@@ -1,0 +1,21 @@
+﻿spring:
+  application:
+    name: gradquest-backend
+  datasource:
+    url: jdbc:mysql://113.44.142.91:3306/gradquest
+    username: zzr
+    password: Zzr123456!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+server:
+  servlet:
+    context-path: /api/v1
