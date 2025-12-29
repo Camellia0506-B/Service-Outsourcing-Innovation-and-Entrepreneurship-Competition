@@ -3,6 +3,12 @@
 -- Notes:
 -- 1) The spec says users.password is stored in plaintext; strongly recommend storing a salted hash instead.
 -- 2) Adjust sizes / constraints as needed for your app.
+-- Create DB if not exists, then use it
+CREATE DATABASE IF NOT EXISTS gradquest
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_0900_ai_ci;
+
+USE gradquest;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
