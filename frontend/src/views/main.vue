@@ -107,6 +107,7 @@ import {
     Setting,
     Document,
     Grid,
+    School,
     ArrowUp,
     ArrowDown,
     Sunny,
@@ -404,19 +405,24 @@ const navItems = ref([
         path: '/main/home' // 新增路径属性
     },
     {
-        text: '个人中心',
-        icon: User,
-        path: '/main/profile' // 新增路径属性
+        text: '院校库',
+        icon: School,
+        path: '/main/school' // 新增路径属性
     },
     {
-        text: '功能菜单',
+        text: 'AI 智囊团',
         icon: Grid,
         expanded: false,
         children: [
-            { text: '用户管理', path: '/main/users' },
-            { text: '文章管理', path: '/main/articles' }
+            { text: '文书润色', path: '/main/articles' },
+            { text: '保研定位', path: '/main/position' }
         ],
         activeChild: null
+    },
+    {
+        text: '个人中心',
+        icon: User,
+        path: '/main/profile' // 新增路径属性
     },
     {
         text: '系统设置',
@@ -463,7 +469,7 @@ const toggleExpand = (item, index) => {
 const handleChildClick = (parentIdx, childIdx, event) => {
     if (event) event.stopPropagation()
     // 新增主题判断逻辑（假设系统设置是navItems的第三个元素）
-    if (parentIdx === 3) {
+    if (parentIdx === 4) {
         // 获取主题模式
         const theme = navItems.value[parentIdx].children[childIdx].text
             .toLowerCase()
@@ -540,6 +546,8 @@ const applyTheme = () => {
         root.style.setProperty('--box-shadow', '0 4px 12px rgba(0, 0, 0, 0.5)')
         root.style.setProperty('--section-title-color', '#ffffff')
         root.style.setProperty('--section-title-border', '#0f5694')
+        root.style.setProperty('--ddl-item', '#111111')
+        root.style.setProperty('--ddl-item-hover', '#333333')
     } else {
         // Light theme settings for navigation
         root.style.setProperty('--nav-bg', '#ffffff')
@@ -567,6 +575,8 @@ const applyTheme = () => {
         root.style.setProperty('--box-shadow', '0 4px 12px rgba(0, 0, 0, 0.08)')
         root.style.setProperty('--section-title-color', '#333333')
         root.style.setProperty('--section-title-border', '#1890ff')
+        root.style.setProperty('--ddl-item', '#fafafa')
+        root.style.setProperty('--ddl-item-hover', '#f5f5f5')
     }
 
     // Update the folder icon color based on theme
@@ -635,7 +645,7 @@ a.folder .el-icon {
 .logo {
     position: fixed;
     left: 70px;
-    top: 7px;
+    top: 8px;
     height: 45px;
     font-size: 30px;
     color: #7ecafe;
@@ -647,7 +657,7 @@ a.folder .el-icon {
 .logo-collapsed {
     position: absolute !important;
     left: 70px !important;
-    top: 7px !important;
+    top: 8px !important;
 }
 
 .big-box .nav-left {
@@ -832,7 +842,7 @@ a.folder .el-icon {
 /* 修改当前路径显示样式 - 添加可点击样式 */
 .current-path {
     position: absolute;
-    left: 10%;
+    left: 15%;
     top: calc(50% + 5px);
     transform: translateY(-50%);
     font-size: 18px;

@@ -17,20 +17,25 @@
 
         <div class="profile-details">
             <div class="detail-item">
-                <div class="detail-label">Email</div>
-                <div class="detail-value">{{ user.email }}</div>
+                <div class="detail-label">本科院校</div>
+                <div class="detail-value">{{ user.university }}</div>
             </div>
 
             <div class="detail-item">
-                <div class="detail-label">Balance</div>
-                <div class="detail-value">
-                    {{ formatCurrency(user.balance) }}
+                <div class="detail-label">专业</div>
+                <div class="detail-value">{{ user.major }}</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">GPA（专业排名）</div>
+                <div class="detail-value gpa">
+                    {{ formatGPA(user.gpa, user.ranking) }}
                 </div>
             </div>
 
             <div class="detail-item">
-                <div class="detail-label">Birthday</div>
-                <div class="detail-value">{{ formatDate(user.birthday) }}</div>
+                <div class="detail-label">保研状态</div>
+                <div class="detail-value status">{{ formatStatus(user.status) }}</div>
             </div>
         </div>
     </div>
@@ -42,9 +47,11 @@ import { ref, onMounted } from 'vue'
 // You would typically fetch this data from an API
 const user = ref({
     username: 'SamHan',
-    email: 'samhantx2020@gmail.com',
-    balance: 1250.75,
-    birthday: '2004-10-12',
+    university: '武汉理工大学',
+    major: '软件工程',
+    gpa: '3.78 / 4.00',
+    ranking: '前 5%',
+    status: '夏令营准备中',
     // avatarUrl: null // Set to null to show the initials placeholder
     avatarUrl: require('../icons/avatar.png') // Set to null to show the initials placeholder
 })
@@ -59,23 +66,14 @@ const getInitials = username => {
         .toUpperCase()
 }
 
-// Format currency with locale
-const formatCurrency = amount => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    }).format(amount)
+// Format GPA with ranking
+const formatGPA = (gpa, ranking) => {
+    return `${gpa}（${ranking}）`
 }
 
-// Format date in a readable format
-const formatDate = dateString => {
-    if (!dateString) return 'Not provided'
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    }).format(date)
+// Format status
+const formatStatus = status => {
+    return status || '未设置'
 }
 
 // You would typically fetch user data here
@@ -176,9 +174,15 @@ onMounted(async () => {
     font-weight: 500;
 }
 
-/* Balance value color special styling */
-.detail-item:nth-child(2) .detail-value {
+/* GPA value color special styling */
+.detail-value.gpa {
     color: var(--time-display-color);
+}
+
+/* Status value color special styling */
+.detail-value.status {
+    color: #10b981;
+    font-weight: 600;
 }
 
 @media (max-width: 600px) {
