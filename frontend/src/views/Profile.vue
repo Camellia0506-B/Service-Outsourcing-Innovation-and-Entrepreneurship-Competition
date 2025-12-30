@@ -38,11 +38,20 @@
                 <div class="detail-value status">{{ formatStatus(user.status) }}</div>
             </div>
         </div>
+
+        <!-- 退出登录按钮 -->
+        <div class="logout-container">
+            <button class="logout-btn" @click="handleLogout">
+                退出登录
+            </button>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 // You would typically fetch this data from an API
 const user = ref({
@@ -55,6 +64,12 @@ const user = ref({
     // avatarUrl: null // Set to null to show the initials placeholder
     avatarUrl: require('../icons/avatar.png') // Set to null to show the initials placeholder
 })
+
+const handleLogout = () => {
+    if (!confirm('确定要退出登录吗？')) return
+    localStorage.clear()
+    router.push('/login')
+}
 
 // Function to get initials from username
 const getInitials = username => {
@@ -184,6 +199,35 @@ onMounted(async () => {
     color: #10b981;
     font-weight: 600;
 }
+
+.logout-container {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.logout-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #ef4444; /* red-500 */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: #dc2626; /* red-600 */
+}
+
+.logout-btn:active {
+    transform: scale(0.98);
+}
+
 
 @media (max-width: 600px) {
     .profile-header {

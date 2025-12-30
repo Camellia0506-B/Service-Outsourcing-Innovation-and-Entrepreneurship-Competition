@@ -50,6 +50,16 @@ const routes = [
                 name: 'School',
                 component: () => import('@/views/School.vue')
             },
+            {
+                path: 'school/detail',
+                name: 'SchoolDetail',
+                component: () => import('@/views/SchoolDetail.vue')
+            },
+            {
+                path: 'posts',
+                name: 'Posts',
+                component: () => import('@/views/Posts.vue')
+            },
             // 其他子路由可以继续在这里添加
         ]
     }

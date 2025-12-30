@@ -405,6 +405,11 @@ const navItems = ref([
         path: '/main/home' // 新增路径属性
     },
     {
+        text: '动态广场',
+        icon: Document,
+        path: '/main/posts' // 新增路径属性
+    },
+    {
         text: '院校库',
         icon: School,
         path: '/main/school' // 新增路径属性
@@ -412,12 +417,7 @@ const navItems = ref([
     {
         text: 'AI 智囊团',
         icon: Grid,
-        expanded: false,
-        children: [
-            { text: '文书润色', path: '/main/articles' },
-            { text: '保研定位', path: '/main/position' }
-        ],
-        activeChild: null
+        path: '/main/articles' // 新增路径属性
     },
     {
         text: '个人中心',
@@ -469,7 +469,7 @@ const toggleExpand = (item, index) => {
 const handleChildClick = (parentIdx, childIdx, event) => {
     if (event) event.stopPropagation()
     // 新增主题判断逻辑（假设系统设置是navItems的第三个元素）
-    if (parentIdx === 4) {
+    if (parentIdx === 5) {
         // 获取主题模式
         const theme = navItems.value[parentIdx].children[childIdx].text
             .toLowerCase()

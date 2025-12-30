@@ -33,6 +33,7 @@
                 <div v-if="showTime" class="time-display">
                     {{ formattedTime }}
                 </div>
+                <img src="@/icons/front_logo.png" class="front-logo"  alt="">
                 <h1>{{ title }}</h1>
                 <a href="#" class="create" @click="handleLoginClick2"
                     >注册账号</a
@@ -330,6 +331,14 @@ input {
     /* background: #f0f2f5; */
 }
 
+.front-logo {
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    transform: translateX(-50%);
+    width: 60%;
+}
+
 .background-slideshow {
     position: fixed;
     width: 100%;
@@ -385,7 +394,7 @@ input {
 
 .time-display {
     position: absolute;
-    top: 60px; /* 距离标题的间距 */
+    top: 140px; /* 距离标题的间距 */
     left: 50%;
     transform: translateX(-50%);
     font-size: 70px;
@@ -432,8 +441,8 @@ input {
     font-family: '字由点字典黑';
     color: #fb7299;
     font-size: 20px;
-    margin-top: 120px;
-    margin-bottom: 60px;
+    margin-top: 200px;
+    margin-bottom: 40px;
 }
 
 .box a,
@@ -504,14 +513,14 @@ input {
     position: absolute;
     border: 1px solid #f0f0f0;
     width: 80%;
-    bottom: 100px;
+    bottom: 60px;
 }
 
 .box .tt {
     position: absolute;
     width: 80%;
     text-align: center;
-    bottom: 80px;
+    bottom: 40px;
     font-size: 12px;
     color: gray;
 }
@@ -525,6 +534,11 @@ input {
 .sign-in h1 {
     margin-top: 40px;
     text-align: center;
+}
+
+.container.active1 .front-logo,
+.container.active2 .front-logo {
+    display: none;
 }
 
 /* 激活状态 */
@@ -757,6 +771,7 @@ input {
     }
 
     .box .time-display {
+        display: none;
         top: 30px;
         font-size: 50px;
     }
