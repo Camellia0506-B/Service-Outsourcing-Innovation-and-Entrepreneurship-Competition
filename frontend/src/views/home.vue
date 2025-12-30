@@ -40,11 +40,11 @@
                     </div>
                     <div class="tags-container">
                         <span class="tag"
-                            >清华大学 | 计算机系
+                            >清华大学
                             <span class="tag-close">×</span></span
                         >
                         <span class="tag"
-                            >复旦大学 | 软件学院
+                            >复旦大学
                             <span class="tag-close">×</span></span
                         >
                     </div>
