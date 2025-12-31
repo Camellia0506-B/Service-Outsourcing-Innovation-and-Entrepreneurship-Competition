@@ -417,7 +417,7 @@ const navItems = ref([
     {
         text: 'AI 智囊团',
         icon: Grid,
-        path: '/main/articles' // 新增路径属性
+        path: '/main/ai' // 新增路径属性
     },
     {
         text: '个人中心',

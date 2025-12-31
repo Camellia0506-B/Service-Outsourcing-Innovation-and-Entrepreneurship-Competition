@@ -57,6 +57,7 @@
         v-for="school in schools" 
         :key="school.id"
         class="school-card"
+        @click="goDetail(school)"
       >
         <div class="school-avatar">
           {{ school.shortName }}
@@ -163,6 +164,12 @@ export default {
       } else {
         this.selectedTags.push(tag);
       }
+    },
+    goDetail(school) {
+      this.$router.push({
+        name: 'SchoolDetail',
+        params: { id: school.id }
+      });
     }
   }
 }
