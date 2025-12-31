@@ -6,6 +6,8 @@
     username: zzr
     password: Zzr123456!
     driver-class-name: com.mysql.cj.jdbc.Driver
+  jackson:
+    property-naming-strategy: SNAKE_CASE
 
 
 mybatis-plus:

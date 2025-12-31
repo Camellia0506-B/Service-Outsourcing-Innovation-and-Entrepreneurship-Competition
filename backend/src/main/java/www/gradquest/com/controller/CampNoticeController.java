@@ -1,11 +1,8 @@
 package www.gradquest.com.controller;
 
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import www.gradquest.com.common.ApiResponse;
 import www.gradquest.com.dto.NoticeDetailResponse;
 import www.gradquest.com.dto.NoticeListResponse;
@@ -21,17 +18,27 @@ public class CampNoticeController {
 
     private final CampNoticeService campNoticeService;
 
-    @GetMapping("/universities/{id}/notices")
-    public ApiResponse<NoticeListResponse> list(@PathVariable("id") Integer univId,
-                                                @RequestParam(value = "dept_name", required = false) String deptName,
-                                                @RequestParam(value = "type", required = false) String type,
-                                                @RequestParam(value = "exam_type", required = false) String examType,
-                                                @RequestParam(value = "before_date", required = false) String beforeDate) {
-        return ApiResponse.success(campNoticeService.listByUniversity(univId, deptName, type, examType, beforeDate));
+    @PostMapping("/universities/notices")
+    public ApiResponse<NoticeListResponse> list(@RequestBody NoticeListRequest request) {
+        return ApiResponse.success(campNoticeService.listByUniversity(request.getUnivId(), request.getDeptName(), request.getType(), request.getExamType(), request.getBeforeDate()));
     }
 
-    @GetMapping("/notices/{id}")
-    public ApiResponse<NoticeDetailResponse> detail(@PathVariable("id") Long id) {
-        return ApiResponse.success(campNoticeService.getDetail(id));
+    @PostMapping("/notices/detail")
+    public ApiResponse<NoticeDetailResponse> noticeDetail(@RequestBody NoticeIdRequest request) {
+        return ApiResponse.success(campNoticeService.getDetail(request.getNoticeId()));
+    }
+
+    @Data
+    private static class NoticeListRequest {
+        private Integer univId;
+        private String deptName;
+        private String type;
+        private String examType;
+        private String beforeDate;
+    }
+
+    @Data
+    private static class NoticeIdRequest {
+        private Long noticeId;
     }
 }

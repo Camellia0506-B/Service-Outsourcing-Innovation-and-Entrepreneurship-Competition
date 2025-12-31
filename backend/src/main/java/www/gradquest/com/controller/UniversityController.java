@@ -1,9 +1,9 @@
 package www.gradquest.com.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import www.gradquest.com.common.ApiResponse;
 import www.gradquest.com.common.PageResponse;
@@ -20,11 +20,21 @@ public class UniversityController {
 
     private final UniversityService universityService;
 
-    @GetMapping
-    public ApiResponse<PageResponse<University>> list(@RequestParam(value = "page", defaultValue = "1") int page,
-                                                     @RequestParam(value = "size", defaultValue = "10") int size,
-                                                     @RequestParam(value = "keyword", required = false) String keyword,
-                                                     @RequestParam(value = "tags", required = false) String tags) {
-        return ApiResponse.success(universityService.listUniversities(page, size, keyword, tags));
+    @PostMapping
+    public ApiResponse<PageResponse<University>> list(@RequestBody UniversityListRequest request) {
+        int page = request.page == null ? 1 : request.page;
+        int size = request.size == null ? 10 : request.size;
+        return ApiResponse.success(universityService.listUniversities(page, size, request.keyword, request.tags));
+    }
+
+    @PostMapping("/info")
+    public ApiResponse<University> detail(@RequestBody UniversityInfoRequest request) {
+        return ApiResponse.success(universityService.getById(request.univId));
+    }
+
+    private record UniversityListRequest(Integer page, Integer size, String keyword, String tags) {
+    }
+
+    private record UniversityInfoRequest(Integer univId) {
     }
 }

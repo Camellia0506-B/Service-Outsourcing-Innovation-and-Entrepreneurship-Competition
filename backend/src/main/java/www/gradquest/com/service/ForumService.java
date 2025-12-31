@@ -9,7 +9,7 @@ import java.util.List;
  * @author zhangzherui
  */
 public interface ForumService {
-    List<ForumPostListItem> listByUniversity(Integer univId);
+    List<ForumPostListItem> listByUniversity(Integer univId, String keyword);
 
     List<ForumPostListItem> listByUser(Long userId);
 

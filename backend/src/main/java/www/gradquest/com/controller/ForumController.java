@@ -24,26 +24,37 @@ public class ForumController {
 
     private final ForumService forumService;
 
-    @GetMapping("/universities/{id}/posts")
-    public ApiResponse<List<ForumPostListItem>> list(@PathVariable("id") Integer univId) {
-        return ApiResponse.success(forumService.listByUniversity(univId));
+    @PostMapping("/universities/posts")
+    public ApiResponse<List<ForumPostListItem>> list(@RequestBody ListRequest request) {
+        return ApiResponse.success(forumService.listByUniversity(request.getUnivId(), request.getKeyword()));
     }
 
-    @GetMapping("/posts/{id}")
-    public ApiResponse<ForumPostDetail> detail(@PathVariable("id") Long id) {
-        return ApiResponse.success(forumService.getPostDetail(id));
+    @PostMapping("/posts/detail")
+    public ApiResponse<ForumPostDetail> detail(@RequestBody IdRequest request) {
+        return ApiResponse.success(forumService.getPostDetail(request.getPostId()));
     }
 
-    @PostMapping("/posts")
+    @PostMapping("/posts/new")
     public ApiResponse<Long> createPost(@RequestBody @Validated CreatePostRequest request) {
         Long id = forumService.createPost(request.getUnivId(), request.getUserId(), request.getTitle(), request.getContent());
         return ApiResponse.success(id);
     }
 
-    @PostMapping("/posts/{id}/comments")
-    public ApiResponse<Long> createComment(@PathVariable("id") Long postId, @RequestBody @Validated CreateCommentRequest request) {
-        Long id = forumService.createComment(postId, request.getUserId(), request.getContent());
-        return ApiResponse.success(id);
+    @PostMapping("/posts/comments")
+    public ApiResponse<Long> createComment(@RequestBody @Validated CreateCommentRequest request) {
+        Long id = forumService.createComment(request.getPostId(), request.getUserId(), request.getContent());
+        return ApiResponse.success("评论发布成功", id);
+    }
+
+    @Data
+    private static class ListRequest {
+        private Integer univId;
+        private String keyword;
+    }
+
+    @Data
+    private static class IdRequest {
+        private Long postId;
     }
 
     @Data
@@ -60,6 +71,8 @@ public class ForumController {
 
     @Data
     private static class CreateCommentRequest {
+        @NotNull
+        private Long postId;
         @NotNull
         private Long userId;
         @NotBlank
