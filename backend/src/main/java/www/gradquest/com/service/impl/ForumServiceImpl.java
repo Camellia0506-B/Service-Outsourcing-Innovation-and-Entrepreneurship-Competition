@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import www.gradquest.com.dto.ForumCommentItem;
 import www.gradquest.com.dto.ForumPostDetail;
 import www.gradquest.com.dto.ForumPostListItem;
@@ -30,10 +31,13 @@ public class ForumServiceImpl implements ForumService {
     private final UserMapper userMapper;
 
     @Override
-    public List<ForumPostListItem> listByUniversity(Integer univId) {
+    public List<ForumPostListItem> listByUniversity(Integer univId, String keyword) {
         LambdaQueryWrapper<ForumPost> wrapper = new LambdaQueryWrapper<>();
         if (univId != null) {
             wrapper.eq(ForumPost::getUnivId, univId);
+        }
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(w -> w.like(ForumPost::getTitle, keyword).or().like(ForumPost::getContent, keyword));
         }
         wrapper.orderByDesc(ForumPost::getCreatedAt);
         List<ForumPost> posts = forumPostMapper.selectList(wrapper);
@@ -78,8 +82,12 @@ public class ForumServiceImpl implements ForumService {
                         .userId(c.getUserId())
                         .content(c.getContent())
                         .createdAt(c.getCreatedAt())
+                        .userNickname(userMapper.selectById(c.getUserId()) != null ? userMapper.selectById(c.getUserId()).getNickname() : null)
+                        .userAvatar(userMapper.selectById(c.getUserId()) != null ? userMapper.selectById(c.getUserId()).getAvatar() : null)
                         .build())
                 .collect(Collectors.toList());
+        post.setViewCount(post.getViewCount() + 1);
+        forumPostMapper.updateById(post);
         return ForumPostDetail.builder()
                 .id(post.getId())
                 .univId(post.getUnivId())

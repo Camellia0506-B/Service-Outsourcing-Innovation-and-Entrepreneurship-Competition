@@ -36,5 +36,6 @@ public class DashboardResponse {
         private String title;
         private String univName;
         private Integer viewCount;
+        private String username;
     }
 }

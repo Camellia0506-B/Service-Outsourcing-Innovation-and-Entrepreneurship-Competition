@@ -15,4 +15,6 @@ public class ForumCommentItem {
     private Long userId;
     private String content;
     private LocalDateTime createdAt;
+    private String userNickname;
+    private String userAvatar;
 }

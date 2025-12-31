@@ -10,6 +10,8 @@ import java.util.List;
 public interface ResourceService {
     List<SharedResource> listByUniversity(Integer univId);
 
+    List<SharedResource> listAll();
+
     Long uploadResource(SharedResource resource);
 
     List<SharedResource> listByUser(Long userId);

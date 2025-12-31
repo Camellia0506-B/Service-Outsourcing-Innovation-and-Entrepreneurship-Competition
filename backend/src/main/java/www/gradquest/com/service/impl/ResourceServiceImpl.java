@@ -27,6 +27,13 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
+    public List<SharedResource> listAll() {
+        LambdaQueryWrapper<SharedResource> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(SharedResource::getCreatedAt);
+        return sharedResourceMapper.selectList(wrapper);
+    }
+
+    @Override
     @Transactional
     public Long uploadResource(SharedResource resource) {
         sharedResourceMapper.insert(resource);

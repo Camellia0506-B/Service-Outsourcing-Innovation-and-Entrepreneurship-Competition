@@ -24,12 +24,16 @@ public class ResourceController {
 
     private final ResourceService resourceService;
 
-    @GetMapping("/universities/{id}/resources")
-    public ApiResponse<List<SharedResource>> list(@PathVariable("id") Integer univId) {
-        return ApiResponse.success(resourceService.listByUniversity(univId));
+    @PostMapping("/resources")
+    public ApiResponse<List<SharedResource>> list(@RequestBody(required = false) ResourceListRequest request) {
+        Integer univId = request == null ? null : request.getUnivId();
+        if (univId != null) {
+            return ApiResponse.success(resourceService.listByUniversity(univId));
+        }
+        return ApiResponse.success(resourceService.listAll());
     }
 
-    @PostMapping("/resources")
+    @PostMapping("/resources/upload")
     public ApiResponse<Long> upload(@RequestBody @Validated UploadResourceRequest request) {
         SharedResource resource = new SharedResource();
         resource.setUnivId(request.getUnivId());
@@ -39,6 +43,11 @@ public class ResourceController {
         resource.setFileSize(request.getFileSize());
         resource.setCreatedAt(LocalDateTime.now());
         return ApiResponse.success(resourceService.uploadResource(resource));
+    }
+
+    @Data
+    private static class ResourceListRequest {
+        private Integer univId;
     }
 
     @Data

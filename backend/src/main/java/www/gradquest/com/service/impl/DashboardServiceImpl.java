@@ -8,10 +8,12 @@ import www.gradquest.com.entity.AppDailyContent;
 import www.gradquest.com.entity.CampNotice;
 import www.gradquest.com.entity.ForumPost;
 import www.gradquest.com.entity.University;
+import www.gradquest.com.entity.User;
 import www.gradquest.com.mapper.AppDailyContentMapper;
 import www.gradquest.com.mapper.CampNoticeMapper;
 import www.gradquest.com.mapper.ForumPostMapper;
 import www.gradquest.com.mapper.UniversityMapper;
+import www.gradquest.com.mapper.UserMapper;
 import www.gradquest.com.service.DashboardService;
 
 import java.time.LocalDate;
@@ -30,6 +32,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final CampNoticeMapper campNoticeMapper;
     private final ForumPostMapper forumPostMapper;
     private final UniversityMapper universityMapper;
+    private final UserMapper userMapper;
 
     @Override
     public DashboardResponse getDashboard(Long userId) {
@@ -54,11 +57,13 @@ public class DashboardServiceImpl implements DashboardService {
                 }).collect(Collectors.toList()))
                 .hotPosts(hotPosts.stream().map(p -> {
                     University u = universityMapper.selectById(p.getUnivId());
+                    User user = userMapper.selectById(p.getUserId());
                     return DashboardResponse.HotPost.builder()
                             .postId(p.getId())
                             .title(p.getTitle())
                             .univName(u != null ? u.getName() : null)
                             .viewCount(p.getViewCount())
+                            .username(user != null ? user.getUsername() : null)
                             .build();
                 }).collect(Collectors.toList()))
                 .build();

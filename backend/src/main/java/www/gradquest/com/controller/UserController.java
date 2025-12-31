@@ -26,25 +26,31 @@ public class UserController {
     private final ResourceService resourceService;
     private final ForumService forumService;
 
-    @GetMapping("/profile")
-    public ApiResponse<UserProfileResponse> profile(@RequestParam("user_id") Long userId) {
-        return ApiResponse.success(userService.getProfileWithStats(userId));
+    @PostMapping("/info")
+    public ApiResponse<UserProfileResponse> profile(@RequestBody UserIdRequest request) {
+        return ApiResponse.success(userService.getProfileWithStats(request.getUserId()));
     }
 
-    @GetMapping("/posts")
-    public ApiResponse<java.util.List<ForumPostListItem>> myPosts(@RequestParam("user_id") Long userId) {
-        return ApiResponse.success(forumService.listByUser(userId));
+    @PostMapping("/posts")
+    public ApiResponse<java.util.List<ForumPostListItem>> myPosts(@RequestBody UserIdRequest request) {
+        return ApiResponse.success(forumService.listByUser(request.getUserId()));
     }
 
-    @GetMapping("/resources")
-    public ApiResponse<java.util.List<SharedResource>> myResources(@RequestParam("user_id") Long userId) {
-        return ApiResponse.success(resourceService.listByUser(userId));
+    @PostMapping("/resources")
+    public ApiResponse<java.util.List<SharedResource>> myResources(@RequestBody UserIdRequest request) {
+        return ApiResponse.success(resourceService.listByUser(request.getUserId()));
     }
 
     @PutMapping("/profile")
     public ApiResponse<Void> updateProfile(@RequestBody @Validated UpdateProfileRequest request) {
         userService.updateProfile(request.getUserId(), request.getNickname(), request.getAvatar());
-        return ApiResponse.success(null);
+        return ApiResponse.success("更新成功", null);
+    }
+
+    @Data
+    private static class UserIdRequest {
+        @NotNull
+        private Long userId;
     }
 
     @Data

@@ -38,11 +38,6 @@ public class AuthController {
         return ApiResponse.success("登录成功", user);
     }
 
-    @PostMapping("/logout")
-    public ApiResponse<Void> logout() {
-        return ApiResponse.success("已退出", null);
-    }
-
     @Data
     private static class RegisterRequest {
         @NotBlank

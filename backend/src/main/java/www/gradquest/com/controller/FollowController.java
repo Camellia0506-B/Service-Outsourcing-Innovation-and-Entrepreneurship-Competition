@@ -23,12 +23,12 @@ public class FollowController {
 
     private final FollowService followService;
 
-    @GetMapping("/follows")
-    public ApiResponse<List<UserFollow>> list(@RequestParam("user_id") Long userId) {
-        return ApiResponse.success(followService.listFollows(userId));
+    @PostMapping("/follows")
+    public ApiResponse<List<UserFollow>> list(@RequestBody UserIdRequest request) {
+        return ApiResponse.success(followService.listFollows(request.getUserId()));
     }
 
-    @PostMapping("/follows")
+    @PostMapping("/follows/add")
     public ApiResponse<Long> add(@RequestBody @Validated AddFollowRequest request) {
         UserFollow follow = new UserFollow();
         follow.setUserId(request.getUserId());
@@ -38,10 +38,16 @@ public class FollowController {
         return ApiResponse.success(followService.addFollow(follow));
     }
 
-    @DeleteMapping("/follows/{id}")
-    public ApiResponse<Void> delete(@PathVariable("id") Long id) {
-        followService.removeFollow(id);
-        return ApiResponse.success(null);
+    @DeleteMapping("/follows")
+    public ApiResponse<Void> delete(@RequestBody IdRequest request) {
+        followService.removeFollow(request.getId());
+        return ApiResponse.success("已取消关注", null);
+    }
+
+    @Data
+    private static class UserIdRequest {
+        @NotNull
+        private Long userId;
     }
 
     @Data
@@ -51,5 +57,11 @@ public class FollowController {
         @NotNull
         private Integer univId;
         private String deptName;
+    }
+
+    @Data
+    private static class IdRequest {
+        @NotNull
+        private Long id;
     }
 }
