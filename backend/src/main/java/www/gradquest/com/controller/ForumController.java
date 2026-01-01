@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import www.gradquest.com.common.ApiResponse;
-import www.gradquest.com.dto.ForumPostDetail;
+import www.gradquest.com.dto.ForumPostDetailResponse;
 import www.gradquest.com.dto.ForumPostListItem;
 import www.gradquest.com.service.ForumService;
 
@@ -30,7 +30,7 @@ public class ForumController {
     }
 
     @PostMapping("/posts/detail")
-    public ApiResponse<ForumPostDetail> detail(@RequestBody IdRequest request) {
+    public ApiResponse<ForumPostDetailResponse> detail(@RequestBody IdRequest request) {
         return ApiResponse.success(forumService.getPostDetail(request.getPostId()));
     }
 

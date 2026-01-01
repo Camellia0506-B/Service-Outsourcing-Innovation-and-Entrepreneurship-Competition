@@ -1,6 +1,6 @@
 package www.gradquest.com.service;
 
-import www.gradquest.com.dto.ForumPostDetail;
+import www.gradquest.com.dto.ForumPostDetailResponse;
 import www.gradquest.com.dto.ForumPostListItem;
 
 import java.util.List;
@@ -13,7 +13,7 @@ public interface ForumService {
 
     List<ForumPostListItem> listByUser(Long userId);
 
-    ForumPostDetail getPostDetail(Long id);
+    ForumPostDetailResponse getPostDetail(Long id);
 
     Long createPost(Integer univId, Long userId, String title, String content);
 

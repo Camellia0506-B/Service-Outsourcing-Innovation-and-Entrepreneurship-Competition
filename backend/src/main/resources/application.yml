@@ -9,7 +9,6 @@
   jackson:
     property-naming-strategy: SNAKE_CASE
 
-
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
@@ -21,3 +20,5 @@ mybatis-plus:
 server:
   servlet:
     context-path: /api/v1
+  port: 5000  # 设置应用运行的端口号为5000
+

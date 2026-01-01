@@ -29,22 +29,9 @@ public class CampNoticeServiceImpl implements CampNoticeService {
     private final UniversityService universityService;
 
     @Override
-    public NoticeListResponse listByUniversity(Integer univId, String deptName, String type, String examType, String beforeDate) {
+    public NoticeListResponse listByUniversity(Integer univId) {
         LambdaQueryWrapper<CampNotice> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CampNotice::getUnivId, univId);
-        if (StringUtils.hasText(deptName)) {
-            wrapper.like(CampNotice::getDeptName, deptName);
-        }
-        if (StringUtils.hasText(type)) {
-            wrapper.eq(CampNotice::getNoticeType, type);
-        }
-        if (StringUtils.hasText(examType)) {
-            wrapper.like(CampNotice::getExamType, examType);
-        }
-        if (StringUtils.hasText(beforeDate)) {
-            LocalDate date = LocalDate.parse(beforeDate, DateTimeFormatter.ISO_LOCAL_DATE);
-            wrapper.le(CampNotice::getEndDate, date);
-        }
         List<CampNotice> notices = campNoticeMapper.selectList(wrapper);
         University university = universityService.getById(univId);
         NoticeListResponse.UniversityBrief brief = university == null ? null : NoticeListResponse.UniversityBrief.builder()
@@ -58,10 +45,7 @@ public class CampNoticeServiceImpl implements CampNoticeService {
                 .id(n.getId())
                 .deptName(n.getDeptName())
                 .title(n.getTitle())
-                .noticeType(n.getNoticeType())
-                .examType(n.getExamType())
                 .endDate(n.getEndDate())
-                .status(n.getStatus())
                 .build()).collect(Collectors.toList());
         return NoticeListResponse.builder().info(brief).notices(items).build();
     }
@@ -78,11 +62,8 @@ public class CampNoticeServiceImpl implements CampNoticeService {
                 .deptName(notice.getDeptName())
                 .title(notice.getTitle())
                 .content(notice.getContent())
-                .noticeType(notice.getNoticeType())
-                .examType(notice.getExamType())
                 .endDate(notice.getEndDate())
                 .sourceLink(notice.getSourceLink())
-                .status(notice.getStatus())
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package www.gradquest.com.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import www.gradquest.com.entity.SharedResource;
 
 import java.util.List;
@@ -12,7 +13,7 @@ public interface ResourceService {
 
     List<SharedResource> listAll();
 
-    Long uploadResource(SharedResource resource);
+    public String uploadFile(Integer univId, Long userId, String fileName, MultipartFile file);
 
     List<SharedResource> listByUser(Long userId);
 }

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import www.gradquest.com.dto.UserProfileResponse;
 import www.gradquest.com.entity.ForumPost;
 import www.gradquest.com.entity.SharedResource;
@@ -16,6 +17,11 @@ import www.gradquest.com.service.UserService;
 import www.gradquest.com.mapper.UserFollowMapper;
 import www.gradquest.com.mapper.ForumPostMapper;
 import www.gradquest.com.mapper.SharedResourceMapper;
+import www.gradquest.com.utils.UploadFileUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @author zhangzherui
@@ -31,19 +37,43 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User register(String username, String password, String nickname) {
+    public User register(String username, String password, String nickname, MultipartFile avatar) {
+        // 检查用户名是否已存在
         LambdaQueryWrapper<User> query = new LambdaQueryWrapper<>();
         query.eq(User::getUsername, username);
         if (userMapper.selectCount(query) > 0) {
             throw new IllegalArgumentException("username exists");
         }
+
+        // 创建用户对象
         User user = new User();
         user.setUsername(username);
         user.setPassword(password);
         user.setNickname(StringUtils.hasText(nickname) ? nickname : username);
+
+        // 处理头像文件上传
+        if (avatar != null && !avatar.isEmpty()) {
+            // 创建一个临时文件来保存上传的头像
+            File avatarFile = new File(System.getProperty("java.io.tmpdir"), Objects.requireNonNull(avatar.getOriginalFilename()));
+            try {
+                // 将 MultipartFile 保存到临时文件
+                avatar.transferTo(avatarFile);
+
+                // 上传文件并获取文件 URL
+                String avatarUrl = UploadFileUtil.upload(avatarFile);
+                user.setAvatar(avatarUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Avatar upload failed", e);
+            }
+        }
+
+        // 保存用户数据
         userMapper.insert(user);
+
         return user;
     }
+
 
     @Override
     public User login(String username, String password) {
@@ -59,19 +89,45 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void updateProfile(Long userId, String nickname, String avatar) {
+    public boolean updateProfile(Long userId, String nickname, MultipartFile avatarFile) {
+        // 获取用户
         User user = userMapper.selectById(userId);
         if (user == null) {
-            return;
+            return false;
         }
+
+        // 处理头像上传并获取 URL
+        String avatarUrl = null;
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                // 将 MultipartFile 转换为 File，保存到临时文件并上传
+                File avatarTempFile = new File(System.getProperty("java.io.tmpdir"), avatarFile.getOriginalFilename());
+                avatarFile.transferTo(avatarTempFile);
+
+                // 上传文件并获取文件 URL
+                avatarUrl = UploadFileUtil.upload(avatarTempFile);
+
+                // 上传成功后，删除临时文件
+                avatarTempFile.delete();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // 更新昵称（如果传入了）和头像 URL（如果上传了头像）
         if (StringUtils.hasText(nickname)) {
             user.setNickname(nickname);
         }
-        if (StringUtils.hasText(avatar)) {
-            user.setAvatar(avatar);
+        if (StringUtils.hasText(avatarUrl)) {
+            user.setAvatar(avatarUrl);
         }
+
+        // 更新用户信息
         userMapper.updateById(user);
+        return true;
     }
+
 
     @Override
     public UserProfileResponse getProfileWithStats(Long userId) {

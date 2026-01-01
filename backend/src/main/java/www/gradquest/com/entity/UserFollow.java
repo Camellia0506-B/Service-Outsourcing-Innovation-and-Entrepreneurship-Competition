@@ -17,6 +17,5 @@ public class UserFollow {
     private Long id;
     private Long userId;
     private Integer univId;
-    private String deptName;
     private LocalDateTime createdAt;
 }

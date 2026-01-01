@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class ForumCommentItem {
-    private Long id;
-    private Long userId;
     private String content;
     private LocalDateTime createdAt;
     private String userNickname;
