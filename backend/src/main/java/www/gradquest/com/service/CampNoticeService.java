@@ -7,7 +7,7 @@ import www.gradquest.com.dto.NoticeListResponse;
  * @author zhangzherui
  */
 public interface CampNoticeService {
-    NoticeListResponse listByUniversity(Integer univId, String deptName, String type, String examType, String beforeDate);
+    NoticeListResponse listByUniversity(Integer univId);
 
     NoticeDetailResponse getDetail(Long id);
 }

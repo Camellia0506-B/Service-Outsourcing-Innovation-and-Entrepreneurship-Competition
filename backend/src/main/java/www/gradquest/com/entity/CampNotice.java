@@ -22,7 +22,4 @@ public class CampNotice {
     private String content;
     private LocalDate endDate;
     private String sourceLink;
-    private String examType;
-    private String noticeType;
-    private Integer status;
 }

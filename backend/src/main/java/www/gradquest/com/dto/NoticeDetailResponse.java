@@ -16,9 +16,6 @@ public class NoticeDetailResponse {
     private String deptName;
     private String title;
     private String content;
-    private String noticeType;
-    private String examType;
     private LocalDate endDate;
     private String sourceLink;
-    private Integer status;
 }

@@ -16,14 +16,13 @@ import java.util.List;
  * @author zhangzherui
  */
 @RestController
-@RequestMapping("/user")
 @RequiredArgsConstructor
 @Validated
 public class FollowController {
 
     private final FollowService followService;
 
-    @PostMapping("/follows")
+    @PostMapping("/follows/list")
     public ApiResponse<List<UserFollow>> list(@RequestBody UserIdRequest request) {
         return ApiResponse.success(followService.listFollows(request.getUserId()));
     }
@@ -33,12 +32,11 @@ public class FollowController {
         UserFollow follow = new UserFollow();
         follow.setUserId(request.getUserId());
         follow.setUnivId(request.getUnivId());
-        follow.setDeptName(request.getDeptName());
         follow.setCreatedAt(LocalDateTime.now());
         return ApiResponse.success(followService.addFollow(follow));
     }
 
-    @DeleteMapping("/follows")
+    @PostMapping("/follows/delete")
     public ApiResponse<Void> delete(@RequestBody IdRequest request) {
         followService.removeFollow(request.getId());
         return ApiResponse.success("已取消关注", null);
@@ -56,7 +54,6 @@ public class FollowController {
         private Long userId;
         @NotNull
         private Integer univId;
-        private String deptName;
     }
 
     @Data

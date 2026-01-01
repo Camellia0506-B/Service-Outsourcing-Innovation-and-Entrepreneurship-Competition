@@ -31,9 +31,6 @@ public class NoticeListResponse {
         private Long id;
         private String deptName;
         private String title;
-        private String noticeType;
-        private String examType;
         private LocalDate endDate;
-        private Integer status;
     }
 }

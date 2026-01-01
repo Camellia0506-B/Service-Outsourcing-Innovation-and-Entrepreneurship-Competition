@@ -20,7 +20,7 @@ public class CampNoticeController {
 
     @PostMapping("/universities/notices")
     public ApiResponse<NoticeListResponse> list(@RequestBody NoticeListRequest request) {
-        return ApiResponse.success(campNoticeService.listByUniversity(request.getUnivId(), request.getDeptName(), request.getType(), request.getExamType(), request.getBeforeDate()));
+        return ApiResponse.success(campNoticeService.listByUniversity(request.getUnivId()));
     }
 
     @PostMapping("/notices/detail")
@@ -31,10 +31,6 @@ public class CampNoticeController {
     @Data
     private static class NoticeListRequest {
         private Integer univId;
-        private String deptName;
-        private String type;
-        private String examType;
-        private String beforeDate;
     }
 
     @Data

@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import www.gradquest.com.dto.ForumCommentItem;
 import www.gradquest.com.dto.ForumPostDetail;
+import www.gradquest.com.dto.ForumPostDetailResponse;
 import www.gradquest.com.dto.ForumPostListItem;
 import www.gradquest.com.entity.ForumComment;
 import www.gradquest.com.entity.ForumPost;
@@ -69,7 +70,7 @@ public class ForumServiceImpl implements ForumService {
     }
 
     @Override
-    public ForumPostDetail getPostDetail(Long id) {
+    public ForumPostDetailResponse getPostDetail(Long id) {
         ForumPost post = forumPostMapper.selectById(id);
         if (post == null) {
             return null;
@@ -78,8 +79,6 @@ public class ForumServiceImpl implements ForumService {
         wrapper.eq(ForumComment::getPostId, id).orderByAsc(ForumComment::getCreatedAt);
         List<ForumComment> comments = forumCommentMapper.selectList(wrapper);
         List<ForumCommentItem> items = comments.stream().map(c -> ForumCommentItem.builder()
-                        .id(c.getId())
-                        .userId(c.getUserId())
                         .content(c.getContent())
                         .createdAt(c.getCreatedAt())
                         .userNickname(userMapper.selectById(c.getUserId()) != null ? userMapper.selectById(c.getUserId()).getNickname() : null)
@@ -88,15 +87,17 @@ public class ForumServiceImpl implements ForumService {
                 .collect(Collectors.toList());
         post.setViewCount(post.getViewCount() + 1);
         forumPostMapper.updateById(post);
-        return ForumPostDetail.builder()
+        ForumPostDetail detail = ForumPostDetail.builder()
                 .id(post.getId())
-                .univId(post.getUnivId())
-                .userId(post.getUserId())
                 .title(post.getTitle())
+                .authorNickname(userMapper.selectById(post.getUserId()) != null ? userMapper.selectById(post.getUserId()).getNickname() : null)
                 .content(post.getContent())
                 .viewCount(post.getViewCount())
                 .replyCount(post.getReplyCount())
                 .createdAt(post.getCreatedAt())
+                .build();
+        return ForumPostDetailResponse.builder()
+                .post(detail)
                 .comments(items)
                 .build();
     }

@@ -140,8 +140,6 @@
       "id": 2005,
       "dept_name": "电子信息与电气工程学院",
       "title": "2025电院优才夏令营...",
-      "notice_type": "夏令营",
-      "exam_type": "机试/面试",
       "end_date": "2025-06-20",
       "source_link": "www.baidu.com"
     }
@@ -302,7 +300,7 @@
 ### 5. 高校详情页 - 资料共享 (Resources)
 #### 5.1 获取资料列表
 + **方法**: `POST`
-+ **路径**: `/resources`
++ **路径**: `/resources/list`
 + **请求示例**:
 
 ```json
@@ -337,7 +335,7 @@
 
 #### 5.2 上传资料
 + **方法**: `POST`
-+ **路径**: `/resources`
++ **路径**: `/resources/upload`
 + **请求示例**
 
 注意，这边不是放在json里面。上传文件，其他参数如大学 ID 和用户 ID 放在 multipart/form-data 请求体中，文件内容作为二进制数据上传。
@@ -347,6 +345,7 @@
 | univ\_id | number | 是  | 大学 ID |
 | user\_id | number | 是  | 用户 ID |
 | file     | file   | 是  | 上传的文件 |
+| file_name     | string   | 是  | 文件名称 |
 
 
 + **响应示例**:
@@ -361,7 +360,7 @@
 ### 6. 关注管理 (Follows)
 #### 6.1 获取我的关注列表
 + **方法**: `POST`
-+ **路径**: `/user/follows`
++ **路径**: `/follows/list`
 + **请求示例**:
 
 ```json
@@ -392,7 +391,7 @@
 
 #### 6.2 添加关注
 + **方法**: `POST`
-+ **路径**: `/user/follows`
++ **路径**: `/follows/add`
 + **请求示例**:
 
 ```json
@@ -412,8 +411,8 @@
 ```
 
 #### 6.3 取消关注
-+ **方法**: `DELETE`
-+ **路径**: `/user/follows`
++ **方法**: `POST`
++ **路径**: `/follows/delete`
 + **请求体**:
 
 ```json
