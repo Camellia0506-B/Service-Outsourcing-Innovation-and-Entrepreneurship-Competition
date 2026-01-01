@@ -10,7 +10,7 @@
 
     <groupId>www.gradquest.com</groupId>
     <artifactId>backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-RELEASE</version>
     <name>GradQuest Backend</name>
     <description>GradQuest backend services</description>
 
