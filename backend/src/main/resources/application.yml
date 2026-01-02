@@ -20,5 +20,12 @@ mybatis-plus:
 server:
   servlet:
     context-path: /api/v1
-  port: 5000  # 设置应用运行的端口号为5000
+  port: 5000 # 设置应用运行的端口号为5000
 
+# PDF Agent 配置
+doubao:
+  api:
+    key: ${ARK_API_KEY:} # 从环境变量读取，如果没有则使用空字符串
+  model: doubao-seed-1-6-251015
+  base:
+    url: https://ark.cn-beijing.volces.com/api/v3
