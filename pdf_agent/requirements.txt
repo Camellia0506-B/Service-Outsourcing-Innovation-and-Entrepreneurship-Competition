@@ -1,0 +1,22 @@
+# PDF Document Reading Agent Dependencies
+
+# Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# LangChain
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.20
+
+# OpenAI Client (compatible with doubao-seed-1.6)
+openai>=1.0.0
+
+# PDF Processing
+PyMuPDF>=1.23.0
+Pillow>=10.0.0
+
+# Utilities
+pydantic>=2.0.0
+python-dotenv>=1.0.0
