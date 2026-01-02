@@ -12,7 +12,6 @@ import java.util.List;
 @Data
 @Builder
 public class DashboardResponse {
-    private LocalDate date;
     private String quote;
     private String bgImage;
     private List<DdlReminder> ddlReminders;
@@ -25,7 +24,7 @@ public class DashboardResponse {
         private String univName;
         private String deptName;
         private String title;
-        private long daysLeft;
+        private String sourceLink;
         private LocalDate endDate;
     }
 

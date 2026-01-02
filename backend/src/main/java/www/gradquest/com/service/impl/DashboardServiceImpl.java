@@ -9,16 +9,19 @@ import www.gradquest.com.entity.CampNotice;
 import www.gradquest.com.entity.ForumPost;
 import www.gradquest.com.entity.University;
 import www.gradquest.com.entity.User;
+import www.gradquest.com.entity.UserFollow;
 import www.gradquest.com.mapper.AppDailyContentMapper;
 import www.gradquest.com.mapper.CampNoticeMapper;
 import www.gradquest.com.mapper.ForumPostMapper;
 import www.gradquest.com.mapper.UniversityMapper;
 import www.gradquest.com.mapper.UserMapper;
+import www.gradquest.com.mapper.UserFollowMapper;
 import www.gradquest.com.service.DashboardService;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -33,39 +36,63 @@ public class DashboardServiceImpl implements DashboardService {
     private final ForumPostMapper forumPostMapper;
     private final UniversityMapper universityMapper;
     private final UserMapper userMapper;
+    private final UserFollowMapper userFollowMapper;
 
     @Override
     public DashboardResponse getDashboard(Long userId) {
-        AppDailyContent daily = appDailyContentMapper.selectOne(new LambdaQueryWrapper<AppDailyContent>().orderByDesc(AppDailyContent::getDate).last("limit 1"));
-        LocalDate today = LocalDate.now();
-        List<CampNotice> notices = campNoticeMapper.selectList(new LambdaQueryWrapper<CampNotice>().orderByAsc(CampNotice::getEndDate).last("limit 5"));
-        List<ForumPost> hotPosts = forumPostMapper.selectList(new LambdaQueryWrapper<ForumPost>().orderByDesc(ForumPost::getViewCount).last("limit 5"));
+        AppDailyContent daily = appDailyContentMapper.selectOne(
+                new LambdaQueryWrapper<AppDailyContent>().last("order by rand() limit 1")
+        );
+
+        List<UserFollow> follows = userFollowMapper.selectList(
+                new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getUserId, userId)
+        );
+
+        Set<Integer> univIds = follows.stream()
+                .map(UserFollow::getUnivId)
+                .collect(Collectors.toSet());
+
+        Map<Integer, String> univNameMap = univIds.isEmpty()
+                ? Collections.emptyMap()
+                : universityMapper.selectBatchIds(univIds).stream()
+                .collect(Collectors.toMap(University::getId, University::getName));
+
+        List<CampNotice> notices = univIds.isEmpty()
+                ? Collections.emptyList()
+                : campNoticeMapper.selectList(new LambdaQueryWrapper<CampNotice>()
+                .in(CampNotice::getUnivId, univIds)
+                .orderByAsc(CampNotice::getEndDate));
+
+        List<ForumPost> hotPosts = univIds.isEmpty()
+                ? Collections.emptyList()
+                : forumPostMapper.selectList(new LambdaQueryWrapper<ForumPost>()
+                .in(ForumPost::getUnivId, univIds)
+                .orderByDesc(ForumPost::getReplyCount));
+
+        Map<Long, String> userNameMap = hotPosts.isEmpty()
+                ? Collections.emptyMap()
+                : userMapper.selectBatchIds(
+                hotPosts.stream().map(ForumPost::getUserId).collect(Collectors.toSet())
+        ).stream().collect(Collectors.toMap(User::getId, User::getUsername));
+
         return DashboardResponse.builder()
-                .date(today)
                 .quote(daily != null ? daily.getQuote() : null)
                 .bgImage(daily != null ? daily.getBgImage() : null)
-                .ddlReminders(notices.stream().map(n -> {
-                    University u = universityMapper.selectById(n.getUnivId());
-                    return DashboardResponse.DdlReminder.builder()
-                            .noticeId(n.getId())
-                            .univName(u != null ? u.getName() : null)
-                            .deptName(n.getDeptName())
-                            .title(n.getTitle())
-                            .daysLeft(n.getEndDate() != null ? ChronoUnit.DAYS.between(today, n.getEndDate()) : 0)
-                            .endDate(n.getEndDate())
-                            .build();
-                }).collect(Collectors.toList()))
-                .hotPosts(hotPosts.stream().map(p -> {
-                    University u = universityMapper.selectById(p.getUnivId());
-                    User user = userMapper.selectById(p.getUserId());
-                    return DashboardResponse.HotPost.builder()
-                            .postId(p.getId())
-                            .title(p.getTitle())
-                            .univName(u != null ? u.getName() : null)
-                            .viewCount(p.getViewCount())
-                            .username(user != null ? user.getUsername() : null)
-                            .build();
-                }).collect(Collectors.toList()))
+                .ddlReminders(notices.stream().map(n -> DashboardResponse.DdlReminder.builder()
+                        .noticeId(n.getId())
+                        .univName(univNameMap.get(n.getUnivId()))
+                        .deptName(n.getDeptName())
+                        .title(n.getTitle())
+                        .sourceLink(n.getSourceLink())
+                        .endDate(n.getEndDate())
+                        .build()).collect(Collectors.toList()))
+                .hotPosts(hotPosts.stream().map(p -> DashboardResponse.HotPost.builder()
+                        .postId(p.getId())
+                        .title(p.getTitle())
+                        .univName(univNameMap.get(p.getUnivId()))
+                        .viewCount(p.getViewCount())
+                        .username(userNameMap.get(p.getUserId()))
+                        .build()).collect(Collectors.toList()))
                 .build();
     }
 }
