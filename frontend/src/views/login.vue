@@ -17,7 +17,7 @@
             :class="{ active1: isActive1, active2: isActive2 }"
         >
             <div class="box">
-                <el-upload
+                <!-- <el-upload
                     class="avatar-uploader"
                     action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
                     :show-file-list="false"
@@ -28,6 +28,17 @@
                     <el-icon v-else class="avatar-uploader-icon"
                         ><Plus
                     /></el-icon>
+                </el-upload> -->
+                <el-upload
+                class="avatar-uploader"
+                :auto-upload="false"
+                :show-file-list="false"
+                :on-change="onAvatarChange"
+                >
+                <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+                <el-icon v-else class="avatar-uploader-icon">
+                    <Plus />
+                </el-icon>
                 </el-upload>
                 <!-- 时间显示容器 -->
                 <div v-if="showTime" class="time-display">
@@ -137,7 +148,7 @@
                         />
                     </el-form-item>
                     <el-form-item>
-                        <el-button type="primary" round>加入我们!</el-button>
+                        <el-button type="primary" round @click="handleRegister">加入我们!</el-button>
                     </el-form-item>
                 </el-form>
             </div>
@@ -148,6 +159,9 @@
 <script>
 import { Lock, User, Plus, Calendar } from '@element-plus/icons-vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { loginAPI } from "@/api/auth";
+import { registerAPI } from "@/api/auth";
+
 export default {
     methods: {
         updateTime() {
@@ -193,17 +207,60 @@ export default {
         gotoResetPassword() {
             this.$router.push('/reset-password')
         },
-        handleLogin() {
-            if (this.username === 'samhan' && this.password === '123456') {
-                this.$router.push('/main')
-            } else {
-                this.$message({
-                    message: '用户名或密码错误',
-                    type: 'error',
-                    duration: 2000
-                })
+        async handleLogin() {
+            if (!this.username || !this.password) {
+                this.$message.error("请输入用户名和密码");
+                return;
             }
-        }
+            try {
+                const res = await loginAPI({ username: this.username, password: this.password });
+                const user = res.data; // ✅ {id, username, nickname, avatar}
+
+                localStorage.setItem("user_id", String(user.id));
+                localStorage.setItem("user_info", JSON.stringify(user));
+
+                this.$message.success(res.msg || "登录成功");
+                this.$router.push("/main");
+            } catch (e) {
+                this.$message.error(e?.message || "登录失败");
+            }
+        },
+        onAvatarChange(uploadFile) {
+            this.avatarFile = uploadFile.raw;
+            this.imageUrl = URL.createObjectURL(uploadFile.raw);
+        },
+        async handleRegister() {
+            if (!this.username1 || !this.password1 || !this.confirmPassword) {
+                this.$message.error("请填写用户名和密码");
+                return;
+            }
+            if (this.password1 !== this.confirmPassword) {
+                this.$message.error("两次密码不一致");
+                return;
+            }
+
+            try {
+                const res = await registerAPI({
+                    username: this.username1,
+                    password: this.password1,
+                    nickname: this.username1, // ✅ 你现在没输入 nickname，就先用 username 顶一下
+                    avatarFile: this.avatarFile,
+                });
+
+                this.$message.success(res.msg || "注册成功，请登录");
+
+                // 注册成功后：切到登录面板
+                this.isActive2 = false;
+                this.title = "Log In";
+                this.isActive1 = true;
+
+                // 可选：自动填充登录框
+                this.username = this.username1;
+                this.password = this.password1;
+            } catch (e) {
+                this.$message.error(e?.message || "注册失败");
+            }
+        },
     },
     setup() {
         const images = [
@@ -267,7 +324,9 @@ export default {
             isActive1: false,
             isActive2: false,
             title: 'Welcome Back!',
-            windowWidth: document.documentElement.clientWidth
+            windowWidth: document.documentElement.clientWidth,
+            avatarFile: null,
+            imageUrl: "",
         }
     },
     computed: {
