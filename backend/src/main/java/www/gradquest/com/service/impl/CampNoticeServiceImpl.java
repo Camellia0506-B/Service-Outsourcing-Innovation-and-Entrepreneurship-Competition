@@ -46,6 +46,7 @@ public class CampNoticeServiceImpl implements CampNoticeService {
                 .deptName(n.getDeptName())
                 .title(n.getTitle())
                 .endDate(n.getEndDate())
+                .sourceLink(n.getSourceLink())
                 .build()).collect(Collectors.toList());
         return NoticeListResponse.builder().info(brief).notices(items).build();
     }

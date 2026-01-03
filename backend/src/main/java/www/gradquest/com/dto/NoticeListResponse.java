@@ -32,5 +32,6 @@ public class NoticeListResponse {
         private String deptName;
         private String title;
         private LocalDate endDate;
+        private String sourceLink;
     }
 }
