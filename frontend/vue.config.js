@@ -4,7 +4,22 @@ module.exports = defineConfig({
     devServer: {
         client: {
             overlay: false
-        }
+        },
+        proxy: {
+            "/api": {
+              target: "http://113.44.142.91:5000",
+              changeOrigin: true,
+              pathRewrite: {
+                "^/api": "/api/v1",
+              },
+            },
+            // ✅ 新增这一段
+            "/static": {
+                target: "http://113.44.142.91:5000",
+                changeOrigin: true,
+            },
+          },
+        
     },
     css: {
         loaderOptions: {

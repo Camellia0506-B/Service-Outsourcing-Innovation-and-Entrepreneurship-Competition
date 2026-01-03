@@ -51,10 +51,10 @@ const routes = [
                 component: () => import('@/views/School.vue')
             },
             {
-                path: 'school/detail:id',
+                path: 'school/detail',
                 name: 'SchoolDetail',
                 component: () => import('@/views/SchoolDetail.vue'),
-                props: true, // 让 detail 组件能直接用 props 接到 id
+                props: true // 让 detail 组件能直接用 props 接到 id
             },
             {
                 path: 'posts',
@@ -65,7 +65,7 @@ const routes = [
                 path: 'artical',
                 name: 'Artical',
                 component: () => import('@/views/Artical.vue')
-            },
+            }
             // 其他子路由可以继续在这里添加
         ]
     }

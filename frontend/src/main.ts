@@ -12,20 +12,37 @@ const app = createApp(App)
 
 app.config.globalProperties.$message = ElMessage
 
-createApp(App)
-    .use(ElementPlus)
+app.config.warnHandler = (msg, instance, trace) => {
+    if (
+        typeof msg === 'string' &&
+        (msg.includes('made a reactive object') ||
+            msg.includes('markRaw') ||
+            msg.includes('shallowRef instead of `ref`'))
+    ) {
+        return
+    }
+    console.warn(msg + trace)
+}
+
+app.use(ElementPlus)
     .use(PrimeVue, { ripple: true })
     .component('Calendar', Calendar)
-    .use(axios)
     .use(router)
     .mount('#app')
 
-// 在main.ts中添加（仅抑制ResizeObserver特定错误）
+// axios 不应该 app.use(axios)，一般做成全局属性
+app.config.globalProperties.$axios = axios
+
 window.addEventListener(
     'error',
     e => {
-        if (e.message.toLowerCase().includes('resizeobserver'))
+        if (
+            String(e.message || '')
+                .toLowerCase()
+                .includes('resizeobserver')
+        ) {
             e.preventDefault()
+        }
     },
     { capture: true }
 )

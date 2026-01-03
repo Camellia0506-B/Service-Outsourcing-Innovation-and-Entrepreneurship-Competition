@@ -84,7 +84,7 @@
                 </div>
                 <div class="time-display">{{ currentTime }}</div>
                 <img
-                    src="@/icons/avatar.png"
+                    :src="avatarUrl"
                     alt=""
                     class="avatar"
                     v-show="!hideAvatar"
@@ -118,6 +118,19 @@ import {
 const router = useRouter()
 const currentTime = ref('')
 const hideAvatar = ref(false)
+
+const avatarUrl = ref('')
+
+// 默认头像（Vite/Vue 都更稳的写法）
+const defaultAvatar = new URL('@/icons/avatar.png', import.meta.url).href
+
+const resolveAvatar = (avatarPath) => {
+  if (!avatarPath) return defaultAvatar
+  // 如果后端直接返回的是完整 http(s) 地址
+  if (/^https?:\/\//i.test(avatarPath)) return avatarPath
+  // 后端返回 /static/xxx.png 这种相对路径：拼后端域名
+  return `http://113.44.142.91:5000${avatarPath}`
+}
 
 // 新增: 当前路径显示相关
 const currentPathDisplay = ref('首页')
@@ -288,6 +301,12 @@ onMounted(() => {
     // 初始化路径显示 - 根据当前路由路径设置
     const currentPath = router.currentRoute.value.path
     initCurrentPathDisplay(currentPath)
+
+    const user = JSON.parse(localStorage.getItem('user_info') || '{}')
+    avatarUrl.value = resolveAvatar(user.avatar)
+
+    console.log('user_info=', user)
+    console.log('avatarUrl=', avatarUrl.value)
 })
 
 // 新增: 初始化路径显示
@@ -644,7 +663,7 @@ a.folder .el-icon {
 
 .logo {
     position: fixed;
-    left: 70px;
+    left: 65px;
     top: 8px;
     height: 45px;
     font-size: 30px;
@@ -656,7 +675,7 @@ a.folder .el-icon {
 /* 折叠状态样式 */
 .logo-collapsed {
     position: absolute !important;
-    left: 70px !important;
+    left: 65px !important;
     top: 8px !important;
 }
 
