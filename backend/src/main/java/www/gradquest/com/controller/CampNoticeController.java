@@ -1,12 +1,17 @@
 package www.gradquest.com.controller;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import www.gradquest.com.common.ApiResponse;
 import www.gradquest.com.dto.NoticeDetailResponse;
 import www.gradquest.com.dto.NoticeListResponse;
+import www.gradquest.com.entity.NoticePlaygroundItem;
 import www.gradquest.com.service.CampNoticeService;
+
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * @author zhangzherui
@@ -26,6 +31,11 @@ public class CampNoticeController {
     @PostMapping("/notices/detail")
     public ApiResponse<NoticeDetailResponse> noticeDetail(@RequestBody NoticeIdRequest request) {
         return ApiResponse.success(campNoticeService.getDetail(request.getNoticeId()));
+    }
+
+    @PostMapping("/notices/playground")
+    public ApiResponse<List<NoticePlaygroundItem>> noticePlayground() {
+        return ApiResponse.success(campNoticeService.getAllNotice());
     }
 
     @Data

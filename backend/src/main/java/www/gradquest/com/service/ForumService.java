@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface ForumService {
     List<ForumPostListItem> listByUniversity(Integer univId, String keyword);
-
+    List<ForumPostListItem> listByPlayground();
     List<ForumPostListItem> listByUser(Long userId);
 
     ForumPostDetailResponse getPostDetail(Long id);

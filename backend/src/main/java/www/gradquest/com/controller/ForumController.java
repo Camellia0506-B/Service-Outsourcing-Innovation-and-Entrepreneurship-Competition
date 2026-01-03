@@ -46,6 +46,11 @@ public class ForumController {
         return ApiResponse.success("评论发布成功", id);
     }
 
+    @PostMapping("/playground/posts")
+    public ApiResponse<List<ForumPostListItem>> playgroundList() {
+        return ApiResponse.success(forumService.listByPlayground());
+    }
+
     @Data
     private static class ListRequest {
         private Integer univId;
