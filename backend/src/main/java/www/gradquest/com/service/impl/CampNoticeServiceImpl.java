@@ -7,6 +7,7 @@ import org.springframework.util.StringUtils;
 import www.gradquest.com.dto.NoticeDetailResponse;
 import www.gradquest.com.dto.NoticeListResponse;
 import www.gradquest.com.entity.CampNotice;
+import www.gradquest.com.entity.NoticePlaygroundItem;
 import www.gradquest.com.entity.University;
 import www.gradquest.com.mapper.CampNoticeMapper;
 import www.gradquest.com.service.CampNoticeService;
@@ -67,4 +68,24 @@ public class CampNoticeServiceImpl implements CampNoticeService {
                 .sourceLink(notice.getSourceLink())
                 .build();
     }
+    @Override
+    public List<NoticePlaygroundItem> getAllNotice() {
+        // 1) 查全部 CampNotice（如果你想按 univId 过滤，把下面注释打开）
+        LambdaQueryWrapper<CampNotice> wrapper = new LambdaQueryWrapper<>();
+        // wrapper.eq(CampNotice::getUnivId, univId);
+
+        List<CampNotice> notices = campNoticeMapper.selectList(wrapper);
+
+        // 2) 映射成 NoticePlaygroundItem
+        return notices.stream()
+                .map(n -> NoticePlaygroundItem.builder()
+                        .id(n.getId())
+                        .deptName(n.getDeptName())
+                        .title(n.getTitle())
+                        .endDate(n.getEndDate())
+                        .sourceLink(n.getSourceLink())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 }

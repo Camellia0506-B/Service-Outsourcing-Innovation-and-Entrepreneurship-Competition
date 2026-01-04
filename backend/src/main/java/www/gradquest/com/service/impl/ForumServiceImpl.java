@@ -11,6 +11,7 @@ import www.gradquest.com.dto.ForumPostDetailResponse;
 import www.gradquest.com.dto.ForumPostListItem;
 import www.gradquest.com.entity.ForumComment;
 import www.gradquest.com.entity.ForumPost;
+import www.gradquest.com.entity.User;
 import www.gradquest.com.mapper.ForumCommentMapper;
 import www.gradquest.com.mapper.ForumPostMapper;
 import www.gradquest.com.mapper.UserMapper;
@@ -133,4 +134,26 @@ public class ForumServiceImpl implements ForumService {
         }
         return comment.getId();
     }
+    @Override
+    public List<ForumPostListItem> listByPlayground() {
+        LambdaQueryWrapper<ForumPost> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(ForumPost::getCreatedAt);
+
+        List<ForumPost> posts = forumPostMapper.selectList(wrapper);
+
+        return posts.stream()
+                .map(p -> {
+                    User u = userMapper.selectById(p.getUserId());
+                    return ForumPostListItem.builder()
+                            .id(p.getId())
+                            .title(p.getTitle())
+                            .authorNickname(u != null ? u.getNickname() : null)
+                            .viewCount(p.getViewCount())
+                            .replyCount(p.getReplyCount())
+                            .createdAt(p.getCreatedAt())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
 }
