@@ -25,7 +25,7 @@ import java.util.Map;
 @Component
 public class DoubaoAPIClient {
 
-    @Value("${doubao.api.key:#{systemEnvironment['ARK_API_KEY']}}")
+    @Value("${doubao.api.key}")
     private String apiKey;
 
     @Value("${doubao.base.url:https://ark.cn-beijing.volces.com/api/v3}")
