@@ -117,7 +117,7 @@
                     </div>
                     <button
                         class="download-btn"
-                        @click="downloadResource(resource.id)"
+                        @click.stop="downloadResource(resource)"
                     >
                         下载
                     </button>
@@ -323,14 +323,31 @@ const getInitials = name => {
 
 // 跳转到帖子详情
 const goToPost = postId => {
-    router.push(`/post/${postId}`)
+    router.push(`/main/posts/detail/${postId}`)
 }
 
 // 下载资料
-const downloadResource = resourceId => {
-    // 实现下载逻辑
-    console.log('下载资料:', resourceId)
-    alert('下载功能开发中...')
+const downloadResource = resource => {
+    if (!resource) return
+
+    const url = (resource.file_url || resource.url || '').trim()
+    if (!url) {
+        alert('缺少文件地址 file_url，无法下载')
+        console.log('resource=', resource)
+        return
+    }
+
+    // 兼容后端返回 "/static/xxx" 这种相对路径
+    if (/^https?:\/\//i.test(url)) {
+        window.open(url, '_blank')
+    } else {
+        // 如果你 http.js 里有 baseURL，这里用它拼一下更稳
+        // 不知道 baseURL 的情况下，用当前域名拼
+        const fullUrl = `${window.location.origin}${
+            url.startsWith('/') ? '' : '/'
+        }${url}`
+        window.open(fullUrl, '_blank')
+    }
 }
 
 // 退出登录

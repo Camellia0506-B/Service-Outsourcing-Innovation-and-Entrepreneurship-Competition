@@ -65,7 +65,14 @@ const routes = [
                 path: 'artical',
                 name: 'Artical',
                 component: () => import('@/views/Artical.vue')
+            },
+            {
+                path: 'posts/detail/:id',
+                name: 'Postdetail',
+                component: () => import('@/views/PostDetail.vue'),
+                props: true
             }
+
             // 其他子路由可以继续在这里添加
         ]
     }

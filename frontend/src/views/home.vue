@@ -47,7 +47,7 @@
                         <span
                             class="tag"
                             :class="{ active: selectedUniv === '' }"
-                            @click="selectedUniv = ''"
+                            @click="handleSelectUniv('')"
                         >
                             全部
                         </span>
@@ -57,7 +57,7 @@
                             v-for="u in followedUnivs"
                             :key="u"
                             :class="{ active: selectedUniv === u }"
-                            @click="selectedUniv = u"
+                            @click="handleSelectUniv(u)"
                         >
                             {{ u }}
                             <span
@@ -122,6 +122,7 @@
                             class="post-item"
                             v-for="(post, idx) in hotPosts"
                             :key="post.post_id"
+                            @click="goPostDetail(post.post_id)"
                         >
                             <span class="post-rank">{{ idx + 1 }}</span>
                             <div class="post-content">
@@ -238,10 +239,15 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { themeEventBus } from '@/utils/themeEvent'
 import { dashboardAPI } from '@/api/dashboard'
 import { followListAPI, followAddAPI, followDeleteAPI } from '@/api/follows'
-import { universitiesAPI, univNoticesAPI } from '@/api/universities'
+import {
+    universitiesAPI,
+    univNoticesAPI,
+    univPostsAPI
+} from '@/api/universities'
 
 export default {
     name: 'CalendarWithDailyCard',
@@ -267,9 +273,14 @@ export default {
         // 存储 univ_name -> {followId, univId} 的映射
         const univMap = ref({})
 
-        // 不再需要这两个过滤参数
-        // const hideExpired = ref(true)
-        // const nearDays = ref(30)
+        const router = useRouter()
+
+        const goPostDetail = postId => {
+            if (!postId) return
+            // ✅ 按你路由配置改：比如 /posts/detail/:id
+            router.push({ path: `/main/posts/detail/${postId}` })
+            // 或者：router.push({ name: 'PostDetail', params: { id: postId } })
+        }
 
         // Toast 提示
         const toast = ref({
@@ -482,7 +493,7 @@ export default {
                 const end = parseDate(item.end_date)
                 if (!end || isNaN(end.getTime())) return false
 
-                // ✅ 是否“早于固定起点”
+                // ✅ 是否"早于固定起点"
                 return end.getTime() < BASE_DATE.getTime()
             }
             return typeof item?.days_left === 'number' && item.days_left < 0
@@ -774,6 +785,9 @@ export default {
                         console.warn('[Debug] No notices loaded for', univName)
                     }
 
+                    await nextTick()
+                    await refreshHotPosts()
+
                     showToast('关注成功', 'success')
                 } else {
                     showToast(res?.msg || '关注失败', 'error')
@@ -848,6 +862,8 @@ export default {
                     if (selectedUniv.value === univName) {
                         selectedUniv.value = ''
                     }
+                    await nextTick()
+                    await refreshHotPosts()
 
                     showToast('已取消关注', 'success')
                 } else {
@@ -859,6 +875,115 @@ export default {
             } finally {
                 isLoading.value = false
             }
+        }
+
+        const dashboardHotPosts = ref([]) // 备份 dashboard 的 hot_posts
+
+        const normalizeHotPostsFromUniv = (list, univName) => {
+            // 把 /universities/posts 的返回统一成你模板需要的字段
+            return (Array.isArray(list) ? list : []).map(p => ({
+                post_id: p.id ?? p.post_id,
+                title: p.title,
+                univ_name: univName,
+                view_count: p.view_count ?? 0
+            }))
+        }
+
+        const pickPostList = res => {
+            // ✅ 兼容两种：1) http 已经返回业务包 {code,data}
+            //            2) axios 原始包 {data:{code,data}}
+            const root =
+                res && typeof res === 'object' && 'code' in res
+                    ? res
+                    : res?.data ?? res
+
+            const data = root?.data ?? {}
+
+            // ✅ 常见字段：list / posts / items / 直接数组
+            const list =
+                (Array.isArray(data) ? data : null) ??
+                (Array.isArray(data.list) ? data.list : null) ??
+                (Array.isArray(data.posts) ? data.posts : null) ??
+                (Array.isArray(data.items) ? data.items : null) ??
+                []
+
+            return { code: root?.code, list, raw: root }
+        }
+
+        const refreshHotPosts = async () => {
+            console.log('[hotPosts] Starting refresh for:', selectedUniv.value)
+
+            // "全部"恢复 dashboard
+            if (!selectedUniv.value) {
+                hotPosts.value = filterPostsByFollowed(dashboardHotPosts.value)
+                console.log(
+                    '[hotPosts] Restored dashboard posts:',
+                    hotPosts.value.length
+                )
+                return
+            }
+
+            const univId =
+                univMap.value?.[selectedUniv.value]?.univId ??
+                allUnivs.value.find(u => u.univ_name === selectedUniv.value)
+                    ?.univ_id
+
+            console.log(
+                '[hotPosts] Found univId:',
+                univId,
+                'for',
+                selectedUniv.value
+            )
+
+            if (!univId) {
+                hotPosts.value = []
+                console.log('[hotPosts] No univId found, clearing posts')
+                return
+            }
+
+            try {
+                const res = await univPostsAPI({ univ_id: univId, keyword: '' })
+                const { code, list, raw } = pickPostList(res)
+
+                console.log(
+                    '[hotPosts] API response - code:',
+                    code,
+                    'list length:',
+                    list.length
+                )
+
+                const sorted = [...list].sort(
+                    (a, b) => (b.view_count ?? 0) - (a.view_count ?? 0)
+                )
+
+                hotPosts.value = normalizeHotPostsFromUniv(
+                    sorted.slice(0, 10),
+                    selectedUniv.value
+                )
+
+                console.log(
+                    '[hotPosts] Updated hotPosts:',
+                    hotPosts.value.length
+                )
+            } catch (e) {
+                console.error('[hotPosts] refresh failed', e)
+                hotPosts.value = []
+            }
+        }
+
+        const filterPostsByFollowed = posts => {
+            const set = new Set(followedUnivs.value)
+            return (Array.isArray(posts) ? posts : []).filter(p => {
+                const name = p.univ_name || p.university_name || p.univ || ''
+                return set.has(name)
+            })
+        }
+
+        const handleSelectUniv = async name => {
+            selectedUniv.value = name
+            // 使用 nextTick 确保 Vue 响应式系统已更新
+            await nextTick()
+            await refreshHotPosts()
         }
 
         onMounted(async () => {
@@ -894,9 +1019,10 @@ export default {
                 ddlReminders.value = Array.isArray(data.ddl_reminders)
                     ? data.ddl_reminders
                     : []
-                hotPosts.value = Array.isArray(data.hot_posts)
+                dashboardHotPosts.value = Array.isArray(data.hot_posts)
                     ? data.hot_posts
                     : []
+                hotPosts.value = dashboardHotPosts.value
 
                 // 如果 allUnivs 为空，尝试从 ddlReminders 构建（兜底）
                 if (allUnivs.value.length === 0) {
@@ -956,19 +1082,6 @@ export default {
                         await loadAllFollowedNotices()
                     }
                 }
-
-                // 如果用户没有关注任何学校，可选择默认关注所有
-                // 注释掉这段代码，让用户手动选择
-                /*
-                if (
-                    followedUnivs.value.length === 0 &&
-                    availableUnivs.value.length > 0
-                ) {
-                    for (const univName of availableUnivs.value) {
-                        await handleAddFollow(univName)
-                    }
-                }
-                */
             } catch (e) {
                 console.error('[home] API failed', e)
                 showToast('数据加载失败', 'error')
@@ -1009,7 +1122,9 @@ export default {
             openAddModal,
             getDaysLeft,
             countdownText,
-            hasPast
+            hasPast,
+            handleSelectUniv,
+            goPostDetail
         }
     }
 }
