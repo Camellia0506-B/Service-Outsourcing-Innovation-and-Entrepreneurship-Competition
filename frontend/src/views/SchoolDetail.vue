@@ -220,7 +220,7 @@
                                 搜索
                             </button>
 
-                            <button class="post-btn" @click="openNewPost">
+                            <!-- <button class="post-btn" @click="openNewPost">
                                 <svg
                                     width="16"
                                     height="16"
@@ -235,7 +235,7 @@
                                     />
                                 </svg>
                                 发布帖子
-                            </button>
+                            </button> -->
                         </div>
                     </div>
 
@@ -251,7 +251,7 @@
                             v-for="post in posts"
                             :key="post.id"
                             class="post-item"
-                            @click="openPostDetail(post.id)"
+                            @click="goPostDetail(post.id)"
                             style="cursor: pointer"
                         >
                             <h3 class="post-title">{{ post.title }}</h3>
@@ -429,168 +429,12 @@
                 </div>
             </div>
         </div>
-
-        <!-- 帖子详情弹窗 -->
-        <div
-            v-if="showPostModal"
-            class="modal-mask"
-            @click.self="closePostDetail"
-        >
-            <div class="modal-card">
-                <div v-if="isPostDetailLoading" style="color: #666">
-                    加载中...
-                </div>
-
-                <div v-else-if="postDetail">
-                    <h2 style="margin: 0 0 8px 0">
-                        {{ postDetail.post.title }}
-                    </h2>
-                    <div
-                        style="
-                            color: #666;
-                            font-size: 12px;
-                            margin-bottom: 12px;
-                        "
-                    >
-                        {{ postDetail.post.author_nickname }} ·
-                        {{ postDetail.post.created_at }} · 浏览
-                        {{ postDetail.post.view_count }} · 回复
-                        {{ postDetail.post.reply_count }}
-                    </div>
-
-                    <pre style="white-space: pre-wrap; line-height: 1.6">{{
-                        postDetail.post.content
-                    }}</pre>
-
-                    <h3 style="margin-top: 16px">评论</h3>
-                    <div
-                        v-if="
-                            !postDetail.comments ||
-                            postDetail.comments.length === 0
-                        "
-                        style="color: #999"
-                    >
-                        暂无评论
-                    </div>
-
-                    <div
-                        v-for="(c, idx) in postDetail.comments"
-                        :key="idx"
-                        style="
-                            padding: 10px 0;
-                            border-bottom: 1px solid #f3f3f3;
-                        "
-                    >
-                        <div style="font-size: 13px">
-                            <b>{{ c.user_nickname }}</b>
-                            <span style="color: #999; margin-left: 8px">{{
-                                c.created_at
-                            }}</span>
-                        </div>
-                        <div style="margin-top: 6px">{{ c.content }}</div>
-                    </div>
-
-                    <div style="display: flex; gap: 8px; margin-top: 12px">
-                        <input
-                            v-model="commentInput"
-                            placeholder="写评论..."
-                            style="
-                                flex: 1;
-                                padding: 10px;
-                                border: 1px solid #eee;
-                                border-radius: 8px;
-                            "
-                        />
-                        <button
-                            @click="submitComment"
-                            style="padding: 10px 14px; border-radius: 8px"
-                        >
-                            发布
-                        </button>
-                    </div>
-                </div>
-
-                <div v-else style="color: #999">帖子不存在或加载失败</div>
-
-                <div
-                    style="
-                        display: flex;
-                        justify-content: flex-end;
-                        margin-top: 12px;
-                    "
-                >
-                    <button
-                        @click="closePostDetail"
-                        style="padding: 10px 14px; border-radius: 8px"
-                    >
-                        关闭
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 发布帖子弹窗 -->
-        <div
-            v-if="showNewPostModal"
-            class="modal-mask"
-            @click.self="showNewPostModal = false"
-        >
-            <div class="modal-card">
-                <h2 style="margin: 0 0 12px 0">发布帖子</h2>
-                <input
-                    v-model="newPostForm.title"
-                    placeholder="标题"
-                    style="
-                        width: 100%;
-                        padding: 10px;
-                        border: 1px solid #eee;
-                        border-radius: 8px;
-                    "
-                />
-                <textarea
-                    v-model="newPostForm.content"
-                    placeholder="内容"
-                    rows="8"
-                    style="
-                        width: 100%;
-                        margin-top: 10px;
-                        padding: 10px;
-                        border: 1px solid #eee;
-                        border-radius: 8px;
-                    "
-                ></textarea>
-
-                <div
-                    style="
-                        display: flex;
-                        justify-content: flex-end;
-                        gap: 8px;
-                        margin-top: 10px;
-                    "
-                >
-                    <button
-                        @click="showNewPostModal = false"
-                        style="padding: 10px 14px; border-radius: 8px"
-                    >
-                        取消
-                    </button>
-                    <button
-                        @click="submitNewPost"
-                        style="padding: 10px 14px; border-radius: 8px"
-                    >
-                        发布
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
 <script>
 import { univInfoAPI, univNoticesAPI, univPostsAPI } from '@/api/universities'
-
 import { resourceListAPI, resourceUploadAPI } from '@/api/resources'
-
 import { postDetailAPI, newPostAPI, newCommentAPI } from '@/api/posts'
 
 export default {
@@ -608,7 +452,9 @@ export default {
             errorMsg: '',
 
             univId: null,
-            userId: 5001,
+
+            // ✅ 从登录信息里拿（不要写死 5001）
+            userId: null,
 
             school: { id: null, name: '', logo_url: '', tags: [], intro: '' },
 
@@ -619,6 +465,7 @@ export default {
             posts: [],
             isPostsLoading: false,
 
+            // ✅ 不再用弹窗详情（改为跳转）
             showPostModal: false,
             postDetail: null,
             isPostDetailLoading: false,
@@ -653,8 +500,14 @@ export default {
 
     async mounted() {
         this.resolveUnivId()
-        console.log('[SchoolDetail] route=', this.$route)
-        console.log('[SchoolDetail] resolved univId=', this.univId)
+        this.resolveUserId()
+
+        if (!this.userId) {
+            this.errorMsg = '未登录或登录信息缺失：请先登录以获取 user_id'
+            // 你也可以选择直接跳转登录
+            // this.$router.push('/login')
+            return
+        }
 
         if (!this.univId || Number.isNaN(this.univId)) {
             this.errorMsg =
@@ -666,6 +519,13 @@ export default {
     },
 
     methods: {
+        // ✅ 从 localStorage 读取 user_id（登录接口是唯一合法来源）
+        resolveUserId() {
+            const v = localStorage.getItem('user_id')
+            const id = v ? Number(v) : null
+            this.userId = Number.isFinite(id) && id > 0 ? id : null
+        },
+
         resolveUnivId() {
             const raw =
                 this.$route?.params?.univ_id ??
@@ -684,21 +544,16 @@ export default {
         },
 
         isOk(payload) {
-            // axios 已经解包后，payload 可能是 Array / Object / {code,data}
             if (payload == null) return false
-
-            // 如果是数组，默认成功
             if (Array.isArray(payload)) return true
-
-            // 如果是对象但没有 code，也默认成功（比如 {id,name,...}）
             if (typeof payload === 'object' && !('code' in payload)) return true
-
-            // 有 code 就严格按 code 判断
             return payload.code === 200
         },
 
+        // ✅ 页面返回按钮：优先回退，否则回院校列表（你的路由是 /main/school）
         goBack() {
-            this.$router.push('/school')
+            if (window.history.length > 1) this.$router.back()
+            else this.$router.push('/main/school')
         },
 
         async refreshAll() {
@@ -721,14 +576,10 @@ export default {
         async fetchSchoolInfo() {
             const res = await univInfoAPI(this.univId)
             const payload = this.unwrap(res)
-            console.log('[SchoolDetail] /universities/info payload=', payload)
 
-            if (!this.isOk(payload)) {
-                console.warn('[SchoolDetail] info not ok:', payload)
-                return
-            }
+            if (!this.isOk(payload)) return
 
-            const info = payload?.data ?? payload // ✅ 关键：兼容裸对象
+            const info = payload?.data ?? payload
             this.school = {
                 id: info.id ?? this.univId,
                 name: info.name ?? '',
@@ -744,52 +595,48 @@ export default {
                 intro: info.intro ?? info.description ?? info.brief ?? ''
             }
         },
+
         async fetchNotices() {
             const res = await univNoticesAPI(this.univId)
             const payload = this.unwrap(res)
-            console.log('[notices] ' + payload)
+
             const raw = Array.isArray(payload)
                 ? payload
                 : payload?.data ?? payload?.notices ?? []
-
             const list = Array.isArray(raw) ? raw : []
 
-            console.log('[notices] first item =', list[0])
-
-            this.notices = list.map(x => {
-                console.log(
-                    '[notice row]',
-                    x.id,
-                    x.title,
-                    x.source_link,
-                    x.sourceLink,
-                    x.url
-                )
-
-                return {
-                    id: x.id,
-                    dept_name: x.dept_name,
-                    tag: x.dept_name,
-                    tagColor: '#E0E7FF',
-                    title: x.title,
-                    deadline: x.end_date,
-                    source_link: x.source_link, // 暂时先保留
-                    status: this.calcNoticeStatus(x.end_date)
-                }
-            })
+            this.notices = list.map(x => ({
+                id: x.id,
+                dept_name: x.dept_name,
+                tag: x.dept_name,
+                tagColor: '#E0E7FF',
+                title: x.title,
+                deadline: x.end_date,
+                source_link: x.source_link,
+                status: this.calcNoticeStatus(x.end_date)
+            }))
         },
+
         calcNoticeStatus(endDateStr) {
             if (!endDateStr) return 'ended'
             const end = new Date(endDateStr + ' 23:59:59')
             return new Date() <= end ? 'ongoing' : 'ended'
         },
 
+        // ✅ 保留一个版本，删掉你原来的重复 openNoticeDetail
         openNoticeDetail(notice) {
-            let url = notice?.source_link || ''
-            console.log(url)
-            // if (!url) return
+            let url = (notice?.source_link || '').trim()
+            if (!url) return
+            if (url.startsWith('//')) url = 'https:' + url
+            if (/^https?:$/i.test(url)) return
             if (!/^https?:\/\//i.test(url)) url = 'https://' + url
-            window.open(url, '_blank')
+            try {
+                // eslint-disable-next-line no-new
+                new URL(url)
+                window.open(url, '_blank')
+            } catch (e) {
+                console.warn('[SchoolDetail] invalid URL:', url, notice, e)
+            }
         },
 
         async fetchPosts() {
@@ -800,10 +647,6 @@ export default {
                     keyword: this.postKeyword
                 })
                 const payload = this.unwrap(res)
-                console.log(
-                    '[SchoolDetail] /universities/posts payload=',
-                    payload
-                )
 
                 if (!this.isOk(payload)) {
                     this.posts = []
@@ -829,12 +672,25 @@ export default {
             }
         },
 
+        // ✅ 经验社区：点击跳转到帖子详情页（方案 A）
+        goPostDetail(postId) {
+            if (!postId) return
+            this.$router.push({
+                name: 'Postdetail',
+                params: { id: String(postId) }
+            })
+        },
+
+        // ✅ 如果你模板里还在用 openPostDetail(post.id)，这里做个兼容：直接跳转
+        openPostDetail(postId) {
+            this.goPostDetail(postId)
+        },
+
         async fetchResources() {
             this.isFilesLoading = true
             try {
-                const res = await resourceListAPI(this.univId) // ✅ 你现在用 resources.js 的函数
+                const res = await resourceListAPI(this.univId)
                 const payload = this.unwrap(res)
-                console.log('[SchoolDetail] /resources/list payload=', payload)
 
                 if (!this.isOk(payload)) {
                     this.files = []
@@ -844,8 +700,6 @@ export default {
                 const list = Array.isArray(payload)
                     ? payload
                     : payload?.data ?? []
-
-                // ✅ 按你日志字段：file_name / file_url / user_id / univ_id ...
                 this.files = (Array.isArray(list) ? list : []).map((f, idx) => {
                     const ext = (f.file_name || '')
                         .split('.')
@@ -854,51 +708,16 @@ export default {
                     return {
                         id: f.id ?? `${idx}-${f.file_name}`,
                         name: f.file_name,
-                        size: f.file_size ?? '-', // 你现在返回里可能没这个字段
+                        size: f.file_size ?? '-',
                         uploader: f.user_name ?? f.user_id ?? '-',
                         type: ext === 'pdf' ? 'pdf' : 'doc',
-                        file_url: f.file_url
+                        file_url: f.file_url,
+                        upload_time: f.created_at ?? f.upload_time ?? '-'
                     }
                 })
             } finally {
                 this.isFilesLoading = false
             }
-        },
-
-        openNoticeDetail(notice) {
-            let url = (notice?.source_link || '').trim()
-            if (!url) return
-
-            // 处理形如 "//www.xxx.com/..." 的情况
-            if (url.startsWith('//')) url = 'https:' + url
-
-            // 如果只有协议（https: / http:），直接判无效，避免 window.open 报错
-            if (/^https?:$/i.test(url)) {
-                console.warn('[SchoolDetail] invalid source_link:', url, notice)
-                return
-            }
-
-            // 没写协议就补 https://
-            if (!/^https?:\/\//i.test(url)) url = 'https://' + url
-
-            // 最后再兜底校验一下
-            try {
-                // eslint-disable-next-line no-new
-                new URL(url)
-                window.open(url, '_blank')
-            } catch (e) {
-                console.warn(
-                    '[SchoolDetail] invalid URL after normalize:',
-                    url,
-                    notice,
-                    e
-                )
-            }
-        },
-
-        closePostDetail() {
-            this.showPostModal = false
-            this.postDetail = null
         },
 
         openNewPost() {
@@ -911,41 +730,60 @@ export default {
             const content = this.newPostForm.content.trim()
             if (!title || !content) return
 
-            await newPostAPI({
-                univ_id: this.univId,
-                user_id: this.userId,
-                title,
-                content
-            })
-            this.showNewPostModal = false
-            await this.fetchPosts()
+            try {
+                await newPostAPI({
+                    univ_id: this.univId,
+                    user_id: this.userId,
+                    title,
+                    content
+                })
+                this.showNewPostModal = false
+                await this.fetchPosts()
+            } catch (e) {
+                console.error('[SchoolDetail] newPost failed:', e)
+                this.$message?.error?.(e?.message || '发布失败')
+            }
         },
 
+        // ⚠️ 由于我们改成“跳转详情页评论”，这里保留但一般用不到
         async submitComment() {
             const content = this.commentInput.trim()
             const postId = this.postDetail?.post?.id
             if (!content || !postId) return
 
-            await newCommentAPI({
-                post_id: postId,
-                user_id: this.userId,
-                content
-            })
-            await this.openPostDetail(postId)
+            try {
+                await newCommentAPI({
+                    post_id: postId,
+                    user_id: this.userId,
+                    content
+                })
+                this.commentInput = ''
+                // 重新拉取弹窗详情（如果你还保留弹窗）
+                await this.openPostDetail(postId)
+            } catch (e) {
+                console.error('[SchoolDetail] comment failed:', e)
+                this.$message?.error?.(e?.message || '评论失败')
+            }
         },
 
         downloadFile(file) {
             if (!file?.file_url) return
             window.open(file.file_url, '_blank')
         },
+
         triggerUpload() {
             this.$refs.fileInput?.click()
         },
 
         async onPickFile(e) {
             const file = e?.target?.files?.[0]
-            e.target.value = '' // ✅ 允许重复选同一个文件
+            e.target.value = ''
             if (!file) return
+
+            if (!this.userId) {
+                this.$message?.error?.('未登录，无法上传')
+                return
+            }
 
             try {
                 this.isFilesLoading = true
@@ -980,6 +818,7 @@ export default {
     padding: 24px 40px;
     background: var(--home-bg, #f3f4f6);
     min-height: 100vh;
+    margin-top: 60px;
 }
 
 .back-btn {
