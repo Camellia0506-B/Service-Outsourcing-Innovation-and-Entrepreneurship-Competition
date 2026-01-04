@@ -1,6 +1,9 @@
 # PDF Agent Test Script (PowerShell)
 # Usage: .\test_pdf_agent.ps1 [pdf_file_path]
 
+# 设置 PowerShell 输出编码为 UTF-8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 param(
     [string]$PdfFile = "src\main\resources\test.pdf"
 )
@@ -40,7 +43,7 @@ try {
     $httpClient = New-Object System.Net.Http.HttpClient
     $multipartContent = New-Object System.Net.Http.MultipartFormDataContent
     
-    $fileContent = New-Object System.Net.Http.ByteArrayContent($fileBytes)
+    $fileContent = New-Object System.Net.Http.ByteArrayContent -ArgumentList (,$fileBytes)
     $fileContent.Headers.ContentType = New-Object System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf")
     $multipartContent.Add($fileContent, "file", $fileName)
     

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -97,5 +98,91 @@ public class DoubaoAPIClient {
         }
 
         return content.asText();
+    }
+
+    /**
+     * 调用聊天完成 API（流式响应）
+     * 
+     * @param messages 消息列表
+     * @return Flux<String> 流式返回的 token
+     */
+    public Flux<String> streamChatCompletion(List<Map<String, Object>> messages) {
+        return Flux.create(sink -> {
+            try {
+                if (apiKey == null || apiKey.isEmpty()) {
+                    sink.error(new IllegalStateException("请设置环境变量 ARK_API_KEY 或配置 doubao.api.key"));
+                    return;
+                }
+
+                // 构建请求体
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("model", model);
+                requestBody.put("messages", messages);
+                requestBody.put("reasoning_effort", "medium");
+                requestBody.put("stream", true);
+
+                String requestBodyJson = objectMapper.writeValueAsString(requestBody);
+
+                // 构建 HTTP 请求
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/chat/completions"))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + apiKey)
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson))
+                        .timeout(Duration.ofSeconds(120))
+                        .build();
+
+                // 发送请求并获取流式响应
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofLines())
+                        .thenAccept(response -> {
+                            if (response.statusCode() != 200) {
+                                sink.error(new RuntimeException("API 调用失败: HTTP " + response.statusCode()));
+                                return;
+                            }
+
+                            response.body().forEach(line -> {
+                                try {
+                                    String trimmedLine = line.trim();
+
+                                    // SSE 格式处理
+                                    if (trimmedLine.startsWith("data: ")) {
+                                        String data = trimmedLine.substring(6);
+
+                                        // 检查是否是结束标记
+                                        if ("[DONE]".equals(data)) {
+                                            sink.complete();
+                                            return;
+                                        }
+
+                                        // 解析 JSON
+                                        JsonNode jsonNode = objectMapper.readTree(data);
+                                        JsonNode choices = jsonNode.get("choices");
+
+                                        if (choices != null && choices.isArray() && choices.size() > 0) {
+                                            JsonNode delta = choices.get(0).get("delta");
+                                            if (delta != null) {
+                                                JsonNode content = delta.get("content");
+                                                if (content != null && !content.isNull()) {
+                                                    String token = content.asText();
+                                                    if (!token.isEmpty()) {
+                                                        sink.next(token);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    log.error("流式响应解析错误: {}", line, e);
+                                }
+                            });
+                        })
+                        .exceptionally(e -> {
+                            sink.error(e);
+                            return null;
+                        });
+            } catch (Exception e) {
+                sink.error(e);
+            }
+        });
     }
 }

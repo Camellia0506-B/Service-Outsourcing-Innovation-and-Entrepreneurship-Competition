@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 import www.gradquest.com.common.ApiResponse;
 import www.gradquest.com.service.PDFAgentService;
 
@@ -70,6 +71,27 @@ public class PDFAgentController {
             return ApiResponse.badRequest(e.getMessage());
         } catch (Exception e) {
             return ApiResponse.serverError("服务器错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 与 PDF 文档进行流式对话（逐 token 返回）
+     */
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> streamChatWithPdf(@RequestBody @Validated ChatRequest request) {
+        if (request.getQuestion() == null || request.getQuestion().trim().isEmpty()) {
+            return Flux.error(new IllegalArgumentException("问题不能为空"));
+        }
+
+        if (request.getSessionId() == null || request.getSessionId().trim().isEmpty()) {
+            return Flux.error(new IllegalArgumentException("session_id 不能为空，请先上传 PDF 文件"));
+        }
+
+        try {
+            return pdfAgentService.streamChat(request.getSessionId(), request.getQuestion())
+                    .map(token -> "data: " + token + "\n\n");
+        } catch (Exception e) {
+            return Flux.error(e);
         }
     }
 
