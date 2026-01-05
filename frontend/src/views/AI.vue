@@ -8,18 +8,31 @@
                 :class="['chat-message', message.role]"
             >
                 <div class="message-content">
+                    <!-- ✅ 流式阶段：纯文本显示 -->
                     <div
-                        class="message-text markdown-body assistant-markdown"
-                        v-html="renderMarkdown(message.content)"
+                        v-if="message.role === 'assistant' && message.streaming"
+                        class="message-text assistant-streaming"
+                        v-text="message.content"
                     ></div>
+
+                    <!-- ✅ 非流式：markdown 渲染 -->
+                    <div
+                        v-else
+                        class="message-text markdown-body assistant-markdown"
+                        v-html="message.html ?? renderMarkdown(message.content)"
+                    ></div>
+
                     <div class="message-time">
                         {{ formatTime(message.timestamp) }}
                     </div>
                 </div>
             </div>
 
-            <!-- 加载状态 -->
-            <div v-if="isLoading" class="chat-message assistant">
+            <!-- ✅ 加载状态：仅在没有流式消息时显示 -->
+            <div
+                v-if="isLoading && !messages[messages.length - 1]?.streaming"
+                class="chat-message assistant"
+            >
                 <div class="message-content">
                     <div class="typing-indicator">
                         <span></span>
@@ -123,12 +136,13 @@
                 支持PDF格式文档（≤10MB）｜拖拽上传或点击按钮｜分析前10页内容｜多轮对话记住上下文
             </div>
         </div>
+
         <!-- ✅ 材料类型选择弹窗 -->
         <div v-if="showTypeModal" class="modal-mask" @click.self="() => {}">
             <div class="modal-card">
                 <div class="modal-title">请选择材料类型</div>
                 <div class="modal-sub">
-                    选择后我会按对应“保研场景”输出更精准的结构与模板。
+                    选择后我会按对应"保研场景"输出更精准的结构与模板。
                 </div>
 
                 <div class="type-grid">
@@ -171,8 +185,18 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
-import { uploadPdfAPI, chatPdfAPI, clearPdfSessionAPI } from '@/api/pdf'
+import {
+    ref,
+    computed,
+    nextTick,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    reactive
+} from 'vue'
+
+import { uploadPdfAPI, clearPdfSessionAPI, chatPdfStreamAPI } from '@/api/pdf'
+import { debugStreamSSE } from '@/utils/sseDebug'
 
 // 响应式数据
 const messages = ref([])
@@ -186,16 +210,17 @@ const pdfInfo = ref(null)
 // DOM引用
 const chatContainer = ref(null)
 const fileInput = ref(null)
+const streamAborter = ref(null) // AbortController
 
 const PG_SYSTEM_PROMPT = `
 你是「保研/推免申请」方向的文书与材料优化助手，而不是就业求职简历顾问。
-请始终以“保研/夏令营/预推免/九推/导师套磁/科研经历展示/学术能力证明”为核心目标来分析与建议。
+请始终以"保研/夏令营/预推免/九推/导师套磁/科研经历展示/学术能力证明"为核心目标来分析与建议。
 
 【必须遵守】
-1) 不要把重点放在“找工作/企业招聘/大厂实习/HR筛选/面试技巧/岗位匹配”等就业语境上，除非用户明确要求。
+1) 不要把重点放在"找工作/企业招聘/大厂实习/HR筛选/面试技巧/岗位匹配"等就业语境上，除非用户明确要求。
 2) 输出内容优先服务：保研简历（学术版）、个人陈述/自述、套磁信、科研/竞赛经历表述、推荐信素材、PPT汇报（学术汇报/面试）等。
-3) 若用户问题模糊，请你先默认按“保研材料优化”来回答，并在开头用一句话说明你的保研视角。
-4) 建议尽量“可落地”：给可直接替换的表述模板、要点列表、可量化指标（论文/项目/比赛/排名/奖学金/科研产出等）。
+3) 若用户问题模糊，请你先默认按"保研材料优化"来回答，并在开头用一句话说明你的保研视角。
+4) 建议尽量"可落地"：给可直接替换的表述模板、要点列表、可量化指标（论文/项目/比赛/排名/奖学金/科研产出等）。
 5) 语言风格：学术申请场景，强调动机、方法、贡献、结果、复现、影响力；避免HR话术。
 
 【输出结构建议】
@@ -225,7 +250,7 @@ const TYPE_PROMPTS = {
 关注：科研/项目/论文/竞赛/排名/课程/技能/奖项的学术含金量与可验证性。
 必须输出：
 1) 一句话定位（研究方向+优势证据）
-2) 亮点条目（用“动作+方法+结果+量化”写法，每条≤2行）
+2) 亮点条目（用"动作+方法+结果+量化"写法，每条≤2行）
 3) 风险点（保研视角：科研深度、方向匹配、产出可信度）
 4) 给出可直接替换的简历条目改写（至少3条）
 避免：HR话术、岗位匹配、企业实习优先级（除非用户要求）。
@@ -237,8 +262,8 @@ const TYPE_PROMPTS = {
 必须输出：
 1) 推荐PPT目录（8-12页的页标题）
 2) 每页要点（每页3-5个bullet，讲什么、怎么讲）
-3) 2-3个“最容易被追问”的点 + 防守话术
-4) 可直接用的“开场/收尾”讲稿各1段
+3) 2-3个"最容易被追问"的点 + 防守话术
+4) 可直接用的"开场/收尾"讲稿各1段
 避免：商务汇报风、求职汇报套路。
 `.trim(),
 
@@ -249,7 +274,7 @@ const TYPE_PROMPTS = {
 1) 邮件主题（给2-3个备选）
 2) 邮件正文（中文/英文按用户语言；默认中文，可附英文版本）
 3) 结构：问候-自我介绍-研究匹配-你做过什么-想要什么-附件/链接-致谢
-4) 给出“可替换变量位”（导师课题/你项目/论文/链接）
+4) 给出"可替换变量位"（导师课题/你项目/论文/链接）
 避免：夸张吹捧、长篇流水账、把导师当HR。
 `.trim(),
 
@@ -260,16 +285,16 @@ const TYPE_PROMPTS = {
 1) 1分钟自我介绍稿 + 3分钟自我介绍稿
 2) 项目讲解模板：背景-目标-方法-你的贡献-结果-不足与改进（每段给示例句）
 3) 3个高频追问点 + 参考回答（简洁有证据）
-避免：空泛形容词、没有证据的“我很热爱科研”。
+避免：空泛形容词、没有证据的"我很热爱科研"。
 `.trim(),
 
     mock: `
 你现在扮演【面试官】，为保研/夏令营进行模拟提问与追问。
 规则：
 1) 先基于PDF内容给出：10个问题（由浅入深，覆盖动机/方向/项目/科研方法/基础知识/未来计划）
-2) 每个问题给“考察点”
+2) 每个问题给"考察点"
 3) 再随机挑3题进行二次追问（更尖锐、更细节）
-4) 最后给“回答建议框架”（STAR/科研五段式等）
+4) 最后给"回答建议框架"（STAR/科研五段式等）
 避免：企业面试题、八股求职题（除非用户要求）。
 `.trim()
 }
@@ -306,6 +331,16 @@ const renderMarkdown = text => {
     return DOMPurify.sanitize(html)
 }
 
+// ✅ assistant 占位：用 reactive 保证后续修改能触发视图更新
+const assistantMsg = reactive({
+    role: 'assistant',
+    content: '',
+    html: null,
+    streaming: true,
+    timestamp: new Date()
+})
+messages.value.push(assistantMsg)
+
 // 计算属性
 const canSend = computed(() => {
     return (
@@ -326,7 +361,7 @@ onMounted(() => {
     })
 })
 
-// 监听消息变化自动滚动
+// 监听消息变化自动滚动（仅针对新消息，流式时在 flush 中处理）
 watch(
     () => messages.value.length,
     () => {
@@ -340,11 +375,12 @@ watch(
 
 // 组件卸载前清除会话
 onBeforeUnmount(() => {
+    // 取消正在进行的流式请求
+    try {
+        streamAborter.value?.abort?.()
+    } catch {}
     clearSession()
 })
-
-// 格式化消息内容
-const formatMessage = content => content.replace(/\n/g, '<br>')
 
 // 格式化时间
 const formatTime = timestamp => {
@@ -410,14 +446,11 @@ const handleFileUpload = async files => {
     isLoading.value = true
 
     try {
-        // ✅ 1️⃣ 在这里明确创建 formData
         const formData = new FormData()
         formData.append('file', file)
 
-        // ✅ 2️⃣ 调用 API（注意：返回的就是 body）
         const body = await uploadPdfAPI(formData)
 
-        // ✅ 3️⃣ 走到这里 = 一定成功
         uploadedFiles.value = [{ name: file.name, size: file.size, file }]
 
         sessionId.value = body.data.session_id
@@ -432,6 +465,7 @@ const handleFileUpload = async files => {
             }\n现在你可以向我提问关于这份文档的任何问题了！`,
             timestamp: new Date()
         })
+
         // ✅ 上传后要求先选择材料类型
         showTypeModal.value = true
         typeConfirmed.value = false
@@ -470,55 +504,97 @@ const removeFile = async () => {
     })
 }
 
-// 发送消息（axios版）
+// ✅ 发送消息（流式版 + rAF 优化）
 const handleSendMessage = async () => {
     if (!canSend.value) return
 
-    if (!sessionId.value) {
-        messages.value.push({
-            role: 'assistant',
-            content: '⚠️ 请先上传PDF文件后再提问。',
-            timestamp: new Date()
-        })
-        return
-    }
-
     const userMsg = inputMessage.value.trim()
-
     messages.value.push({
         role: 'user',
         content: userMsg,
         timestamp: new Date()
     })
-
     inputMessage.value = ''
     isLoading.value = true
 
-    try {
-        const body = await chatPdfAPI({
-            session_id: sessionId.value,
-            question: buildQuestion(userMsg)
-        })
-        // 这里 body 就是 { code:200, data:{answer:...}, msg:... }
-        messages.value.push({
-            role: 'assistant',
-            content: body.data.answer,
-            timestamp: new Date()
-        })
-    } catch (error) {
-        const msg =
-            error?.response?.data?.msg ||
-            error?.response?.data?.message ||
-            error?.message ||
-            '回答失败'
+    // ✅ assistant 占位：增加 streaming/html 字段
+    const assistantMsg = {
+        role: 'assistant',
+        content: '',
+        html: null,
+        streaming: true,
+        timestamp: new Date()
+    }
+    messages.value.push(assistantMsg)
 
-        messages.value.push({
-            role: 'assistant',
-            content: `❌ 回答失败：${msg}\n\n可能的原因：\n• 会话已过期，请重新上传PDF\n• 服务器连接失败（检查 /api 代理、后端端口、跨域配置）\n• API调用异常`,
-            timestamp: new Date()
+    // ✅ AbortController
+    const ac = new AbortController()
+    streamAborter.value = ac
+
+    // ✅ token 缓冲 + 每帧最多更新一次
+    let buffer = ''
+    let rafPending = false
+
+    const flush = () => {
+        rafPending = false
+        if (!buffer) return
+        assistantMsg.content += buffer
+        buffer = ''
+
+        // ✅ 滚动也别每 token 做，跟随 rAF 做一次即可
+        nextTick(() => {
+            if (chatContainer.value) {
+                chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+            }
+        })
+    }
+
+    const scheduleFlush = () => {
+        if (rafPending) return
+        rafPending = true
+        requestAnimationFrame(flush)
+    }
+
+    try {
+        await debugStreamSSE({
+            url: '/api/pdf/chat/stream',
+            payload: {
+                session_id: sessionId.value,
+                question: buildQuestion(userMsg)
+            },
+            signal: ac.signal,
+            debug: true,
+
+            onOpen(resp) {
+                console.log('[UI] stream open')
+            },
+
+            onToken(token) {
+                buffer += token
+                scheduleFlush()
+            },
+
+            onDone(info) {
+                // ✅ 把尾巴刷出来
+                flush()
+
+                // ✅ 结束后一次性把最终文本转 markdown（只做 1 次）
+                assistantMsg.streaming = false
+                assistantMsg.html = renderMarkdown(assistantMsg.content)
+
+                console.log('[UI] stream done', info)
+            },
+
+            onError(e) {
+                flush()
+                assistantMsg.streaming = false
+                assistantMsg.content += `\n\n❌ 流式失败：${e?.message || e}`
+                assistantMsg.html = renderMarkdown(assistantMsg.content)
+            }
         })
     } finally {
         isLoading.value = false
+        streamAborter.value = null
     }
 }
 </script>
@@ -601,7 +677,15 @@ const handleSendMessage = async () => {
 
 /* 专门给 AI 输出用 */
 .assistant-markdown {
-    padding: 6px 4px; /* 👈 关键 */
+    padding: 6px 4px;
+}
+
+/* ✅ 流式阶段：纯文本显示 */
+.assistant-streaming {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 14px;
 }
 
 /* 打字动画 */
@@ -797,6 +881,7 @@ const handleSendMessage = async () => {
     font-weight: 600;
 }
 
+/* 弹窗样式 */
 .modal-mask {
     position: fixed;
     inset: 0;
@@ -867,6 +952,10 @@ const handleSendMessage = async () => {
     cursor: pointer;
     color: #fff;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.confirm-btn:hover {
+    opacity: 0.9;
 }
 
 /* 响应式 */

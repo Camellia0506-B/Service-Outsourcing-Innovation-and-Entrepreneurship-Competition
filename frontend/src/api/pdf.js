@@ -27,3 +27,26 @@ export function chatPdfAPI({ session_id, question }) {
 export function clearPdfSessionAPI(session_id) {
     return pdfHttp.post('/pdf/clear', { session_id })
 }
+
+export async function chatPdfStreamAPI({ session_id, question, signal }) {
+    // ⚠️ 这里的 baseURL 你按项目实际情况：一般是 '/api/v1'
+    const url = `/api/v1/pdf/chat/stream`
+
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id, question }),
+        signal
+    })
+
+    if (!resp.ok) {
+        // HTTP 层错误（比如 502、404）
+        throw new Error(`HTTP ${resp.status} ${resp.statusText}`)
+    }
+
+    if (!resp.body) {
+        throw new Error('响应不包含可读流（resp.body 为空）')
+    }
+
+    return resp // 返回 response，让上层自己 reader.read()
+}
