@@ -3,8 +3,8 @@
         <!-- 聊天消息区域 -->
         <div class="chat-container" ref="chatContainer">
             <div
-                v-for="(message, index) in messages"
-                :key="index"
+                v-for="message in messages"
+                :key="message.id"
                 :class="['chat-message', message.role]"
             >
                 <div class="message-content">
@@ -196,7 +196,7 @@ import {
 } from 'vue'
 
 import { uploadPdfAPI, clearPdfSessionAPI, chatPdfStreamAPI } from '@/api/pdf'
-import { debugStreamSSE } from '@/utils/sseDebug'
+// import { debugStreamSSE } from '@/utils/sseDebug'
 
 // 响应式数据
 const messages = ref([])
@@ -211,6 +211,9 @@ const pdfInfo = ref(null)
 const chatContainer = ref(null)
 const fileInput = ref(null)
 const streamAborter = ref(null) // AbortController
+
+const genId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`
+const findMsgById = id => messages.value.find(m => m?.id === id)
 
 const PG_SYSTEM_PROMPT = `
 你是「保研/推免申请」方向的文书与材料优化助手，而不是就业求职简历顾问。
@@ -331,15 +334,82 @@ const renderMarkdown = text => {
     return DOMPurify.sanitize(html)
 }
 
+async function streamSSEPost({ url, payload, signal, onEvent }) {
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'text/event-stream'
+        },
+        body: JSON.stringify(payload),
+        signal
+    })
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+
+    const reader = resp.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+
+    let pending = ''
+    let curEvent = 'message'
+    let curDataLines = []
+
+    const emit = () => {
+        // 允许 data 为空（data: 表示换行）
+        const data = curDataLines.join('\n')
+        onEvent?.({ event: curEvent, data })
+    }
+
+    while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        // 兼容 CRLF
+        pending += decoder
+            .decode(value, { stream: true })
+            .replace(/\r\n/g, '\n')
+
+        // 按 SSE 规范：\n\n 分隔一个事件块
+        let idx
+        while ((idx = pending.indexOf('\n\n')) !== -1) {
+            const block = pending.slice(0, idx)
+            pending = pending.slice(idx + 2)
+
+            const lines = block.split('\n')
+            curEvent = 'message'
+            curDataLines = []
+
+            for (const line of lines) {
+                if (!line || line.startsWith(':')) continue
+                if (line.startsWith('event:')) curEvent = line.slice(6).trim()
+                else if (line.startsWith('data:'))
+                    curDataLines.push(line.slice(5))
+            }
+
+            emit()
+
+            // done 事件 / [DONE]：结束
+            if (curEvent === 'done' || curDataLines.join('\n') === '[DONE]') {
+                try {
+                    reader.cancel()
+                } catch {}
+                return
+            }
+        }
+    }
+}
+
 // ✅ assistant 占位：用 reactive 保证后续修改能触发视图更新
-const assistantMsg = reactive({
+const assistantId = genId()
+messages.value.push({
+    id: assistantId,
     role: 'assistant',
     content: '',
     html: null,
     streaming: true,
     timestamp: new Date()
 })
-messages.value.push(assistantMsg)
+// messages.value.push(assistantMsg)
 
 // 计算属性
 const canSend = computed(() => {
@@ -354,6 +424,7 @@ const canSend = computed(() => {
 // 初始化欢迎消息
 onMounted(() => {
     messages.value.push({
+        id: genId(),
         role: 'assistant',
         content:
             '你好！我是「保研文书AI助手」📄\n\n我可以帮你阅读和打磨简历/套磁信/PPT内容：\n\n• 上传PDF文件（支持拖拽上传）\n\n• 询问文档中的任何内容\n\n• 多轮对话，记住上下文\n\n• 智能提取关键信息\n\n请上传一份PDF文件开始吧！支持最多10页的文档分析。',
@@ -457,6 +528,7 @@ const handleFileUpload = async files => {
         pdfInfo.value = body.data
 
         messages.value.push({
+            id: genId(),
             role: 'assistant',
             content: `✅ PDF文件上传成功！\n\n文件名：${
                 body.data.filename
@@ -471,6 +543,7 @@ const handleFileUpload = async files => {
         typeConfirmed.value = false
 
         messages.value.push({
+            id: genId(),
             role: 'assistant',
             content:
                 '📌 请先选择这份PDF属于哪种材料：\n\n (1) 简历  (2) 面试PPT  (3) 套磁邮件  (4) 面试文字稿  (5) 模拟提问 \n\n选择后我会按对应场景给你更精准的建议。',
@@ -480,6 +553,7 @@ const handleFileUpload = async files => {
         console.error('[upload err]', err)
 
         messages.value.push({
+            id: genId(),
             role: 'assistant',
             content: `❌ 上传失败：${err.message || '未知错误'}`,
             timestamp: new Date()
@@ -498,13 +572,14 @@ const removeFile = async () => {
     }
     uploadedFiles.value = []
     messages.value.push({
+        id: genId(),
         role: 'assistant',
         content: '文件已移除，请上传新的PDF文件开始对话。',
         timestamp: new Date()
     })
 }
 
-// ✅ 发送消息（流式版 + rAF 优化）
+// ✅ 发送消息（流式版 + rAF + 打字机节流）
 const handleSendMessage = async () => {
     if (!canSend.value) return
 
@@ -517,81 +592,93 @@ const handleSendMessage = async () => {
     inputMessage.value = ''
     isLoading.value = true
 
-    // ✅ assistant 占位：增加 streaming/html 字段
-    const assistantMsg = {
+    // ✅ assistant 占位：必须 reactive
+    const assistantMsg = reactive({
         role: 'assistant',
         content: '',
         html: null,
         streaming: true,
         timestamp: new Date()
-    }
+    })
     messages.value.push(assistantMsg)
 
     // ✅ AbortController
     const ac = new AbortController()
     streamAborter.value = ac
 
-    // ✅ token 缓冲 + 每帧最多更新一次
-    let buffer = ''
-    let rafPending = false
+    // ====== 打字机参数（你只调这两个）======
+    const CHUNK_CHARS = 4 // 每次吐几个字（小=慢）
+    const TICK_MS = 60 // 间隔 ms（大=慢）
+    // ======================================
 
-    const flush = () => {
-        rafPending = false
-        if (!buffer) return
-        assistantMsg.content += buffer
-        buffer = ''
+    let queue = ''
+    let timer = null
+    let ended = false
 
-        // ✅ 滚动也别每 token 做，跟随 rAF 做一次即可
-        nextTick(() => {
-            if (chatContainer.value) {
-                chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-            }
-        })
+    const forceRerender = () => {
+        // ✅ 关键：强制 Vue 触发一次 v-for 的更新（解决你现在的“气泡空白”）
+        messages.value = [...messages.value]
     }
 
-    const scheduleFlush = () => {
-        if (rafPending) return
-        rafPending = true
-        requestAnimationFrame(flush)
+    const startTyping = () => {
+        if (timer) return
+        timer = setInterval(() => {
+            if (!queue) {
+                if (ended) {
+                    clearInterval(timer)
+                    timer = null
+                    assistantMsg.streaming = false
+                    assistantMsg.html = renderMarkdown(assistantMsg.content)
+                    forceRerender()
+                }
+                return
+            }
+
+            const take = queue.slice(0, CHUNK_CHARS)
+            queue = queue.slice(CHUNK_CHARS)
+
+            assistantMsg.content += take
+            forceRerender()
+
+            nextTick(() => {
+                if (chatContainer.value) {
+                    chatContainer.value.scrollTop =
+                        chatContainer.value.scrollHeight
+                }
+            })
+        }, TICK_MS)
     }
 
     try {
-        await debugStreamSSE({
-            url: '/api/pdf/chat/stream',
+        await streamSSEPost({
+            url: '/api/pdf/chat/stream', // 走你前端 proxy 的路径
             payload: {
+                // ✅ 注意：你后端 ChatRequest 是 sessionId（驼峰）
+                // 如果你后端已经支持 snake_case 就无所谓；不支持就必须改成 sessionId
                 session_id: sessionId.value,
                 question: buildQuestion(userMsg)
             },
             signal: ac.signal,
-            debug: true,
-
-            onOpen(resp) {
-                console.log('[UI] stream open')
-            },
-
-            onToken(token) {
-                buffer += token
-                scheduleFlush()
-            },
-
-            onDone(info) {
-                // ✅ 把尾巴刷出来
-                flush()
-
-                // ✅ 结束后一次性把最终文本转 markdown（只做 1 次）
-                assistantMsg.streaming = false
-                assistantMsg.html = renderMarkdown(assistantMsg.content)
-
-                console.log('[UI] stream done', info)
-            },
-
-            onError(e) {
-                flush()
-                assistantMsg.streaming = false
-                assistantMsg.content += `\n\n❌ 流式失败：${e?.message || e}`
-                assistantMsg.html = renderMarkdown(assistantMsg.content)
+            onEvent: ({ event, data }) => {
+                if (event === 'token') {
+                    queue += data ?? ''
+                    startTyping()
+                } else if (event === 'done' || data === '[DONE]') {
+                    ended = true
+                } else if (event === 'error') {
+                    ended = true
+                    queue += `\n\n❌ ${data || '流式异常'}`
+                    startTyping()
+                }
             }
         })
+        ended = true
+    } catch (e) {
+        if (e?.name !== 'AbortError') {
+            ended = true
+            queue += `\n\n❌ 流式失败：${e?.message || e}`
+            startTyping()
+        }
     } finally {
         isLoading.value = false
         streamAborter.value = null
