@@ -12,8 +12,18 @@
                     <div
                         v-if="message.role === 'assistant' && message.streaming"
                         class="message-text assistant-streaming"
-                        v-html="renderStreamingMarkdown(message.content)"
-                    />
+                    >
+                        <!-- ✅ 首 token 未到：显示等待动画 -->
+                        <div v-if="waitingFirstToken" class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+
+                        <!-- ✅ 已有 token：开始流式内容 -->
+                        <div
+                            v-else
+                            v-html="renderStreamingMarkdown(message.content)"
+                        />
+                    </div>
 
                     <!-- ✅ 非流式：markdown 渲染 -->
                     <div
@@ -211,6 +221,7 @@ const pdfInfo = ref(null)
 const chatContainer = ref(null)
 const fileInput = ref(null)
 const streamAborter = ref(null) // AbortController
+const waitingFirstToken = ref(false)
 
 const genId = () => `${Date.now()}_${Math.random().toString(16).slice(2)}`
 const findMsgById = id => messages.value.find(m => m?.id === id)
@@ -329,8 +340,16 @@ ${userMsg}
 import md from '@/utils/markdown'
 import DOMPurify from 'dompurify'
 
+const normalizeMarkdown = (s = '') =>
+    s
+        // 1️⃣ 去掉全文 BOM / 零宽字符
+        .replace(/^\uFEFF/, '')
+        .replace(/\u200B/g, '')
+        // 2️⃣ 关键：去掉“行首所有空白 + #”
+        .replace(/^[ \t\u3000]+(?=#{1,6}\s*)/gm, '')
+
 const renderMarkdown = text => {
-    const html = md.render(text || '')
+    const html = md.render(normalizeMarkdown(text || ''))
     return DOMPurify.sanitize(html)
 }
 
@@ -615,6 +634,7 @@ const handleSendMessage = async () => {
         timestamp: new Date()
     })
     messages.value.push(assistantMsg)
+    waitingFirstToken.value = true
 
     // ✅ AbortController
     const ac = new AbortController()
@@ -673,11 +693,18 @@ const handleSendMessage = async () => {
             signal: ac.signal,
             onEvent: ({ event, data }) => {
                 if (event === 'token') {
+                    // ✅ 第一个“非空 token”到来
+                    if (waitingFirstToken.value && data && data.trim()) {
+                        waitingFirstToken.value = false
+                    }
+
                     queue += data ?? ''
                     startTyping()
                 } else if (event === 'done' || data === '[DONE]') {
+                    waitingFirstToken.value = false
                     ended = true
                 } else if (event === 'error') {
+                    waitingFirstToken.value = false
                     ended = true
                     queue += `\n\n❌ ${data || '流式异常'}`
                     startTyping()
@@ -1055,6 +1082,51 @@ const handleSendMessage = async () => {
 
 .confirm-btn:hover {
     opacity: 0.9;
+}
+
+.thinking-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    color: #667eea;
+    font-size: 13px;
+}
+
+.thinking-indicator span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #667eea;
+    animation: thinking 1.4s infinite ease-in-out;
+}
+
+.thinking-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+.thinking-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.thinking-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.thinking-text {
+    margin-left: 6px;
+    opacity: 0.7;
+}
+
+@keyframes thinking {
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* 响应式 */
