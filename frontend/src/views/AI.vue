@@ -12,8 +12,8 @@
                     <div
                         v-if="message.role === 'assistant' && message.streaming"
                         class="message-text assistant-streaming"
-                        v-text="message.content"
-                    ></div>
+                        v-html="renderStreamingMarkdown(message.content)"
+                    />
 
                     <!-- ✅ 非流式：markdown 渲染 -->
                     <div
@@ -401,14 +401,14 @@ async function streamSSEPost({ url, payload, signal, onEvent }) {
 
 // ✅ assistant 占位：用 reactive 保证后续修改能触发视图更新
 const assistantId = genId()
-messages.value.push({
-    id: assistantId,
-    role: 'assistant',
-    content: '',
-    html: null,
-    streaming: true,
-    timestamp: new Date()
-})
+// messages.value.push({
+//     id: assistantId,
+//     role: 'assistant',
+//     content: '',
+//     html: null,
+//     streaming: true,
+//     timestamp: new Date()
+// })
 // messages.value.push(assistantMsg)
 
 // 计算属性
@@ -579,6 +579,20 @@ const removeFile = async () => {
     })
 }
 
+const renderStreamingMarkdown = text => {
+    if (!text) return ''
+
+    return DOMPurify.sanitize(
+        text
+            // 换行
+            .replace(/\n/g, '<br/>')
+            // 加粗
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            // 列表
+            .replace(/^\s*[-*]\s+(.*)$/gm, '• $1')
+    )
+}
+
 // ✅ 发送消息（流式版 + rAF + 打字机节流）
 const handleSendMessage = async () => {
     if (!canSend.value) return
@@ -653,8 +667,6 @@ const handleSendMessage = async () => {
         await streamSSEPost({
             url: '/api/pdf/chat/stream', // 走你前端 proxy 的路径
             payload: {
-                // ✅ 注意：你后端 ChatRequest 是 sessionId（驼峰）
-                // 如果你后端已经支持 snake_case 就无所谓；不支持就必须改成 sessionId
                 session_id: sessionId.value,
                 question: buildQuestion(userMsg)
             },
