@@ -354,6 +354,10 @@ const renderMarkdown = text => {
 }
 
 async function streamSSEPost({ url, payload, signal, onEvent }) {
+    // ✅ [DBG] 开始时间
+    const t0 = performance.now()
+    console.log('[SSE][T0] start', url)
+
     const resp = await fetch(url, {
         method: 'POST',
         headers: {
@@ -364,6 +368,15 @@ async function streamSSEPost({ url, payload, signal, onEvent }) {
         signal
     })
 
+    // ✅ [DBG] 拿到 headers
+    console.log(
+        '[SSE][T1] headers',
+        (performance.now() - t0).toFixed(1),
+        'ms',
+        'status=',
+        resp.status
+    )
+
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
 
     const reader = resp.body.getReader()
@@ -373,9 +386,26 @@ async function streamSSEPost({ url, payload, signal, onEvent }) {
     let curEvent = 'message'
     let curDataLines = []
 
+    // ✅ [DBG] 第一次 chunk / 第一次 emit
+    let firstChunkLogged = false
+    let firstEmitLogged = false
+
     const emit = () => {
-        // 允许 data 为空（data: 表示换行）
         const data = curDataLines.join('\n')
+
+        if (!firstEmitLogged) {
+            firstEmitLogged = true
+            console.log(
+                '[SSE][T3] first emit',
+                (performance.now() - t0).toFixed(1),
+                'ms',
+                'event=',
+                curEvent,
+                'dataLen=',
+                data.length
+            )
+        }
+
         onEvent?.({ event: curEvent, data })
     }
 
@@ -383,12 +413,21 @@ async function streamSSEPost({ url, payload, signal, onEvent }) {
         const { value, done } = await reader.read()
         if (done) break
 
-        // 兼容 CRLF
+        if (!firstChunkLogged) {
+            firstChunkLogged = true
+            console.log(
+                '[SSE][T2] first chunk',
+                (performance.now() - t0).toFixed(1),
+                'ms',
+                'bytes=',
+                value?.byteLength ?? 0
+            )
+        }
+
         pending += decoder
             .decode(value, { stream: true })
             .replace(/\r\n/g, '\n')
 
-        // 按 SSE 规范：\n\n 分隔一个事件块
         let idx
         while ((idx = pending.indexOf('\n\n')) !== -1) {
             const block = pending.slice(0, idx)
@@ -407,7 +446,6 @@ async function streamSSEPost({ url, payload, signal, onEvent }) {
 
             emit()
 
-            // done 事件 / [DONE]：结束
             if (curEvent === 'done' || curDataLines.join('\n') === '[DONE]') {
                 try {
                     reader.cancel()
@@ -694,8 +732,27 @@ const handleSendMessage = async () => {
             onEvent: ({ event, data }) => {
                 if (event === 'token') {
                     // ✅ 第一个“非空 token”到来
-                    if (waitingFirstToken.value && data && data.trim()) {
+                    if (
+                        waitingFirstToken.value &&
+                        data &&
+                        data.replace(/\u200b/g, '').trim()
+                    ) {
                         waitingFirstToken.value = false
+                        console.log(
+                            '[UI][FIRST_TOKEN] got',
+                            performance.now().toFixed(1),
+                            'ms',
+                            'token=',
+                            data
+                        )
+
+                        requestAnimationFrame(() => {
+                            console.log(
+                                '[UI][PAINT] after first token',
+                                performance.now().toFixed(1),
+                                'ms'
+                            )
+                        })
                     }
 
                     queue += data ?? ''
