@@ -44,7 +44,7 @@
                         </span>
                         <span class="meta-item">
                             <i class="icon-comment">💬</i>
-                            {{ post.comment_count || 0 }} 回复
+                            {{ post.reply_count || 0 }} 回复
                         </span>
                     </div>
                 </div>
