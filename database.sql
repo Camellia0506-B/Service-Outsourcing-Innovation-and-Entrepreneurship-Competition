@@ -1,8 +1,22 @@
+-- 建库（存在则不重复创建）
+CREATE DATABASE IF NOT EXISTS gradquest
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+
+-- 2) 建用户（只允许本机）
+CREATE USER IF NOT EXISTS 'gradquest'@'localhost'
+  IDENTIFIED WITH mysql_native_password BY 'Gradquest123!';
+
+-- 3) 授权
+GRANT ALL PRIVILEGES ON gradquest.* TO 'gradquest'@'localhost';
+FLUSH PRIVILEGES;
+
 USE gradquest;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- 先删表（按依赖顺序删也行，但关闭外键检查就无所谓）
 DROP TABLE IF EXISTS forum_comments;
 DROP TABLE IF EXISTS forum_posts;
 DROP TABLE IF EXISTS shared_resources;
@@ -11,8 +25,6 @@ DROP TABLE IF EXISTS user_follows;
 DROP TABLE IF EXISTS app_daily_content;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS universities;
-
-SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. 高校基本信息表
 CREATE TABLE universities (
@@ -24,7 +36,7 @@ CREATE TABLE universities (
   PRIMARY KEY (id),
   KEY idx_universities_name (name),
   KEY idx_universities_tags (tags)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='高校基本信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='高校基本信息';
 
 -- 6. 用户表
 CREATE TABLE users (
@@ -35,7 +47,7 @@ CREATE TABLE users (
   avatar    VARCHAR(255) NULL COMMENT '头像链接',
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_username (username)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户';
 
 -- 2. 招生通知表
 CREATE TABLE camp_notices (
@@ -52,7 +64,7 @@ CREATE TABLE camp_notices (
   CONSTRAINT fk_camp_notices_univ
     FOREIGN KEY (univ_id) REFERENCES universities(id)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='招生通知';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='招生通知';
 
 -- 3. 经验帖子表
 CREATE TABLE forum_posts (
@@ -74,7 +86,7 @@ CREATE TABLE forum_posts (
   CONSTRAINT fk_forum_posts_user
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='论坛帖子';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='论坛帖子';
 
 -- 4. 帖子评论表
 CREATE TABLE forum_comments (
@@ -93,7 +105,7 @@ CREATE TABLE forum_comments (
   CONSTRAINT fk_forum_comments_user
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='帖子评论';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='帖子评论';
 
 -- 5. 共享资料表
 CREATE TABLE shared_resources (
@@ -114,7 +126,7 @@ CREATE TABLE shared_resources (
   CONSTRAINT fk_shared_resources_user
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='共享资料';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='共享资料';
 
 -- 7. 用户关注表
 CREATE TABLE user_follows (
@@ -132,7 +144,7 @@ CREATE TABLE user_follows (
   CONSTRAINT fk_user_follows_univ
     FOREIGN KEY (univ_id) REFERENCES universities(id)
     ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户关注';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户关注';
 
 -- 8. 每日/全局配置表
 CREATE TABLE app_daily_content (
@@ -142,7 +154,13 @@ CREATE TABLE app_daily_content (
   bg_image VARCHAR(255) NULL COMMENT '每日背景图url',
   PRIMARY KEY (id),
   UNIQUE KEY uk_app_daily_content_date (date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='每日/全局配置';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='每日/全局配置';
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+ALTER USER 'gradquest'@'localhost'
+  IDENTIFIED WITH mysql_native_password BY 'Gradquest123!';
+FLUSH PRIVILEGES;
 
 -- universities
 INSERT INTO universities (id,name,logo_url,intro,tags) VALUES
@@ -892,3 +910,5 @@ b.考生须在面试过程中进行音乐能力展示，可演奏某种乐器或
   (140,'未来技术学院','未来技术学院','我院暂定于2025年9月18日（周四）全天开展复试工作，具体复试时间以复试通知为准','2025-09-18 00:00:00','https://ai.shu.edu.cn/info/1087/3568.htm'),
   (149,'计算机科学与技术学院（大数据学院）','计算机科学与技术学院（大数据学院）','研究生院通过该“推免系统”和学院报送的接收名单审核推免生报名志愿，对符合申请条件者发送复试通知、待录取通知','2025-09-20 00:00:00','https://ccst.tyut.edu.cn/info/2123/13911.htm'),
   (150,'ALL','ALL','温特母校！极力推荐！！！','2025-09-19 12:00:00','https://yjsy.sdust.edu.cn/zhaosheng/info/1090/1840.htm');
+
+

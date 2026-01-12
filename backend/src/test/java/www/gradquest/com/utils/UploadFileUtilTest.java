@@ -3,6 +3,7 @@ package www.gradquest.com.utils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,10 +11,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class UploadFileUtilTest {
 
     @Test
-    void testUpload() {
+    void testUpload() throws URISyntaxException {
         // 获取测试资源文件（test.pdf）
-        File testFile = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("test.pdf")).getFile());
+        var url = getClass().getClassLoader().getResource("test.pdf");
+        assertNotNull(url, "test.pdf should exist in src/test/resources.");
 
+        File testFile = new File(url.toURI()); // ⭐ 关键修复点
         // 校验文件存在性
         assertNotNull(testFile, "test.pdf should exist in the resources folder.");
         assertTrue(testFile.exists(), "test.pdf should exist in the resources folder.");

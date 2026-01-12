@@ -2,9 +2,9 @@
   application:
     name: gradquest-backend
   datasource:
-    url: jdbc:mysql://113.44.142.91:3306/gradquest
-    username: zzr
-    password: Zzr123456!
+    url: jdbc:mysql://127.0.0.1:3306/gradquest?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8
+    username: gradquest
+    password: Gradquest123!
     driver-class-name: com.mysql.cj.jdbc.Driver
   jackson:
     property-naming-strategy: SNAKE_CASE
@@ -36,3 +36,7 @@ doubao:
   model: doubao-seed-1-6-251015
   base:
     url: https://ark.cn-beijing.volces.com/api/v3
+
+logging:
+  level:
+    com.zaxxer.hikari: DEBUG

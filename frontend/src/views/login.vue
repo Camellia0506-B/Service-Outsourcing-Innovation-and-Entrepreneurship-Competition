@@ -30,21 +30,21 @@
                     /></el-icon>
                 </el-upload> -->
                 <el-upload
-                class="avatar-uploader"
-                :auto-upload="false"
-                :show-file-list="false"
-                :on-change="onAvatarChange"
+                    class="avatar-uploader"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    :on-change="onAvatarChange"
                 >
-                <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-                <el-icon v-else class="avatar-uploader-icon">
-                    <Plus />
-                </el-icon>
+                    <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+                    <el-icon v-else class="avatar-uploader-icon">
+                        <Plus />
+                    </el-icon>
                 </el-upload>
                 <!-- 时间显示容器 -->
                 <div v-if="showTime" class="time-display">
                     {{ formattedTime }}
                 </div>
-                <img src="@/icons/front_logo.png" class="front-logo"  alt="">
+                <img src="@/icons/front_logo.png" class="front-logo" alt="" />
                 <h1>{{ title }}</h1>
                 <a href="#" class="create" @click="handleLoginClick2"
                     >注册账号</a
@@ -148,7 +148,9 @@
                         />
                     </el-form-item>
                     <el-form-item>
-                        <el-button type="primary" round @click="handleRegister">加入我们!</el-button>
+                        <el-button type="primary" round @click="handleRegister"
+                            >加入我们!</el-button
+                        >
                     </el-form-item>
                 </el-form>
             </div>
@@ -159,8 +161,8 @@
 <script>
 import { Lock, User, Plus, Calendar } from '@element-plus/icons-vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { loginAPI } from "@/api/auth";
-import { registerAPI } from "@/api/auth";
+import { loginAPI } from '@/api/auth'
+import { registerAPI } from '@/api/auth'
 
 export default {
     methods: {
@@ -209,34 +211,37 @@ export default {
         },
         async handleLogin() {
             if (!this.username || !this.password) {
-                this.$message.error("请输入用户名和密码");
-                return;
+                this.$message.error('请输入用户名和密码')
+                return
             }
             try {
-                const res = await loginAPI({ username: this.username, password: this.password });
-                const user = res.data; // ✅ {id, username, nickname, avatar}
+                const res = await loginAPI({
+                    username: this.username,
+                    password: this.password
+                })
+                const user = res.data // ✅ {id, username, nickname, avatar}
 
-                localStorage.setItem("user_id", String(user.id));
-                localStorage.setItem("user_info", JSON.stringify(user));
+                localStorage.setItem('user_id', String(user.id))
+                localStorage.setItem('user_info', JSON.stringify(user))
 
-                this.$message.success(res.msg || "登录成功");
-                this.$router.push("/main");
+                this.$message.success(res.msg || '登录成功')
+                this.$router.push('/main')
             } catch (e) {
-                this.$message.error(e?.message || "登录失败");
+                this.$message.error(e?.message || '登录失败')
             }
         },
         onAvatarChange(uploadFile) {
-            this.avatarFile = uploadFile.raw;
-            this.imageUrl = URL.createObjectURL(uploadFile.raw);
+            this.avatarFile = uploadFile.raw
+            this.imageUrl = URL.createObjectURL(uploadFile.raw)
         },
         async handleRegister() {
             if (!this.username1 || !this.password1 || !this.confirmPassword) {
-                this.$message.error("请填写用户名和密码");
-                return;
+                this.$message.error('请填写用户名和密码')
+                return
             }
             if (this.password1 !== this.confirmPassword) {
-                this.$message.error("两次密码不一致");
-                return;
+                this.$message.error('两次密码不一致')
+                return
             }
 
             try {
@@ -244,23 +249,24 @@ export default {
                     username: this.username1,
                     password: this.password1,
                     nickname: this.username1, // ✅ 你现在没输入 nickname，就先用 username 顶一下
-                    avatarFile: this.avatarFile,
-                });
+                    avatarFile: this.avatarFile
+                })
 
-                this.$message.success(res.msg || "注册成功，请登录");
+                this.$message.success(res.msg || '注册成功，请登录')
 
                 // 注册成功后：切到登录面板
-                this.isActive2 = false;
-                this.title = "Log In";
-                this.isActive1 = true;
+                this.isActive2 = false
+                this.title = 'Log In'
+                this.isActive1 = true
 
                 // 可选：自动填充登录框
-                this.username = this.username1;
-                this.password = this.password1;
+                this.username = this.username1
+                this.password = this.password1
             } catch (e) {
-                this.$message.error(e?.message || "注册失败");
+                console.log(e)
+                this.$message.error(e?.message || '注册失败')
             }
-        },
+        }
     },
     setup() {
         const images = [
@@ -326,7 +332,7 @@ export default {
             title: 'Welcome Back!',
             windowWidth: document.documentElement.clientWidth,
             avatarFile: null,
-            imageUrl: "",
+            imageUrl: ''
         }
     },
     computed: {
