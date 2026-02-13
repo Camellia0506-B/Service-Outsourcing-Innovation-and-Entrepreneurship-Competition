@@ -24,3 +24,36 @@ hs_err_pid*
 
 .idea
 backend/target
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# 数据库文件
+*.sqlite3
+*.db
+
+# 向量数据库
+rag/chroma/
+chroma_db/
+*/chroma_db/
+
+# 日志
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
