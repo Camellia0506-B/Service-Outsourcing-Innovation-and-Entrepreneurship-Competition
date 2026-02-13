@@ -6,7 +6,7 @@ from langchain_core.tools import tool
 from utils.config_handler import agent_conf
 from utils.path_tool import get_abs_path
 import random
-
+#agent工具
 rag=RagSummarizeService()
 
 user_ids = ["1001", "1002", "1003", "1004", "1005", "1006", "1007", "1008", "1009", "1010"]
