@@ -1,0 +1,473 @@
+# ============================================================
+# 岗位画像模块配置 v3
+# 策略：模型知识优先（主）+ CSV市场数据（有则用，无则跳过）
+# 覆盖：计算机行业35个主流岗位，8大方向
+#
+# layer_level 字段说明（用于垂直图谱节点排序与晋升路径连接）：
+#   1 = 助理/实习/入门级
+#   2 = 初级工程师
+#   3 = 中级工程师
+#   4 = 高级工程师/技术专家
+#   5 = 架构师/资深专家
+#   6 = 总监/管理层
+#
+# career_track 字段：同一赛道内按 layer_level 升序连接为垂直图谱
+# transfer_targets 字段：预定义该岗位的换岗目标 job_id，用于图谱连线
+# ============================================================
+
+job_data_path: data/求职岗位信息数据.csv
+job_profiles_store: data/job_profiles/profiles.json
+job_graph_store:    data/job_profiles/graph.json
+max_csv_sample_per_job: 10
+generation_strategy: model_first   # model_first: 模型知识主导，CSV辅助
+
+# ============================================================
+# 35个岗位定义
+# ============================================================
+target_jobs:
+
+  # ===================================================
+  # 方向1：后端开发（6个，构成一条完整赛道）
+  # 层级：L2初级 → L3中级 → L4高级 → L5架构师 → L6总监
+  # ===================================================
+
+  - job_id: "job_001"
+    name: "Java后端开发工程师"
+    category: "后端开发"
+    career_track: "后端开发赛道"
+    layer_level: 2          # 初级
+    csv_keywords: ["java", "Java", "spring", "Spring", "后端"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_018", "job_034", "job_026"]   # 运维/项目经理/测试
+
+  - job_id: "job_002"
+    name: "Python后端开发工程师"
+    category: "后端开发"
+    career_track: "后端开发赛道"
+    layer_level: 2
+    csv_keywords: ["python", "Python", "Django", "Flask", "FastAPI"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_011", "job_016", "job_034"]   # 算法/大数据/项目经理
+
+  - job_id: "job_003"
+    name: "Go后端开发工程师"
+    category: "后端开发"
+    career_track: "后端开发赛道"
+    layer_level: 3          # 中级（Go岗位普遍要求2年以上）
+    csv_keywords: ["golang", "Go", "go语言", "go开发"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_019", "job_006", "job_034"]   # DevOps/微服务/项目经理
+
+  - job_id: "job_004"
+    name: "Node.js全栈开发工程师"
+    category: "后端开发"
+    career_track: "后端开发赛道"
+    layer_level: 3
+    csv_keywords: ["nodejs", "node.js", "全栈", "fullstack", "express"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.43, 职业素养: 0.32, 发展潜力: 0.15}
+    transfer_targets: ["job_007", "job_023", "job_034"]   # 前端/产品经理/项目经理
+
+  - job_id: "job_005"
+    name: "后端架构师"
+    category: "后端开发"
+    career_track: "后端开发赛道"
+    layer_level: 5          # 架构师级
+    csv_keywords: ["架构师", "系统架构", "技术架构", "分布式架构"]
+    dimension_weights: {基础要求: 0.08, 专业技能: 0.42, 职业素养: 0.35, 发展潜力: 0.15}
+    transfer_targets: ["job_035", "job_034", "job_023"]   # 技术总监/项目经理/产品经理
+
+  - job_id: "job_006"
+    name: "微服务/分布式开发工程师"
+    category: "后端开发"
+    career_track: "后端开发赛道"
+    layer_level: 4          # 高级（需要分布式经验）
+    csv_keywords: ["微服务", "分布式", "kafka", "dubbo", "springcloud", "消息队列"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_005", "job_020", "job_022"]   # 架构师/云原生/DBA
+
+  # ===================================================
+  # 方向2：前端/移动端开发（4个）
+  # ===================================================
+
+  - job_id: "job_007"
+    name: "前端开发工程师"
+    category: "前端开发"
+    career_track: "前端开发赛道"
+    layer_level: 2
+    csv_keywords: ["前端", "frontend", "vue", "react", "javascript", "h5"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_025", "job_009", "job_023"]   # UI设计/小程序/产品经理
+
+  - job_id: "job_008"
+    name: "移动端开发工程师(iOS/Android)"
+    category: "前端开发"
+    career_track: "前端开发赛道"
+    layer_level: 3
+    csv_keywords: ["android", "ios", "移动开发", "flutter", "swift", "kotlin"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.48, 职业素养: 0.28, 发展潜力: 0.14}
+    transfer_targets: ["job_009", "job_004", "job_023"]   # 小程序/全栈/产品经理
+
+  - job_id: "job_009"
+    name: "小程序/跨端开发工程师"
+    category: "前端开发"
+    career_track: "前端开发赛道"
+    layer_level: 2
+    csv_keywords: ["小程序", "uniapp", "taro", "跨端", "微信开发", "跨平台"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_007", "job_008", "job_023"]   # 前端/移动端/产品经理
+
+  - job_id: "job_010"
+    name: "前端架构师/技术专家"
+    category: "前端开发"
+    career_track: "前端开发赛道"
+    layer_level: 5
+    csv_keywords: ["前端架构", "前端专家", "前端负责人", "前端leader"]
+    dimension_weights: {基础要求: 0.08, 专业技能: 0.42, 职业素养: 0.35, 发展潜力: 0.15}
+    transfer_targets: ["job_035", "job_023", "job_034"]   # 技术总监/产品经理/项目经理
+
+  # ===================================================
+  # 方向3：AI/算法/数据（7个，跨两条赛道）
+  # ===================================================
+
+  - job_id: "job_011"
+    name: "机器学习/算法工程师"
+    category: "AI与算法"
+    career_track: "AI算法赛道"
+    layer_level: 3
+    csv_keywords: ["算法工程师", "机器学习", "深度学习", "nlp", "模型训练"]
+    dimension_weights: {基础要求: 0.15, 专业技能: 0.40, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_012", "job_015", "job_024"]   # 大模型/数据分析/AI产品经理
+
+  - job_id: "job_012"
+    name: "大模型/AIGC应用工程师"
+    category: "AI与算法"
+    career_track: "AI算法赛道"
+    layer_level: 4
+    csv_keywords: ["大模型", "llm", "aigc", "rag", "prompt", "langchain", "agent"]
+    dimension_weights: {基础要求: 0.12, 专业技能: 0.43, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_024", "job_011", "job_002"]   # AI产品经理/算法/Python后端
+
+  - job_id: "job_013"
+    name: "计算机视觉工程师"
+    category: "AI与算法"
+    career_track: "AI算法赛道"
+    layer_level: 3
+    csv_keywords: ["计算机视觉", "cv", "图像识别", "目标检测", "opencv", "yolo"]
+    dimension_weights: {基础要求: 0.15, 专业技能: 0.42, 职业素养: 0.28, 发展潜力: 0.15}
+    transfer_targets: ["job_011", "job_031", "job_017"]   # 算法/嵌入式/推荐系统
+
+  - job_id: "job_014"
+    name: "数据科学家"
+    category: "AI与算法"
+    career_track: "AI算法赛道"
+    layer_level: 4
+    csv_keywords: ["数据科学", "data scientist", "统计建模", "AB测试", "因果推断"]
+    dimension_weights: {基础要求: 0.12, 专业技能: 0.43, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_015", "job_011", "job_024"]   # 数据分析/算法/AI产品
+
+  - job_id: "job_015"
+    name: "数据分析师"
+    category: "AI与算法"
+    career_track: "数据分析赛道"
+    layer_level: 2
+    csv_keywords: ["数据分析", "数据挖掘", "bi", "tableau", "数据运营", "business analysis"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.40, 职业素养: 0.35, 发展潜力: 0.15}
+    transfer_targets: ["job_016", "job_014", "job_023"]   # 大数据/数据科学家/产品经理
+
+  - job_id: "job_016"
+    name: "大数据工程师"
+    category: "AI与算法"
+    career_track: "数据分析赛道"
+    layer_level: 3
+    csv_keywords: ["大数据", "hadoop", "spark", "flink", "hive", "数仓", "数据湖"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_014", "job_022", "job_020"]   # 数据科学家/DBA/云原生
+
+  - job_id: "job_017"
+    name: "推荐系统/搜索工程师"
+    category: "AI与算法"
+    career_track: "AI算法赛道"
+    layer_level: 4
+    csv_keywords: ["推荐系统", "搜索引擎", "elasticsearch", "向量检索", "召回排序"]
+    dimension_weights: {基础要求: 0.12, 专业技能: 0.43, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_011", "job_016", "job_012"]   # 算法/大数据/大模型
+
+  # ===================================================
+  # 方向4：运维/DevOps/云计算（5个）
+  # ===================================================
+
+  - job_id: "job_018"
+    name: "Linux运维工程师"
+    category: "运维与云"
+    career_track: "运维DevOps赛道"
+    layer_level: 2
+    csv_keywords: ["运维", "linux运维", "系统运维", "it运维", "服务器运维"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_019", "job_020", "job_001"]   # DevOps/云原生/Java后端
+
+  - job_id: "job_019"
+    name: "DevOps工程师"
+    category: "运维与云"
+    career_track: "运维DevOps赛道"
+    layer_level: 3
+    csv_keywords: ["devops", "cicd", "jenkins", "gitlab", "pipeline", "自动化运维"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_020", "job_021", "job_003"]   # 云原生/SRE/Go后端
+
+  - job_id: "job_020"
+    name: "云计算/云原生工程师"
+    category: "运维与云"
+    career_track: "运维DevOps赛道"
+    layer_level: 4
+    csv_keywords: ["云计算", "kubernetes", "k8s", "docker", "云原生", "aws", "阿里云", "腾讯云"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_021", "job_005", "job_019"]   # SRE/架构师/DevOps
+
+  - job_id: "job_021"
+    name: "SRE站点可靠性工程师"
+    category: "运维与云"
+    career_track: "运维DevOps赛道"
+    layer_level: 4
+    csv_keywords: ["sre", "可靠性工程", "稳定性", "混沌工程", "故障演练", "on-call"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.43, 职业素养: 0.32, 发展潜力: 0.15}
+    transfer_targets: ["job_020", "job_005", "job_034"]   # 云原生/架构师/项目经理
+
+  - job_id: "job_022"
+    name: "数据库工程师/DBA"
+    category: "运维与云"
+    career_track: "运维DevOps赛道"
+    layer_level: 3
+    csv_keywords: ["dba", "数据库", "mysql", "oracle", "postgresql", "redis", "mongodb"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.48, 职业素养: 0.28, 发展潜力: 0.14}
+    transfer_targets: ["job_016", "job_001", "job_005"]   # 大数据/Java后端/架构师
+
+  # ===================================================
+  # 方向5：产品/设计/测试（5个）
+  # ===================================================
+
+  - job_id: "job_023"
+    name: "产品经理"
+    category: "产品与设计"
+    career_track: "产品经理赛道"
+    layer_level: 3
+    csv_keywords: ["产品经理", "产品总监", "产品策划", "产品负责人", "pm"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.30, 职业素养: 0.45, 发展潜力: 0.15}
+    transfer_targets: ["job_024", "job_034", "job_015"]   # AI产品/项目经理/数据分析
+
+  - job_id: "job_024"
+    name: "AI产品经理"
+    category: "产品与设计"
+    career_track: "产品经理赛道"
+    layer_level: 4
+    csv_keywords: ["ai产品", "智能产品", "算法产品", "大模型产品", "aigc产品"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.35, 职业素养: 0.40, 发展潜力: 0.15}
+    transfer_targets: ["job_035", "job_023", "job_012"]   # 技术总监/产品经理/大模型工程师
+
+  - job_id: "job_025"
+    name: "UI/UX设计师"
+    category: "产品与设计"
+    career_track: "设计赛道"
+    layer_level: 2
+    csv_keywords: ["ui", "ux", "交互设计", "视觉设计", "用户体验", "用研"]
+    dimension_weights: {基础要求: 0.08, 专业技能: 0.40, 职业素养: 0.37, 发展潜力: 0.15}
+    transfer_targets: ["job_023", "job_007", "job_026"]   # 产品经理/前端/测试
+
+  - job_id: "job_026"
+    name: "软件测试工程师"
+    category: "产品与设计"
+    career_track: "测试赛道"
+    layer_level: 2
+    csv_keywords: ["测试", "qa", "质量工程师", "功能测试", "手动测试"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.42, 职业素养: 0.33, 发展潜力: 0.15}
+    transfer_targets: ["job_027", "job_034", "job_001"]   # 自动化测试/项目经理/Java后端
+
+  - job_id: "job_027"
+    name: "自动化/性能测试工程师"
+    category: "产品与设计"
+    career_track: "测试赛道"
+    layer_level: 3
+    csv_keywords: ["性能测试", "自动化测试", "selenium", "jmeter", "pytest", "appium"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.45, 职业素养: 0.30, 发展潜力: 0.15}
+    transfer_targets: ["job_019", "job_034", "job_001"]   # DevOps/项目经理/Java后端
+
+  # ===================================================
+  # 方向6：网络安全（3个）
+  # ===================================================
+
+  - job_id: "job_028"
+    name: "网络安全工程师"
+    category: "网络安全"
+    career_track: "安全赛道"
+    layer_level: 2
+    csv_keywords: ["网络安全", "安全工程师", "渗透测试", "等保", "信息安全"]
+    dimension_weights: {基础要求: 0.12, 专业技能: 0.45, 职业素养: 0.28, 发展潜力: 0.15}
+    transfer_targets: ["job_029", "job_030", "job_018"]   # 安全研究/SOC/运维
+
+  - job_id: "job_029"
+    name: "安全研究员/逆向工程师"
+    category: "网络安全"
+    career_track: "安全赛道"
+    layer_level: 4
+    csv_keywords: ["逆向", "漏洞研究", "ctf", "二进制", "malware", "pwn"]
+    dimension_weights: {基础要求: 0.15, 专业技能: 0.50, 职业素养: 0.23, 发展潜力: 0.12}
+    transfer_targets: ["job_028", "job_030", "job_031"]   # 安全工程师/SOC/嵌入式
+
+  - job_id: "job_030"
+    name: "安全运营/SOC工程师"
+    category: "网络安全"
+    career_track: "安全赛道"
+    layer_level: 3
+    csv_keywords: ["soc", "安全运营", "应急响应", "态势感知", "siem", "安全监控"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.43, 职业素养: 0.32, 发展潜力: 0.15}
+    transfer_targets: ["job_028", "job_034", "job_018"]   # 安全工程师/项目经理/运维
+
+  # ===================================================
+  # 方向7：嵌入式/硬件（3个）
+  # ===================================================
+
+  - job_id: "job_031"
+    name: "嵌入式软件工程师"
+    category: "嵌入式与硬件"
+    career_track: "嵌入式赛道"
+    layer_level: 2
+    csv_keywords: ["嵌入式", "单片机", "rtos", "stm32", "arm", "c/c++嵌入式"]
+    dimension_weights: {基础要求: 0.12, 专业技能: 0.50, 职业素养: 0.26, 发展潜力: 0.12}
+    transfer_targets: ["job_032", "job_013", "job_033"]   # IoT/计算机视觉/FPGA
+
+  - job_id: "job_032"
+    name: "物联网/IoT工程师"
+    category: "嵌入式与硬件"
+    career_track: "嵌入式赛道"
+    layer_level: 3
+    csv_keywords: ["iot", "物联网", "智能硬件", "mqtt", "边缘计算", "zigbee"]
+    dimension_weights: {基础要求: 0.10, 专业技能: 0.46, 职业素养: 0.29, 发展潜力: 0.15}
+    transfer_targets: ["job_031", "job_020", "job_013"]   # 嵌入式/云原生/CV
+
+  - job_id: "job_033"
+    name: "FPGA/芯片验证工程师"
+    category: "嵌入式与硬件"
+    career_track: "嵌入式赛道"
+    layer_level: 4
+    csv_keywords: ["fpga", "verilog", "芯片验证", "asic", "ic设计", "数字电路"]
+    dimension_weights: {基础要求: 0.15, 专业技能: 0.52, 职业素养: 0.22, 发展潜力: 0.11}
+    transfer_targets: ["job_031", "job_029", "job_034"]   # 嵌入式/安全研究/项目经理
+
+  # ===================================================
+  # 方向8：管理类（2个，各赛道顶层汇聚节点）
+  # ===================================================
+
+  - job_id: "job_034"
+    name: "技术项目经理"
+    category: "管理类"
+    career_track: "管理赛道"
+    layer_level: 5
+    csv_keywords: ["项目经理", "it项目", "技术pm", "pmp", "研发管理"]
+    dimension_weights: {基础要求: 0.08, 专业技能: 0.25, 职业素养: 0.52, 发展潜力: 0.15}
+    transfer_targets: ["job_035", "job_023", "job_005"]   # 技术总监/产品/架构师
+
+  - job_id: "job_035"
+    name: "技术总监/CTO"
+    category: "管理类"
+    career_track: "管理赛道"
+    layer_level: 6
+    csv_keywords: ["技术总监", "cto", "技术VP", "研发总监", "技术负责人"]
+    dimension_weights: {基础要求: 0.05, 专业技能: 0.30, 职业素养: 0.50, 发展潜力: 0.15}
+    transfer_targets: ["job_034", "job_023", "job_005"]   # 项目经理/产品总监/架构师
+
+# ============================================================
+# 垂直赛道定义
+# 同一 career_track 内的岗位，按 layer_level 升序
+# 自动生成垂直晋升图谱（由 job_graph_service 读取）
+# ============================================================
+career_tracks:
+  - track_id: "track_backend"
+    name: "后端开发赛道"
+    color: "#4A90E2"
+    job_ids_ordered:   # 按layer_level顺序排列
+      - "job_001"  # L2 Java后端
+      - "job_002"  # L2 Python后端
+      - "job_004"  # L3 Node.js全栈
+      - "job_003"  # L3 Go后端
+      - "job_006"  # L4 微服务/分布式
+      - "job_005"  # L5 后端架构师
+
+  - track_id: "track_frontend"
+    name: "前端开发赛道"
+    color: "#7ED321"
+    job_ids_ordered:
+      - "job_009"  # L2 小程序/跨端
+      - "job_007"  # L2 前端开发
+      - "job_008"  # L3 移动端
+      - "job_004"  # L3 Node.js全栈（跨赛道节点）
+      - "job_010"  # L5 前端架构师
+
+  - track_id: "track_ai"
+    name: "AI算法赛道"
+    color: "#F5A623"
+    job_ids_ordered:
+      - "job_011"  # L3 机器学习/算法
+      - "job_013"  # L3 计算机视觉
+      - "job_017"  # L4 推荐系统/搜索
+      - "job_012"  # L4 大模型/AIGC
+      - "job_014"  # L4 数据科学家
+
+  - track_id: "track_data"
+    name: "数据分析赛道"
+    color: "#9B59B6"
+    job_ids_ordered:
+      - "job_015"  # L2 数据分析师
+      - "job_016"  # L3 大数据工程师
+      - "job_014"  # L4 数据科学家（跨赛道节点）
+
+  - track_id: "track_devops"
+    name: "运维DevOps赛道"
+    color: "#E74C3C"
+    job_ids_ordered:
+      - "job_018"  # L2 Linux运维
+      - "job_022"  # L3 DBA
+      - "job_019"  # L3 DevOps
+      - "job_020"  # L4 云原生
+      - "job_021"  # L4 SRE
+
+  - track_id: "track_product"
+    name: "产品经理赛道"
+    color: "#1ABC9C"
+    job_ids_ordered:
+      - "job_023"  # L3 产品经理
+      - "job_024"  # L4 AI产品经理
+
+  - track_id: "track_design"
+    name: "设计赛道"
+    color: "#E67E22"
+    job_ids_ordered:
+      - "job_025"  # L2 UI/UX设计师
+
+  - track_id: "track_test"
+    name: "测试赛道"
+    color: "#27AE60"
+    job_ids_ordered:
+      - "job_026"  # L2 软件测试
+      - "job_027"  # L3 自动化/性能测试
+
+  - track_id: "track_security"
+    name: "安全赛道"
+    color: "#C0392B"
+    job_ids_ordered:
+      - "job_028"  # L2 网络安全
+      - "job_030"  # L3 SOC运营
+      - "job_029"  # L4 安全研究员
+
+  - track_id: "track_embedded"
+    name: "嵌入式赛道"
+    color: "#8E44AD"
+    job_ids_ordered:
+      - "job_031"  # L2 嵌入式
+      - "job_032"  # L3 IoT
+      - "job_033"  # L4 FPGA/芯片验证
+
+  - track_id: "track_management"
+    name: "管理赛道"
+    color: "#2C3E50"
+    job_ids_ordered:
+      - "job_034"  # L5 技术项目经理
+      - "job_035"  # L6 技术总监/CTO
