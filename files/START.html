@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目启动说明</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 24px;
+            font-size: 36px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+        
+        p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        
+        .method {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .method h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        
+        code {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+        
+        pre {
+            background: #2d3748;
+            color: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 24px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .feature {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AI职业规划智能体 - 前端项目</h1>
+        
+        <p>
+            这是一个完整的、可运行的前端应用，基于纯HTML/CSS/JavaScript开发，
+            实现了API文档中的所有主要功能。
+        </p>
+
+        <div class="success">
+            <strong>✅ 项目已准备就绪！</strong> 您可以立即开始使用。
+        </div>
+
+        <h2>📦 项目文件</h2>
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📄</div>
+                <div>index.html</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                <div>styles.css</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔌</div>
+                <div>api.js</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚙️</div>
+                <div>app.js</div>
+            </div>
+        </div>
+
+        <h2>🎯 如何运行</h2>
+
+        <div class="method">
+            <h3>方法1: 直接打开（最简单）</h3>
+            <p>1. 找到项目文件夹中的 <code>index.html</code></p>
+            <p>2. 双击打开，或右键选择用浏览器打开</p>
+            <p>3. 开始使用！</p>
+        </div>
+
+        <div class="method">
+            <h3>方法2: 使用Python本地服务器（推荐）</h3>
+            <p>在项目文件夹中打开终端，运行:</p>
+            <pre>python -m http.server 8000</pre>
+            <p>然后在浏览器访问: <code>http://localhost:8000</code></p>
+        </div>
+
+        <div class="method">
+            <h3>方法3: 使用PHP本地服务器</h3>
+            <p>在项目文件夹中打开终端，运行:</p>
+            <pre>php -S localhost:8000</pre>
+            <p>然后在浏览器访问: <code>http://localhost:8000</code></p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 重要提示:</strong><br>
+            需要在 <code>api.js</code> 文件中配置正确的后端API地址。
+            打开文件找到 <code>API_CONFIG</code> 部分进行修改。
+        </div>
+
+        <h2>✨ 主要功能</h2>
+        <ul style="line-height: 2; color: #666;">
+            <li>✅ 用户注册和登录</li>
+            <li>✅ 个人档案管理</li>
+            <li>✅ 简历上传与AI解析</li>
+            <li>✅ 职业测评问卷</li>
+            <li>✅ 岗位推荐与匹配</li>
+            <li>✅ 人岗匹配分析</li>
+            <li>✅ 职业规划报告生成</li>
+        </ul>
+
+        <h2>🔧 配置后端API</h2>
+        <p>编辑 <code>api.js</code> 文件，修改以下配置:</p>
+        <pre>const API_CONFIG = {
+    baseURL: '/api/v1',  // 改为你的后端地址
+    timeout: 30000
+};</pre>
+
+        <h2>📱 浏览器支持</h2>
+        <p>支持所有现代浏览器: Chrome、Firefox、Safari、Edge</p>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="index.html" class="btn">🚀 立即开始使用</a>
+        </div>
+
+        <h2>📚 更多信息</h2>
+        <p>查看 <code>README.md</code> 文件了解完整的项目文档和使用说明。</p>
+    </div>
+</body>
+</html>
