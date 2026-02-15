@@ -10,7 +10,7 @@
   2.4 get_parse_result()   - 获取AI解析任务结果
 
 AI核心：
-  - 使用 大模型解析简历PDF/文本
+  - 使用 Claude 大模型解析简历PDF/文本
   - 自动提取 basic_info / education / skills / internships / projects / awards
   - 计算解析置信度 confidence_score
   - 给出档案补充建议 suggestions
@@ -242,7 +242,7 @@ class ProfileService:
     def parse_resume_async(self, user_id: int, resume_text: str, task_id: str):
         """
         异步触发AI简历解析任务。
-        - 后台线程调用 qwen 解析简历文本
+        - 后台线程调用 Claude 解析简历文本
         - 解析结果写入 task_store，前端通过 2.4 接口轮询
         对应 API 文档 2.3
         """
@@ -263,6 +263,40 @@ class ProfileService:
                 self.task_store[task_id]["status"] = "completed"
                 self.task_store[task_id]["result"] = result
                 logger.info(f"[ProfileService] 简历解析完成 task_id={task_id}")
+
+                # ── 解析成功后自动回填档案（无需前端再调 2.2 接口）──
+                try:
+                    parsed = result.get("parsed_data", {})
+                    auto_updates = {}
+
+                    # basic_info：只取简历里有值的字段，不覆盖用户已填的
+                    bi = parsed.get("basic_info") or {}
+                    if bi:
+                        auto_updates["basic_info"] = {
+                            k: v for k, v in bi.items() if v not in (None, "")
+                        }
+
+                    # education：取第一条教育经历映射到 education_info
+                    edu_list = parsed.get("education") or []
+                    if edu_list:
+                        first_edu = edu_list[0]
+                        auto_updates["education_info"] = {
+                            k: v for k, v in first_edu.items() if v not in (None, "")
+                        }
+
+                    # 列表型字段：有内容才覆盖
+                    for field in ("skills", "certificates", "internships", "projects", "awards"):
+                        val = parsed.get(field)
+                        if val:
+                            auto_updates[field] = val
+
+                    if auto_updates:
+                        self.update_profile(user_id, auto_updates)
+                        logger.info(f"[ProfileService] 简历解析结果已自动回填档案 user_id={user_id}")
+                except Exception as fill_err:
+                    # 回填失败不影响解析任务本身的状态
+                    logger.warning(f"[ProfileService] 自动回填档案失败: {fill_err}")
+
             except Exception as e:
                 self.task_store[task_id]["status"] = "failed"
                 self.task_store[task_id]["error"] = str(e)
