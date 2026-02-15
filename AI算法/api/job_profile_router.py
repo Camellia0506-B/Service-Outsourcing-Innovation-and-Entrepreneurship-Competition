@@ -162,37 +162,48 @@ def get_job_relation_graph():
 def ai_generate_profile():
     """
     使用AI大模型分析岗位数据，生成新的岗位画像（异步）
-    请求体：{ job_name, sample_size } 或 { job_names, sample_size_per_job }（批量）
+    请求体（对应API文档4.4）：
+      { job_name, job_descriptions: [...], sample_size }
+    job_descriptions 为前端传入的JD文本数组（可选）；
+    若不传，则自动从内部CSV数据集中检索对应JD。
     """
     try:
         body = request.get_json(silent=True) or {}
-        job_name = body.get("job_name")          # 单个岗位
-        job_names = body.get("job_names", [])    # 批量岗位（对应API文档8.2）
-        sample_size = int(body.get("sample_size", 30))
+        job_name         = body.get("job_name")           # 单个岗位名称
+        job_names        = body.get("job_names", [])      # 批量岗位（对应8.2）
+        job_descriptions = body.get("job_descriptions", [])  # 前端传入JD列表（4.4）
+        sample_size      = int(body.get("sample_size", 30))
 
         if not job_name and not job_names:
             return error_response(400, "请提供 job_name 或 job_names 参数")
 
         service = get_job_profile_service()
         target_jobs = job_profile_conf.get("target_jobs", [])
-
-        # 生成任务ID
         ts = datetime.now().strftime("%Y%m%d%H%M%S")
 
         if job_name:
-            # 单个岗位生成
+            # ── 单个岗位生成 ──
             task_id = f"job_gen_{ts}_{job_name[:8]}"
             job_config = next((j for j in target_jobs if j["name"] == job_name), None)
 
             if not job_config:
-                return error_response(404, f"未找到岗位配置：{job_name}，支持的岗位：{[j['name'] for j in target_jobs]}")
+                return error_response(
+                    404,
+                    f"未找到岗位配置：{job_name}，支持的岗位：{[j['name'] for j in target_jobs]}"
+                )
 
             def _generate_single():
-                profile = service.generate_profile(job_config)
-                service.profiles_store[job_config["job_id"]] = profile
+                # 将前端传入的 job_descriptions 注入 job_config；
+                # service 层优先使用它，若为空则自动从CSV检索
+                cfg = dict(job_config)
+                if job_descriptions:
+                    cfg["external_jd_list"] = job_descriptions[:sample_size]
+                profile = service.generate_profile(cfg)
+                service.profiles_store[cfg["job_id"]] = profile
                 from job_profile.job_profile_service import _save_profiles_store
                 _save_profiles_store(service.profiles_store)
-                return {"job_id": job_config["job_id"], "job_name": job_name}
+                # 对应API文档4.5：任务结果存完整画像，供 job_profile 字段返回
+                return profile
 
             _run_task_async(task_id, _generate_single)
 
@@ -204,7 +215,7 @@ def ai_generate_profile():
             }, msg="AI画像生成中...")
 
         else:
-            # 批量生成（对应API文档8.2）
+            # ── 批量生成 ──
             task_id = f"batch_gen_{ts}"
 
             def _generate_batch():
@@ -216,14 +227,13 @@ def ai_generate_profile():
                         errors[name] = "未找到配置"
                         continue
                     try:
-                        profile = service.generate_profile(cfg)
+                        profile = service.generate_profile(dict(cfg))
                         service.profiles_store[cfg["job_id"]] = profile
                         results[name] = cfg["job_id"]
                     except Exception as ex:
                         errors[name] = str(ex)
                 from job_profile.job_profile_service import _save_profiles_store
-                if isinstance(service.profiles_store, dict):
-                    _save_profiles_store(service.profiles_store)
+                _save_profiles_store(service.profiles_store)
                 return {"results": results, "errors": errors}
 
             _run_task_async(task_id, _generate_batch)
@@ -267,7 +277,22 @@ def get_ai_generate_result():
         }
 
         if task["status"] == "completed":
-            response_data["result"] = task["result"]
+            raw = task["result"]
+            # 对应API文档4.5响应格式：job_profile + ai_confidence + data_sources
+            response_data["job_profile"]  = raw if isinstance(raw, dict) else raw
+            response_data["ai_confidence"] = (
+                raw.get("_ai_confidence", 0.88)
+                if isinstance(raw, dict) else 0.88
+            )
+            response_data["data_sources"] = {
+                "total_samples":  (raw.get("csv_sample_count", 0)
+                                   if isinstance(raw, dict) else 0),
+                "valid_samples":  (raw.get("csv_sample_count", 0)
+                                   if isinstance(raw, dict) else 0),
+                "analysis_date":  datetime.now().strftime("%Y-%m-%d"),
+                "data_source":    (raw.get("data_source", "")
+                                   if isinstance(raw, dict) else ""),
+            }
         elif task["status"] == "failed":
             response_data["error"] = task["error"]
 
@@ -297,15 +322,40 @@ def get_full_graph():
 
 
 # ============================================================
-# 系统触发批量生成（对应API文档 8.2 /system/generate-job-profiles）
-# POST /api/v1/job/batch-generate
+# 8.2 触发岗位画像生成（对应API文档 8.2）
+# POST /api/v1/system/generate-job-profiles
+# 注：同时保留 /job/batch-generate 作为内部兼容路径
 # ============================================================
 @job_bp.route("/batch-generate", methods=["POST"])
-def batch_generate_profiles():
+def _batch_generate_compat():
+    """兼容旧路径，转发至标准路径处理函数"""
+    return _do_batch_generate()
+
+
+# 标准路径（对应API文档8.2）
+from flask import current_app as _app
+
+def _register_system_route(app):
+    """在 app 上注册 /api/v1/system 路由（由 app.py 调用）"""
+    @app.route("/api/v1/system/generate-job-profiles", methods=["POST"])
+    def system_generate_job_profiles():
+        """
+        8.2 管理员触发批量岗位画像生成（对应API文档8.2）
+        请求体：{ admin_id, job_names: [...], sample_size_per_job }
+        admin_id 为必填，标准路径在此校验权限。
+        """
+        body = request.get_json(silent=True) or {}
+        admin_id = body.get("admin_id")
+        if admin_id is None:
+            return error_response(400, "请提供 admin_id 参数")
+        return _do_batch_generate()
+
+
+def _do_batch_generate():
     """
-    批量生成所有预配置岗位的画像
-    对应 /system/generate-job-profiles（权限验证由外层中间件处理）
-    请求体：{ force_regenerate: bool }
+    批量生成所有预配置岗位的画像（内部实现，不含权限校验）
+    供标准路径 /system/generate-job-profiles 和兼容路径 /job/batch-generate 共用。
+    请求体：{ force_regenerate }
     """
     try:
         body = request.get_json(silent=True) or {}

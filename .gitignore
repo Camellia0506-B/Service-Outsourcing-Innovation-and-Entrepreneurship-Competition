@@ -57,3 +57,5 @@ logs/
 *.swo
 *~
 
+
+data/job_profiles/*.json

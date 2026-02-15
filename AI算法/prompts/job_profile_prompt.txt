@@ -43,7 +43,9 @@
 
   "basic_info": {{
     "industry": "所属行业（从JD中提取，或按行业认知填写）",
+    "level": "初级",
     "level_range": ["初级", "中级", "高级"],
+    "avg_salary": "15k-25k",
     "salary_range": {{
       "junior":       "月薪范围（如8k-15k）",
       "intermediate": "月薪范围（如15k-25k）",
@@ -51,6 +53,7 @@
       "expert":       "月薪范围（如40k-70k）"
     }},
     "work_locations": ["从JD提取的城市，或一线城市"],
+    "company_scales": ["100-500人", "500-2000人", "2000人以上"],
     "description": "基于JD的岗位核心职责，50字内",
     "demand_score": 75,
     "growth_trend": "上升或平稳或下降"
@@ -62,6 +65,11 @@
         "level": "从JD提取或按岗位常规要求",
         "preferred_majors": ["专业1", "专业2"],
         "weight": 0.10
+      }},
+      "gpa": {{
+        "min_requirement": "3.0/4.0",
+        "preferred": "3.5/4.0以上",
+        "weight": 0.05
       }},
       "experience_years": {{
         "junior":       "0-2年",
@@ -137,7 +145,7 @@
       "expert": "40k-70k"
     }},
     "hottest_cities": [
-      {{"city": "城市名", "demand_level": "高"}}
+      {{"city": "城市名", "job_count": 1000}}
     ],
     "top_companies": ["代表企业"],
     "industry_trends": ["行业趋势1", "趋势2"],
@@ -145,7 +153,7 @@
   }},
 
   "career_path": {{
-    "entry_level": "入门级职位名",
+    "current_level": "初级{job_name}",
     "promotion_path": [
       {{
         "level": "中级{job_name}",

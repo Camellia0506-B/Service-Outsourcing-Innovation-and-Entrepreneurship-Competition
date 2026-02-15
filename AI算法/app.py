@@ -11,9 +11,11 @@ app = Flask(__name__)
 # ========== 注册路由蓝图 ==========
 
 # 岗位画像模块（第一个功能）
-from api.job_profile_router import job_bp
+from api.job_profile_router import job_bp, _register_system_route
 app.register_blueprint(job_bp)
+_register_system_route(app)   # 注册 8.2: POST /api/v1/system/generate-job-profiles
 logger.info("[App] 注册路由: 岗位画像模块 /api/v1/job/*")
+logger.info("[App] 注册路由: 系统管理模块 /api/v1/system/*")
 
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp

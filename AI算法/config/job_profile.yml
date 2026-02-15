@@ -1,7 +1,7 @@
 # ============================================================
 # 岗位画像模块配置 v3
 # 策略：模型知识优先（主）+ CSV市场数据（有则用，无则跳过）
-# 覆盖：计算机行业35个主流岗位，8大方向
+# 覆盖：计算机行业35个主流岗位，8个大方向
 #
 # layer_level 字段说明（用于垂直图谱节点排序与晋升路径连接）：
 #   1 = 助理/实习/入门级
@@ -19,7 +19,7 @@ job_data_path: data/求职岗位信息数据.csv
 job_profiles_store: data/job_profiles/profiles.json
 job_graph_store:    data/job_profiles/graph.json
 max_csv_sample_per_job: 10
-generation_strategy: model_first   # model_first: 模型知识主导，CSV辅助
+
 
 # ============================================================
 # 35个岗位定义

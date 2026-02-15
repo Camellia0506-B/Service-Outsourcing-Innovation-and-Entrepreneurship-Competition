@@ -9,7 +9,6 @@ AI职业规划智能体 — Agent工具集
   5. get_transfer_paths_summary   - 获取全部换岗路径摘要
   6. preview_csv_match          - 预览各岗位CSV匹配情况
 
-注：已删除原扫地机器人智能体相关工具（天气/位置/外部数据/RAG等）
 """
 
 import json

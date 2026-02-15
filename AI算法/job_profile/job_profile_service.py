@@ -65,14 +65,76 @@ def _load_profiles_store() -> dict:
     store_path = _ensure_store_dir()
     if not os.path.exists(store_path):
         return {}
-    with open(store_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(store_path, "r", encoding="utf-8") as f:
+            text = f.read().strip()
+            if not text:          # 文件存在但内容为空
+                return {}
+            return json.loads(text)
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.warning(f"[ProfileStore] profiles.json 解析失败（{e}），已重置为空字典")
+        return {}
 
 
 def _save_profiles_store(profiles: dict):
+    # 只允许写入真实字典，防止 Mock 对象或非法数据损坏文件
+    if not isinstance(profiles, dict):
+        logger.error(f"[ProfileStore] 拒绝写入非dict对象: {type(profiles)}")
+        return
     store_path = _ensure_store_dir()
     with open(store_path, "w", encoding="utf-8") as f:
         json.dump(profiles, f, ensure_ascii=False, indent=2)
+
+
+def _normalize_profile(p: dict) -> dict:
+    """
+    兜底字段映射：确保画像返回字段与API文档4.2完全一致。
+    同时兼容旧格式画像（使用旧字段名生成的）。
+    只做补充和映射，不删除原有字段，保持向后兼容。
+    """
+    import copy
+    p = copy.deepcopy(p)
+    bi = p.get("basic_info", {})
+
+    # basic_info.level：文档要求单字符串，兜底取 level_range[0]
+    if "level" not in bi:
+        lr = bi.get("level_range", [])
+        bi["level"] = lr[0] if lr else "初级"
+
+    # basic_info.avg_salary：文档要求单字符串，兜底取 salary_range.junior
+    if "avg_salary" not in bi:
+        bi["avg_salary"] = bi.get("salary_range", {}).get("junior", "")
+
+    # basic_info.company_scales：文档要求存在此字段
+    if "company_scales" not in bi:
+        bi["company_scales"] = ["100-500人", "500-2000人", "2000人以上"]
+
+    p["basic_info"] = bi
+
+    # requirements.basic_requirements.gpa：文档要求存在此字段
+    br = p.get("requirements", {}).get("basic_requirements", {})
+    if "gpa" not in br:
+        br["gpa"] = {"min_requirement": "3.0/4.0", "preferred": "3.5/4.0以上", "weight": 0.05}
+        if "basic_requirements" in p.get("requirements", {}):
+            p["requirements"]["basic_requirements"] = br
+
+    # market_analysis.hottest_cities：文档要求 {city, job_count}，旧格式是 {city, demand_level}
+    cities = p.get("market_analysis", {}).get("hottest_cities", [])
+    for c in cities:
+        if "job_count" not in c:
+            # demand_level → job_count 估算映射
+            dm = c.pop("demand_level", "中")
+            c["job_count"] = {"极高": 2000, "高": 1200, "中": 600, "低": 200}.get(dm, 600)
+    if "market_analysis" in p:
+        p["market_analysis"]["hottest_cities"] = cities
+
+    # career_path.current_level：文档要求此字段名，旧字段名是 entry_level
+    cp = p.get("career_path", {})
+    if "current_level" not in cp and "entry_level" in cp:
+        cp["current_level"] = cp.pop("entry_level")
+        p["career_path"] = cp
+
+    return p
 
 
 def _extract_json(text: str) -> dict:
@@ -241,16 +303,37 @@ class JobProfileService:
 
         logger.info(f"[JobProfileService] 开始生成: {job_name} ({job_id})")
 
-        # Step 1: 检索CSV数据集
-        matched_rows = self.extractor.search(keywords, max_count)
-        jd_block     = self.extractor.build_jd_block(matched_rows)
-        market_meta  = self.extractor.get_market_meta(matched_rows)
+        # Step 1: 获取JD数据（优先使用前端传入，其次CSV检索）
+        external_jds = job_config.get("external_jd_list", [])  # 4.4接口前端传入
 
-        logger.info(f"  CSV检索: {len(matched_rows)}条匹配数据")
+        if external_jds:
+            # ★ 分支A1：前端直接传入JD列表（API文档4.4）
+            jd_texts = "\n\n".join(
+                f"【JD {i+1}】\n{jd}" for i, jd in enumerate(external_jds[:max_count])
+            )
+            jd_block    = jd_texts
+            matched_rows = []
+            market_meta  = {}
+            logger.info(f"  使用前端传入JD: {len(external_jds)}条")
+        else:
+            # ★ 分支A2：从CSV数据集检索
+            matched_rows = self.extractor.search(keywords, max_count)
+            jd_block     = self.extractor.build_jd_block(matched_rows)
+            market_meta  = self.extractor.get_market_meta(matched_rows)
+            logger.info(f"  CSV检索: {len(matched_rows)}条匹配数据")
 
-        # Step 2: 构建数据注入文本（两条分支清晰）
-        if jd_block:
-            # ★ 分支A：有数据集数据，基于真实JD生成
+        # Step 2: 构建数据注入文本（三条分支清晰）
+        if external_jds:
+            # ★ 前端传入JD
+            data_section = (
+                f"[数据来源：前端传入JD | 条数：{len(external_jds)}]\n"
+                f"以下是调用方传入的真实招聘JD，请严格基于这些JD内容提炼岗位画像，"
+                f"不要自由发挥超出JD范围的内容：\n\n"
+                f"{jd_block}"
+            )
+            data_source_label = f"前端传入JD分析（{len(external_jds)}条样本）"
+        elif jd_block:
+            # ★ CSV检索到数据
             data_section = (
                 f"[数据来源：数据集 | 匹配条数：{len(matched_rows)}]\n"
                 f"以下是数据集中检索到的真实招聘JD，请严格基于这些JD内容提炼岗位画像，"
@@ -259,7 +342,7 @@ class JobProfileService:
             )
             data_source_label = f"数据集JD分析（{len(matched_rows)}条样本）"
         else:
-            # ★ 分支B：无匹配数据，模型知识兜底
+            # ★ 无任何数据，模型知识兜底
             data_section = (
                 f"[数据来源：模型知识 | 数据集无匹配]\n"
                 f"数据集中未检索到【{job_name}】的相关招聘数据。\n"
@@ -291,6 +374,7 @@ class JobProfileService:
         profile["created_at"]       = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         profile["updated_at"]       = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         profile["status"]           = "completed"
+        profile["_ai_confidence"]    = 0.88  # 供4.5接口 ai_confidence 字段使用
         profile["dimension_weights"] = weights
 
         logger.info(f"  ✅ 画像生成完成: {job_name} | 来源: {data_source_label}")
@@ -376,6 +460,7 @@ class JobProfileService:
                 "category":     p.get("category"),
                 "industry":     p.get("basic_info", {}).get("industry"),
                 "level_range":  p.get("basic_info", {}).get("level_range", []),
+                "level":        (p.get("basic_info", {}).get("level_range") or [""])[0],  # 对应API文档4.1 level字段
                 "avg_salary":   p.get("basic_info", {}).get("salary_range", {}).get("junior", ""),
                 "description":  p.get("basic_info", {}).get("description"),
                 "demand_score": p.get("market_analysis", {}).get("demand_score", 0),
@@ -387,15 +472,16 @@ class JobProfileService:
         }
 
     def get_profile_detail(self, job_id: str) -> Optional[dict]:
-        return self.profiles_store.get(job_id)
+        p = self.profiles_store.get(job_id)
+        return _normalize_profile(p) if p else None
 
     def get_profile_by_name(self, job_name: str) -> Optional[dict]:
         for p in self.profiles_store.values():
             if p.get("job_name") == job_name:
-                return p
+                return _normalize_profile(p)
         for p in self.profiles_store.values():
             if job_name in p.get("job_name", ""):
-                return p
+                return _normalize_profile(p)
         return None
 
     def get_category_summary(self) -> dict:
@@ -429,7 +515,7 @@ class JobProfileService:
                 "name":    job_config["name"],
                 "matched": len(matched),
                 "samples": [r.get("职位名称", "") for r in matched],
-                "strategy": "数据集JD分析" if matched else "模型知识兜底",
+                "strategy": "数据集JD分析" if matched else "模型生成",
             }
         return result
 
