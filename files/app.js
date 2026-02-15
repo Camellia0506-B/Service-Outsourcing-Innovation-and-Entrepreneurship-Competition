@@ -28,6 +28,26 @@ class CareerPlanningApp {
             this.handleLogin();
         });
 
+        // 创建账户 - 注册表单提交
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleRegisterForm();
+        });
+
+        // 登录页「创建账户」跳转到注册页
+        document.getElementById('goRegister').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+        });
+
+        // 注册页「立即登录」跳转到登录页
+        document.getElementById('showLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showPage('loginPage');
+            document.getElementById('registerPage').classList.add('hidden');
+        });
+
         // 快速注册按钮
         document.getElementById('quickRegisterBtn').addEventListener('click', () => {
             this.showQuickRegisterModal();
@@ -282,8 +302,50 @@ class CareerPlanningApp {
             saveUserInfo(result.data);
             this.currentUser = result.data;
             this.showMainApp();
+            const name = (result.data.nickname || result.data.username || '').trim() || '用户';
+            this.showToast('登录成功，欢迎 ' + name, 'success');
         } else {
-            this.showToast('自动登录失败，请手动登录', 'error');
+            this.showToast('自动登录失败，请使用账号密码在登录页登录', 'error');
+        }
+    }
+
+    // 创建账户表单：注册后自动登录并进入首页
+    async handleRegisterForm() {
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const nickname = document.getElementById('regNickname').value.trim();
+        const avatarInput = document.getElementById('regAvatar');
+        const avatarFile = avatarInput && avatarInput.files && avatarInput.files[0] ? avatarInput.files[0] : null;
+
+        if (!username || !password || !nickname) {
+            this.showToast('请填写用户名、密码和昵称', 'error');
+            return;
+        }
+
+        this.showLoading();
+        const result = await register(username, password, nickname, avatarFile);
+        this.hideLoading();
+
+        if (!result.success) {
+            this.showToast(result.msg || '注册失败', 'error');
+            return;
+        }
+
+        this.showToast('注册成功，正在登录...', 'success');
+        const loginResult = await login(username, password);
+        if (loginResult.success) {
+            localStorage.setItem('token', loginResult.data.token);
+            saveUserInfo(loginResult.data);
+            this.currentUser = loginResult.data;
+            document.getElementById('registerPage').classList.add('hidden');
+            this.showMainApp();
+            this.loadDashboardData();
+            const name = (loginResult.data.nickname || loginResult.data.username || '').trim() || username;
+            this.showToast('欢迎 ' + name + '！请记住您的账号和密码，下次可在本页登录。', 'success');
+        } else {
+            this.showToast('注册成功，请在本页用账号「' + username + '」和您设置的密码登录。', 'success');
+            this.showPage('loginPage');
+            document.getElementById('registerPage').classList.add('hidden');
         }
     }
 

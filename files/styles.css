@@ -950,6 +950,19 @@ body {
     box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
 }
 
+.login-register-hint {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.login-register-hint a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+.login-register-hint a:hover {
+    text-decoration: underline;
+}
+
 .ai-indicator {
     display: flex;
     flex-direction: column;

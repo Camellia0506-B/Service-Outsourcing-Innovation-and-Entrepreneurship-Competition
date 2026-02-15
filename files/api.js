@@ -1,8 +1,8 @@
 // API配置
 const API_CONFIG = {
-    baseURL: '/api/v1',  // 可以根据实际情况修改为服务器地址
+    baseURL: 'http://localhost:5000/api/v1',  // 后端地址（后端默认端口 5000）
     timeout: 30000,
-    mockMode: true  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
 
 // API工具类
@@ -53,7 +53,10 @@ class API {
             }
         } catch (error) {
             console.error('API请求错误:', error);
-            return { success: false, msg: error.message || '网络错误，请稍后重试' };
+            const msg = (error.message && error.message.toLowerCase().includes('fetch')) 
+                ? '无法连接后端，请确认已启动后端服务 (http://localhost:5000)' 
+                : (error.message || '网络错误，请稍后重试');
+            return { success: false, msg };
         }
     }
 
@@ -93,7 +96,10 @@ class API {
             }
         } catch (error) {
             console.error('文件上传错误:', error);
-            return { success: false, msg: error.message || '上传失败' };
+            const msg = (error.message && error.message.toLowerCase().includes('fetch'))
+                ? '无法连接后端，请确认已启动后端服务 (http://localhost:5000)'
+                : (error.message || '上传失败');
+            return { success: false, msg };
         }
     }
 
