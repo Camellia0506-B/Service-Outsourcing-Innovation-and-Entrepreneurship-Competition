@@ -10,6 +10,7 @@
 """
 
 import os
+import random
 import threading
 from datetime import datetime
 
@@ -155,7 +156,7 @@ def upload_resume():
             )["resume_upload_dir"]
         )
         os.makedirs(upload_dir, exist_ok=True)
-        ts = datetime.now().strftime("%Y%m%d%H%M%S")
+        ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]  # 精确到毫秒
         save_name = f"{user_id}_{ts}{ext}"
         save_path = os.path.join(upload_dir, save_name)
         resume_file.save(save_path)
@@ -165,8 +166,9 @@ def upload_resume():
         if not resume_text or len(resume_text.strip()) < 50:
             return error_response(400, "无法从文件中提取有效文本，请确认文件内容不为空")
 
-        # 生成task_id，触发异步解析
-        task_id = f"resume_parse_{ts}_{user_id}"
+        # 生成task_id：毫秒时间戳 + 随机数，确保唯一
+        random_num = random.randint(1000, 999999)
+        task_id = f"resume_parse_{ts}_{user_id}_{random_num}"
         service = get_profile_service()
         service.parse_resume_async(int(user_id), resume_text, task_id)
 
