@@ -17,6 +17,13 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 先删表（按依赖顺序删也行，但关闭外键检查就无所谓）
+DROP TABLE IF EXISTS resume_parse_tasks;
+DROP TABLE IF EXISTS profile_awards;
+DROP TABLE IF EXISTS profile_projects;
+DROP TABLE IF EXISTS profile_internships;
+DROP TABLE IF EXISTS profile_certificates;
+DROP TABLE IF EXISTS profile_skills;
+DROP TABLE IF EXISTS user_profiles;
 DROP TABLE IF EXISTS forum_comments;
 DROP TABLE IF EXISTS forum_posts;
 DROP TABLE IF EXISTS shared_resources;
@@ -156,6 +163,104 @@ CREATE TABLE app_daily_content (
   PRIMARY KEY (id),
   UNIQUE KEY uk_app_daily_content_date (date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='每日/全局配置';
+
+-- 9. 个人档案扩展表（与 users 1:1，basic + education）
+CREATE TABLE user_profiles (
+  user_id              BIGINT NOT NULL COMMENT '用户ID，关联 users.id',
+  gender               VARCHAR(10) NULL COMMENT '性别',
+  birth_date           DATE NULL COMMENT '出生日期',
+  phone                VARCHAR(20) NULL COMMENT '手机号',
+  email                VARCHAR(100) NULL COMMENT '邮箱',
+  school               VARCHAR(100) NULL COMMENT '学校',
+  major                VARCHAR(100) NULL COMMENT '专业',
+  degree               VARCHAR(50) NULL COMMENT '学历',
+  grade                VARCHAR(50) NULL COMMENT '年级',
+  expected_graduation  VARCHAR(20) NULL COMMENT '预计毕业时间',
+  gpa                  VARCHAR(20) NULL COMMENT 'GPA',
+  updated_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '档案更新时间',
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_user_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='个人档案扩展';
+
+-- 10. 档案-技能（按分类）
+CREATE TABLE profile_skills (
+  id       BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id  BIGINT NOT NULL COMMENT '用户ID',
+  category VARCHAR(50) NOT NULL COMMENT '技能分类',
+  items    JSON NOT NULL COMMENT '技能项列表',
+  PRIMARY KEY (id),
+  KEY idx_profile_skills_user_id (user_id),
+  CONSTRAINT fk_profile_skills_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='档案-技能';
+
+-- 11. 档案-证书
+CREATE TABLE profile_certificates (
+  id         BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id    BIGINT NOT NULL COMMENT '用户ID',
+  name       VARCHAR(200) NOT NULL COMMENT '证书名称',
+  issue_date VARCHAR(20) NULL COMMENT '颁发日期',
+  cert_url   VARCHAR(500) NULL COMMENT '证书文件URL',
+  PRIMARY KEY (id),
+  KEY idx_profile_certificates_user_id (user_id),
+  CONSTRAINT fk_profile_certificates_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='档案-证书';
+
+-- 12. 档案-实习经历
+CREATE TABLE profile_internships (
+  id          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id     BIGINT NOT NULL COMMENT '用户ID',
+  company     VARCHAR(100) NOT NULL COMMENT '公司',
+  position    VARCHAR(100) NULL COMMENT '职位',
+  start_date  VARCHAR(20) NULL COMMENT '开始日期',
+  end_date    VARCHAR(20) NULL COMMENT '结束日期',
+  description TEXT NULL COMMENT '描述',
+  PRIMARY KEY (id),
+  KEY idx_profile_internships_user_id (user_id),
+  CONSTRAINT fk_profile_internships_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='档案-实习经历';
+
+-- 13. 档案-项目经历
+CREATE TABLE profile_projects (
+  id          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id     BIGINT NOT NULL COMMENT '用户ID',
+  name        VARCHAR(200) NOT NULL COMMENT '项目名称',
+  role        VARCHAR(100) NULL COMMENT '角色',
+  start_date  VARCHAR(20) NULL COMMENT '开始日期',
+  end_date    VARCHAR(20) NULL COMMENT '结束日期',
+  description TEXT NULL COMMENT '描述',
+  tech_stack  JSON NULL COMMENT '技术栈列表',
+  PRIMARY KEY (id),
+  KEY idx_profile_projects_user_id (user_id),
+  CONSTRAINT fk_profile_projects_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='档案-项目经历';
+
+-- 14. 档案-获奖
+CREATE TABLE profile_awards (
+  id     BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  name   VARCHAR(200) NOT NULL COMMENT '奖项名称',
+  level  VARCHAR(50) NULL COMMENT '级别',
+  date   VARCHAR(20) NULL COMMENT '获奖日期',
+  PRIMARY KEY (id),
+  KEY idx_profile_awards_user_id (user_id),
+  CONSTRAINT fk_profile_awards_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='档案-获奖';
+
+-- 15. 简历解析任务（上传简历后生成，用于拉取解析结果）
+CREATE TABLE resume_parse_tasks (
+  id               BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  task_id          VARCHAR(80) NOT NULL COMMENT '业务任务ID，如 resume_parse_20260214_10001',
+  user_id          BIGINT NOT NULL COMMENT '用户ID',
+  status           VARCHAR(20) NOT NULL DEFAULT 'processing' COMMENT 'processing/completed/failed',
+  parsed_data      JSON NULL COMMENT '解析结果',
+  confidence_score DECIMAL(3,2) NULL COMMENT '置信度 0-1',
+  suggestions      JSON NULL COMMENT '建议列表',
+  created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_resume_parse_tasks_task_id (task_id),
+  KEY idx_resume_parse_tasks_user_id (user_id),
+  CONSTRAINT fk_resume_parse_tasks_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='简历解析任务';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

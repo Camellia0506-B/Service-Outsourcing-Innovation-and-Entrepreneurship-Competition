@@ -3,6 +3,7 @@ package www.gradquest.com.utils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -59,6 +60,16 @@ public class PDFProcessor {
         }
 
         return images;
+    }
+
+    /**
+     * 从 PDF 提取纯文本（用于简历解析等）
+     */
+    public String extractText(File pdfFile) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfFile)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            return stripper.getText(document);
+        }
     }
 
     /**
