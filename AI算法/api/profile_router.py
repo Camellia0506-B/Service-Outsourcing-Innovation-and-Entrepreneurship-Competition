@@ -186,22 +186,49 @@ def upload_resume():
 def _extract_text(file_path: str, ext: str) -> str:
     """
     从文件提取纯文本内容。
-    支持 PDF（pdfplumber）、TXT、DOC/DOCX（python-docx）。
-    若依赖库未安装，退回到读取原始字节尝试解码。
+    PDF优先用 pymupdf（fitz），提取效果更好，兼容内嵌字体；
+    未安装则降级用 pdfplumber；再不行读原始字节。
     """
     try:
         if ext == ".pdf":
+            # 方案1：pymupdf（推荐，对中文内嵌字体支持最好）
+            try:
+                import fitz  # pymupdf
+                doc = fitz.open(file_path)
+                pages_text = []
+                for page in doc:
+                    text = page.get_text("text")
+                    if text.strip():
+                        pages_text.append(text)
+                doc.close()
+                result = "\n".join(pages_text)
+                if result.strip():
+                    logger.info(f"[Profile] pymupdf提取成功，字符数={len(result)}")
+                    return result
+            except ImportError:
+                logger.warning("[Profile] pymupdf未安装，降级使用pdfplumber")
+            except Exception as e:
+                logger.warning(f"[Profile] pymupdf提取失败({e})，降级使用pdfplumber")
+
+            # 方案2：pdfplumber（备用）
             try:
                 import pdfplumber
                 with pdfplumber.open(file_path) as pdf:
-                    return "\n".join(
+                    result = "\n".join(
                         page.extract_text() or "" for page in pdf.pages
                     )
+                if result.strip():
+                    logger.info(f"[Profile] pdfplumber提取成功，字符数={len(result)}")
+                    return result
             except ImportError:
-                logger.warning("[Profile] pdfplumber未安装，尝试读取原始文本")
-                with open(file_path, "rb") as f:
-                    raw = f.read()
-                return raw.decode("utf-8", errors="ignore")
+                logger.warning("[Profile] pdfplumber未安装")
+            except Exception as e:
+                logger.warning(f"[Profile] pdfplumber提取失败({e})")
+
+            # 方案3：读原始字节（最后兜底）
+            logger.warning("[Profile] 降级为原始字节读取")
+            with open(file_path, "rb") as f:
+                return f.read().decode("utf-8", errors="ignore")
 
         elif ext in (".docx", ".doc"):
             try:
