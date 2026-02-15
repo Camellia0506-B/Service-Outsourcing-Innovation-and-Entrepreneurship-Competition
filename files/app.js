@@ -474,13 +474,16 @@ class CareerPlanningApp {
             skills: this.collectSkills()
         };
 
+        console.log('保存档案数据:', JSON.stringify(profileData, null, 2));
+
         this.showLoading();
         const result = await updateProfile(userId, profileData);
         this.hideLoading();
 
+        console.log('保存结果:', result);
+
         if (result.success) {
             this.showToast('档案保存成功', 'success');
-            // 更新完整度显示
             if (result.data.profile_completeness) {
                 document.getElementById('profileCompleteness').textContent = 
                     result.data.profile_completeness + '%';
