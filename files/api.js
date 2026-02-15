@@ -2,7 +2,7 @@
 const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',  // 后端地址（后端默认端口 5000）
     timeout: 30000,
-    mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    mockMode: true  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
 
 // API工具类

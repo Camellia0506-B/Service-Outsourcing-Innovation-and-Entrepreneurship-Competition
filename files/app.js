@@ -58,6 +58,16 @@ class CareerPlanningApp {
             this.hideQuickRegisterModal();
         });
 
+        document.getElementById('closeProfileModal').addEventListener('click', () => {
+            document.getElementById('profileModal').classList.add('hidden');
+        });
+
+        document.getElementById('profileModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('profileModal')) {
+                document.getElementById('profileModal').classList.add('hidden');
+            }
+        });
+
         // 点击对话框外部关闭
         document.getElementById('quickRegisterModal').addEventListener('click', (e) => {
             if (e.target === document.getElementById('quickRegisterModal')) {
@@ -524,8 +534,87 @@ class CareerPlanningApp {
 
     // 显示档案模态框
     showProfileModal(data) {
-        alert('完整档案信息:\n' + JSON.stringify(data, null, 2));
-        // 实际项目中应该创建一个美观的模态框来显示
+        const modal = document.getElementById('profileModal');
+        const content = document.getElementById('profileModalContent');
+        
+        let html = '<div class="profile-tables">';
+        
+        if (data.basic_info) {
+            html += `
+                <div class="profile-section">
+                    <h4>基本信息</h4>
+                    <table class="profile-table">
+                        <tr><th>昵称</th><td>${data.basic_info.nickname || '-'}</td></tr>
+                        <tr><th>性别</th><td>${data.basic_info.gender || '-'}</td></tr>
+                        <tr><th>出生日期</th><td>${data.basic_info.birth_date || '-'}</td></tr>
+                        <tr><th>手机号</th><td>${data.basic_info.phone || '-'}</td></tr>
+                        <tr><th>邮箱</th><td>${data.basic_info.email || '-'}</td></tr>
+                    </table>
+                </div>
+            `;
+        }
+        
+        if (data.education_info) {
+            html += `
+                <div class="profile-section">
+                    <h4>教育信息</h4>
+                    <table class="profile-table">
+                        <tr><th>学校</th><td>${data.education_info.school || '-'}</td></tr>
+                        <tr><th>专业</th><td>${data.education_info.major || '-'}</td></tr>
+                        <tr><th>学历</th><td>${data.education_info.degree || '-'}</td></tr>
+                        <tr><th>年级</th><td>${data.education_info.grade || '-'}</td></tr>
+                        <tr><th>预计毕业时间</th><td>${data.education_info.expected_graduation || '-'}</td></tr>
+                        <tr><th>GPA</th><td>${data.education_info.gpa || '-'}</td></tr>
+                    </table>
+                </div>
+            `;
+        }
+        
+        if (data.skills && data.skills.length > 0) {
+            html += `
+                <div class="profile-section">
+                    <h4>技能</h4>
+                    <table class="profile-table">
+            `;
+            data.skills.forEach(skill => {
+                html += `<tr><th>${skill.category}</th><td>${skill.items.join(', ')}</td></tr>`;
+            });
+            html += `
+                    </table>
+                </div>
+            `;
+        }
+        
+        if (data.certificates && data.certificates.length > 0) {
+            html += `
+                <div class="profile-section">
+                    <h4>证书</h4>
+                    <table class="profile-table">
+            `;
+            data.certificates.forEach(cert => {
+                html += `<tr><th>${cert.name}</th><td>${cert.issue_date || '-'}</td></tr>`;
+            });
+            html += `
+                    </table>
+                </div>
+            `;
+        }
+        
+        if (data.profile_completeness !== undefined) {
+            html += `
+                <div class="profile-section">
+                    <h4>档案完整度</h4>
+                    <table class="profile-table">
+                        <tr><th>完整度</th><td><span class="completeness-badge">${data.profile_completeness}%</span></td></tr>
+                    </table>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
     }
 
     // 处理简历上传
@@ -579,8 +668,13 @@ class CareerPlanningApp {
                     statusDiv.textContent = '解析完成！已自动填充档案信息';
                     statusDiv.style.background = '#dcfce7';
                     
-                    // 重新加载档案数据
-                    this.loadProfileData();
+                    this.showToast('简历解析完成，档案信息已更新', 'success');
+                    
+                    if (this.currentPage === 'profile') {
+                        this.loadProfileData();
+                    }
+                    
+                    this.loadDashboardData();
                 } else if (result.data.status === 'failed') {
                     statusDiv.textContent = '解析失败，请重试';
                     statusDiv.style.background = '#fee2e2';

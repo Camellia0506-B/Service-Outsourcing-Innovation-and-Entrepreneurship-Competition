@@ -370,6 +370,19 @@
 
         <!-- 消息提示 -->
         <div id="toast" class="toast"></div>
+
+        <!-- 档案详情模态框 -->
+        <div id="profileModal" class="modal-overlay hidden">
+            <div class="modal-content profile-modal">
+                <div class="modal-header">
+                    <h3>完整档案信息</h3>
+                    <button class="modal-close" id="closeProfileModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="profileModalContent"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="api.js?v=2"></script>
