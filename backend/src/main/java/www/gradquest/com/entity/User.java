@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author zhangzherui
  */
@@ -17,4 +19,5 @@ public class User {
     private String password;
     private String nickname;
     private String avatar;
+    private LocalDateTime createdAt;
 }

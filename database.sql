@@ -40,11 +40,12 @@ CREATE TABLE universities (
 
 -- 6. 用户表
 CREATE TABLE users (
-  id        BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键，自增',
-  username  VARCHAR(50) NOT NULL COMMENT '用户名/账号',
-  password  VARCHAR(255) NOT NULL COMMENT '密码(建议存储哈希，不要明文)',
-  nickname  VARCHAR(50) NULL COMMENT '昵称(显示在帖子中)',
-  avatar    VARCHAR(255) NULL COMMENT '头像链接',
+  id         BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键，自增',
+  username   VARCHAR(50) NOT NULL COMMENT '用户名/账号',
+  password   VARCHAR(255) NOT NULL COMMENT '密码(BCrypt 哈希)',
+  nickname   VARCHAR(50) NULL COMMENT '昵称(显示在帖子中)',
+  avatar     VARCHAR(255) NULL COMMENT '头像链接',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户';
@@ -911,4 +912,6 @@ b.考生须在面试过程中进行音乐能力展示，可演奏某种乐器或
   (149,'计算机科学与技术学院（大数据学院）','计算机科学与技术学院（大数据学院）','研究生院通过该“推免系统”和学院报送的接收名单审核推免生报名志愿，对符合申请条件者发送复试通知、待录取通知','2025-09-20 00:00:00','https://ccst.tyut.edu.cn/info/2123/13911.htm'),
   (150,'ALL','ALL','温特母校！极力推荐！！！','2025-09-19 12:00:00','https://yjsy.sdust.edu.cn/zhaosheng/info/1090/1840.htm');
 
+-- --------------- 迁移：为已存在的 users 表添加 created_at（若报 Unknown column 'created_at' 可执行） ---------------
+-- ALTER TABLE users ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间';
 

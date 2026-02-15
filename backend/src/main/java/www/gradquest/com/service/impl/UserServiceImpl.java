@@ -18,9 +18,11 @@ import www.gradquest.com.mapper.UserFollowMapper;
 import www.gradquest.com.mapper.ForumPostMapper;
 import www.gradquest.com.mapper.SharedResourceMapper;
 import www.gradquest.com.utils.UploadFileUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -34,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final UserFollowMapper userFollowMapper;
     private final ForumPostMapper forumPostMapper;
     private final SharedResourceMapper sharedResourceMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -42,14 +45,15 @@ public class UserServiceImpl implements UserService {
         LambdaQueryWrapper<User> query = new LambdaQueryWrapper<>();
         query.eq(User::getUsername, username);
         if (userMapper.selectCount(query) > 0) {
-            throw new IllegalArgumentException("username exists");
+            throw new IllegalArgumentException("用户名已存在");
         }
 
-        // 创建用户对象
+        // 创建用户对象，密码使用 BCrypt 哈希
         User user = new User();
         user.setUsername(username);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         user.setNickname(StringUtils.hasText(nickname) ? nickname : username);
+        user.setCreatedAt(LocalDateTime.now());
 
         // 处理头像文件上传
         if (avatar != null && !avatar.isEmpty()) {
@@ -77,9 +81,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User login(String username, String password) {
-        LambdaQueryWrapper<User> query = new LambdaQueryWrapper<>();
-        query.eq(User::getUsername, username).eq(User::getPassword, password);
-        return userMapper.selectOne(query);
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+        if (user == null) {
+            return null;
+        }
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return null;
+        }
+        return user;
     }
 
     @Override
