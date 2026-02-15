@@ -59,3 +59,6 @@ logs/
 
 
 data/job_profiles/*.json
+data/profiles/profiles.json
+data/profiles/resume_tasks.json
+data/profiles/resumes/

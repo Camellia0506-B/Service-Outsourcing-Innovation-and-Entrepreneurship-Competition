@@ -17,6 +17,11 @@ _register_system_route(app)   # 注册 8.2: POST /api/v1/system/generate-job-pro
 logger.info("[App] 注册路由: 岗位画像模块 /api/v1/job/*")
 logger.info("[App] 注册路由: 系统管理模块 /api/v1/system/*")
 
+# 个人档案模块（第二个功能）
+from api.profile_router import profile_bp
+app.register_blueprint(profile_bp)
+logger.info("[App] 注册路由: 个人档案模块 /api/v1/profile/*")
+
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp
 # app.register_blueprint(auth_bp)
