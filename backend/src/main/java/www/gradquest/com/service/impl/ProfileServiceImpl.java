@@ -19,6 +19,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.dao.DuplicateKeyException;
 
 @Service
 @RequiredArgsConstructor
@@ -196,7 +201,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (original == null || !original.toLowerCase().endsWith(".pdf")) {
             throw new IllegalArgumentException("仅支持 PDF 格式简历");
         }
-        String taskId = "resume_parse_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "_" + userId;
+        String taskId = "resume_parse_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")) + "_" + userId + "_" + (int)(Math.random() * 9000 + 1000);
         ResumeParseTask task = new ResumeParseTask();
         task.setTaskId(taskId);
         task.setUserId(userId);
