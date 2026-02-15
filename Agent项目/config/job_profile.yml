@@ -19,7 +19,7 @@ job_data_path: data/求职岗位信息数据.csv
 job_profiles_store: data/job_profiles/profiles.json
 job_graph_store:    data/job_profiles/graph.json
 max_csv_sample_per_job: 10
-generation_strategy: model_first   # model_first: 模型知识主导，CSV辅助
+
 
 # ============================================================
 # 35个岗位定义

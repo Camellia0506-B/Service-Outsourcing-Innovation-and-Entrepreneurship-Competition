@@ -515,7 +515,7 @@ class JobProfileService:
                 "name":    job_config["name"],
                 "matched": len(matched),
                 "samples": [r.get("职位名称", "") for r in matched],
-                "strategy": "数据集JD分析" if matched else "模型知识兜底",
+                "strategy": "数据集JD分析" if matched else "模型生成",
             }
         return result
 
