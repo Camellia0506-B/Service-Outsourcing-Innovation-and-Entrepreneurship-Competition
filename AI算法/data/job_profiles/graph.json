@@ -1,0 +1,3475 @@
+{
+  "graph_version": "v3",
+  "generated_at": "2026-02-15 10:30:00",
+  "data_strategy": "从job_profile.yml自动构建，节点与画像store直接关联",
+  "summary": {
+    "total_jobs": 35,
+    "total_vertical_tracks": 11,
+    "total_transfer_nodes": 35,
+    "total_transfer_edges": 105,
+    "profiles_generated": 0,
+    "jobs_with_2plus_transfers": 35
+  },
+  "vertical_graphs": [
+    {
+      "track_id": "track_backend",
+      "career_track": "后端开发赛道",
+      "color": "#4A90E2",
+      "nodes": [
+        {
+          "job_id": "job_001",
+          "job_name": "Java后端开发工程师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_002",
+          "job_name": "Python后端开发工程师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_004",
+          "job_name": "Node.js全栈开发工程师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_003",
+          "job_name": "Go后端开发工程师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_006",
+          "job_name": "微服务/分布式开发工程师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_005",
+          "job_name": "后端架构师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 5,
+          "level": 5,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_001",
+          "to": "job_002",
+          "from_name": "Java后端开发工程师",
+          "to_name": "Python后端开发工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "掌握核心技能栈",
+            "有完整项目经验",
+            "能独立交付任务"
+          ]
+        },
+        {
+          "from": "job_002",
+          "to": "job_004",
+          "from_name": "Python后端开发工程师",
+          "to_name": "Node.js全栈开发工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_004",
+          "to": "job_003",
+          "from_name": "Node.js全栈开发工程师",
+          "to_name": "Go后端开发工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_003",
+          "to": "job_006",
+          "from_name": "Go后端开发工程师",
+          "to_name": "微服务/分布式开发工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        },
+        {
+          "from": "job_006",
+          "to": "job_005",
+          "from_name": "微服务/分布式开发工程师",
+          "to_name": "后端架构师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "系统架构设计能力",
+            "技术选型与攻坚",
+            "跨团队协调"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_frontend",
+      "career_track": "前端开发赛道",
+      "color": "#7ED321",
+      "nodes": [
+        {
+          "job_id": "job_009",
+          "job_name": "小程序/跨端开发工程师",
+          "category": "前端开发",
+          "career_track": "前端开发赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_007",
+          "job_name": "前端开发工程师",
+          "category": "前端开发",
+          "career_track": "前端开发赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_008",
+          "job_name": "移动端开发工程师(iOS/Android)",
+          "category": "前端开发",
+          "career_track": "前端开发赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_004",
+          "job_name": "Node.js全栈开发工程师",
+          "category": "后端开发",
+          "career_track": "后端开发赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_010",
+          "job_name": "前端架构师/技术专家",
+          "category": "前端开发",
+          "career_track": "前端开发赛道",
+          "layer_level": 5,
+          "level": 5,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_009",
+          "to": "job_007",
+          "from_name": "小程序/跨端开发工程师",
+          "to_name": "前端开发工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "掌握核心技能栈",
+            "有完整项目经验",
+            "能独立交付任务"
+          ]
+        },
+        {
+          "from": "job_007",
+          "to": "job_008",
+          "from_name": "前端开发工程师",
+          "to_name": "移动端开发工程师(iOS/Android)",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_008",
+          "to": "job_004",
+          "from_name": "移动端开发工程师(iOS/Android)",
+          "to_name": "Node.js全栈开发工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_004",
+          "to": "job_010",
+          "from_name": "Node.js全栈开发工程师",
+          "to_name": "前端架构师/技术专家",
+          "years": "2-4年",
+          "level_gap": 2,
+          "requirements": [
+            "系统架构设计能力",
+            "技术选型与攻坚",
+            "跨团队协调"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_ai",
+      "career_track": "AI算法赛道",
+      "color": "#F5A623",
+      "nodes": [
+        {
+          "job_id": "job_011",
+          "job_name": "机器学习/算法工程师",
+          "category": "AI与算法",
+          "career_track": "AI算法赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_013",
+          "job_name": "计算机视觉工程师",
+          "category": "AI与算法",
+          "career_track": "AI算法赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_017",
+          "job_name": "推荐系统/搜索工程师",
+          "category": "AI与算法",
+          "career_track": "AI算法赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_012",
+          "job_name": "大模型/AIGC应用工程师",
+          "category": "AI与算法",
+          "career_track": "AI算法赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_014",
+          "job_name": "数据科学家",
+          "category": "AI与算法",
+          "career_track": "AI算法赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_011",
+          "to": "job_013",
+          "from_name": "机器学习/算法工程师",
+          "to_name": "计算机视觉工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_013",
+          "to": "job_017",
+          "from_name": "计算机视觉工程师",
+          "to_name": "推荐系统/搜索工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        },
+        {
+          "from": "job_017",
+          "to": "job_012",
+          "from_name": "推荐系统/搜索工程师",
+          "to_name": "大模型/AIGC应用工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        },
+        {
+          "from": "job_012",
+          "to": "job_014",
+          "from_name": "大模型/AIGC应用工程师",
+          "to_name": "数据科学家",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_data",
+      "career_track": "数据分析赛道",
+      "color": "#9B59B6",
+      "nodes": [
+        {
+          "job_id": "job_015",
+          "job_name": "数据分析师",
+          "category": "AI与算法",
+          "career_track": "数据分析赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_016",
+          "job_name": "大数据工程师",
+          "category": "AI与算法",
+          "career_track": "数据分析赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_014",
+          "job_name": "数据科学家",
+          "category": "AI与算法",
+          "career_track": "AI算法赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_015",
+          "to": "job_016",
+          "from_name": "数据分析师",
+          "to_name": "大数据工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_016",
+          "to": "job_014",
+          "from_name": "大数据工程师",
+          "to_name": "数据科学家",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_devops",
+      "career_track": "运维DevOps赛道",
+      "color": "#E74C3C",
+      "nodes": [
+        {
+          "job_id": "job_018",
+          "job_name": "Linux运维工程师",
+          "category": "运维与云",
+          "career_track": "运维DevOps赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_022",
+          "job_name": "数据库工程师/DBA",
+          "category": "运维与云",
+          "career_track": "运维DevOps赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_019",
+          "job_name": "DevOps工程师",
+          "category": "运维与云",
+          "career_track": "运维DevOps赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_020",
+          "job_name": "云计算/云原生工程师",
+          "category": "运维与云",
+          "career_track": "运维DevOps赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_021",
+          "job_name": "SRE站点可靠性工程师",
+          "category": "运维与云",
+          "career_track": "运维DevOps赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_018",
+          "to": "job_022",
+          "from_name": "Linux运维工程师",
+          "to_name": "数据库工程师/DBA",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_022",
+          "to": "job_019",
+          "from_name": "数据库工程师/DBA",
+          "to_name": "DevOps工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_019",
+          "to": "job_020",
+          "from_name": "DevOps工程师",
+          "to_name": "云计算/云原生工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        },
+        {
+          "from": "job_020",
+          "to": "job_021",
+          "from_name": "云计算/云原生工程师",
+          "to_name": "SRE站点可靠性工程师",
+          "years": "1-2年",
+          "level_gap": 0,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_product",
+      "career_track": "产品经理赛道",
+      "color": "#1ABC9C",
+      "nodes": [
+        {
+          "job_id": "job_023",
+          "job_name": "产品经理",
+          "category": "产品与设计",
+          "career_track": "产品经理赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_024",
+          "job_name": "AI产品经理",
+          "category": "产品与设计",
+          "career_track": "产品经理赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_023",
+          "to": "job_024",
+          "from_name": "产品经理",
+          "to_name": "AI产品经理",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_design",
+      "career_track": "设计赛道",
+      "color": "#E67E22",
+      "nodes": [
+        {
+          "job_id": "job_025",
+          "job_name": "UI/UX设计师",
+          "category": "产品与设计",
+          "career_track": "设计赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        }
+      ],
+      "edges": []
+    },
+    {
+      "track_id": "track_test",
+      "career_track": "测试赛道",
+      "color": "#27AE60",
+      "nodes": [
+        {
+          "job_id": "job_026",
+          "job_name": "软件测试工程师",
+          "category": "产品与设计",
+          "career_track": "测试赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_027",
+          "job_name": "自动化/性能测试工程师",
+          "category": "产品与设计",
+          "career_track": "测试赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_026",
+          "to": "job_027",
+          "from_name": "软件测试工程师",
+          "to_name": "自动化/性能测试工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_security",
+      "career_track": "安全赛道",
+      "color": "#C0392B",
+      "nodes": [
+        {
+          "job_id": "job_028",
+          "job_name": "网络安全工程师",
+          "category": "网络安全",
+          "career_track": "安全赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_030",
+          "job_name": "安全运营/SOC工程师",
+          "category": "网络安全",
+          "career_track": "安全赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_029",
+          "job_name": "安全研究员/逆向工程师",
+          "category": "网络安全",
+          "career_track": "安全赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_028",
+          "to": "job_030",
+          "from_name": "网络安全工程师",
+          "to_name": "安全运营/SOC工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_030",
+          "to": "job_029",
+          "from_name": "安全运营/SOC工程师",
+          "to_name": "安全研究员/逆向工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_embedded",
+      "career_track": "嵌入式赛道",
+      "color": "#8E44AD",
+      "nodes": [
+        {
+          "job_id": "job_031",
+          "job_name": "嵌入式软件工程师",
+          "category": "嵌入式与硬件",
+          "career_track": "嵌入式赛道",
+          "layer_level": 2,
+          "level": 2,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_032",
+          "job_name": "物联网/IoT工程师",
+          "category": "嵌入式与硬件",
+          "career_track": "嵌入式赛道",
+          "layer_level": 3,
+          "level": 3,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_033",
+          "job_name": "FPGA/芯片验证工程师",
+          "category": "嵌入式与硬件",
+          "career_track": "嵌入式赛道",
+          "layer_level": 4,
+          "level": 4,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_031",
+          "to": "job_032",
+          "from_name": "嵌入式软件工程师",
+          "to_name": "物联网/IoT工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "独立负责模块开发",
+            "有优化与攻坚经验",
+            "指导初级成员"
+          ]
+        },
+        {
+          "from": "job_032",
+          "to": "job_033",
+          "from_name": "物联网/IoT工程师",
+          "to_name": "FPGA/芯片验证工程师",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "主导技术方案设计",
+            "深度领域专家能力",
+            "带动团队技术提升"
+          ]
+        }
+      ]
+    },
+    {
+      "track_id": "track_management",
+      "career_track": "管理赛道",
+      "color": "#2C3E50",
+      "nodes": [
+        {
+          "job_id": "job_034",
+          "job_name": "技术项目经理",
+          "category": "管理类",
+          "career_track": "管理赛道",
+          "layer_level": 5,
+          "level": 5,
+          "profile_generated": false
+        },
+        {
+          "job_id": "job_035",
+          "job_name": "技术总监/CTO",
+          "category": "管理类",
+          "career_track": "管理赛道",
+          "layer_level": 6,
+          "level": 6,
+          "profile_generated": false
+        }
+      ],
+      "edges": [
+        {
+          "from": "job_034",
+          "to": "job_035",
+          "from_name": "技术项目经理",
+          "to_name": "技术总监/CTO",
+          "years": "1-2年",
+          "level_gap": 1,
+          "requirements": [
+            "团队管理与战略规划",
+            "行业影响力",
+            "业务与技术融合"
+          ]
+        }
+      ]
+    }
+  ],
+  "transfer_graph": {
+    "nodes": [
+      {
+        "job_id": "job_001",
+        "job_name": "Java后端开发工程师",
+        "category": "后端开发",
+        "career_track": "后端开发赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_002",
+        "job_name": "Python后端开发工程师",
+        "category": "后端开发",
+        "career_track": "后端开发赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_003",
+        "job_name": "Go后端开发工程师",
+        "category": "后端开发",
+        "career_track": "后端开发赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_004",
+        "job_name": "Node.js全栈开发工程师",
+        "category": "后端开发",
+        "career_track": "后端开发赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_005",
+        "job_name": "后端架构师",
+        "category": "后端开发",
+        "career_track": "后端开发赛道",
+        "layer_level": 5,
+        "level": 5,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_006",
+        "job_name": "微服务/分布式开发工程师",
+        "category": "后端开发",
+        "career_track": "后端开发赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_007",
+        "job_name": "前端开发工程师",
+        "category": "前端开发",
+        "career_track": "前端开发赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_008",
+        "job_name": "移动端开发工程师(iOS/Android)",
+        "category": "前端开发",
+        "career_track": "前端开发赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_009",
+        "job_name": "小程序/跨端开发工程师",
+        "category": "前端开发",
+        "career_track": "前端开发赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_010",
+        "job_name": "前端架构师/技术专家",
+        "category": "前端开发",
+        "career_track": "前端开发赛道",
+        "layer_level": 5,
+        "level": 5,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_011",
+        "job_name": "机器学习/算法工程师",
+        "category": "AI与算法",
+        "career_track": "AI算法赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_012",
+        "job_name": "大模型/AIGC应用工程师",
+        "category": "AI与算法",
+        "career_track": "AI算法赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_013",
+        "job_name": "计算机视觉工程师",
+        "category": "AI与算法",
+        "career_track": "AI算法赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_014",
+        "job_name": "数据科学家",
+        "category": "AI与算法",
+        "career_track": "AI算法赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_015",
+        "job_name": "数据分析师",
+        "category": "AI与算法",
+        "career_track": "数据分析赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_016",
+        "job_name": "大数据工程师",
+        "category": "AI与算法",
+        "career_track": "数据分析赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_017",
+        "job_name": "推荐系统/搜索工程师",
+        "category": "AI与算法",
+        "career_track": "AI算法赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_018",
+        "job_name": "Linux运维工程师",
+        "category": "运维与云",
+        "career_track": "运维DevOps赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_019",
+        "job_name": "DevOps工程师",
+        "category": "运维与云",
+        "career_track": "运维DevOps赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_020",
+        "job_name": "云计算/云原生工程师",
+        "category": "运维与云",
+        "career_track": "运维DevOps赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_021",
+        "job_name": "SRE站点可靠性工程师",
+        "category": "运维与云",
+        "career_track": "运维DevOps赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_022",
+        "job_name": "数据库工程师/DBA",
+        "category": "运维与云",
+        "career_track": "运维DevOps赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_023",
+        "job_name": "产品经理",
+        "category": "产品与设计",
+        "career_track": "产品经理赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_024",
+        "job_name": "AI产品经理",
+        "category": "产品与设计",
+        "career_track": "产品经理赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_025",
+        "job_name": "UI/UX设计师",
+        "category": "产品与设计",
+        "career_track": "设计赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_026",
+        "job_name": "软件测试工程师",
+        "category": "产品与设计",
+        "career_track": "测试赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_027",
+        "job_name": "自动化/性能测试工程师",
+        "category": "产品与设计",
+        "career_track": "测试赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_028",
+        "job_name": "网络安全工程师",
+        "category": "网络安全",
+        "career_track": "安全赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_029",
+        "job_name": "安全研究员/逆向工程师",
+        "category": "网络安全",
+        "career_track": "安全赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_030",
+        "job_name": "安全运营/SOC工程师",
+        "category": "网络安全",
+        "career_track": "安全赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_031",
+        "job_name": "嵌入式软件工程师",
+        "category": "嵌入式与硬件",
+        "career_track": "嵌入式赛道",
+        "layer_level": 2,
+        "level": 2,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_032",
+        "job_name": "物联网/IoT工程师",
+        "category": "嵌入式与硬件",
+        "career_track": "嵌入式赛道",
+        "layer_level": 3,
+        "level": 3,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_033",
+        "job_name": "FPGA/芯片验证工程师",
+        "category": "嵌入式与硬件",
+        "career_track": "嵌入式赛道",
+        "layer_level": 4,
+        "level": 4,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_034",
+        "job_name": "技术项目经理",
+        "category": "管理类",
+        "career_track": "管理赛道",
+        "layer_level": 5,
+        "level": 5,
+        "profile_generated": false
+      },
+      {
+        "job_id": "job_035",
+        "job_name": "技术总监/CTO",
+        "category": "管理类",
+        "career_track": "管理赛道",
+        "layer_level": 6,
+        "level": 6,
+        "profile_generated": false
+      }
+    ],
+    "edges": [
+      {
+        "from": "job_001",
+        "to": "job_018",
+        "from_name": "Java后端开发工程师",
+        "to_name": "Linux运维工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_001",
+        "to": "job_034",
+        "from_name": "Java后端开发工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_001",
+        "to": "job_026",
+        "from_name": "Java后端开发工程师",
+        "to_name": "软件测试工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_002",
+        "to": "job_011",
+        "from_name": "Python后端开发工程师",
+        "to_name": "机器学习/算法工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_002",
+        "to": "job_016",
+        "from_name": "Python后端开发工程师",
+        "to_name": "大数据工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_002",
+        "to": "job_034",
+        "from_name": "Python后端开发工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_003",
+        "to": "job_019",
+        "from_name": "Go后端开发工程师",
+        "to_name": "DevOps工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_003",
+        "to": "job_006",
+        "from_name": "Go后端开发工程师",
+        "to_name": "微服务/分布式开发工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_003",
+        "to": "job_034",
+        "from_name": "Go后端开发工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_004",
+        "to": "job_007",
+        "from_name": "Node.js全栈开发工程师",
+        "to_name": "前端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_004",
+        "to": "job_023",
+        "from_name": "Node.js全栈开发工程师",
+        "to_name": "产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_004",
+        "to": "job_034",
+        "from_name": "Node.js全栈开发工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_005",
+        "to": "job_035",
+        "from_name": "后端架构师",
+        "to_name": "技术总监/CTO",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_005",
+        "to": "job_034",
+        "from_name": "后端架构师",
+        "to_name": "技术项目经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_005",
+        "to": "job_023",
+        "from_name": "后端架构师",
+        "to_name": "产品经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_006",
+        "to": "job_005",
+        "from_name": "微服务/分布式开发工程师",
+        "to_name": "后端架构师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_006",
+        "to": "job_020",
+        "from_name": "微服务/分布式开发工程师",
+        "to_name": "云计算/云原生工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_006",
+        "to": "job_022",
+        "from_name": "微服务/分布式开发工程师",
+        "to_name": "数据库工程师/DBA",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_007",
+        "to": "job_025",
+        "from_name": "前端开发工程师",
+        "to_name": "UI/UX设计师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_007",
+        "to": "job_009",
+        "from_name": "前端开发工程师",
+        "to_name": "小程序/跨端开发工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_007",
+        "to": "job_023",
+        "from_name": "前端开发工程师",
+        "to_name": "产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_008",
+        "to": "job_009",
+        "from_name": "移动端开发工程师(iOS/Android)",
+        "to_name": "小程序/跨端开发工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_008",
+        "to": "job_004",
+        "from_name": "移动端开发工程师(iOS/Android)",
+        "to_name": "Node.js全栈开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_008",
+        "to": "job_023",
+        "from_name": "移动端开发工程师(iOS/Android)",
+        "to_name": "产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_009",
+        "to": "job_007",
+        "from_name": "小程序/跨端开发工程师",
+        "to_name": "前端开发工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_009",
+        "to": "job_008",
+        "from_name": "小程序/跨端开发工程师",
+        "to_name": "移动端开发工程师(iOS/Android)",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_009",
+        "to": "job_023",
+        "from_name": "小程序/跨端开发工程师",
+        "to_name": "产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_010",
+        "to": "job_035",
+        "from_name": "前端架构师/技术专家",
+        "to_name": "技术总监/CTO",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_010",
+        "to": "job_023",
+        "from_name": "前端架构师/技术专家",
+        "to_name": "产品经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_010",
+        "to": "job_034",
+        "from_name": "前端架构师/技术专家",
+        "to_name": "技术项目经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_011",
+        "to": "job_012",
+        "from_name": "机器学习/算法工程师",
+        "to_name": "大模型/AIGC应用工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_011",
+        "to": "job_015",
+        "from_name": "机器学习/算法工程师",
+        "to_name": "数据分析师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_011",
+        "to": "job_024",
+        "from_name": "机器学习/算法工程师",
+        "to_name": "AI产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_012",
+        "to": "job_024",
+        "from_name": "大模型/AIGC应用工程师",
+        "to_name": "AI产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_012",
+        "to": "job_011",
+        "from_name": "大模型/AIGC应用工程师",
+        "to_name": "机器学习/算法工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_012",
+        "to": "job_002",
+        "from_name": "大模型/AIGC应用工程师",
+        "to_name": "Python后端开发工程师",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_013",
+        "to": "job_011",
+        "from_name": "计算机视觉工程师",
+        "to_name": "机器学习/算法工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_013",
+        "to": "job_031",
+        "from_name": "计算机视觉工程师",
+        "to_name": "嵌入式软件工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_013",
+        "to": "job_017",
+        "from_name": "计算机视觉工程师",
+        "to_name": "推荐系统/搜索工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_014",
+        "to": "job_015",
+        "from_name": "数据科学家",
+        "to_name": "数据分析师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_014",
+        "to": "job_011",
+        "from_name": "数据科学家",
+        "to_name": "机器学习/算法工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_014",
+        "to": "job_024",
+        "from_name": "数据科学家",
+        "to_name": "AI产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_015",
+        "to": "job_016",
+        "from_name": "数据分析师",
+        "to_name": "大数据工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_015",
+        "to": "job_014",
+        "from_name": "数据分析师",
+        "to_name": "数据科学家",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_015",
+        "to": "job_023",
+        "from_name": "数据分析师",
+        "to_name": "产品经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_016",
+        "to": "job_014",
+        "from_name": "大数据工程师",
+        "to_name": "数据科学家",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_016",
+        "to": "job_022",
+        "from_name": "大数据工程师",
+        "to_name": "数据库工程师/DBA",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_016",
+        "to": "job_020",
+        "from_name": "大数据工程师",
+        "to_name": "云计算/云原生工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_017",
+        "to": "job_011",
+        "from_name": "推荐系统/搜索工程师",
+        "to_name": "机器学习/算法工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_017",
+        "to": "job_016",
+        "from_name": "推荐系统/搜索工程师",
+        "to_name": "大数据工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_017",
+        "to": "job_012",
+        "from_name": "推荐系统/搜索工程师",
+        "to_name": "大模型/AIGC应用工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_018",
+        "to": "job_019",
+        "from_name": "Linux运维工程师",
+        "to_name": "DevOps工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_018",
+        "to": "job_020",
+        "from_name": "Linux运维工程师",
+        "to_name": "云计算/云原生工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_018",
+        "to": "job_001",
+        "from_name": "Linux运维工程师",
+        "to_name": "Java后端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_019",
+        "to": "job_020",
+        "from_name": "DevOps工程师",
+        "to_name": "云计算/云原生工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_019",
+        "to": "job_021",
+        "from_name": "DevOps工程师",
+        "to_name": "SRE站点可靠性工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_019",
+        "to": "job_003",
+        "from_name": "DevOps工程师",
+        "to_name": "Go后端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_020",
+        "to": "job_021",
+        "from_name": "云计算/云原生工程师",
+        "to_name": "SRE站点可靠性工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_020",
+        "to": "job_005",
+        "from_name": "云计算/云原生工程师",
+        "to_name": "后端架构师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_020",
+        "to": "job_019",
+        "from_name": "云计算/云原生工程师",
+        "to_name": "DevOps工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_021",
+        "to": "job_020",
+        "from_name": "SRE站点可靠性工程师",
+        "to_name": "云计算/云原生工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_021",
+        "to": "job_005",
+        "from_name": "SRE站点可靠性工程师",
+        "to_name": "后端架构师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_021",
+        "to": "job_034",
+        "from_name": "SRE站点可靠性工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_022",
+        "to": "job_016",
+        "from_name": "数据库工程师/DBA",
+        "to_name": "大数据工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_022",
+        "to": "job_001",
+        "from_name": "数据库工程师/DBA",
+        "to_name": "Java后端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_022",
+        "to": "job_005",
+        "from_name": "数据库工程师/DBA",
+        "to_name": "后端架构师",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_023",
+        "to": "job_024",
+        "from_name": "产品经理",
+        "to_name": "AI产品经理",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_023",
+        "to": "job_034",
+        "from_name": "产品经理",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_023",
+        "to": "job_015",
+        "from_name": "产品经理",
+        "to_name": "数据分析师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_024",
+        "to": "job_035",
+        "from_name": "AI产品经理",
+        "to_name": "技术总监/CTO",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_024",
+        "to": "job_023",
+        "from_name": "AI产品经理",
+        "to_name": "产品经理",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_024",
+        "to": "job_012",
+        "from_name": "AI产品经理",
+        "to_name": "大模型/AIGC应用工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_025",
+        "to": "job_023",
+        "from_name": "UI/UX设计师",
+        "to_name": "产品经理",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_025",
+        "to": "job_007",
+        "from_name": "UI/UX设计师",
+        "to_name": "前端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_025",
+        "to": "job_026",
+        "from_name": "UI/UX设计师",
+        "to_name": "软件测试工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_026",
+        "to": "job_027",
+        "from_name": "软件测试工程师",
+        "to_name": "自动化/性能测试工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_026",
+        "to": "job_034",
+        "from_name": "软件测试工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_026",
+        "to": "job_001",
+        "from_name": "软件测试工程师",
+        "to_name": "Java后端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_027",
+        "to": "job_019",
+        "from_name": "自动化/性能测试工程师",
+        "to_name": "DevOps工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_027",
+        "to": "job_034",
+        "from_name": "自动化/性能测试工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_027",
+        "to": "job_001",
+        "from_name": "自动化/性能测试工程师",
+        "to_name": "Java后端开发工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_028",
+        "to": "job_029",
+        "from_name": "网络安全工程师",
+        "to_name": "安全研究员/逆向工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_028",
+        "to": "job_030",
+        "from_name": "网络安全工程师",
+        "to_name": "安全运营/SOC工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_028",
+        "to": "job_018",
+        "from_name": "网络安全工程师",
+        "to_name": "Linux运维工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_029",
+        "to": "job_028",
+        "from_name": "安全研究员/逆向工程师",
+        "to_name": "网络安全工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_029",
+        "to": "job_030",
+        "from_name": "安全研究员/逆向工程师",
+        "to_name": "安全运营/SOC工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_029",
+        "to": "job_031",
+        "from_name": "安全研究员/逆向工程师",
+        "to_name": "嵌入式软件工程师",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_030",
+        "to": "job_028",
+        "from_name": "安全运营/SOC工程师",
+        "to_name": "网络安全工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_030",
+        "to": "job_034",
+        "from_name": "安全运营/SOC工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_030",
+        "to": "job_018",
+        "from_name": "安全运营/SOC工程师",
+        "to_name": "Linux运维工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_031",
+        "to": "job_032",
+        "from_name": "嵌入式软件工程师",
+        "to_name": "物联网/IoT工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_031",
+        "to": "job_013",
+        "from_name": "嵌入式软件工程师",
+        "to_name": "计算机视觉工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_031",
+        "to": "job_033",
+        "from_name": "嵌入式软件工程师",
+        "to_name": "FPGA/芯片验证工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_032",
+        "to": "job_031",
+        "from_name": "物联网/IoT工程师",
+        "to_name": "嵌入式软件工程师",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_032",
+        "to": "job_020",
+        "from_name": "物联网/IoT工程师",
+        "to_name": "云计算/云原生工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_032",
+        "to": "job_013",
+        "from_name": "物联网/IoT工程师",
+        "to_name": "计算机视觉工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_033",
+        "to": "job_031",
+        "from_name": "FPGA/芯片验证工程师",
+        "to_name": "嵌入式软件工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_033",
+        "to": "job_029",
+        "from_name": "FPGA/芯片验证工程师",
+        "to_name": "安全研究员/逆向工程师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_033",
+        "to": "job_034",
+        "from_name": "FPGA/芯片验证工程师",
+        "to_name": "技术项目经理",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_034",
+        "to": "job_035",
+        "from_name": "技术项目经理",
+        "to_name": "技术总监/CTO",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_034",
+        "to": "job_023",
+        "from_name": "技术项目经理",
+        "to_name": "产品经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_034",
+        "to": "job_005",
+        "from_name": "技术项目经理",
+        "to_name": "后端架构师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_035",
+        "to": "job_034",
+        "from_name": "技术总监/CTO",
+        "to_name": "技术项目经理",
+        "relevance_score": 80,
+        "difficulty": "低",
+        "estimated_time": "3-6个月",
+        "time": "3-6个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_035",
+        "to": "job_023",
+        "from_name": "技术总监/CTO",
+        "to_name": "产品经理",
+        "relevance_score": 60,
+        "difficulty": "高",
+        "estimated_time": "12-18个月",
+        "time": "12-18个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      },
+      {
+        "from": "job_035",
+        "to": "job_005",
+        "from_name": "技术总监/CTO",
+        "to_name": "后端架构师",
+        "relevance_score": 70,
+        "difficulty": "中",
+        "estimated_time": "6-12个月",
+        "time": "6-12个月",
+        "skills_gap": [
+          "待画像生成后补充具体技能差距"
+        ],
+        "reason": "同属计算机行业，技能存在关联性",
+        "data_source": "推导（画像未生成）"
+      }
+    ]
+  },
+  "hot_transfer_paths": [
+    {
+      "from_job": "Go后端开发工程师",
+      "to_job": "微服务/分布式开发工程师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "微服务/分布式开发工程师",
+      "to_job": "后端架构师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "前端开发工程师",
+      "to_job": "小程序/跨端开发工程师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "移动端开发工程师(iOS/Android)",
+      "to_job": "小程序/跨端开发工程师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "小程序/跨端开发工程师",
+      "to_job": "前端开发工程师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "小程序/跨端开发工程师",
+      "to_job": "移动端开发工程师(iOS/Android)",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "机器学习/算法工程师",
+      "to_job": "大模型/AIGC应用工程师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    },
+    {
+      "from_job": "机器学习/算法工程师",
+      "to_job": "数据分析师",
+      "relevance_score": 80,
+      "difficulty": "低",
+      "estimated_time": "3-6个月"
+    }
+  ],
+  "transfer_summary": {
+    "job_001": {
+      "job_name": "Java后端开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "Linux运维工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "软件测试工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_002": {
+      "job_name": "Python后端开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "机器学习/算法工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "大数据工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_003": {
+      "job_name": "Go后端开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "DevOps工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "微服务/分布式开发工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_004": {
+      "job_name": "Node.js全栈开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "前端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_005": {
+      "job_name": "后端架构师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "技术总监/CTO",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_006": {
+      "job_name": "微服务/分布式开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "后端架构师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "云计算/云原生工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "数据库工程师/DBA",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_007": {
+      "job_name": "前端开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "UI/UX设计师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "小程序/跨端开发工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_008": {
+      "job_name": "移动端开发工程师(iOS/Android)",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "小程序/跨端开发工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "Node.js全栈开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_009": {
+      "job_name": "小程序/跨端开发工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "前端开发工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "移动端开发工程师(iOS/Android)",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_010": {
+      "job_name": "前端架构师/技术专家",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "技术总监/CTO",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_011": {
+      "job_name": "机器学习/算法工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "大模型/AIGC应用工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "数据分析师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "AI产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_012": {
+      "job_name": "大模型/AIGC应用工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "AI产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "机器学习/算法工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "Python后端开发工程师",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_013": {
+      "job_name": "计算机视觉工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "机器学习/算法工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "嵌入式软件工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "推荐系统/搜索工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        }
+      ]
+    },
+    "job_014": {
+      "job_name": "数据科学家",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "数据分析师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "机器学习/算法工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "AI产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_015": {
+      "job_name": "数据分析师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "大数据工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "数据科学家",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_016": {
+      "job_name": "大数据工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "数据科学家",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "数据库工程师/DBA",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "云计算/云原生工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_017": {
+      "job_name": "推荐系统/搜索工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "机器学习/算法工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "大数据工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "大模型/AIGC应用工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        }
+      ]
+    },
+    "job_018": {
+      "job_name": "Linux运维工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "DevOps工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "云计算/云原生工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "Java后端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_019": {
+      "job_name": "DevOps工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "云计算/云原生工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "SRE站点可靠性工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "Go后端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_020": {
+      "job_name": "云计算/云原生工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "SRE站点可靠性工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "后端架构师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "DevOps工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        }
+      ]
+    },
+    "job_021": {
+      "job_name": "SRE站点可靠性工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "云计算/云原生工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "后端架构师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_022": {
+      "job_name": "数据库工程师/DBA",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "大数据工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "Java后端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "后端架构师",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_023": {
+      "job_name": "产品经理",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "AI产品经理",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "数据分析师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_024": {
+      "job_name": "AI产品经理",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "技术总监/CTO",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "大模型/AIGC应用工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_025": {
+      "job_name": "UI/UX设计师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "产品经理",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "前端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "软件测试工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        }
+      ]
+    },
+    "job_026": {
+      "job_name": "软件测试工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "自动化/性能测试工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "Java后端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_027": {
+      "job_name": "自动化/性能测试工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "DevOps工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "Java后端开发工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_028": {
+      "job_name": "网络安全工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "安全研究员/逆向工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "安全运营/SOC工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "Linux运维工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_029": {
+      "job_name": "安全研究员/逆向工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "网络安全工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "安全运营/SOC工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "嵌入式软件工程师",
+          "difficulty": "高",
+          "time": "12-18个月"
+        }
+      ]
+    },
+    "job_030": {
+      "job_name": "安全运营/SOC工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "网络安全工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "Linux运维工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_031": {
+      "job_name": "嵌入式软件工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "物联网/IoT工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "计算机视觉工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "FPGA/芯片验证工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_032": {
+      "job_name": "物联网/IoT工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "嵌入式软件工程师",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "云计算/云原生工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "计算机视觉工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_033": {
+      "job_name": "FPGA/芯片验证工程师",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "嵌入式软件工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "安全研究员/逆向工程师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        },
+        {
+          "to": "技术项目经理",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_034": {
+      "job_name": "技术项目经理",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "技术总监/CTO",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "后端架构师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    },
+    "job_035": {
+      "job_name": "技术总监/CTO",
+      "transfer_count": 3,
+      "paths": [
+        {
+          "to": "技术项目经理",
+          "difficulty": "低",
+          "time": "3-6个月"
+        },
+        {
+          "to": "产品经理",
+          "difficulty": "高",
+          "time": "12-18个月"
+        },
+        {
+          "to": "后端架构师",
+          "difficulty": "中",
+          "time": "6-12个月"
+        }
+      ]
+    }
+  }
+}
