@@ -1,0 +1,1001 @@
+// 应用主类
+class CareerPlanningApp {
+    constructor() {
+        this.currentPage = 'login';
+        this.currentUser = null;
+        this.init();
+    }
+
+    // 初始化应用
+    init() {
+        // 检查登录状态
+        if (isLoggedIn()) {
+            this.currentUser = getUserInfo();
+            this.showMainApp();
+        } else {
+            this.showPage('loginPage');
+        }
+
+        // 绑定事件
+        this.bindEvents();
+    }
+
+    // 绑定所有事件
+    bindEvents() {
+        // 登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleLogin();
+        });
+
+        // 快速注册按钮
+        document.getElementById('quickRegisterBtn').addEventListener('click', () => {
+            this.showQuickRegisterModal();
+        });
+
+        // 关闭快速注册对话框
+        document.getElementById('closeModal').addEventListener('click', () => {
+            this.hideQuickRegisterModal();
+        });
+
+        // 点击对话框外部关闭
+        document.getElementById('quickRegisterModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('quickRegisterModal')) {
+                this.hideQuickRegisterModal();
+            }
+        });
+
+        // 快速注册提交
+        document.getElementById('quickRegisterSubmit').addEventListener('click', () => {
+            this.handleQuickRegister();
+        });
+
+        // 导航链接
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = e.target.dataset.page;
+                this.navigateTo(page);
+            });
+        });
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            this.handleLogout();
+        });
+
+        // 仪表板快捷操作
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const action = card.dataset.action;
+                this.navigateTo(action);
+            });
+        });
+
+        // 个人档案相关
+        document.getElementById('saveProfileBtn').addEventListener('click', () => {
+            this.saveProfile();
+        });
+
+        document.getElementById('viewProfileBtn').addEventListener('click', () => {
+            this.viewCompleteProfile();
+        });
+
+        document.getElementById('addSkillCategory').addEventListener('click', () => {
+            this.addSkillCategory();
+        });
+
+        document.getElementById('uploadResumeBtn').addEventListener('click', () => {
+            document.getElementById('resumeUpload').click();
+        });
+
+        document.getElementById('resumeUpload').addEventListener('change', (e) => {
+            this.handleResumeUpload(e.target.files[0]);
+        });
+
+        // 职业测评相关
+        document.getElementById('submitAssessmentBtn')?.addEventListener('click', () => {
+            this.submitAssessment();
+        });
+
+        // 岗位匹配相关
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchTab(e.target.dataset.tab);
+            });
+        });
+
+        document.getElementById('searchJobBtn').addEventListener('click', () => {
+            this.searchJobs();
+        });
+
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            this.analyzeJobMatch();
+        });
+
+        // 职业规划报告相关
+        document.getElementById('generateReportBtn').addEventListener('click', () => {
+            this.generateReport();
+        });
+
+        document.getElementById('viewHistoryBtn').addEventListener('click', () => {
+            this.viewReportHistory();
+        });
+    }
+
+    // 显示页面
+    showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.add('hidden');
+        });
+        document.getElementById(pageId).classList.remove('hidden');
+    }
+
+    // 显示主应用（登录后）
+    showMainApp() {
+        document.getElementById('navbar').classList.remove('hidden');
+        this.updateUserInfo();
+        this.navigateTo('dashboard');
+        this.loadDashboardData();
+    }
+
+    // 更新用户信息显示
+    updateUserInfo() {
+        if (this.currentUser) {
+            document.getElementById('userName').textContent = this.currentUser.nickname || this.currentUser.username;
+            document.getElementById('welcomeName').textContent = this.currentUser.nickname || this.currentUser.username;
+            
+            const avatarUrl = this.currentUser.avatar || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ddd" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23666" font-size="40">👤</text></svg>';
+            document.getElementById('userAvatar').src = avatarUrl;
+        }
+    }
+
+    // 导航到指定页面
+    navigateTo(page) {
+        // 更新导航高亮
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.page === page) {
+                link.classList.add('active');
+            }
+        });
+
+        // 显示对应页面
+        this.showPage(page + 'Page');
+        this.currentPage = page;
+
+        // 加载页面数据
+        this.loadPageData(page);
+    }
+
+    // 加载页面数据
+    async loadPageData(page) {
+        switch(page) {
+            case 'dashboard':
+                await this.loadDashboardData();
+                break;
+            case 'profile':
+                await this.loadProfileData();
+                break;
+            case 'assessment':
+                await this.loadAssessmentData();
+                break;
+            case 'matching':
+                await this.loadMatchingData();
+                break;
+            case 'report':
+                await this.loadReportData();
+                break;
+        }
+    }
+
+    // 处理登录
+    async handleLogin() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+
+        this.showLoading();
+        const result = await login(username, password);
+        this.hideLoading();
+
+        if (result.success) {
+            localStorage.setItem('token', result.data.token);
+            saveUserInfo(result.data);
+            this.currentUser = result.data;
+            this.showToast('登录成功', 'success');
+            this.showMainApp();
+        } else {
+            this.showToast(result.msg || '登录失败', 'error');
+        }
+    }
+
+    // 显示快速注册对话框
+    showQuickRegisterModal() {
+        document.getElementById('quickRegisterModal').classList.remove('hidden');
+        document.getElementById('quickRegisterText').focus();
+    }
+
+    // 隐藏快速注册对话框
+    hideQuickRegisterModal() {
+        document.getElementById('quickRegisterModal').classList.add('hidden');
+        document.getElementById('quickRegisterText').value = '';
+    }
+
+    // 处理快速注册
+    async handleQuickRegister() {
+        const introduction = document.getElementById('quickRegisterText').value.trim();
+        
+        if (!introduction) {
+            this.showToast('请介绍一下自己', 'error');
+            return;
+        }
+
+        // 根据介绍生成用户信息
+        const userInfo = this.generateUserInfoFromIntro(introduction);
+        
+        this.showLoading();
+        const result = await register(userInfo.username, userInfo.password, userInfo.nickname);
+        this.hideLoading();
+
+        if (result.success) {
+            this.showToast('注册成功，正在登录...', 'success');
+            // 自动登录
+            setTimeout(() => {
+                this.autoLogin(userInfo.username, userInfo.password);
+            }, 1000);
+        } else {
+            this.showToast(result.msg || '注册失败', 'error');
+        }
+    }
+
+    // 根据介绍生成用户信息
+    generateUserInfoFromIntro(introduction) {
+        // 简单的用户信息生成逻辑
+        const timestamp = Date.now();
+        const username = 'user_' + timestamp.toString().slice(-6);
+        const password = '123456'; // 默认密码
+        let nickname = '新用户';
+        
+        // 尝试从介绍中提取信息
+        if (introduction.includes('学生')) {
+            nickname = '学生用户';
+        } else if (introduction.includes('转行')) {
+            nickname = '转行用户';
+        } else if (introduction.includes('设计')) {
+            nickname = '设计爱好者';
+        } else if (introduction.includes('技术') || introduction.includes('开发')) {
+            nickname = '技术达人';
+        } else if (introduction.includes('大三')) {
+            nickname = '大三学生';
+        }
+        
+        return { username, password, nickname };
+    }
+
+    // 自动登录
+    async autoLogin(username, password) {
+        this.hideQuickRegisterModal();
+        const result = await login(username, password);
+        
+        if (result.success) {
+            localStorage.setItem('token', result.data.token);
+            saveUserInfo(result.data);
+            this.currentUser = result.data;
+            this.showMainApp();
+        } else {
+            this.showToast('自动登录失败，请手动登录', 'error');
+        }
+    }
+
+
+
+    // 处理退出登录
+    async handleLogout() {
+        if (confirm('确定要退出登录吗？')) {
+            const userId = getCurrentUserId();
+            await logout(userId);
+            clearUserInfo();
+            this.currentUser = null;
+            document.getElementById('navbar').classList.add('hidden');
+            this.showPage('loginPage');
+            this.showToast('已退出登录', 'success');
+        }
+    }
+
+    // 加载仪表板数据
+    async loadDashboardData() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        // 获取个人档案信息
+        const profileResult = await getProfile(userId);
+        if (profileResult.success) {
+            const completeness = profileResult.data.profile_completeness || 0;
+            document.getElementById('profileCompleteness').textContent = completeness + '%';
+        }
+
+        // 获取测评状态
+        const assessmentResult = await getAssessmentReport(userId);
+        if (assessmentResult.success) {
+            document.getElementById('assessmentStatus').textContent = '已完成';
+        } else {
+            document.getElementById('assessmentStatus').textContent = '未完成';
+        }
+
+        // 获取推荐岗位数量
+        const matchingResult = await getRecommendedJobs(userId, 10);
+        if (matchingResult.success) {
+            document.getElementById('matchedJobs').textContent = matchingResult.data.jobs.length;
+        }
+    }
+
+    // 加载个人档案数据
+    async loadProfileData() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        this.showLoading();
+        const result = await getProfile(userId);
+        this.hideLoading();
+
+        if (result.success) {
+            this.fillProfileForm(result.data);
+        }
+    }
+
+    // 填充个人档案表单
+    fillProfileForm(data) {
+        if (data.basic_info) {
+            document.getElementById('nickname').value = data.basic_info.nickname || '';
+            document.getElementById('gender').value = data.basic_info.gender || '';
+            document.getElementById('birthDate').value = data.basic_info.birth_date || '';
+            document.getElementById('phone').value = data.basic_info.phone || '';
+            document.getElementById('email').value = data.basic_info.email || '';
+        }
+
+        if (data.education_info) {
+            document.getElementById('school').value = data.education_info.school || '';
+            document.getElementById('major').value = data.education_info.major || '';
+            document.getElementById('degree').value = data.education_info.degree || '';
+            document.getElementById('grade').value = data.education_info.grade || '';
+            document.getElementById('expectedGraduation').value = data.education_info.expected_graduation || '';
+            document.getElementById('gpa').value = data.education_info.gpa || '';
+        }
+
+        // 填充技能
+        if (data.skills && data.skills.length > 0) {
+            const container = document.getElementById('skillsContainer');
+            container.innerHTML = '';
+            data.skills.forEach(skill => {
+                const div = document.createElement('div');
+                div.className = 'skill-category';
+                div.innerHTML = `
+                    <input type="text" placeholder="技能分类" class="skill-category-input" value="${skill.category}">
+                    <input type="text" placeholder="技能列表" class="skill-items-input" value="${skill.items.join(', ')}">
+                `;
+                container.appendChild(div);
+            });
+        }
+    }
+
+    // 保存个人档案
+    async saveProfile() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        const profileData = {
+            basic_info: {
+                nickname: document.getElementById('nickname').value,
+                gender: document.getElementById('gender').value,
+                birth_date: document.getElementById('birthDate').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value
+            },
+            education_info: {
+                school: document.getElementById('school').value,
+                major: document.getElementById('major').value,
+                degree: document.getElementById('degree').value,
+                grade: document.getElementById('grade').value,
+                expected_graduation: document.getElementById('expectedGraduation').value,
+                gpa: document.getElementById('gpa').value
+            },
+            skills: this.collectSkills()
+        };
+
+        this.showLoading();
+        const result = await updateProfile(userId, profileData);
+        this.hideLoading();
+
+        if (result.success) {
+            this.showToast('档案保存成功', 'success');
+            // 更新完整度显示
+            if (result.data.profile_completeness) {
+                document.getElementById('profileCompleteness').textContent = 
+                    result.data.profile_completeness + '%';
+            }
+        } else {
+            this.showToast(result.msg || '保存失败', 'error');
+        }
+    }
+
+    // 收集技能数据
+    collectSkills() {
+        const skills = [];
+        document.querySelectorAll('.skill-category').forEach(category => {
+            const categoryName = category.querySelector('.skill-category-input').value;
+            const itemsStr = category.querySelector('.skill-items-input').value;
+            if (categoryName && itemsStr) {
+                skills.push({
+                    category: categoryName,
+                    items: itemsStr.split(',').map(s => s.trim()).filter(s => s)
+                });
+            }
+        });
+        return skills;
+    }
+
+    // 添加技能分类
+    addSkillCategory() {
+        const container = document.getElementById('skillsContainer');
+        const div = document.createElement('div');
+        div.className = 'skill-category';
+        div.innerHTML = `
+            <input type="text" placeholder="技能分类 (如: 编程语言)" class="skill-category-input">
+            <input type="text" placeholder="技能列表 (用逗号分隔)" class="skill-items-input">
+        `;
+        container.appendChild(div);
+    }
+
+    // 查看完整档案
+    async viewCompleteProfile() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        this.showLoading();
+        const result = await getProfile(userId);
+        this.hideLoading();
+
+        if (result.success) {
+            this.showProfileModal(result.data);
+        }
+    }
+
+    // 显示档案模态框
+    showProfileModal(data) {
+        alert('完整档案信息:\n' + JSON.stringify(data, null, 2));
+        // 实际项目中应该创建一个美观的模态框来显示
+    }
+
+    // 处理简历上传
+    async handleResumeUpload(file) {
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            this.showToast('请上传PDF格式的简历', 'error');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            this.showToast('文件大小不能超过10MB', 'error');
+            return;
+        }
+
+        const userId = getCurrentUserId();
+        const statusDiv = document.getElementById('uploadStatus');
+        statusDiv.textContent = '上传中...';
+        statusDiv.style.background = '#e0f2fe';
+
+        const result = await uploadResume(userId, file);
+
+        if (result.success) {
+            statusDiv.textContent = '上传成功，正在解析...';
+            statusDiv.style.background = '#dcfce7';
+            
+            // 轮询获取解析结果
+            this.pollResumeParseResult(userId, result.data.task_id);
+        } else {
+            statusDiv.textContent = '上传失败: ' + result.msg;
+            statusDiv.style.background = '#fee2e2';
+        }
+    }
+
+    // 轮询简历解析结果
+    async pollResumeParseResult(userId, taskId, maxAttempts = 10) {
+        let attempts = 0;
+        const statusDiv = document.getElementById('uploadStatus');
+
+        const poll = async () => {
+            if (attempts >= maxAttempts) {
+                statusDiv.textContent = '解析超时，请稍后查看';
+                return;
+            }
+
+            const result = await getResumeParseResult(userId, taskId);
+
+            if (result.success) {
+                if (result.data.status === 'completed') {
+                    statusDiv.textContent = '解析完成！已自动填充档案信息';
+                    statusDiv.style.background = '#dcfce7';
+                    
+                    // 重新加载档案数据
+                    this.loadProfileData();
+                } else if (result.data.status === 'failed') {
+                    statusDiv.textContent = '解析失败，请重试';
+                    statusDiv.style.background = '#fee2e2';
+                } else {
+                    attempts++;
+                    setTimeout(poll, 3000);
+                }
+            } else {
+                attempts++;
+                setTimeout(poll, 3000);
+            }
+        };
+
+        poll();
+    }
+
+    // 加载职业测评数据
+    async loadAssessmentData() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        this.showLoading();
+        const result = await getQuestionnaire(userId);
+        this.hideLoading();
+
+        if (result.success) {
+            this.renderQuestionnaire(result.data.questions);
+        }
+    }
+
+    // 渲染测评问卷
+    renderQuestionnaire(questions) {
+        const container = document.getElementById('questionnaireContainer');
+        container.innerHTML = '';
+
+        questions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-card';
+            
+            let optionsHtml = '';
+            q.options.forEach((option, optionIndex) => {
+                optionsHtml += `
+                    <label class="option-item">
+                        <input type="radio" name="question_${q.question_id}" value="${optionIndex}" data-score="${option.score}">
+                        <span>${option.text}</span>
+                    </label>
+                `;
+            });
+
+            questionDiv.innerHTML = `
+                <div class="question-header">
+                    <div class="question-number">${index + 1}</div>
+                    <div class="question-text">${q.question_text}</div>
+                </div>
+                <div class="options">${optionsHtml}</div>
+            `;
+
+            container.appendChild(questionDiv);
+        });
+
+        // 显示提交按钮
+        document.getElementById('assessmentActions').classList.remove('hidden');
+
+        // 添加选项点击效果
+        document.querySelectorAll('.option-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // 移除同组其他选项的选中样式
+                const name = radio.name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                    r.closest('.option-item').classList.remove('selected');
+                });
+                
+                // 添加当前选项的选中样式
+                this.classList.add('selected');
+            });
+        });
+    }
+
+    // 提交测评
+    async submitAssessment() {
+        const answers = [];
+        const questions = document.querySelectorAll('.question-card');
+
+        // 收集答案
+        questions.forEach(questionCard => {
+            const questionHeader = questionCard.querySelector('.question-text');
+            const selectedOption = questionCard.querySelector('input[type="radio"]:checked');
+            
+            if (selectedOption) {
+                const questionId = selectedOption.name.replace('question_', '');
+                answers.push({
+                    question_id: questionId,
+                    answer_index: parseInt(selectedOption.value),
+                    score: parseFloat(selectedOption.dataset.score || 0)
+                });
+            }
+        });
+
+        // 检查是否所有问题都已回答
+        if (answers.length < questions.length) {
+            this.showToast('请回答所有问题', 'error');
+            return;
+        }
+
+        const userId = getCurrentUserId();
+        this.showLoading();
+        const result = await submitAssessment(userId, answers);
+        this.hideLoading();
+
+        if (result.success) {
+            this.showToast('测评提交成功', 'success');
+            document.getElementById('viewReportBtn').classList.remove('hidden');
+            
+            // 显示测评报告
+            setTimeout(() => {
+                this.viewAssessmentReport();
+            }, 1000);
+        } else {
+            this.showToast(result.msg || '提交失败', 'error');
+        }
+    }
+
+    // 查看测评报告
+    async viewAssessmentReport() {
+        const userId = getCurrentUserId();
+        this.showLoading();
+        const result = await getAssessmentReport(userId);
+        this.hideLoading();
+
+        if (result.success) {
+            alert('测评报告:\n' + JSON.stringify(result.data, null, 2));
+            // 实际项目中应该创建一个美观的展示页面
+        }
+    }
+
+    // 加载岗位匹配数据
+    async loadMatchingData() {
+        await this.loadRecommendedJobs();
+        await this.loadJobList();
+    }
+
+    // 加载推荐岗位
+    async loadRecommendedJobs() {
+        const userId = getCurrentUserId();
+        const container = document.getElementById('recommendedJobs');
+        container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
+
+        const result = await getRecommendedJobs(userId, 10);
+
+        if (result.success && result.data.jobs) {
+            this.renderJobs(result.data.jobs, container);
+        } else {
+            container.innerHTML = '<div class="hint-text">暂无推荐岗位</div>';
+        }
+    }
+
+    // 渲染岗位列表
+    renderJobs(jobs, container) {
+        container.innerHTML = '';
+
+        jobs.forEach(job => {
+            const jobCard = document.createElement('div');
+            jobCard.className = 'job-card';
+            
+            const tags = job.required_skills ? 
+                job.required_skills.slice(0, 3).map(skill => 
+                    `<span class="job-tag">${skill}</span>`
+                ).join('') : '';
+
+            jobCard.innerHTML = `
+                <div class="job-card-header">
+                    <div class="job-title">${job.job_name}</div>
+                    <div class="job-company">${job.company || '多家公司'}</div>
+                </div>
+                <div class="job-tags">${tags}</div>
+                <div class="match-score">
+                    <span class="score-label">匹配度</span>
+                    <span class="score-value">${job.match_score || '--'}%</span>
+                </div>
+            `;
+
+            jobCard.addEventListener('click', () => {
+                this.showJobDetail(job);
+            });
+
+            container.appendChild(jobCard);
+        });
+    }
+
+    // 显示岗位详情
+    showJobDetail(job) {
+        alert('岗位详情:\n' + JSON.stringify(job, null, 2));
+        // 实际项目中应该创建一个美观的详情页面
+    }
+
+    // 加载岗位列表（用于分析）
+    async loadJobList() {
+        const result = await getJobList(1, 50);
+        
+        if (result.success && result.data.list) {
+            const select = document.getElementById('jobSelect');
+            select.innerHTML = '<option value="">选择一个岗位进行分析</option>';
+            
+            result.data.list.forEach(job => {
+                const option = document.createElement('option');
+                option.value = job.job_name;
+                option.textContent = job.job_name;
+                select.appendChild(option);
+            });
+        }
+    }
+
+    // 切换标签页
+    switchTab(tabName) {
+        // 更新按钮状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+            }
+        });
+
+        // 切换内容
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+
+    // 搜索岗位
+    async searchJobs() {
+        const keyword = document.getElementById('jobSearchInput').value.trim();
+        if (!keyword) {
+            this.showToast('请输入搜索关键词', 'error');
+            return;
+        }
+
+        const container = document.getElementById('searchResults');
+        container.innerHTML = '<div class="loading-message">搜索中...</div>';
+
+        const result = await searchJobs(keyword);
+
+        if (result.success && result.data.jobs && result.data.jobs.length > 0) {
+            this.renderJobs(result.data.jobs, container);
+        } else {
+            container.innerHTML = '<div class="hint-text">未找到相关岗位</div>';
+        }
+    }
+
+    // 分析岗位匹配
+    async analyzeJobMatch() {
+        const jobName = document.getElementById('jobSelect').value;
+        if (!jobName) {
+            this.showToast('请选择一个岗位', 'error');
+            return;
+        }
+
+        const userId = getCurrentUserId();
+        const container = document.getElementById('analysisResult');
+        container.innerHTML = '<div class="loading-message">分析中...</div>';
+
+        const result = await analyzeJobMatch(userId, jobName);
+
+        if (result.success) {
+            this.renderAnalysisResult(result.data);
+        } else {
+            container.innerHTML = '<div class="hint-text">分析失败: ' + result.msg + '</div>';
+        }
+    }
+
+    // 渲染分析结果
+    renderAnalysisResult(data) {
+        const container = document.getElementById('analysisResult');
+        
+        let gapsHtml = '';
+        if (data.gap_analysis && data.gap_analysis.length > 0) {
+            gapsHtml = data.gap_analysis.map(gap => `
+                <div style="margin-bottom: 12px; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+                    <strong>${gap.dimension}:</strong> ${gap.description}
+                </div>
+            `).join('');
+        }
+
+        container.innerHTML = `
+            <h3 style="color: var(--primary-color); margin-bottom: 20px;">匹配分析结果</h3>
+            <div style="margin-bottom: 24px;">
+                <div style="font-size: 48px; font-weight: 700; color: var(--primary-color); text-align: center;">
+                    ${data.match_score}%
+                </div>
+                <div style="text-align: center; color: var(--text-secondary); margin-top: 8px;">
+                    综合匹配度
+                </div>
+            </div>
+            <div style="margin-bottom: 24px;">
+                <h4 style="margin-bottom: 12px;">能力差距分析</h4>
+                ${gapsHtml || '<p>暂无差距分析</p>'}
+            </div>
+            <div>
+                <h4 style="margin-bottom: 12px;">提升建议</h4>
+                <p>${data.improvement_suggestions || '继续保持当前学习状态'}</p>
+            </div>
+        `;
+    }
+
+    // 加载职业规划报告数据
+    loadReportData() {
+        // 初始化时不加载，等待用户操作
+    }
+
+    // 生成职业规划报告
+    async generateReport() {
+        const userId = getCurrentUserId();
+        
+        if (!confirm('生成职业规划报告需要几分钟时间，确定要开始吗？')) {
+            return;
+        }
+
+        const contentDiv = document.getElementById('reportContent');
+        contentDiv.innerHTML = '<div class="loading-message">正在生成报告，请稍候...</div>';
+
+        const result = await generateCareerReport(userId);
+
+        if (result.success) {
+            this.showToast('报告生成中...', 'success');
+            
+            // 轮询获取报告状态
+            this.pollReportStatus(result.data.task_id);
+        } else {
+            contentDiv.innerHTML = '<div class="hint-text">生成失败: ' + result.msg + '</div>';
+        }
+    }
+
+    // 轮询报告生成状态
+    async pollReportStatus(taskId, maxAttempts = 20) {
+        let attempts = 0;
+        const contentDiv = document.getElementById('reportContent');
+
+        const poll = async () => {
+            if (attempts >= maxAttempts) {
+                contentDiv.innerHTML = '<div class="hint-text">生成超时，请稍后查看历史报告</div>';
+                return;
+            }
+
+            const result = await getReportStatus(taskId);
+
+            if (result.success) {
+                if (result.data.status === 'completed') {
+                    this.showToast('报告生成完成！', 'success');
+                    
+                    // 加载报告内容
+                    this.loadReportContent(result.data.report_id);
+                } else if (result.data.status === 'failed') {
+                    contentDiv.innerHTML = '<div class="hint-text">生成失败，请重试</div>';
+                } else {
+                    attempts++;
+                    contentDiv.innerHTML = `<div class="loading-message">正在生成报告... (${result.data.progress || 0}%)</div>`;
+                    setTimeout(poll, 3000);
+                }
+            } else {
+                attempts++;
+                setTimeout(poll, 3000);
+            }
+        };
+
+        poll();
+    }
+
+    // 加载报告内容
+    async loadReportContent(reportId) {
+        const contentDiv = document.getElementById('reportContent');
+        contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
+
+        const result = await getReportContent(reportId);
+
+        if (result.success) {
+            this.renderReportContent(result.data);
+        } else {
+            contentDiv.innerHTML = '<div class="hint-text">加载失败</div>';
+        }
+    }
+
+    // 渲染报告内容
+    renderReportContent(data) {
+        const contentDiv = document.getElementById('reportContent');
+        
+        contentDiv.innerHTML = `
+            <h3 style="color: var(--primary-color); margin-bottom: 20px;">
+                ${data.title || '职业规划报告'}
+            </h3>
+            <div style="color: var(--text-secondary); margin-bottom: 32px;">
+                生成时间: ${data.created_at}
+            </div>
+            <div style="white-space: pre-wrap; line-height: 1.8;">
+                ${data.content || '报告内容加载中...'}
+            </div>
+        `;
+    }
+
+    // 查看历史报告
+    async viewReportHistory() {
+        const userId = getCurrentUserId();
+        const historyDiv = document.getElementById('reportHistory');
+        const listDiv = document.getElementById('historyList');
+        
+        historyDiv.classList.remove('hidden');
+        listDiv.innerHTML = '<div class="loading-message">加载历史报告中...</div>';
+
+        const result = await getReportHistory(userId);
+
+        if (result.success && result.data.list) {
+            this.renderReportHistory(result.data.list);
+        } else {
+            listDiv.innerHTML = '<div class="hint-text">暂无历史报告</div>';
+        }
+    }
+
+    // 渲染历史报告列表
+    renderReportHistory(reports) {
+        const listDiv = document.getElementById('historyList');
+        listDiv.innerHTML = '';
+
+        reports.forEach(report => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">
+                            ${report.primary_career || '职业规划报告'}
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 14px;">
+                            生成于 ${report.created_at}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: var(--primary-color); font-weight: 600;">
+                            完整度 ${report.completeness}%
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            item.addEventListener('click', () => {
+                this.loadReportContent(report.report_id);
+                historyDiv.classList.add('hidden');
+            });
+
+            listDiv.appendChild(item);
+        });
+    }
+
+    // 显示加载动画
+    showLoading() {
+        document.getElementById('loading').classList.remove('hidden');
+    }
+
+    // 隐藏加载动画
+    hideLoading() {
+        document.getElementById('loading').classList.add('hidden');
+    }
+
+    // 显示消息提示
+    showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast show ' + type;
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+}
+
+// 页面加载完成后初始化应用
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new CareerPlanningApp();
+});

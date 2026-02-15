@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI职业规划智能体</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 加载动画 -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+
+        <!-- 顶部导航 -->
+        <nav id="navbar" class="navbar hidden">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h1>AI职业规划</h1>
+                </div>
+                <div class="nav-menu">
+                    <a href="#" class="nav-link" data-page="dashboard">首页</a>
+                    <a href="#" class="nav-link" data-page="profile">个人档案</a>
+                    <a href="#" class="nav-link" data-page="assessment">职业测评</a>
+                    <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
+                    <a href="#" class="nav-link" data-page="report">职业规划</a>
+                </div>
+                <div class="nav-user">
+                    <div class="user-info">
+                        <img id="userAvatar" src="" alt="用户头像" class="user-avatar">
+                        <span id="userName"></span>
+                    </div>
+                    <button id="logoutBtn" class="btn-logout">退出</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 登录页面 -->
+        <div id="loginPage" class="page">
+            <div class="ai-login-container">
+                <!-- AI问候语 -->
+                <div class="ai-greeting">
+                    <h2>👋 你好，我是你的职业规划AI助手</h2>
+                </div>
+                
+                <!-- 登录表单 -->
+                <div class="login-form-container">
+                    <form id="loginForm" class="ai-login-form">
+                        <div class="form-group">
+                            <input type="text" id="loginUsername" placeholder="账号" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="loginPassword" placeholder="密码" required>
+                        </div>
+                        <button type="submit" class="ai-btn-login">登录</button>
+                    </form>
+                </div>
+                
+                <!-- 分隔线 -->
+                <div class="divider">
+                    <span>—— 还没有账号？ ——</span>
+                </div>
+                
+                <!-- 一句话注册 -->
+                <button id="quickRegisterBtn" class="ai-btn-quick-register">用一句话注册</button>
+                
+                <!-- AI在线指示器 -->
+                <div class="ai-indicator">
+                    <div class="ai-dots">
+                        <div class="ai-dot dot-1"></div>
+                        <div class="ai-dot dot-2"></div>
+                        <div class="ai-dot dot-3"></div>
+                    </div>
+                    <p class="ai-status-text">告诉我你是谁，剩下的交给我</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速注册对话框 -->
+        <div id="quickRegisterModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>快速注册</h3>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-hint">说句话介绍自己（如：我是想转行做设计的大三学生）</p>
+                    <textarea id="quickRegisterText" placeholder="请简单介绍一下自己..." rows="4"></textarea>
+                    <button id="quickRegisterSubmit" class="ai-btn-register-submit">注册并进入</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 注册页面 -->
+        <div id="registerPage" class="page hidden">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <h1>创建账户</h1>
+                        <p>开始您的职业规划之旅</p>
+                    </div>
+                    <form id="registerForm" class="login-form">
+                        <div class="form-group">
+                            <label for="regUsername">用户名</label>
+                            <input type="text" id="regUsername" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">密码</label>
+                            <input type="password" id="regPassword" placeholder="请输入密码" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regNickname">昵称</label>
+                            <input type="text" id="regNickname" placeholder="请输入昵称" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regAvatar">头像(可选)</label>
+                            <input type="file" id="regAvatar" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn-primary">注册</button>
+                    </form>
+                    <div class="login-footer">
+                        <p>已有账户? <a href="#" id="showLogin">立即登录</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主页面 -->
+        <div id="dashboardPage" class="page hidden">
+            <div class="dashboard-container">
+                <div class="welcome-section">
+                    <h2>欢迎, <span id="welcomeName"></span></h2>
+                    <p>让AI帮助您规划职业发展路径</p>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <h3>档案完整度</h3>
+                        <div class="stat-value" id="profileCompleteness">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <h3>测评状态</h3>
+                        <div class="stat-value" id="assessmentStatus">未完成</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <h3>匹配岗位</h3>
+                        <div class="stat-value" id="matchedJobs">0</div>
+                    </div>
+                </div>
+
+                <div class="action-cards">
+                    <div class="action-card" data-action="profile">
+                        <h3>📝 完善个人档案</h3>
+                        <p>填写您的教育背景、技能和经历</p>
+                        <button class="btn-secondary">前往填写</button>
+                    </div>
+                    <div class="action-card" data-action="assessment">
+                        <h3>🧭 职业测评</h3>
+                        <p>完成测评,了解您的职业倾向</p>
+                        <button class="btn-secondary">开始测评</button>
+                    </div>
+                    <div class="action-card" data-action="matching">
+                        <h3>🔍 岗位匹配</h3>
+                        <p>查看推荐岗位和匹配度分析</p>
+                        <button class="btn-secondary">查看匹配</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 个人档案页面 -->
+        <div id="profilePage" class="page hidden">
+            <div class="profile-container">
+                <h2>个人档案</h2>
+                
+                <div class="profile-sections">
+                    <!-- 基本信息 -->
+                    <div class="profile-section">
+                        <h3>基本信息</h3>
+                        <form id="basicInfoForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>昵称</label>
+                                    <input type="text" id="nickname" placeholder="请输入昵称">
+                                </div>
+                                <div class="form-group">
+                                    <label>性别</label>
+                                    <select id="gender">
+                                        <option value="">请选择</option>
+                                        <option value="男">男</option>
+                                        <option value="女">女</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>出生日期</label>
+                                    <input type="date" id="birthDate">
+                                </div>
+                                <div class="form-group">
+                                    <label>手机号</label>
+                                    <input type="tel" id="phone" placeholder="请输入手机号">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>邮箱</label>
+                                <input type="email" id="email" placeholder="请输入邮箱">
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 教育信息 -->
+                    <div class="profile-section">
+                        <h3>教育信息</h3>
+                        <form id="educationForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>学校</label>
+                                    <input type="text" id="school" placeholder="请输入学校名称">
+                                </div>
+                                <div class="form-group">
+                                    <label>专业</label>
+                                    <input type="text" id="major" placeholder="请输入专业">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>学历</label>
+                                    <select id="degree">
+                                        <option value="">请选择</option>
+                                        <option value="本科">本科</option>
+                                        <option value="硕士">硕士</option>
+                                        <option value="博士">博士</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>年级</label>
+                                    <input type="text" id="grade" placeholder="如: 2021级">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>预计毕业时间</label>
+                                    <input type="month" id="expectedGraduation">
+                                </div>
+                                <div class="form-group">
+                                    <label>GPA</label>
+                                    <input type="text" id="gpa" placeholder="如: 3.8/4.0">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 技能 -->
+                    <div class="profile-section">
+                        <h3>技能</h3>
+                        <div id="skillsContainer">
+                            <div class="skill-category">
+                                <input type="text" placeholder="技能分类 (如: 编程语言)" class="skill-category-input">
+                                <input type="text" placeholder="技能列表 (用逗号分隔)" class="skill-items-input">
+                            </div>
+                        </div>
+                        <button type="button" id="addSkillCategory" class="btn-secondary">添加技能分类</button>
+                    </div>
+
+                    <!-- 简历上传 -->
+                    <div class="profile-section">
+                        <h3>上传简历 (AI自动解析)</h3>
+                        <div class="upload-area">
+                            <input type="file" id="resumeUpload" accept=".pdf" style="display: none;">
+                            <button type="button" id="uploadResumeBtn" class="btn-secondary">选择PDF文件</button>
+                            <p class="upload-hint">上传简历后,AI将自动解析并填充您的档案信息</p>
+                            <div id="uploadStatus" class="upload-status"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="saveProfileBtn" class="btn-primary">保存档案</button>
+                    <button id="viewProfileBtn" class="btn-secondary">查看完整档案</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 职业测评页面 -->
+        <div id="assessmentPage" class="page hidden">
+            <div class="assessment-container">
+                <h2>职业测评问卷</h2>
+                <p class="assessment-intro">请根据您的真实情况回答以下问题,帮助我们更好地了解您的职业倾向</p>
+                
+                <div id="questionnaireContainer">
+                    <div class="loading-message">加载问卷中...</div>
+                </div>
+
+                <div class="assessment-actions hidden" id="assessmentActions">
+                    <button id="submitAssessmentBtn" class="btn-primary">提交测评</button>
+                    <button id="viewReportBtn" class="btn-secondary hidden">查看测评报告</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 岗位匹配页面 -->
+        <div id="matchingPage" class="page hidden">
+            <div class="matching-container">
+                <h2>岗位匹配</h2>
+                
+                <div class="matching-tabs">
+                    <button class="tab-btn active" data-tab="recommend">推荐岗位</button>
+                    <button class="tab-btn" data-tab="search">搜索岗位</button>
+                    <button class="tab-btn" data-tab="analysis">匹配分析</button>
+                </div>
+
+                <!-- 推荐岗位 -->
+                <div class="tab-content active" id="recommendTab">
+                    <div id="recommendedJobs" class="jobs-grid">
+                        <div class="loading-message">加载推荐岗位中...</div>
+                    </div>
+                </div>
+
+                <!-- 搜索岗位 -->
+                <div class="tab-content" id="searchTab">
+                    <div class="search-section">
+                        <input type="text" id="jobSearchInput" placeholder="搜索岗位名称...">
+                        <button id="searchJobBtn" class="btn-primary">搜索</button>
+                    </div>
+                    <div id="searchResults" class="jobs-grid">
+                        <p class="hint-text">请输入岗位名称进行搜索</p>
+                    </div>
+                </div>
+
+                <!-- 匹配分析 -->
+                <div class="tab-content" id="analysisTab">
+                    <div class="analysis-section">
+                        <select id="jobSelect" class="job-select">
+                            <option value="">选择一个岗位进行分析</option>
+                        </select>
+                        <button id="analyzeBtn" class="btn-primary">开始分析</button>
+                    </div>
+                    <div id="analysisResult" class="analysis-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 职业规划报告页面 -->
+        <div id="reportPage" class="page hidden">
+            <div class="report-container">
+                <h2>职业规划报告</h2>
+                
+                <div class="report-actions">
+                    <button id="generateReportBtn" class="btn-primary">生成新报告</button>
+                    <button id="viewHistoryBtn" class="btn-secondary">查看历史报告</button>
+                </div>
+
+                <div id="reportContent" class="report-content">
+                    <p class="hint-text">点击"生成新报告"开始创建您的职业规划报告</p>
+                </div>
+
+                <div id="reportHistory" class="report-history hidden">
+                    <h3>历史报告</h3>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 消息提示 -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="api.js?v=2"></script>
+    <script src="app.js?v=2"></script>
+</body>
+</html>
