@@ -1,0 +1,9 @@
+{
+  "resume_parse_20260215203038_1": {
+    "status": "failed",
+    "user_id": 1,
+    "created_at": "2026-02-15 20:30:38",
+    "result": null,
+    "error": "'resume_parse_prompt_path'"
+  }
+}
