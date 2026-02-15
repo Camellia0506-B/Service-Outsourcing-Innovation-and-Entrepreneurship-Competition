@@ -62,3 +62,4 @@ data/job_profiles/*.json
 data/profiles/profiles.json
 data/profiles/resume_tasks.json
 data/profiles/resumes/
+AI算法/test_feature1.py
