@@ -1,5 +1,5 @@
 """
-岗位关联图谱服务 v3
+岗位关联图谱服务
 ==================================================
 核心改进：
   - 垂直图谱：从 career_tracks + layer_level 自动生成，节点直接用真实 job_id
@@ -53,12 +53,14 @@ class JobGraphBuilder:
         确保图谱始终可用，不因画像未全量生成而报错。
         """
         cfg = self._job_index.get(job_id, {})
+        _layer = cfg.get("layer_level", 0)
         base = {
             "job_id":      job_id,
             "job_name":    cfg.get("name", job_id),
             "category":    cfg.get("category", ""),
             "career_track":cfg.get("career_track", ""),
-            "layer_level": cfg.get("layer_level", 0),
+            "layer_level": _layer,
+            "level":       _layer,   # 对应API文档4.3 nodes.level 字段
         }
 
         profile = profiles.get(job_id)
@@ -234,6 +236,7 @@ class JobGraphBuilder:
                         "relevance_score":      tp.get("relevance_score", 70),
                         "difficulty":           tp.get("transition_difficulty", "中"),
                         "estimated_time":       tp.get("estimated_time", "6-12个月"),
+                        "time":                 tp.get("estimated_time", "6-12个月"),  # 对应API文档4.3 edges.time
                         "skills_gap":           tp.get("required_skills", []),
                         "reason":               tp.get("reason", ""),
                         "data_source":          "画像生成",
@@ -262,6 +265,7 @@ class JobGraphBuilder:
             "relevance_score":  score,
             "difficulty":       difficulty,
             "estimated_time":   time_est,
+            "time":             time_est,   # 对应API文档4.3 edges.time
             "skills_gap":       ["待画像生成后补充具体技能差距"],
             "reason":           f"同属计算机行业，技能存在关联性",
             "data_source":      "推导（画像未生成）",
@@ -395,13 +399,16 @@ class JobGraphService:
         full = self.get_full_graph()
         cfg  = self.builder._job_index.get(job_id, {})
 
+        _level_map = {1: "初级", 2: "中级", 3: "高级", 4: "专家"}
+        _layer = cfg.get("layer_level", 0)
         result = {
             "center_job": {
                 "job_id":      job_id,
                 "job_name":    cfg.get("name", job_id),
+                "level":       _level_map.get(_layer, ""),  # 对应API文档4.3 center_job.level
                 "category":    cfg.get("category", ""),
                 "career_track":cfg.get("career_track", ""),
-                "layer_level": cfg.get("layer_level", 0),
+                "layer_level": _layer,
             }
         }
 

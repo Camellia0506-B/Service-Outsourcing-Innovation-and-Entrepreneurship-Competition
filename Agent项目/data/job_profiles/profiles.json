@@ -1,0 +1,534 @@
+{
+  "job_001": {
+    "job_id": "job_001",
+    "job_name": "Java后端开发工程师",
+    "job_code": "DEV-JAVA-001",
+    "category": "后端开发",
+    "basic_info": {
+      "industry": "互联网、工业自动化、新零售、专业技术服务、计算机软件",
+      "level": "初级",
+      "level_range": [
+        "初级",
+        "中级",
+        "高级"
+      ],
+      "avg_salary": "15k-25k",
+      "salary_range": {
+        "junior": "8k-15k",
+        "intermediate": "15k-25k",
+        "senior": "25k-40k",
+        "expert": "40k-70k"
+      },
+      "work_locations": [
+        "北京",
+        "上海",
+        "深圳",
+        "杭州",
+        "成都",
+        "西安",
+        "南京",
+        "武汉",
+        "苏州",
+        "东莞"
+      ],
+      "company_scales": [
+        "100-500人",
+        "1000-9999人",
+        "10000人以上"
+      ],
+      "description": "负责后端系统设计、开发、优化及高并发高可用服务构建",
+      "demand_score": 75,
+      "growth_trend": "上升"
+    },
+    "requirements": {
+      "basic_requirements": {
+        "education": {
+          "level": "本科及以上",
+          "preferred_majors": [
+            "计算机科学与技术",
+            "软件工程",
+            "通信工程",
+            "电子信息工程",
+            "数学",
+            "自动化"
+          ],
+          "weight": 0.1
+        },
+        "gpa": {
+          "min_requirement": "3.0/4.0",
+          "preferred": "3.5/4.0以上",
+          "weight": 0.05
+        },
+        "experience_years": {
+          "junior": "0-2年",
+          "intermediate": "2-4年",
+          "senior": "4-7年",
+          "expert": "7年以上"
+        }
+      },
+      "professional_skills": {
+        "programming_languages": [
+          {
+            "skill": "Java",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.1
+          }
+        ],
+        "frameworks_tools": [
+          {
+            "skill": "Spring",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Spring Boot",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Spring Cloud",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "MyBatis",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Dubbo",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Redis",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Kafka",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "RocketMQ",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "RabbitMQ",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "MySQL",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "PostgreSQL",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "MongoDB",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Oracle",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Elasticsearch",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Linux",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Hadoop",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Spark",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Flink",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "HBase",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Zookeeper",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "Netty",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          }
+        ],
+        "domain_knowledge": [
+          {
+            "skill": "微服务架构",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "分布式系统",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "高并发系统设计",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "数据库设计与优化",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "消息中间件",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "缓存技术",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "分库分表",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "读写分离",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "服务治理",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "服务发现",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "限流熔断",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "负载均衡",
+            "level": "熟练",
+            "importance": "必需",
+            "weight": 0.08
+          },
+          {
+            "skill": "物联网平台开发",
+            "level": "熟练",
+            "importance": "可选",
+            "weight": 0.08
+          },
+          {
+            "skill": "车联网系统",
+            "level": "熟练",
+            "importance": "可选",
+            "weight": 0.08
+          },
+          {
+            "skill": "大数据处理",
+            "level": "熟练",
+            "importance": "可选",
+            "weight": 0.08
+          },
+          {
+            "skill": "协议解析（MQTT/CoAP/HTTP）",
+            "level": "熟练",
+            "importance": "可选",
+            "weight": 0.08
+          }
+        ],
+        "total_weight": 0.45
+      },
+      "certificates": {
+        "required": [],
+        "preferred": [
+          "Oracle Certified Professional, Java SE Programmer",
+          "阿里云ACA/ACP认证",
+          "华为云HCIA/HCIP认证"
+        ],
+        "weight": 0.05
+      },
+      "soft_skills": {
+        "innovation_ability": {
+          "description": "能探索新技术并推动创新功能落地，如AI与物联网结合",
+          "level": "中",
+          "weight": 0.06
+        },
+        "learning_ability": {
+          "description": "具备快速学习能力，能及时掌握新框架和工具",
+          "level": "高",
+          "weight": 0.08
+        },
+        "pressure_resistance": {
+          "description": "能应对高并发、高可用场景下的技术难题和项目压力",
+          "level": "高",
+          "weight": 0.05
+        },
+        "communication_ability": {
+          "description": "能与产品、前端、客户端等多角色高效协作沟通",
+          "level": "高",
+          "weight": 0.06
+        },
+        "teamwork_ability": {
+          "description": "具备良好的团队精神，乐于分享技术经验",
+          "level": "高",
+          "weight": 0.05
+        },
+        "total_weight": 0.3
+      },
+      "experience": {
+        "internship_required": false,
+        "preferred_experience": [
+          "大型分布式系统开发",
+          "微服务架构落地",
+          "高并发系统调优",
+          "物联网或车联网平台开发",
+          "电商/会员/渠道系统业务流程"
+        ],
+        "project_requirements": [
+          "独立完成模块设计开发",
+          "参与核心系统架构设计",
+          "有百万级C端项目经验",
+          "能输出完整技术文档（含架构图、时序图等）"
+        ],
+        "weight": 0.15
+      }
+    },
+    "market_analysis": {
+      "demand_score": 75,
+      "growth_trend": "上升",
+      "salary_range": {
+        "junior": "8k-15k",
+        "intermediate": "15k-25k",
+        "senior": "25k-40k",
+        "expert": "40k-70k"
+      },
+      "hottest_cities": [
+        {
+          "city": "北京",
+          "job_count": 1200
+        },
+        {
+          "city": "上海",
+          "job_count": 1100
+        },
+        {
+          "city": "深圳",
+          "job_count": 1000
+        },
+        {
+          "city": "杭州",
+          "job_count": 900
+        }
+      ],
+      "top_companies": [
+        "阿里巴巴",
+        "腾讯",
+        "华为",
+        "字节跳动",
+        "京东",
+        "美团",
+        "百度",
+        "小米"
+      ],
+      "industry_trends": [
+        "微服务与云原生架构普及",
+        "高并发与稳定性要求提升",
+        "IoT与车联网场景融合",
+        "AI大模型与后端服务集成"
+      ],
+      "tags": [
+        "Java",
+        "Spring Cloud",
+        "高并发",
+        "微服务",
+        "分布式",
+        "Redis",
+        "Kafka",
+        "MySQL"
+      ]
+    },
+    "career_path": {
+      "current_level": "初级Java后端开发工程师",
+      "promotion_path": [
+        {
+          "level": "中级Java后端开发工程师",
+          "years_required": "2-3年",
+          "key_requirements": [
+            "2年以上Java开发经验",
+            "熟练使用Spring Boot/Cloud",
+            "能独立完成模块设计",
+            "具备良好沟通协作能力"
+          ]
+        },
+        {
+          "level": "高级Java后端开发工程师/技术专家",
+          "years_required": "3-5年",
+          "key_requirements": [
+            "5年以上Java经验",
+            "主导微服务架构设计",
+            "具备高并发系统调优能力",
+            "能输出完整技术方案文档"
+          ]
+        },
+        {
+          "level": "资深专家/技术总监",
+          "years_required": "5-8年",
+          "key_requirements": [
+            "大型分布式系统实战经验",
+            "跨团队技术协调与决策能力",
+            "前沿技术预研与落地能力"
+          ]
+        }
+      ]
+    },
+    "transfer_paths": [
+      {
+        "target_job": "后端架构师",
+        "relevance_score": 85,
+        "required_skills": [
+          "系统架构设计",
+          "技术选型评估",
+          "性能压测与容量规划"
+        ],
+        "transition_difficulty": "低",
+        "estimated_time": "3-6个月",
+        "reason": "Java后端工程师已掌握微服务、分布式等核心能力，向架构方向延伸自然"
+      },
+      {
+        "target_job": "大数据开发工程师",
+        "relevance_score": 70,
+        "required_skills": [
+          "Hadoop生态深入使用",
+          "数据建模",
+          "ETL流程设计"
+        ],
+        "transition_difficulty": "中",
+        "estimated_time": "6-12个月",
+        "reason": "部分JD已涉及Hadoop/Spark/Flink，具备一定大数据基础，需强化数据处理能力"
+      },
+      {
+        "target_job": "DevOps工程师",
+        "relevance_score": 60,
+        "required_skills": [
+          "CI/CD流水线搭建",
+          "容器化（Docker/K8s）",
+          "监控告警体系",
+          "自动化运维脚本"
+        ],
+        "transition_difficulty": "高",
+        "estimated_time": "12-18个月",
+        "reason": "需补充大量运维与自动化工具链知识，但后端开发对部署和系统稳定性已有理解"
+      }
+    ],
+    "data_source": "数据集JD分析（10条样本）",
+    "csv_sample_count": 10,
+    "csv_market_meta": {
+      "salaries": [
+        "1-1.4万",
+        "1.5-3万",
+        "8000-16000元",
+        "1.5-3万·16薪",
+        "2-3万",
+        "1.4-1.8万·14薪",
+        "1-1.1万",
+        "1-1.5万·13薪",
+        "1-1.6万",
+        "1-1.5万"
+      ],
+      "cities": [
+        "广州"
+      ],
+      "companies": [
+        "亿达信息",
+        "广州二向箔信息科技有限公司",
+        "广船国际有限公司",
+        "外企德科数字技术有限公司",
+        "南京睿雯人力资源有限公司"
+      ],
+      "industries": [
+        "专业技术服务",
+        "船舶/航空/航天/火车制造",
+        "人力资源服务",
+        "新零售",
+        "互联网",
+        "计算机软件",
+        "工业自动化"
+      ]
+    },
+    "created_at": "2026-02-15 10:51:52",
+    "updated_at": "2026-02-15 10:51:52",
+    "status": "completed",
+    "_ai_confidence": 0.88,
+    "dimension_weights": {
+      "基础要求": 0.1,
+      "专业技能": 0.45,
+      "职业素养": 0.3,
+      "发展潜力": 0.15
+    }
+  }
+}
