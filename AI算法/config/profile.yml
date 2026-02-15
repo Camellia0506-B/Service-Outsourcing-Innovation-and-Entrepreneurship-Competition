@@ -1,0 +1,39 @@
+# ============================================================
+# 个人档案模块配置
+# 对应 API 文档第 2 章：Profile 模块
+# ============================================================
+
+# 档案数据存储路径（JSON文件，按 user_id 为键）
+profile_store_path: data/profiles/profiles.json
+
+# 简历文件上传目录
+resume_upload_dir: data/profiles/resumes/
+
+# 档案完整度权重配置（各字段权重之和 = 100）
+completeness_weights:
+  basic_info:       20   # 基本信息（昵称/性别/生日/手机/邮箱）
+  education_info:   20   # 教育背景（学校/专业/学历/年级/毕业时间/GPA）
+  skills:           15   # 技能列表
+  certificates:     10   # 证书
+  internships:      15   # 实习经历
+  projects:         15   # 项目经历
+  awards:            5   # 荣誉奖项
+
+# 每个大类的子字段权重（计算细粒度完整度用）
+basic_info_fields:
+  nickname:    4
+  gender:      3
+  birth_date:  3
+  phone:       5
+  email:       5
+
+education_info_fields:
+  school:               4
+  major:                4
+  degree:               3
+  grade:                2
+  expected_graduation:  3
+  gpa:                  4
+
+# 简历解析任务存储路径
+resume_task_store_path: data/profiles/resume_tasks.json
