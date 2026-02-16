@@ -48,38 +48,6 @@ class CareerPlanningApp {
             document.getElementById('registerPage').classList.add('hidden');
         });
 
-        // 快速注册按钮
-        document.getElementById('quickRegisterBtn').addEventListener('click', () => {
-            this.showQuickRegisterModal();
-        });
-
-        // 关闭快速注册对话框
-        document.getElementById('closeModal').addEventListener('click', () => {
-            this.hideQuickRegisterModal();
-        });
-
-        document.getElementById('closeProfileModal').addEventListener('click', () => {
-            document.getElementById('profileModal').classList.add('hidden');
-        });
-
-        document.getElementById('profileModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('profileModal')) {
-                document.getElementById('profileModal').classList.add('hidden');
-            }
-        });
-
-        // 点击对话框外部关闭
-        document.getElementById('quickRegisterModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('quickRegisterModal')) {
-                this.hideQuickRegisterModal();
-            }
-        });
-
-        // 快速注册提交
-        document.getElementById('quickRegisterSubmit').addEventListener('click', () => {
-            this.handleQuickRegister();
-        });
-
         // 导航链接
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -315,7 +283,7 @@ class CareerPlanningApp {
             const name = (result.data.nickname || result.data.username || '').trim() || '用户';
             this.showToast('登录成功，欢迎 ' + name, 'success');
         } else {
-            this.showToast('自动登录失败，请使用账号密码在登录页登录', 'error');
+            this.showToast(result.msg || '登录失败', 'error');
         }
     }
 
@@ -347,15 +315,12 @@ class CareerPlanningApp {
             localStorage.setItem('token', loginResult.data.token);
             saveUserInfo(loginResult.data);
             this.currentUser = loginResult.data;
-            document.getElementById('registerPage').classList.add('hidden');
             this.showMainApp();
             this.loadDashboardData();
             const name = (loginResult.data.nickname || loginResult.data.username || '').trim() || username;
             this.showToast('欢迎 ' + name + '！请记住您的账号和密码，下次可在本页登录。', 'success');
         } else {
             this.showToast('注册成功，请在本页用账号「' + username + '」和您设置的密码登录。', 'success');
-            this.showPage('loginPage');
-            document.getElementById('registerPage').classList.add('hidden');
         }
     }
 

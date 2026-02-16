@@ -58,14 +58,8 @@
                     </form>
                 </div>
                 
-                <!-- 分隔线 -->
-                <div class="divider">
-                    <span>—— 还没有账号？ ——</span>
-                </div>
-                
-                <!-- 一句话注册 -->
-                <button id="quickRegisterBtn" class="ai-btn-quick-register">用一句话注册</button>
-                <p class="login-register-hint">或 <a href="#" id="goRegister">创建账户</a>（设置账号和密码，下次可在此登录）</p>
+                <!-- 创建账户 -->
+                <p class="login-register-hint">还没有账号？ <a href="#" id="goRegister">创建账户</a></p>
                 
                 <!-- AI在线指示器 -->
                 <div class="ai-indicator">
@@ -75,21 +69,6 @@
                         <div class="ai-dot dot-3"></div>
                     </div>
                     <p class="ai-status-text">告诉我你是谁，剩下的交给我</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 快速注册对话框 -->
-        <div id="quickRegisterModal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>快速注册</h3>
-                    <button class="modal-close" id="closeModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p class="modal-hint">说句话介绍自己（如：我是想转行做设计的大三学生）</p>
-                    <textarea id="quickRegisterText" placeholder="请简单介绍一下自己..." rows="4"></textarea>
-                    <button id="quickRegisterSubmit" class="ai-btn-register-submit">注册并进入</button>
                 </div>
             </div>
         </div>
