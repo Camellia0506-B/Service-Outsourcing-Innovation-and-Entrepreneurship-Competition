@@ -403,6 +403,7 @@ class API {
     mockAssessmentReport() {
         return {
             report_id: 'report_001',
+            created_at: new Date().toISOString(),
             interest_analysis: {
                 holland_code: 'RIA',
                 primary_interest: {
@@ -477,9 +478,13 @@ class API {
     }
 
     mockCareerReport() {
+        const now = new Date();
         return {
             report_id: 'report_001',
-            generated_at: new Date().toISOString(),
+            created_at: now.toISOString(),
+            generated_at: now.toISOString(),
+            primary_career: '算法工程师',
+            completeness: 85,
             summary: '根据您的测评结果和档案分析，您适合从事技术类工作',
             recommendations: [
                 { career: '算法工程师', match_score: 92 },

@@ -1315,6 +1315,28 @@ class CareerPlanningApp {
     }
 
     // 渲染报告内容
+    // 格式化时间（北京时间）
+    formatDateTime(dateString) {
+        if (!dateString) return '未知时间';
+        
+        try {
+            const date = new Date(dateString);
+            // 转换为北京时间（UTC+8）
+            const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000) + (date.getTimezoneOffset() * 60 * 1000));
+            
+            const year = beijingTime.getFullYear();
+            const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+            const day = String(beijingTime.getDate()).padStart(2, '0');
+            const hours = String(beijingTime.getHours()).padStart(2, '0');
+            const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+            
+            return `${year}年${month}月${day}日 ${hours}:${minutes} (北京时间)`;
+        } catch (error) {
+            console.error('时间格式化错误:', error);
+            return dateString;
+        }
+    }
+
     renderReportContent(data) {
         const contentDiv = document.getElementById('reportContent');
         
@@ -1323,7 +1345,7 @@ class CareerPlanningApp {
                 ${data.title || '职业测评报告'}
             </h3>
             <div style="color: var(--text-secondary); margin-bottom: 32px;">
-                生成时间: ${data.created_at}
+                生成时间: ${this.formatDateTime(data.created_at)}
             </div>
         `;
 
@@ -1526,7 +1548,7 @@ class CareerPlanningApp {
                             ${report.primary_career || '职业规划报告'}
                         </div>
                         <div style="color: var(--text-secondary); font-size: 14px;">
-                            生成于 ${report.created_at}
+                            生成于 ${this.formatDateTime(report.created_at)}
                         </div>
                     </div>
                     <div style="text-align: right;">
