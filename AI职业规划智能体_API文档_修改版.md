@@ -3,28 +3,13 @@
 
 ## 版本信息
 
-- **版本** : v1.2
-- **最后更新** : 2026-02-14
+- **版本** : v1.0
+- **最后更新** : 2025-02-14
 - **项目** : 基于AI的大学生职业规划智能体
 - **团队分工** :
   - 算法模型: 孙于婷
   - 前端开发: 李嘉鑫、王雨姗
   - 后端开发: 古媛媛
-
----
-
-## 文档目录
-
-1. [版本信息](#版本信息)
-2. [接口交互通用规范](#0-接口交互通用规范)
-3. [身份认证模块 (Auth)](#1-身份认证模块-auth)
-4. [个人档案模块 (Profile)](#2-个人档案模块-profile)
-5. [职业测评模块 (Assessment)](#3-职业测评模块-assessment)
-6. [岗位画像模块 (Job Profile)](#4-岗位画像模块-job-profile)
-7. [学生能力画像模块 (Student Profile)](#5-学生能力画像模块-student-profile)
-8. [人岗匹配模块 (Job Matching)](#6-人岗匹配模块-job-matching)
-9. [职业规划报告模块 (Career Report)](#7-职业规划报告模块-career-report)
-10. [系统管理模块 (System)](#8-系统管理模块-system)
 
 ---
 
@@ -64,96 +49,6 @@
 | 404 | 资源不存在 | 提示资源未找到 |
 | 500 | 服务器内部错误 | 稍后重试或联系技术支持 |
 
-### 0.5 API调用示例
-
-#### 0.5.1 JavaScript (Fetch API) 示例
-
-```javascript
-// 登录示例
-async function login(username, password) {
-  const response = await fetch('/api/v1/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ username, password })
-  });
-  
-  const result = await response.json();
-  if (result.code === 200) {
-    // 登录成功，保存token
-    localStorage.setItem('token', result.data.token);
-    return result.data;
-  } else {
-    throw new Error(result.msg);
-  }
-}
-
-// 带认证的请求示例
-async function getProfile(user_id) {
-  const token = localStorage.getItem('token');
-  const response = await fetch('/api/v1/profile/info', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ user_id })
-  });
-  
-  return await response.json();
-}
-```
-
-#### 0.5.2 Python (requests) 示例
-
-```python
-import requests
-
-# 登录示例
-def login(username, password):
-    url = 'http://localhost:8000/api/v1/auth/login'
-    data = {'username': username, 'password': password}
-    response = requests.post(url, json=data)
-    result = response.json()
-    if result['code'] == 200:
-        return result['data']
-    else:
-        raise Exception(result['msg'])
-
-# 带认证的请求示例
-def get_profile(user_id, token):
-    url = 'http://localhost:8000/api/v1/profile/info'
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}'
-    }
-    data = {'user_id': user_id}
-    response = requests.post(url, json=data, headers=headers)
-    return response.json()
-```
-
-### 0.6 典型使用场景
-
-#### 场景1: 新用户注册流程
-1. 调用 `/auth/register` 注册账号
-2. 调用 `/auth/login` 登录获取token
-3. 调用 `/profile/update` 完善个人档案
-4. 调用 `/assessment/questionnaire` 获取职业测评问卷
-
-#### 场景2: 职业规划流程
-1. 完成职业测评 (`/assessment/submit`)
-2. 获取测评报告 (`/assessment/report`)
-3. 获取能力画像 (`/student/ability-profile`)
-4. 获取推荐岗位 (`/matching/recommend-jobs`)
-5. 生成职业规划报告 (`/career/generate-report`)
-
-#### 场景3: 岗位匹配分析
-1. 选择目标岗位
-2. 调用 `/matching/analyze` 获取匹配分析
-3. 根据分析结果制定能力提升计划
-4. 定期更新档案和重新分析匹配度
-
 ---
 
 ## 1. 身份认证模块 (Auth)
@@ -186,7 +81,7 @@ def get_profile(user_id, token):
     "username": "2021001001",
     "nickname": "李明",
     "avatar": "/uploads/avatars/10001.jpg",
-    "created_at": "2026-02-14 10:30:00"
+    "created_at": "2025-02-14 10:30:00"
   }
 }
 ```
@@ -272,6 +167,84 @@ def get_profile(user_id, token):
 }
 ```
 
+### 1.4 忘记密码
+
+#### 1.4.1 发送验证码
+
+**功能说明**: 用户忘记密码时，发送验证码到邮箱
+
+**方法**:`POST`**路径**:`/auth/forgot-password/send-code`
+
+**请求示例**:
+
+```json
+{
+  "username": "2021001001",
+  "email": "user@example.com"
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "code": 200,
+  "msg": "验证码已发送",
+  "data": {
+    "email": "user@example.com",
+    "expire_minutes": 10
+  }
+}
+```
+
+**错误示例**:
+
+```json
+{
+  "code": 400,
+  "msg": "用户不存在",
+  "data": null
+}
+```
+
+---
+
+#### 1.4.2 重置密码
+
+**功能说明**: 验证验证码并重置密码
+
+**方法**:`POST`**路径**:`/auth/forgot-password/reset`
+
+**请求示例**:
+
+```json
+{
+  "username": "2021001001",
+  "code": "123456",
+  "new_password": "newpassword123"
+}
+```
+
+**响应示例**:
+
+```json
+{
+  "code": 200,
+  "msg": "密码重置成功",
+  "data": null
+}
+```
+
+**错误示例**:
+
+```json
+{
+  "code": 400,
+  "msg": "验证码错误或已过期",
+  "data": null
+}
+```
+
 ---
 
 ## 2. 个人档案模块 (Profile)
@@ -311,7 +284,7 @@ def get_profile(user_id, token):
       "major": "计算机科学与技术",
       "degree": "本科",
       "grade": "2021级",
-      "expected_graduation": "2026-06",
+      "expected_graduation": "2025-06",
       "gpa": "3.8/4.0"
     },
     "skills": [
@@ -362,7 +335,7 @@ def get_profile(user_id, token):
       }
     ],
     "profile_completeness": 85,  // 档案完整度百分比
-    "updated_at": "2026-02-10 15:30:00"
+    "updated_at": "2025-02-10 15:30:00"
   }
 }
 ```
@@ -392,7 +365,7 @@ def get_profile(user_id, token):
     "major": "计算机科学与技术",
     "degree": "本科",
     "grade": "2021级",
-    "expected_graduation": "2026-06",
+    "expected_graduation": "2025-06",
     "gpa": "3.8/4.0"
   },
   "skills": [
@@ -418,7 +391,7 @@ def get_profile(user_id, token):
   "msg": "档案更新成功",
   "data": {
     "profile_completeness": 90,
-    "updated_at": "2026-02-14 10:45:00"
+    "updated_at": "2025-02-14 10:45:00"
   }
 }
 ```
@@ -447,7 +420,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "简历上传成功，正在解析...",
   "data": {
-    "task_id": "resume_parse_20260214_10001",
+    "task_id": "resume_parse_20250214_10001",
     "status": "processing"
   }
 }
@@ -466,7 +439,7 @@ def get_profile(user_id, token):
 ```json
 {
   "user_id": 10001,
-  "task_id": "resume_parse_20260214_10001"
+  "task_id": "resume_parse_20250214_10001"
 }
 ```
 
@@ -524,7 +497,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "success",
   "data": {
-    "assessment_id": "assess_20260214_10001",
+    "assessment_id": "assess_20250214_10001",
     "total_questions": 50,
     "estimated_time": 15,  // 预计耗时（分钟）
     "dimensions": [
@@ -577,7 +550,7 @@ def get_profile(user_id, token):
 ```json
 {
   "user_id": 10001,
-  "assessment_id": "assess_20260214_10001",
+  "assessment_id": "assess_20250214_10001",
   "answers": [
     {
       "question_id": "q001",
@@ -603,7 +576,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "测评提交成功，正在生成报告...",
   "data": {
-    "report_id": "report_20260214_10001",
+    "report_id": "report_20250214_10001",
     "status": "processing"
   }
 }
@@ -622,7 +595,7 @@ def get_profile(user_id, token):
 ```json
 {
   "user_id": 10001,
-  "report_id": "report_20260214_10001"
+  "report_id": "report_20250214_10001"
 }
 ```
 
@@ -633,9 +606,9 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "success",
   "data": {
-    "report_id": "report_20260214_10001",
+    "report_id": "report_20250214_10001",
     "user_id": 10001,
-    "assessment_date": "2026-02-14",
+    "assessment_date": "2025-02-14",
     "status": "completed",
     
     // 职业兴趣分析
@@ -798,7 +771,7 @@ def get_profile(user_id, token):
         "demand_score": 85,  // 市场需求热度（0-100）
         "growth_trend": "上升",  // 发展趋势：上升/平稳/下降
         "tags": ["人工智能", "机器学习", "Python"],
-        "created_at": "2026-01-15"
+        "created_at": "2025-01-15"
       }
     ]
   }
@@ -1188,7 +1161,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "AI画像生成中...",
   "data": {
-    "task_id": "job_gen_20260214_001",
+    "task_id": "job_gen_20250214_001",
     "status": "processing",
     "estimated_time": 30  // 预计耗时（秒）
   }
@@ -1207,7 +1180,7 @@ def get_profile(user_id, token):
 
 ```json
 {
-  "task_id": "job_gen_20260214_001"
+  "task_id": "job_gen_20250214_001"
 }
 ```
 
@@ -1230,7 +1203,7 @@ def get_profile(user_id, token):
     "data_sources": {
       "total_samples": 50,
       "valid_samples": 47,
-      "analysis_date": "2026-02-14"
+      "analysis_date": "2025-02-14"
     }
   }
 }
@@ -1263,7 +1236,7 @@ def get_profile(user_id, token):
   "data": {
     "user_id": 10001,
     "profile_id": "profile_10001",
-    "generated_at": "2026-02-14 11:00:00",
+    "generated_at": "2025-02-14 11:00:00",
     
     // 基础信息
     "basic_info": {
@@ -1271,7 +1244,7 @@ def get_profile(user_id, token):
       "major": "计算机科学与技术",
       "school": "北京大学",
       "gpa": "3.8/4.0",
-      "expected_graduation": "2026-06"
+      "expected_graduation": "2025-06"
     },
     
     // 专业技能画像
@@ -1467,7 +1440,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "AI画像生成中...",
   "data": {
-    "task_id": "stu_gen_20260214_10001",
+    "task_id": "stu_gen_20250214_10001",
     "status": "processing"
   }
 }
@@ -1500,7 +1473,7 @@ def get_profile(user_id, token):
       "items": [
         {
           "name": "AWS云从业者认证",
-          "issue_date": "2026-01-15"
+          "issue_date": "2025-01-15"
         }
       ]
     }
@@ -1515,7 +1488,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "画像更新成功",
   "data": {
-    "updated_at": "2026-02-14 11:30:00",
+    "updated_at": "2025-02-14 11:30:00",
     "new_total_score": 78,
     "score_change": +2
   }
@@ -1780,7 +1753,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "报告生成中，预计需要30秒...",
   "data": {
-    "report_id": "report_career_20260214_10001",
+    "report_id": "report_career_20250214_10001",
     "status": "processing"
   }
 }
@@ -1799,7 +1772,7 @@ def get_profile(user_id, token):
 ```json
 {
   "user_id": 10001,
-  "report_id": "report_career_20260214_10001"
+  "report_id": "report_career_20250214_10001"
 }
 ```
 
@@ -1810,9 +1783,9 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "success",
   "data": {
-    "report_id": "report_career_20260214_10001",
+    "report_id": "report_career_20250214_10001",
     "user_id": 10001,
-    "generated_at": "2026-02-14 12:00:00",
+    "generated_at": "2025-02-14 12:00:00",
     "status": "completed",
     
     // 报告元数据
@@ -1919,18 +1892,18 @@ def get_profile(user_id, token):
       
       // 短期目标（1年内）
       "short_term_goal": {
-        "timeline": "2026.06 - 2026.06",
+        "timeline": "2025.06 - 2026.06",
         "primary_goal": "成功入职算法工程师岗位，完成职业起步",
         "specific_targets": [
           {
             "target": "获得算法工程师offer",
             "metrics": "至少2个中大厂offer",
-            "deadline": "2026.06"
+            "deadline": "2025.06"
           },
           {
             "target": "快速融入团队",
             "metrics": "3个月内独立负责算法模块",
-            "deadline": "2026.09"
+            "deadline": "2025.09"
           },
           {
             "target": "建立技术基础",
@@ -2066,11 +2039,11 @@ def get_profile(user_id, token):
       
       // 短期行动计划（6个月）
       "short_term_plan": {
-        "period": "2026.02 - 2026.08",
+        "period": "2025.02 - 2025.08",
         "goal": "补齐能力短板，冲刺校招offer",
         "monthly_plans": [
           {
-            "month": "2026.02 - 2026.03",
+            "month": "2025.02 - 2025.03",
             "focus": "技能提升",
             "tasks": [
               {
@@ -2096,7 +2069,7 @@ def get_profile(user_id, token):
             "milestone": "完成2个深度学习项目，Spark实战项目"
           },
           {
-            "month": "2026.03 - 2026.04",
+            "month": "2025.03 - 2025.04",
             "focus": "项目实战",
             "tasks": [
               {
@@ -2113,7 +2086,7 @@ def get_profile(user_id, token):
             "milestone": "完成1个高质量开源项目"
           },
           {
-            "month": "2026.04 - 2026.06",
+            "month": "2025.04 - 2025.06",
             "focus": "求职冲刺",
             "tasks": [
               {
@@ -2152,11 +2125,11 @@ def get_profile(user_id, token):
       
       // 中期行动计划（1-3年）
       "mid_term_plan": {
-        "period": "2026.06 - 2028.06",
+        "period": "2025.06 - 2028.06",
         "goal": "从初级到中高级算法工程师的成长",
         "yearly_plans": [
           {
-            "year": "第1年 (2026.06-2026.06)",
+            "year": "第1年 (2025.06-2026.06)",
             "focus": "快速成长，建立基础",
             "key_tasks": [
               "完成公司新人培训和导师制项目",
@@ -2413,11 +2386,11 @@ def get_profile(user_id, token):
 
 ```json
 {
-  "report_id": "report_career_20260214_10001",
+  "report_id": "report_career_20250214_10001",
   "user_id": 10001,
   "edits": {
     "section_3_action_plan.short_term_plan.monthly_plans[0].tasks[0].时间投入": "每周12小时",
-    "section_2_career_path.short_term_goal.specific_targets[0].deadline": "2026.07"
+    "section_2_career_path.short_term_goal.specific_targets[0].deadline": "2025.07"
   }
 }
 ```
@@ -2429,7 +2402,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "报告编辑成功",
   "data": {
-    "updated_at": "2026-02-14 13:00:00"
+    "updated_at": "2025-02-14 13:00:00"
   }
 }
 ```
@@ -2446,7 +2419,7 @@ def get_profile(user_id, token):
 
 ```json
 {
-  "report_id": "report_career_20260214_10001",
+  "report_id": "report_career_20250214_10001",
   "polish_options": {
     "improve_readability": true,  // 提升可读性
     "add_examples": true,  // 添加具体案例
@@ -2463,7 +2436,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "AI优化中...",
   "data": {
-    "task_id": "polish_20260214_001",
+    "task_id": "polish_20250214_001",
     "status": "processing"
   }
 }
@@ -2481,7 +2454,7 @@ def get_profile(user_id, token):
 
 ```json
 {
-  "report_id": "report_career_20260214_10001",
+  "report_id": "report_career_20250214_10001",
   "format": "pdf",  // pdf/docx
   "include_sections": ["all"],  // all 或指定章节
   "template_style": "professional"  // professional/modern/simple
@@ -2495,9 +2468,9 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "报告导出成功",
   "data": {
-    "download_url": "/downloads/career_report_10001_20260214.pdf",
+    "download_url": "/downloads/career_report_10001_20250214.pdf",
     "file_size": "2.5MB",
-    "expires_at": "2026-02-21 13:00:00"  // 下载链接7天有效
+    "expires_at": "2025-02-21 13:00:00"  // 下载链接7天有效
   }
 }
 ```
@@ -2514,7 +2487,7 @@ def get_profile(user_id, token):
 
 ```json
 {
-  "report_id": "report_career_20260214_10001"
+  "report_id": "report_career_20250214_10001"
 }
 ```
 
@@ -2601,16 +2574,16 @@ def get_profile(user_id, token):
     "total": 3,
     "list": [
       {
-        "report_id": "report_career_20260214_10001",
-        "created_at": "2026-02-14 12:00:00",
+        "report_id": "report_career_20250214_10001",
+        "created_at": "2025-02-14 12:00:00",
         "status": "completed",
         "primary_career": "算法工程师",
         "completeness": 95,
-        "last_viewed": "2026-02-14 13:30:00"
+        "last_viewed": "2025-02-14 13:30:00"
       },
       {
-        "report_id": "report_career_20260101_10001",
-        "created_at": "2026-01-01 10:00:00",
+        "report_id": "report_career_20250101_10001",
+        "created_at": "2025-01-01 10:00:00",
         "status": "archived",
         "primary_career": "前端开发工程师",
         "completeness": 85
@@ -2647,7 +2620,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "数据上传成功，正在处理...",
   "data": {
-    "task_id": "upload_20260214_001",
+    "task_id": "upload_20250214_001",
     "total_records": 10000,
     "status": "processing"
   }
@@ -2679,7 +2652,7 @@ def get_profile(user_id, token):
   "code": 200,
   "msg": "批量生成任务已启动",
   "data": {
-    "task_id": "batch_gen_20260214_001",
+    "task_id": "batch_gen_20250214_001",
     "total_jobs": 3,
     "estimated_time": "15分钟"
   }
@@ -2700,8 +2673,8 @@ def get_profile(user_id, token):
 {
   "admin_id": 1,
   "date_range": {
-    "start": "2026-01-01",
-    "end": "2026-02-14"
+    "start": "2025-01-01",
+    "end": "2025-02-14"
   }
 }
 ```
@@ -2806,7 +2779,7 @@ def get_profile(user_id, token):
         "title": "算法工程师技能树全解析",
         "content_snippet": "算法工程师需要掌握的核心技能包括：1. 编程语言（Python/C++）...",
         "relevance_score": 0.92,
-        "source": "《2026 AI人才白皮书》"
+        "source": "《2025 AI人才白皮书》"
       },
       {
         "doc_id": "kb_doc_015",
@@ -2852,7 +2825,7 @@ def get_profile(user_id, token):
         "title": "算法工程师技能树全解析",
         "category": "技能指南",
         "file_size": "1.2MB",
-        "uploaded_at": "2026-01-15",
+        "uploaded_at": "2025-01-15",
         "view_count": 150
       }
     ]
@@ -2943,7 +2916,7 @@ def get_profile(user_id, token):
 
 | 版本 | 日期 | 变更内容 |
 | --- | --- | --- |
-| v1.0 | 2026-02-14 | 初始版本，完整API设计 |
+| v1.0 | 2025-02-14 | 初始版本，完整API设计 |
 
 ---
 
