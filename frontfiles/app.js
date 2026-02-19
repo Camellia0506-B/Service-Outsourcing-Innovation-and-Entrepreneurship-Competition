@@ -512,7 +512,7 @@ class CareerPlanningApp {
                 <div class="profile-section">
                     <h4>基本信息</h4>
                     <table class="profile-table">
-                        <tr><th>昵称</th><td>${data.basic_info.nickname || '-'}</td></tr>
+                        <tr><th>姓名</th><td>${data.basic_info.nickname || '-'}</td></tr>
                         <tr><th>性别</th><td>${data.basic_info.gender || '-'}</td></tr>
                         <tr><th>出生日期</th><td>${data.basic_info.birth_date || '-'}</td></tr>
                         <tr><th>手机号</th><td>${data.basic_info.phone || '-'}</td></tr>
