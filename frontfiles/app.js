@@ -779,45 +779,88 @@ class CareerPlanningApp {
     // 加载职业测评数据
     async loadAssessmentData() {
         const userId = getCurrentUserId();
+        console.log('loadAssessmentData - userId:', userId);
         if (!userId) return;
 
         this.showLoading();
         const result = await getQuestionnaire(userId);
         this.hideLoading();
 
+        console.log('loadAssessmentData - API result:', result);
+
         if (result.success) {
-            this.renderQuestionnaire(result.data.questions);
+            console.log('loadAssessmentData - assessmentData:', result.data);
+            this.renderQuestionnaire(result.data);
+        } else {
+            console.error('loadAssessmentData - API failed:', result.msg);
+            document.getElementById('questionnaireContainer').innerHTML = '<div class="hint-text">加载失败: ' + result.msg + '</div>';
         }
     }
 
     // 渲染测评问卷
-    renderQuestionnaire(questions) {
+    renderQuestionnaire(assessmentData) {
         const container = document.getElementById('questionnaireContainer');
         container.innerHTML = '';
 
-        questions.forEach((q, index) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.className = 'question-card';
+        console.log('renderQuestionnaire - assessmentData:', assessmentData);
+
+        if (!assessmentData || !assessmentData.dimensions) {
+            console.error('renderQuestionnaire - Invalid assessmentData:', assessmentData);
+            container.innerHTML = '<div class="hint-text">数据格式错误，请重试</div>';
+            return;
+        }
+
+        const { dimensions, total_questions, estimated_time } = assessmentData;
+
+        dimensions.forEach((dimension, dimIndex) => {
+            const dimensionDiv = document.createElement('div');
+            dimensionDiv.className = 'dimension-section';
             
-            let optionsHtml = '';
-            q.options.forEach((option, optionIndex) => {
-                optionsHtml += `
-                    <label class="option-item">
-                        <input type="radio" name="question_${q.question_id}" value="${optionIndex}" data-score="${option.score}">
-                        <span>${option.text}</span>
-                    </label>
+            let questionsHtml = '';
+            dimension.questions.forEach((q, qIndex) => {
+                let optionsHtml = '';
+                
+                if (q.question_type === 'single_choice') {
+                    q.options.forEach((option, optionIndex) => {
+                        optionsHtml += `
+                            <label class="option-item">
+                                <input type="radio" name="question_${q.question_id}" value="${option.option_id}">
+                                <span>${option.option_text}</span>
+                            </label>
+                        `;
+                    });
+                } else if (q.question_type === 'scale') {
+                    q.options.forEach((option, optionIndex) => {
+                        optionsHtml += `
+                            <label class="option-item scale-option">
+                                <input type="radio" name="question_${q.question_id}" value="${option.option_id}">
+                                <span>${option.option_text}</span>
+                            </label>
+                        `;
+                    });
+                }
+
+                questionsHtml += `
+                    <div class="question-card" data-question-id="${q.question_id}" data-question-type="${q.question_type}">
+                        <div class="question-header">
+                            <div class="question-number">${qIndex + 1}</div>
+                            <div class="question-text">${q.question_text}</div>
+                        </div>
+                        <div class="options">${optionsHtml}</div>
+                    </div>
                 `;
             });
 
-            questionDiv.innerHTML = `
-                <div class="question-header">
-                    <div class="question-number">${index + 1}</div>
-                    <div class="question-text">${q.question_text}</div>
+            dimensionDiv.innerHTML = `
+                <div class="dimension-header">
+                    <h3>${dimension.dimension_name}</h3>
                 </div>
-                <div class="options">${optionsHtml}</div>
+                <div class="dimension-questions">
+                    ${questionsHtml}
+                </div>
             `;
 
-            container.appendChild(questionDiv);
+            container.appendChild(dimensionDiv);
         });
 
         // 显示提交按钮

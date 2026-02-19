@@ -2,7 +2,7 @@
 const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',  // 后端地址（后端默认端口 5000）
     timeout: 30000,
-    mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    mockMode: true  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
 
 // API工具类
@@ -126,7 +126,7 @@ class API {
             case '/profile/resume-parse-result':
                 return { success: true, data: { status: 'completed', parsed_data: {} } };
             case '/assessment/questionnaire':
-                return { success: true, data: { questions: this.mockQuestions() } };
+                return { success: true, data: this.mockQuestions() };
             case '/assessment/submit':
                 return { success: true, data: { report_id: 'report_' + Date.now() }, msg: '测评提交成功' };
             case '/assessment/report':
@@ -241,35 +241,163 @@ class API {
     }
 
     mockQuestions() {
-        return [
-            {
-                question_id: 'q001',
-                question_text: '你更喜欢哪种工作方式？',
-                options: [
-                    { text: '独立完成任务', score: 3 },
-                    { text: '团队协作完成', score: 2 },
-                    { text: '两者都可以', score: 1 }
-                ]
-            },
-            {
-                question_id: 'q002',
-                question_text: '你对技术研究的兴趣程度？',
-                options: [
-                    { text: '非常感兴趣', score: 3 },
-                    { text: '比较感兴趣', score: 2 },
-                    { text: '一般', score: 1 }
-                ]
-            },
-            {
-                question_id: 'q003',
-                question_text: '你更看重工作的哪个方面？',
-                options: [
-                    { text: '技术挑战', score: 3 },
-                    { text: '薪资待遇', score: 2 },
-                    { text: '工作稳定', score: 1 }
-                ]
-            }
-        ];
+        return {
+            assessment_id: 'assess_' + Date.now(),
+            total_questions: 12,
+            estimated_time: 10,
+            dimensions: [
+                {
+                    dimension_id: 'interest',
+                    dimension_name: '职业兴趣',
+                    questions: [
+                        {
+                            question_id: 'q001',
+                            question_text: '你更喜欢哪种工作方式？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '独立完成任务' },
+                                { option_id: 'B', option_text: '团队协作完成' },
+                                { option_id: 'C', option_text: '两者都可以' }
+                            ]
+                        },
+                        {
+                            question_id: 'q002',
+                            question_text: '你对技术研究的兴趣程度？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '非常感兴趣' },
+                                { option_id: 'B', option_text: '比较感兴趣' },
+                                { option_id: 'C', option_text: '一般' }
+                            ]
+                        },
+                        {
+                            question_id: 'q003',
+                            question_text: '你更看重工作的哪个方面？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '技术挑战' },
+                                { option_id: 'B', option_text: '薪资待遇' },
+                                { option_id: 'C', option_text: '工作稳定' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    dimension_id: 'personality',
+                    dimension_name: '性格特质',
+                    questions: [
+                        {
+                            question_id: 'q004',
+                            question_text: '在社交场合中，你通常？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '主动交流' },
+                                { option_id: 'B', option_text: '选择性交流' },
+                                { option_id: 'C', option_text: '倾向于倾听' }
+                            ]
+                        },
+                        {
+                            question_id: 'q005',
+                            question_text: '面对新任务时，你通常？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '立即行动' },
+                                { option_id: 'B', option_text: '制定计划' },
+                                { option_id: 'C', option_text: '寻求帮助' }
+                            ]
+                        },
+                        {
+                            question_id: 'q006',
+                            question_text: '你更喜欢哪种工作环境？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '安静独立' },
+                                { option_id: 'B', option_text: '团队协作' },
+                                { option_id: 'C', option_text: '开放灵活' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    dimension_id: 'ability',
+                    dimension_name: '能力倾向',
+                    questions: [
+                        {
+                            question_id: 'q007',
+                            question_text: '你的逻辑分析能力如何？',
+                            question_type: 'scale',
+                            options: [
+                                { option_id: '1', option_text: '1分' },
+                                { option_id: '2', option_text: '2分' },
+                                { option_id: '3', option_text: '3分' },
+                                { option_id: '4', option_text: '4分' },
+                                { option_id: '5', option_text: '5分' }
+                            ]
+                        },
+                        {
+                            question_id: 'q008',
+                            question_text: '你的学习能力如何？',
+                            question_type: 'scale',
+                            options: [
+                                { option_id: '1', option_text: '1分' },
+                                { option_id: '2', option_text: '2分' },
+                                { option_id: '3', option_text: '3分' },
+                                { option_id: '4', option_text: '4分' },
+                                { option_id: '5', option_text: '5分' }
+                            ]
+                        },
+                        {
+                            question_id: 'q009',
+                            question_text: '你的创新能力如何？',
+                            question_type: 'scale',
+                            options: [
+                                { option_id: '1', option_text: '1分' },
+                                { option_id: '2', option_text: '2分' },
+                                { option_id: '3', option_text: '3分' },
+                                { option_id: '4', option_text: '4分' },
+                                { option_id: '5', option_text: '5分' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    dimension_id: 'values',
+                    dimension_name: '职业价值观',
+                    questions: [
+                        {
+                            question_id: 'q010',
+                            question_text: '你更看重工作的哪个方面？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '成就感' },
+                                { option_id: 'B', option_text: '稳定性' },
+                                { option_id: 'C', option_text: '薪资待遇' }
+                            ]
+                        },
+                        {
+                            question_id: 'q011',
+                            question_text: '你希望从工作中获得什么？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '技能提升' },
+                                { option_id: 'B', option_text: '工作平衡' },
+                                { option_id: 'C', option_text: '认可尊重' }
+                            ]
+                        },
+                        {
+                            question_id: 'q012',
+                            question_text: '你认为理想的工作状态是？',
+                            question_type: 'single_choice',
+                            options: [
+                                { option_id: 'A', option_text: '持续学习成长' },
+                                { option_id: 'B', option_text: '稳定贡献' },
+                                { option_id: 'C', option_text: '灵活自主' }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
     }
 
     mockAssessmentReport() {
