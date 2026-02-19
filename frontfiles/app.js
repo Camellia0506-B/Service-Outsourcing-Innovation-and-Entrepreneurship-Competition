@@ -500,20 +500,35 @@ class CareerPlanningApp {
     // 填充个人档案表单
     fillProfileForm(data) {
         if (data.basic_info) {
-            document.getElementById('nickname').value = data.basic_info.nickname || '';
-            document.getElementById('gender').value = data.basic_info.gender || '';
-            document.getElementById('birthDate').value = data.basic_info.birth_date || '';
-            document.getElementById('phone').value = data.basic_info.phone || '';
-            document.getElementById('email').value = data.basic_info.email || '';
+            const basic = data.basic_info;
+            const nicknameInput = document.getElementById('nickname');
+            const genderInput = document.getElementById('gender');
+            const birthInput = document.getElementById('birthDate');
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+
+            if (basic.nickname) nicknameInput.value = basic.nickname;
+            if (basic.gender) genderInput.value = basic.gender;
+            if (basic.birth_date) birthInput.value = this.formatDateForDisplay(basic.birth_date);
+            if (basic.phone) phoneInput.value = basic.phone;
+            if (basic.email) emailInput.value = basic.email;
         }
 
         if (data.education_info) {
-            document.getElementById('school').value = data.education_info.school || '';
-            document.getElementById('major').value = data.education_info.major || '';
-            document.getElementById('degree').value = data.education_info.degree || '';
-            document.getElementById('grade').value = data.education_info.grade || '';
-            document.getElementById('expectedGraduation').value = data.education_info.expected_graduation || '';
-            document.getElementById('gpa').value = data.education_info.gpa || '';
+            const edu = data.education_info;
+            const schoolInput = document.getElementById('school');
+            const majorInput = document.getElementById('major');
+            const degreeInput = document.getElementById('degree');
+            const gradeInput = document.getElementById('grade');
+            const gradInput = document.getElementById('expectedGraduation');
+            const gpaInput = document.getElementById('gpa');
+
+            if (edu.school) schoolInput.value = edu.school;
+            if (edu.major) majorInput.value = edu.major;
+            if (edu.degree) degreeInput.value = edu.degree;
+            if (edu.grade) gradeInput.value = edu.grade;
+            if (edu.expected_graduation) gradInput.value = this.formatMonthForDisplay(edu.expected_graduation);
+            if (edu.gpa) gpaInput.value = edu.gpa;
         }
 
         // 填充技能
@@ -532,6 +547,101 @@ class CareerPlanningApp {
         }
     }
 
+    // 将简历解析结果转换为档案结构，便于直接填充表单
+    transformParsedResumeData(parsed) {
+        if (!parsed || typeof parsed !== 'object') return {};
+
+        const basic = parsed.basic_info || {};
+        const firstEdu = Array.isArray(parsed.education) && parsed.education.length > 0
+            ? parsed.education[0]
+            : {};
+        const skillsFromResume = Array.isArray(parsed.skills) ? parsed.skills : [];
+
+        const profileData = {
+            basic_info: {
+                // 只在有值时填写，避免用空字符串覆盖原来的内容
+                ...(basic.name || basic.nickname ? { nickname: basic.name || basic.nickname } : {}),
+                ...(basic.gender ? { gender: basic.gender } : {}),
+                ...(basic.birth_date || basic.birthday ? { birth_date: basic.birth_date || basic.birthday } : {}),
+                ...(basic.phone ? { phone: basic.phone } : {}),
+                ...(basic.email ? { email: basic.email } : {})
+            },
+            education_info: {
+                ...(firstEdu.school || firstEdu.school_name ? { school: firstEdu.school || firstEdu.school_name } : {}),
+                ...(firstEdu.major ? { major: firstEdu.major } : {}),
+                ...(firstEdu.degree || firstEdu.education ? { degree: firstEdu.degree || firstEdu.education } : {}),
+                ...(firstEdu.grade ? { grade: firstEdu.grade } : {}),
+                ...(firstEdu.graduation_date || firstEdu.end_date ? { expected_graduation: firstEdu.graduation_date || firstEdu.end_date } : {}),
+                ...(firstEdu.gpa ? { gpa: firstEdu.gpa } : {})
+            },
+            skills: []
+        };
+
+        if (skillsFromResume.length > 0) {
+            // 兼容字符串数组或对象数组两种情况
+            if (typeof skillsFromResume[0] === 'string') {
+                profileData.skills.push({
+                    category: '简历技能',
+                    items: skillsFromResume
+                });
+            } else {
+                skillsFromResume.forEach(s => {
+                    if (!s) return;
+                    if (typeof s === 'string') {
+                        profileData.skills.push({
+                            category: '简历技能',
+                            items: [s]
+                        });
+                    } else {
+                        const category = s.category || s.type || '简历技能';
+                        const items = Array.isArray(s.items)
+                            ? s.items
+                            : (s.name ? [s.name] : []);
+                        if (items.length > 0) {
+                            profileData.skills.push({ category, items });
+                        }
+                    }
+                });
+            }
+        }
+
+        return profileData;
+    }
+
+    // 将后端日期 YYYY-MM-DD → 界面显示 YYYY/MM/DD
+    formatDateForDisplay(value) {
+        if (!value) return '';
+        return value.replace(/-/g, '/');
+    }
+
+    // 将界面输入 YYYY/MM/DD 或 YYYY-MM-DD → 后端存储 YYYY-MM-DD
+    normalizeDateForStorage(value) {
+        if (!value) return '';
+        const v = value.trim().replace(/[./年月日]/g, '-').replace(/\/+/g, '-');
+        // 简单校验：YYYY-MM-DD
+        const m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!m) return value; // 格式不对就原样返回，避免卡死用户
+        const mm = m[2].padStart(2, '0');
+        const dd = m[3].padStart(2, '0');
+        return `${m[1]}-${mm}-${dd}`;
+    }
+
+    // 将后端月份 YYYY-MM → 界面显示 YYYY/MM
+    formatMonthForDisplay(value) {
+        if (!value) return '';
+        return value.replace(/-/g, '/');
+    }
+
+    // 将界面输入 YYYY/MM 或 YYYY-MM → 后端存储 YYYY-MM
+    normalizeMonthForStorage(value) {
+        if (!value) return '';
+        const v = value.trim().replace(/[./年月]/g, '-').replace(/\/+/g, '-');
+        const m = v.match(/^(\d{4})-(\d{1,2})$/);
+        if (!m) return value;
+        const mm = m[2].padStart(2, '0');
+        return `${m[1]}-${mm}`;
+    }
+
     // 保存个人档案
     async saveProfile() {
         const userId = getCurrentUserId();
@@ -541,7 +651,7 @@ class CareerPlanningApp {
             basic_info: {
                 nickname: document.getElementById('nickname').value,
                 gender: document.getElementById('gender').value,
-                birth_date: document.getElementById('birthDate').value,
+                birth_date: this.normalizeDateForStorage(document.getElementById('birthDate').value),
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value
             },
@@ -550,7 +660,7 @@ class CareerPlanningApp {
                 major: document.getElementById('major').value,
                 degree: document.getElementById('degree').value,
                 grade: document.getElementById('grade').value,
-                expected_graduation: document.getElementById('expectedGraduation').value,
+                expected_graduation: this.normalizeMonthForStorage(document.getElementById('expectedGraduation').value),
                 gpa: document.getElementById('gpa').value
             },
             skills: this.collectSkills()
@@ -753,12 +863,25 @@ class CareerPlanningApp {
                     statusDiv.textContent = '解析完成！已自动填充档案信息';
                     statusDiv.style.background = '#dcfce7';
                     
-                    this.showToast('简历解析完成，档案信息已更新', 'success');
-                    
-                    if (this.currentPage === 'profile') {
-                        this.loadProfileData();
+                    // 如果后端返回了解析后的档案结构，优先转换后直接填充到表单中
+                    const parsedData = result.data.parsed_data || result.data.profile || null;
+                    if (parsedData) {
+                        try {
+                            const profileData = this.transformParsedResumeData(parsedData);
+                            this.fillProfileForm(profileData);
+                        } catch (e) {
+                            console.error('应用简历解析结果到表单时出错:', e);
+                        }
                     }
                     
+                    // 清空文件输入框
+                    const fileInput = document.getElementById('resumeFile');
+                    if (fileInput) fileInput.value = '';
+                    
+                    // 再从后端刷新一次档案数据，保证前后端数据一致
+                    await this.loadProfileData();
+                    
+                    this.showToast('简历解析完成，档案信息已更新', 'success');
                     this.loadDashboardData();
                 } else if (result.data.status === 'failed') {
                     statusDiv.textContent = '解析失败，请重试';
