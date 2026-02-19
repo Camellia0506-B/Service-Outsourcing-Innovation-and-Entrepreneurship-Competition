@@ -105,6 +105,7 @@ class API {
 
     // 模拟请求方法
     async mockRequest(endpoint, options) {
+        console.log('Mock请求:', endpoint, options);
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const data = options.body || {};
