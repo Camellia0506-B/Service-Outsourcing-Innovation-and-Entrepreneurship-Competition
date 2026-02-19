@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import www.gradquest.com.common.ApiResponse;
+import www.gradquest.com.dto.ForgotPasswordResetRequest;
+import www.gradquest.com.dto.ForgotPasswordSendCodeRequest;
+import www.gradquest.com.dto.ForgotPasswordSendCodeResponse;
 import www.gradquest.com.dto.LoginResponse;
 import www.gradquest.com.dto.RegisterResponse;
 import www.gradquest.com.service.AuthService;
@@ -69,6 +72,24 @@ public class AuthController {
     public ApiResponse<Void> logout(@RequestBody @Validated LogoutRequest request) {
         authService.logout(request.getUserId());
         return ApiResponse.success("退出成功", null);
+    }
+
+    /**
+     * 1.4.1 忘记密码：发送验证码
+     */
+    @PostMapping("/forgot-password/send-code")
+    public ApiResponse<ForgotPasswordSendCodeResponse> forgotPasswordSendCode(@RequestBody @Validated ForgotPasswordSendCodeRequest request) {
+        ForgotPasswordSendCodeResponse data = authService.forgotPasswordSendCode(request.getUsername(), request.getEmail());
+        return ApiResponse.success("验证码已发送", data);
+    }
+
+    /**
+     * 1.4.2 忘记密码：重置密码
+     */
+    @PostMapping("/forgot-password/reset")
+    public ApiResponse<Void> forgotPasswordReset(@RequestBody @Validated ForgotPasswordResetRequest request) {
+        authService.forgotPasswordReset(request.getUsername(), request.getCode(), request.getNewPassword());
+        return ApiResponse.success("密码重置成功", null);
     }
 
     @Data

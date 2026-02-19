@@ -17,6 +17,7 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 先删表（按依赖顺序删也行，但关闭外键检查就无所谓）
+DROP TABLE IF EXISTS password_reset_codes;
 DROP TABLE IF EXISTS assessment_reports;
 DROP TABLE IF EXISTS assessment_submissions;
 DROP TABLE IF EXISTS resume_parse_tasks;
@@ -295,6 +296,21 @@ CREATE TABLE assessment_reports (
   KEY idx_assessment_reports_assessment_id (assessment_id),
   CONSTRAINT fk_assessment_reports_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='职业测评报告';
+
+-- 18. 忘记密码验证码表
+CREATE TABLE password_reset_codes (
+  id         BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  username   VARCHAR(50) NOT NULL COMMENT '用户名/账号',
+  email      VARCHAR(100) NOT NULL COMMENT '邮箱',
+  code       VARCHAR(10) NOT NULL COMMENT '验证码',
+  expires_at DATETIME NOT NULL COMMENT '过期时间',
+  used       TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已使用',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  KEY idx_password_reset_codes_username (username),
+  KEY idx_password_reset_codes_email (email),
+  KEY idx_password_reset_codes_expires_at (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='忘记密码验证码';
 
 SET FOREIGN_KEY_CHECKS = 1;
 
