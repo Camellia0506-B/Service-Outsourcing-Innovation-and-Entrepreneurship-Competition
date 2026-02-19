@@ -491,6 +491,29 @@ body {
     margin-bottom: 32px;
 }
 
+.dimension-section {
+    margin-bottom: 40px;
+}
+
+.dimension-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.dimension-header h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.dimension-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
 .question-card {
     background: var(--card-bg);
     border-radius: 16px;
@@ -559,9 +582,203 @@ body {
     background: rgba(37, 99, 235, 0.1);
 }
 
+.scale-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.scale-option span {
+    flex: 1;
+}
+
 .assessment-actions {
     text-align: center;
     margin-top: 32px;
+}
+
+.assessment-actions button {
+    margin: 0 8px;
+}
+
+/* 测评报告样式 */
+.assessment-report {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: var(--shadow);
+}
+
+.assessment-report h2 {
+    text-align: center;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 40px;
+}
+
+.report-section {
+    margin-bottom: 40px;
+    padding: 24px;
+    background: rgba(37, 99, 235, 0.03);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.report-section h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.report-section h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    margin-top: 16px;
+}
+
+.report-content {
+    color: var(--text-primary);
+    line-height: 1.8;
+}
+
+.report-content p {
+    margin-bottom: 12px;
+}
+
+.report-content ul {
+    margin-left: 24px;
+    margin-bottom: 12px;
+}
+
+.report-content li {
+    margin-bottom: 8px;
+}
+
+.suitable-fields ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-left: 0;
+    list-style: none;
+}
+
+.suitable-fields li {
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.traits-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.trait-item {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.trait-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.trait-score {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-right: 12px;
+}
+
+.trait-level {
+    background: var(--success-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.trait-desc {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.strengths ul,
+.improvements ul {
+    margin-left: 24px;
+}
+
+.strengths li {
+    color: var(--success-color);
+    margin-bottom: 8px;
+}
+
+.improvements li {
+    color: var(--warning-color);
+    margin-bottom: 8px;
+}
+
+.values-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.value-item {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.value-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.value-score {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-right: 12px;
+}
+
+.value-desc {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.recommendations ul,
+.development-suggestions ul {
+    margin-left: 24px;
+}
+
+.recommendations li {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.development-suggestions li {
+    color: var(--text-primary);
+    margin-bottom: 8px;
 }
 
 /* 岗位匹配页面 */
