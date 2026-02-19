@@ -1059,8 +1059,12 @@ class CareerPlanningApp {
         this.hideLoading();
 
         if (result.success) {
-            alert('测评报告:\n' + JSON.stringify(result.data, null, 2));
-            // 实际项目中应该创建一个美观的展示页面
+            // 切换到报告页面
+            this.showPage('reportPage');
+            // 渲染报告内容
+            this.renderReportContent(result.data);
+        } else {
+            this.showToast('获取报告失败: ' + (result.msg || '未知错误'), 'error');
         }
     }
 
@@ -1314,17 +1318,179 @@ class CareerPlanningApp {
     renderReportContent(data) {
         const contentDiv = document.getElementById('reportContent');
         
-        contentDiv.innerHTML = `
+        let html = `
             <h3 style="color: var(--primary-color); margin-bottom: 20px;">
-                ${data.title || '职业规划报告'}
+                ${data.title || '职业测评报告'}
             </h3>
             <div style="color: var(--text-secondary); margin-bottom: 32px;">
                 生成时间: ${data.created_at}
             </div>
-            <div style="white-space: pre-wrap; line-height: 1.8;">
-                ${data.content || '报告内容加载中...'}
-            </div>
         `;
+
+        // 兴趣分析表格
+        if (data.interest_analysis) {
+            html += `
+                <div class="report-section">
+                    <h4 style="color: var(--primary-color); margin-bottom: 16px;">职业兴趣分析</h4>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>分析项目</th>
+                                <th>结果</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>霍兰德代码</td>
+                                <td><strong>${data.interest_analysis.holland_code}</strong></td>
+                                <td>职业兴趣类型组合</td>
+                            </tr>
+                            <tr>
+                                <td>主要兴趣类型</td>
+                                <td><strong>${data.interest_analysis.primary_interest.type}</strong></td>
+                                <td>${data.interest_analysis.primary_interest.description}</td>
+                            </tr>
+                            <tr>
+                                <td>兴趣匹配度</td>
+                                <td><strong>${data.interest_analysis.primary_interest.score}分</strong></td>
+                                <td>兴趣倾向强度</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h5 style="margin-top: 20px; margin-bottom: 12px;">适合的职业领域</h5>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>职业领域</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.interest_analysis.suitable_fields.forEach((field, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${field}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // 性格特质分析表格
+        if (data.personality_analysis) {
+            html += `
+                <div class="report-section">
+                    <h4 style="color: var(--primary-color); margin-bottom: 16px;">性格特质分析</h4>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>MBTI类型</th>
+                                <th colspan="3">${data.personality_analysis.mbti_type}</th>
+                            </tr>
+                            <tr>
+                                <th>特质维度</th>
+                                <th>得分</th>
+                                <th>水平</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.personality_analysis.traits.forEach(trait => {
+                html += `
+                    <tr>
+                        <td>${trait.trait_name}</td>
+                        <td><strong>${trait.score}分</strong></td>
+                        <td><span class="trait-level">${trait.level}</span></td>
+                        <td>基于测评结果的性格倾向</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // 能力分析表格
+        if (data.ability_analysis) {
+            html += `
+                <div class="report-section">
+                    <h4 style="color: var(--primary-color); margin-bottom: 16px;">能力分析</h4>
+                    
+                    <h5 style="margin-bottom: 12px;">优势能力</h5>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>能力项</th>
+                                <th>得分</th>
+                                <th>水平</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.ability_analysis.strengths.forEach(strength => {
+                const level = strength.score >= 80 ? '优秀' : strength.score >= 70 ? '良好' : '一般';
+                html += `
+                    <tr>
+                        <td>${strength.ability}</td>
+                        <td><strong>${strength.score}分</strong></td>
+                        <td><span class="ability-level excellent">${level}</span></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                    
+                    <h5 style="margin-top: 20px; margin-bottom: 12px;">待提升能力</h5>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>能力项</th>
+                                <th>得分</th>
+                                <th>水平</th>
+                                <th>建议</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.ability_analysis.areas_to_improve.forEach(area => {
+                const level = area.score >= 70 ? '一般' : area.score >= 60 ? '需提升' : '重点提升';
+                html += `
+                    <tr>
+                        <td>${area.ability}</td>
+                        <td><strong>${area.score}分</strong></td>
+                        <td><span class="ability-level improve">${level}</span></td>
+                        <td>建议通过学习和实践提升此项能力</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        contentDiv.innerHTML = html;
     }
 
     // 查看历史报告
