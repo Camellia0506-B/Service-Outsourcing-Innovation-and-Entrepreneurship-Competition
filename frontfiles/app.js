@@ -23,26 +23,26 @@ class CareerPlanningApp {
     // 绑定所有事件
     bindEvents() {
         // 登录表单提交
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleLogin();
         });
 
         // 创建账户 - 注册表单提交
-        document.getElementById('registerForm').addEventListener('submit', (e) => {
+        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleRegisterForm();
         });
 
         // 登录页「创建账户」跳转到注册页
-        document.getElementById('goRegister').addEventListener('click', (e) => {
+        document.getElementById('goRegister')?.addEventListener('click', (e) => {
             e.preventDefault();
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('registerPage').classList.remove('hidden');
         });
 
         // 注册页「立即登录」跳转到登录页
-        document.getElementById('showLogin').addEventListener('click', (e) => {
+        document.getElementById('showLogin')?.addEventListener('click', (e) => {
             e.preventDefault();
             this.showPage('loginPage');
             document.getElementById('registerPage').classList.add('hidden');
@@ -58,7 +58,7 @@ class CareerPlanningApp {
         });
 
         // 退出登录
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
             this.handleLogout();
         });
 
@@ -71,23 +71,23 @@ class CareerPlanningApp {
         });
 
         // 个人档案相关
-        document.getElementById('saveProfileBtn').addEventListener('click', () => {
+        document.getElementById('saveProfileBtn')?.addEventListener('click', () => {
             this.saveProfile();
         });
 
-        document.getElementById('viewProfileBtn').addEventListener('click', () => {
+        document.getElementById('viewProfileBtn')?.addEventListener('click', () => {
             this.viewCompleteProfile();
         });
 
-        document.getElementById('addSkillCategory').addEventListener('click', () => {
+        document.getElementById('addSkillCategory')?.addEventListener('click', () => {
             this.addSkillCategory();
         });
 
-        document.getElementById('uploadResumeBtn').addEventListener('click', () => {
+        document.getElementById('uploadResumeBtn')?.addEventListener('click', () => {
             document.getElementById('resumeUpload').click();
         });
 
-        document.getElementById('resumeUpload').addEventListener('change', (e) => {
+        document.getElementById('resumeUpload')?.addEventListener('change', (e) => {
             this.handleResumeUpload(e.target.files[0]);
         });
 
