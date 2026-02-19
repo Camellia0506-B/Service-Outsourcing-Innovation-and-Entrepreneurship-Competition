@@ -19,7 +19,10 @@ logger.info("[App] 注册路由: 系统管理模块 /api/v1/system/*")
 
 # 个人档案模块（第二个功能）
 from api.profile_router import profile_bp
+from api.assessment_router import assessment_bp
 app.register_blueprint(profile_bp)
+app.register_blueprint(assessment_bp)
+logger.info("[App] 注册路由: 职业测评模块 /api/v1/assessment/*")
 logger.info("[App] 注册路由: 个人档案模块 /api/v1/profile/*")
 
 # TODO: 后续功能模块按需注册

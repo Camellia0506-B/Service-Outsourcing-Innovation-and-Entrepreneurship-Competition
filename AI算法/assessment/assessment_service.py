@@ -1,0 +1,421 @@
+"""
+职业测评模块 - 服务层
+对应 API 文档第 3 章
+包含AI核心算法:
+1. 动态问卷生成
+2. 多维度计分算法(霍兰德/MBTI/能力/价值观)
+3. AI综合报告生成
+"""
+
+import json
+import os
+import threading
+from datetime import datetime
+from typing import Dict, List, Optional
+from utils.logger_handler import logger
+from assessment.question_bank_vector_store import QuestionBankVectorStore
+
+
+# ===== 辅助函数 =====
+
+def _load_assessment_config() -> dict:
+    """加载assessment配置"""
+    import yaml
+    from utils.path_tool import get_abs_path
+    path = get_abs_path("config/assessment.yml")
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.load(f, Loader=yaml.FullLoader)
+
+
+def _load_prompt(prompt_key: str) -> str:
+    """从prompts.yml加载指定prompt模板"""
+    from utils.config_handler import prompts_conf
+    from utils.path_tool import get_abs_path
+    prompt_path = prompts_conf.get(prompt_key)
+    if not prompt_path:
+        raise ValueError(f"Prompt key '{prompt_key}' not found in prompts.yml")
+    abs_path = get_abs_path(prompt_path)
+    with open(abs_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def _ensure_data_dir():
+    """确保数据目录存在"""
+    from utils.path_tool import get_abs_path
+    data_dir = get_abs_path("data/assessment")
+    os.makedirs(data_dir, exist_ok=True)
+
+
+def _load_store(store_path_key: str) -> dict:
+    """加载JSON存储文件"""
+    _ensure_data_dir()
+    from utils.path_tool import get_abs_path
+    config = _load_assessment_config()
+    path = get_abs_path(config[store_path_key])
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def _save_store(store_path_key: str, data: dict):
+    """保存JSON存储文件"""
+    _ensure_data_dir()
+    from utils.path_tool import get_abs_path
+    config = _load_assessment_config()
+    path = get_abs_path(config[store_path_key])
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _extract_json(raw_text: str) -> dict:
+    """从模型输出中提取JSON（兼容markdown包裹）"""
+    text = raw_text.strip()
+    # 移除markdown代码块标记
+    if text.startswith("```json"):
+        text = text[7:]
+    if text.startswith("```"):
+        text = text[3:]
+    if text.endswith("```"):
+        text = text[:-3]
+    text = text.strip()
+    return json.loads(text)
+
+
+# ===== 核心服务类 =====
+
+class AssessmentService:
+    """职业测评服务：问卷生成 + AI计分 + 报告生成"""
+
+    def __init__(self):
+        self.config = _load_assessment_config()
+        self.questionnaires = _load_store("questionnaire_store_path")
+        self.answers = _load_store("answers_store_path")
+        self.reports = _load_store("reports_store_path")
+        self.tasks = _load_store("report_tasks_store_path")
+        # 题库向量数据库（RAG检索）
+        self.question_bank = QuestionBankVectorStore()
+        # 确保题库已加载
+        try:
+            self.question_bank.load_questions()
+        except Exception as e:
+            logger.warning(f"[Assessment] 题库加载异常: {e}")
+
+    # ==================================================
+    # 3.1 获取测评问卷
+    # ==================================================
+    def get_questionnaire(self, user_id: int, assessment_type: str) -> dict:
+        """
+        生成/获取职业测评问卷。
+        assessment_type: comprehensive(综合) / quick(快速)
+        对应 API 文档 3.1
+        """
+        ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+        assessment_id = f"assess_{ts}_{user_id}"
+
+        # 检查类型合法性
+        type_config = self.config["assessment_types"].get(assessment_type)
+        if not type_config:
+            raise ValueError(f"Invalid assessment_type: {assessment_type}")
+
+        # 生成问卷（调用问卷生成算法）
+        dimensions_data = self._generate_questions(assessment_type)
+
+        questionnaire = {
+            "assessment_id": assessment_id,
+            "user_id": user_id,
+            "assessment_type": assessment_type,
+            "total_questions": type_config["total_questions"],
+            "estimated_time": type_config["estimated_time"],
+            "dimensions": dimensions_data,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        # 持久化
+        self.questionnaires[assessment_id] = questionnaire
+        _save_store("questionnaire_store_path", self.questionnaires)
+
+        logger.info(f"[Assessment] 生成问卷 assessment_id={assessment_id}, type={assessment_type}")
+        return questionnaire
+
+    def _generate_questions(self, assessment_type: str) -> List[dict]:
+        """
+        问卷生成算法：从题库向量数据库检索题目（RAG方式）。
+        根据assessment_type决定题目数量：
+        - comprehensive: 职业兴趣18题 + 性格20题 + 能力15题 + 价值观10题 = 63题
+        - quick: 职业兴趣12题 + 性格10题 + 能力8题 + 价值观5题 = 35题（简化）
+        """
+        dimensions_config = self.config["dimensions"]
+        is_comprehensive = (assessment_type == "comprehensive")
+
+        dimensions = []
+
+        # 从配置读取每个维度需要的题目数量
+        dim_configs = {
+            "interest": {
+                "dimension_id": "interest",
+                "dimension_name": "职业兴趣",
+                "count": 18 if is_comprehensive else 12
+            },
+            "personality": {
+                "dimension_id": "personality",
+                "dimension_name": "性格特质",
+                "count": 20 if is_comprehensive else 10
+            },
+            "ability": {
+                "dimension_id": "ability",
+                "dimension_name": "能力倾向",
+                "count": 15 if is_comprehensive else 8
+            },
+            "values": {
+                "dimension_id": "values",
+                "dimension_name": "职业价值观",
+                "count": 10 if is_comprehensive else 5
+            }
+        }
+
+        # 从向量数据库检索各维度题目
+        for dim_id, dim_cfg in dim_configs.items():
+            try:
+                questions = self.question_bank.retrieve_by_dimension(
+                    dimension_id=dim_id,
+                    count=dim_cfg["count"]
+                )
+                dimensions.append({
+                    "dimension_id": dim_id,
+                    "dimension_name": dim_cfg["dimension_name"],
+                    "questions": questions
+                })
+                logger.info(f"[Assessment] 从RAG检索 {dim_id} 维度题目: {len(questions)}题")
+            except Exception as e:
+                logger.error(f"[Assessment] 检索 {dim_id} 维度题目失败: {e}")
+                # 降级：使用空列表（前端会提示错误）
+                dimensions.append({
+                    "dimension_id": dim_id,
+                    "dimension_name": dim_cfg["dimension_name"],
+                    "questions": []
+                })
+
+        return dimensions
+
+    # ==================================================
+    # 3.2 提交测评答案（触发AI报告生成）
+    # ==================================================
+    def submit_answers(self, user_id: int, assessment_id: str, answers: List[dict], time_spent: int) -> dict:
+        """
+        提交测评答卷，触发后台AI报告生成。
+        对应 API 文档 3.2
+        """
+        # 校验assessment_id
+        if assessment_id not in self.questionnaires:
+            raise ValueError(f"Invalid assessment_id: {assessment_id}")
+
+        # 生成report_id
+        ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+        report_id = f"report_{ts}_{user_id}"
+
+        # 保存答案
+        answer_record = {
+            "assessment_id": assessment_id,
+            "user_id": user_id,
+            "answers": answers,
+            "time_spent": time_spent,
+            "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        self.answers[assessment_id] = answer_record
+        _save_store("answers_store_path", self.answers)
+
+        # 初始化任务状态
+        self.tasks[report_id] = {
+            "status": "processing",
+            "user_id": user_id,
+            "assessment_id": assessment_id,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "result": None,
+            "error": None
+        }
+        _save_store("report_tasks_store_path", self.tasks)
+
+        # 后台线程生成报告
+        def _run():
+            try:
+                # 1. 计分
+                scores = self._calculate_scores(assessment_id, answers)
+                # 2. 调用AI生成报告
+                report = self._generate_report_with_ai(user_id, assessment_id, answers, scores)
+                # 3. 保存报告
+                report["report_id"] = report_id
+                report["user_id"] = user_id
+                report["assessment_date"] = datetime.now().strftime("%Y-%m-%d")
+                report["status"] = "completed"
+                self.reports[report_id] = report
+                _save_store("reports_store_path", self.reports)
+
+                self.tasks[report_id]["status"] = "completed"
+                self.tasks[report_id]["result"] = {"report_id": report_id}
+                logger.info(f"[Assessment] 报告生成完成 report_id={report_id}")
+            except Exception as e:
+                self.tasks[report_id]["status"] = "failed"
+                self.tasks[report_id]["error"] = str(e)
+                logger.error(f"[Assessment] 报告生成失败 report_id={report_id}: {e}", exc_info=True)
+            finally:
+                _save_store("report_tasks_store_path", self.tasks)
+
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
+
+        logger.info(f"[Assessment] 答案提交成功，触发报告生成 report_id={report_id}")
+        return {"report_id": report_id, "status": "processing"}
+
+    def _calculate_scores(self, assessment_id: str, answers: List[dict]) -> dict:
+        """
+        多维度计分算法：
+        - 霍兰德6类型分数
+        - 5大性格特质分数
+        - 5项能力分数
+        - 5个价值观分数
+        """
+        questionnaire = self.questionnaires[assessment_id]
+        answer_map = {a["question_id"]: a["answer"] for a in answers}
+
+        # 初始化分数
+        holland_scores = {"R": 0, "I": 0, "A": 0, "S": 0, "E": 0, "C": 0}
+        trait_scores = {"外向性": 0, "开放性": 0, "尽责性": 0, "宜人性": 0, "情绪稳定性": 0}
+        ability_scores = {"逻辑分析能力": 0, "学习能力": 0, "沟通表达能力": 0, "执行能力": 0, "创新能力": 0}
+        value_scores = {"成就感": 0, "学习发展": 0, "工作稳定": 0, "薪资待遇": 0, "工作环境": 0}
+
+        # 遍历问卷题目，累加分数
+        for dim in questionnaire["dimensions"]:
+            dim_id = dim["dimension_id"]
+            for q in dim["questions"]:
+                qid = q["question_id"]
+                user_answer = answer_map.get(qid)
+                if not user_answer:
+                    continue
+
+                # 根据题目类型计分
+                if q["question_type"] == "single_choice":
+                    for opt in q["options"]:
+                        if opt["option_id"] == user_answer:
+                            score = opt.get("score", 0)
+                            if dim_id == "interest":
+                                holland_type = q.get("holland_type", "R")
+                                holland_scores[holland_type] += score
+                            elif dim_id == "personality":
+                                trait = q.get("trait", "外向性")
+                                trait_scores[trait] += score
+                            elif dim_id == "values":
+                                val_type = q.get("value_type", "成就感")
+                                value_scores[val_type] += score
+                            break
+
+                elif q["question_type"] == "scale":
+                    # 量表题（1-5分）
+                    scale_score = int(user_answer) if isinstance(user_answer, (int, str)) else 3
+                    if dim_id == "ability":
+                        ability = q.get("ability", "逻辑分析能力")
+                        ability_scores[ability] += scale_score * 20  # 归一化到0-100
+
+        # 归一化到0-100
+        for k in holland_scores:
+            holland_scores[k] = min(100, int(holland_scores[k] * 5))  # 假设每类型最多20分原始分
+        for k in trait_scores:
+            trait_scores[k] = min(100, int(trait_scores[k] * 5))
+        for k in value_scores:
+            value_scores[k] = min(100, int(value_scores[k] * 10))
+
+        return {
+            "holland": holland_scores,
+            "traits": trait_scores,
+            "abilities": ability_scores,
+            "values": value_scores
+        }
+
+    def _generate_report_with_ai(self, user_id: int, assessment_id: str, answers: List[dict], scores: dict) -> dict:
+        """
+        AI核心算法：调用通义大模型（qwen3-max）生成综合测评报告。
+        输入：用户档案 + 答题数据 + 计分结果
+        输出：霍兰德分析 + MBTI分析 + 能力分析 + 价值观分析 + 职业建议
+        """
+        from langchain_core.output_parsers import StrOutputParser
+        from langchain_core.prompts import PromptTemplate
+
+        # 模型加载（与profile_service保持一致）
+        try:
+            from model.factory import chat_model
+            model = chat_model
+        except ImportError:
+            from langchain_community.chat_models.tongyi import ChatTongyi
+            from utils.config_handler import rag_conf
+            model = ChatTongyi(model=rag_conf["chat_model_name"])
+
+        # 加载用户档案（如果有的话）
+        try:
+            from profile.profile_service import ProfileService
+            profile_service = ProfileService()
+            user_profile_data = profile_service.get_profile(user_id)
+            user_profile = json.dumps(user_profile_data, ensure_ascii=False, indent=2)
+        except Exception:
+            user_profile = "用户档案暂无"
+
+        # 构造prompt输入
+        prompt_template = _load_prompt("assessment_report_prompt_path")
+        prompt = PromptTemplate(
+            input_variables=["user_profile", "answers_data", "dimension_scores"],
+            template=prompt_template
+        )
+        chain = prompt | model | StrOutputParser()
+
+        # 调用模型
+        raw_output = chain.invoke({
+            "user_profile": user_profile,
+            "answers_data": json.dumps(answers, ensure_ascii=False, indent=2),
+            "dimension_scores": json.dumps(scores, ensure_ascii=False, indent=2)
+        })
+
+        # 解析JSON
+        report_data = _extract_json(raw_output)
+        logger.info(f"[Assessment] AI报告生成完成，confidence={report_data.get('confidence_score', 0)}")
+        return report_data
+
+    # ==================================================
+    # 3.3 获取测评报告
+    # ==================================================
+    def get_report(self, user_id: int, report_id: str) -> Optional[dict]:
+        """
+        获取测评报告（轮询任务状态）。
+        对应 API 文档 3.3
+        """
+        # 先查任务状态
+        task = self.tasks.get(report_id)
+        if not task:
+            return None
+
+        if task["status"] == "processing":
+            return {
+                "report_id": report_id,
+                "status": "processing",
+                "message": "报告生成中，请稍后查询"
+            }
+        elif task["status"] == "failed":
+            return {
+                "report_id": report_id,
+                "status": "failed",
+                "error": task.get("error", "未知错误")
+            }
+        else:  # completed
+            report = self.reports.get(report_id)
+            if not report:
+                return None
+            return report
+
+
+# ===== 单例获取 =====
+_service_instance = None
+
+
+def get_assessment_service() -> AssessmentService:
+    global _service_instance
+    if _service_instance is None:
+        _service_instance = AssessmentService()
+    return _service_instance
