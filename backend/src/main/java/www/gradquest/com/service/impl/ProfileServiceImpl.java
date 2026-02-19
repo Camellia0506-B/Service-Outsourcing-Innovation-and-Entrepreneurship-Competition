@@ -19,11 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import org.springframework.dao.DuplicateKeyException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -190,7 +187,12 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
+    @SuppressWarnings("null")
     public UploadResumeResponse uploadResume(Long userId, MultipartFile resumeFile) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
         if (resumeFile == null || resumeFile.isEmpty()) {
             throw new IllegalArgumentException("请上传简历文件");
         }
@@ -211,13 +213,49 @@ public class ProfileServiceImpl implements ProfileService {
         try {
             File tmp = File.createTempFile("resume_", ".pdf");
             resumeFile.transferTo(tmp);
-            pdfProcessor.extractText(tmp); // 校验 PDF 可读，后续可接入 AI 解析
+            String text = pdfProcessor.extractText(tmp);
             tmp.delete();
+
+            // 简单抽取：邮箱/手机号/姓名（可后续替换为 AI 结构化解析）
+            String email = extractEmail(text);
+            String phone = extractPhone(text);
+            String name = extractName(text);
+
+            // 写回个人档案：user_profiles(phone/email) & users.nickname（若为空且能抽取到姓名）
+            UserProfile profile = userProfileMapper.selectById(userId);
+            if (profile == null) {
+                profile = new UserProfile();
+                profile.setUserId(userId);
+            }
+            boolean profileChanged = false;
+            if (phone != null && (profile.getPhone() == null || profile.getPhone().isBlank())) {
+                profile.setPhone(phone);
+                profileChanged = true;
+            }
+            if (email != null && (profile.getEmail() == null || profile.getEmail().isBlank())) {
+                profile.setEmail(email);
+                profileChanged = true;
+            }
+            profile.setUpdatedAt(LocalDateTime.now());
+            if (profileChanged) {
+                if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
+                else userProfileMapper.updateById(profile);
+            } else {
+                // 仍然刷新 updated_at
+                if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
+                else userProfileMapper.updateById(profile);
+            }
+
+            if (name != null && (user.getNickname() == null || user.getNickname().isBlank() || user.getNickname().startsWith("user_"))) {
+                user.setNickname(name);
+                userMapper.updateById(user);
+            }
+
             Map<String, Object> parsed = new LinkedHashMap<>();
             Map<String, Object> basic = new LinkedHashMap<>();
-            basic.put("name", "");
-            basic.put("phone", "");
-            basic.put("email", "");
+            basic.put("name", name != null ? name : "");
+            basic.put("phone", phone != null ? phone : "");
+            basic.put("email", email != null ? email : "");
             parsed.put("basic_info", basic);
             parsed.put("education", List.of());
             parsed.put("skills", List.of());
@@ -300,5 +338,40 @@ public class ProfileServiceImpl implements ProfileService {
 
     private static boolean has(String s) {
         return s != null && !s.isBlank();
+    }
+
+    private static String extractEmail(String text) {
+        if (text == null) return null;
+        Pattern p = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
+        Matcher m = p.matcher(text);
+        return m.find() ? m.group() : null;
+    }
+
+    private static String extractPhone(String text) {
+        if (text == null) return null;
+        // 中国大陆手机号：1[3-9]xxxxxxxxx（允许中间有空格/短横线）
+        Pattern p = Pattern.compile("1[3-9]\\d[-\\s]?\\d{4}[-\\s]?\\d{4}");
+        Matcher m = p.matcher(text);
+        if (m.find()) {
+            return m.group().replaceAll("[-\\s]", "");
+        }
+        return null;
+    }
+
+    private static String extractName(String text) {
+        if (text == null) return null;
+        // 简单策略：取前 5 行内第一个“姓名/Name”字段；找不到则返回 null
+        String[] lines = text.split("\\R");
+        int max = Math.min(lines.length, 5);
+        Pattern p1 = Pattern.compile("^(姓名|Name)[:：\\s]+(.+)$");
+        for (int i = 0; i < max; i++) {
+            String line = lines[i].trim();
+            Matcher m = p1.matcher(line);
+            if (m.find()) {
+                String v = m.group(2).trim();
+                if (!v.isEmpty() && v.length() <= 20) return v;
+            }
+        }
+        return null;
     }
 }
