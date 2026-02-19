@@ -3,7 +3,7 @@ class CareerPlanningApp {
     constructor() {
         this.currentPage = 'login';
         this.currentUser = null;
-        this.init();
+        // init() 移到 DOMContentLoaded 后调用
     }
 
     // 初始化应用
@@ -1239,4 +1239,5 @@ class CareerPlanningApp {
 // 页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new CareerPlanningApp();
+    window.app.init();  // DOM加载完成后再初始化
 });
