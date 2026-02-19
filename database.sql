@@ -17,6 +17,8 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 先删表（按依赖顺序删也行，但关闭外键检查就无所谓）
+DROP TABLE IF EXISTS assessment_reports;
+DROP TABLE IF EXISTS assessment_submissions;
 DROP TABLE IF EXISTS resume_parse_tasks;
 DROP TABLE IF EXISTS profile_awards;
 DROP TABLE IF EXISTS profile_projects;
@@ -261,6 +263,38 @@ CREATE TABLE resume_parse_tasks (
   KEY idx_resume_parse_tasks_user_id (user_id),
   CONSTRAINT fk_resume_parse_tasks_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='简历解析任务';
+
+-- 16. 职业测评答卷（提交测评答案）
+CREATE TABLE assessment_submissions (
+  id              BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  assessment_id   VARCHAR(80) NOT NULL COMMENT '测评ID，如 assess_20260214_10001',
+  user_id         BIGINT NOT NULL COMMENT '用户ID',
+  assessment_type VARCHAR(30) NOT NULL COMMENT 'comprehensive/quick',
+  answers         JSON NOT NULL COMMENT '答题内容',
+  time_spent      INT NULL COMMENT '耗时（分钟）',
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_assessment_submissions_assessment_id (assessment_id),
+  KEY idx_assessment_submissions_user_id (user_id),
+  CONSTRAINT fk_assessment_submissions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='职业测评答卷';
+
+-- 17. 职业测评报告（生成结果）
+CREATE TABLE assessment_reports (
+  id              BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  report_id       VARCHAR(80) NOT NULL COMMENT '报告ID，如 report_20260214_10001',
+  user_id         BIGINT NOT NULL COMMENT '用户ID',
+  assessment_id   VARCHAR(80) NOT NULL COMMENT '测评ID',
+  status          VARCHAR(20) NOT NULL DEFAULT 'processing' COMMENT 'processing/completed/failed',
+  assessment_date DATE NULL COMMENT '测评日期',
+  report_data     JSON NULL COMMENT '报告内容（完整 JSON）',
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_assessment_reports_report_id (report_id),
+  KEY idx_assessment_reports_user_id (user_id),
+  KEY idx_assessment_reports_assessment_id (assessment_id),
+  CONSTRAINT fk_assessment_reports_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='职业测评报告';
 
 SET FOREIGN_KEY_CHECKS = 1;
 
