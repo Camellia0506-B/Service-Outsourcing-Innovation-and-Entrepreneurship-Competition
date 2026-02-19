@@ -127,6 +127,69 @@ def _extract_json(text: str) -> dict:
     return json.loads(text)
 
 
+def _fallback_parse_resume_text(resume_text: str) -> dict:
+    """
+    当大模型未解析出有效结构时，使用正则从原始文本里兜底提取几项关键信息：
+    - 姓名（匹配“姓名：XXX”）
+    - 手机号（11位国内手机号）
+    - 邮箱
+    - 教育经历中第一所学校和专业（尽量猜测，有则填，没有就留空）
+    """
+    import re
+
+    text = resume_text or ""
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+
+    # 手机号
+    phone_match = re.search(r"1[3-9]\d{9}", text)
+    phone = phone_match.group(0) if phone_match else ""
+
+    # 邮箱
+    email_match = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
+    email = email_match.group(0) if email_match else ""
+
+    # 姓名（优先匹配“姓名：XXX”）
+    name = ""
+    name_match = re.search(r"姓名[:：]\s*([^\s，,。]{2,4})", text)
+    if name_match:
+        name = name_match.group(1).strip()
+
+    # 学校/专业（非常简单的启发式，不保证完全正确，只是为了让前端看到效果）
+    school = ""
+    major = ""
+    for ln in lines:
+        if not school and ("大学" in ln or "学院" in ln):
+            school = ln
+        if "专业" in ln:
+            m = re.search(r"专业[:：]\s*([\u4e00-\u9fa5A-Za-z0-9·\s]+)", ln)
+            if m:
+                major = m.group(1).strip()
+        if school and major:
+            break
+
+    education = []
+    if school or major:
+        education.append(
+            {
+                "school": school,
+                "major": major,
+            }
+        )
+
+    return {
+        "basic_info": {
+            "name": name,
+            "phone": phone,
+            "email": email,
+        },
+        "education": education,
+        "skills": [],
+        "internships": [],
+        "projects": [],
+        "awards": [],
+    }
+
+
 # ============================================================
 # 档案完整度计算
 # ============================================================
@@ -348,6 +411,25 @@ class ProfileService:
         # 调用模型
         raw_output = chain.invoke({"resume_text": resume_text})
         parsed = _extract_json(raw_output)
+
+        # 如果模型没有解析出有效结构，用本地正则做一次兜底解析
+        try:
+            bi = (parsed.get("basic_info") or {}) if isinstance(parsed, dict) else {}
+            no_basic = not bi or all(
+                not (bi.get(k) or "").strip() for k in ("name", "phone", "email")
+            )
+        except Exception:
+            bi = {}
+            no_basic = True
+
+        if no_basic:
+            fallback = _fallback_parse_resume_text(resume_text)
+            if isinstance(parsed, dict):
+                for k, v in fallback.items():
+                    if k not in parsed or not parsed[k]:
+                        parsed[k] = v
+            else:
+                parsed = fallback
 
         # 提取 confidence_score 和 suggestions（从模型输出中分离）
         confidence_score = parsed.pop("confidence_score", 0.85)
