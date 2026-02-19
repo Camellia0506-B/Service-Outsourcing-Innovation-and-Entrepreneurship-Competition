@@ -103,20 +103,20 @@ class CareerPlanningApp {
             });
         });
 
-        document.getElementById('searchJobBtn').addEventListener('click', () => {
+        document.getElementById('searchJobBtn')?.addEventListener('click', () => {
             this.searchJobs();
         });
 
-        document.getElementById('analyzeBtn').addEventListener('click', () => {
+        document.getElementById('analyzeBtn')?.addEventListener('click', () => {
             this.analyzeJobMatch();
         });
 
         // 职业规划报告相关
-        document.getElementById('generateReportBtn').addEventListener('click', () => {
+        document.getElementById('generateReportBtn')?.addEventListener('click', () => {
             this.generateReport();
         });
 
-        document.getElementById('viewHistoryBtn').addEventListener('click', () => {
+        document.getElementById('viewHistoryBtn')?.addEventListener('click', () => {
             this.viewReportHistory();
         });
     }
