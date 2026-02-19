@@ -189,8 +189,56 @@ class CareerPlanningApp {
 
     // 处理登录
     async handleLogin() {
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
+        const usernameInput = document.getElementById('loginUsername');
+        const passwordInput = document.getElementById('loginPassword');
+        const usernameError = document.getElementById('loginUsernameError');
+        const passwordError = document.getElementById('loginPasswordError');
+        
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        // 清除之前的错误状态
+        usernameInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+        usernameError.classList.remove('show');
+        passwordError.classList.remove('show');
+
+        // 验证账号格式
+        if (!username) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '请输入账号';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        if (username.length < 3) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '账号长度不能少于3位';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        if (username.length > 20) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '账号长度不能超过20位';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        // 验证密码格式
+        if (!password) {
+            passwordInput.classList.add('error');
+            passwordError.textContent = '请输入密码';
+            passwordError.classList.add('show');
+            return;
+        }
+
+        if (password.length < 6) {
+            passwordInput.classList.add('error');
+            passwordError.textContent = '密码长度不能少于6位';
+            passwordError.classList.add('show');
+            return;
+        }
 
         this.showLoading();
         const result = await login(username, password);
@@ -289,14 +337,83 @@ class CareerPlanningApp {
 
     // 创建账户表单：注册后自动登录并进入首页
     async handleRegisterForm() {
-        const username = document.getElementById('regUsername').value.trim();
-        const password = document.getElementById('regPassword').value;
-        const nickname = document.getElementById('regNickname').value.trim();
+        const usernameInput = document.getElementById('regUsername');
+        const passwordInput = document.getElementById('regPassword');
+        const nicknameInput = document.getElementById('regNickname');
+        const usernameError = document.getElementById('regUsernameError');
+        const passwordError = document.getElementById('regPasswordError');
+        const nicknameError = document.getElementById('regNicknameError');
         const avatarInput = document.getElementById('regAvatar');
         const avatarFile = avatarInput && avatarInput.files && avatarInput.files[0] ? avatarInput.files[0] : null;
 
-        if (!username || !password || !nickname) {
-            this.showToast('请填写用户名、密码和昵称', 'error');
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+        const nickname = nicknameInput.value.trim();
+
+        // 清除之前的错误状态
+        usernameInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+        nicknameInput.classList.remove('error');
+        usernameError.classList.remove('show');
+        passwordError.classList.remove('show');
+        nicknameError.classList.remove('show');
+
+        // 验证用户名
+        if (!username) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '请输入用户名';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        if (username.length < 3) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '用户名长度不能少于3位';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        if (username.length > 20) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '用户名长度不能超过20位';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        // 验证密码
+        if (!password) {
+            passwordInput.classList.add('error');
+            passwordError.textContent = '请输入密码';
+            passwordError.classList.add('show');
+            return;
+        }
+
+        if (password.length < 6) {
+            passwordInput.classList.add('error');
+            passwordError.textContent = '密码长度不能少于6位';
+            passwordError.classList.add('show');
+            return;
+        }
+
+        // 验证姓名
+        if (!nickname) {
+            nicknameInput.classList.add('error');
+            nicknameError.textContent = '请输入姓名';
+            nicknameError.classList.add('show');
+            return;
+        }
+
+        if (nickname.length < 2) {
+            nicknameInput.classList.add('error');
+            nicknameError.textContent = '姓名长度不能少于2位';
+            nicknameError.classList.add('show');
+            return;
+        }
+
+        if (nickname.length > 20) {
+            nicknameInput.classList.add('error');
+            nicknameError.textContent = '姓名长度不能超过20位';
+            nicknameError.classList.add('show');
             return;
         }
 

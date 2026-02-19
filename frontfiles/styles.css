@@ -879,6 +879,22 @@ body {
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
+.ai-login-form input.error {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.ai-login-form .error-message {
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+}
+
+.ai-login-form .error-message.show {
+    display: block;
+}
+
 .ai-btn-login {
     width: 100%;
     padding: 16px;
