@@ -17,6 +17,8 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 先删表（按依赖顺序删也行，但关闭外键检查就无所谓）
+DROP TABLE IF EXISTS job_ai_tasks;
+DROP TABLE IF EXISTS job_profiles;
 DROP TABLE IF EXISTS resume_parse_tasks;
 DROP TABLE IF EXISTS profile_awards;
 DROP TABLE IF EXISTS profile_projects;
@@ -261,6 +263,39 @@ CREATE TABLE resume_parse_tasks (
   KEY idx_resume_parse_tasks_user_id (user_id),
   CONSTRAINT fk_resume_parse_tasks_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='简历解析任务';
+
+-- 16. 岗位画像主表
+CREATE TABLE job_profiles (
+  id          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  job_id      VARCHAR(40) NOT NULL COMMENT '岗位ID，如 job_001',
+  job_name    VARCHAR(100) NOT NULL COMMENT '岗位名称',
+  job_code    VARCHAR(40) NULL COMMENT '岗位编码',
+  industry    VARCHAR(50) NULL COMMENT '行业',
+  level       VARCHAR(20) NULL COMMENT '岗位级别：初级/中级/高级',
+  avg_salary  VARCHAR(50) NULL COMMENT '平均薪资',
+  description TEXT NULL COMMENT '岗位简介',
+  demand_score INT NULL COMMENT '市场需求热度（0-100）',
+  growth_trend VARCHAR(20) NULL COMMENT '发展趋势：上升/平稳/下降',
+  tags        JSON NULL COMMENT '标签列表',
+  created_at  DATE NOT NULL DEFAULT (CURRENT_DATE) COMMENT '创建日期',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_job_profiles_job_id (job_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='岗位画像主表';
+
+-- 17. AI 岗位画像生成任务
+CREATE TABLE job_ai_tasks (
+  id            BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  task_id       VARCHAR(80) NOT NULL COMMENT '任务ID，如 job_gen_20250214_001',
+  job_name      VARCHAR(100) NOT NULL COMMENT '生成的岗位名称',
+  job_desc_raw  TEXT NULL COMMENT '原始岗位描述（拼接的文本）',
+  status        VARCHAR(20) NOT NULL DEFAULT 'processing' COMMENT 'processing/completed/failed',
+  job_profile   JSON NULL COMMENT '生成的岗位画像（格式同 4.2 data）',
+  ai_confidence DECIMAL(3,2) NULL COMMENT 'AI 置信度',
+  data_sources  JSON NULL COMMENT '数据来源统计',
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_job_ai_tasks_task_id (task_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='AI 岗位画像生成任务';
 
 SET FOREIGN_KEY_CHECKS = 1;
 
