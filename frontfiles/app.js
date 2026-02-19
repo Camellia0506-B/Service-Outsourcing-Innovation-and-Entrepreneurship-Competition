@@ -3,6 +3,8 @@ class CareerPlanningApp {
     constructor() {
         this.currentPage = 'login';
         this.currentUser = null;
+        this.assessmentId = null;
+        this.reportId = null;
         this.init();
     }
 
@@ -776,7 +778,7 @@ class CareerPlanningApp {
         poll();
     }
 
-    // 加载职业测评数据
+    // 加载测评数据
     async loadAssessmentData() {
         const userId = getCurrentUserId();
         if (!userId) return;
@@ -785,39 +787,74 @@ class CareerPlanningApp {
         const result = await getQuestionnaire(userId);
         this.hideLoading();
 
+        console.log('问卷API返回结果:', result);
+
         if (result.success) {
-            this.renderQuestionnaire(result.data.questions);
+            this.assessmentId = result.data.assessment_id;
+            console.log('问卷数据:', result.data);
+            this.renderQuestionnaire(result.data);
+        } else {
+            console.error('加载问卷失败:', result.msg);
+            document.getElementById('questionnaireContainer').innerHTML = '<div class="hint-text">加载问卷失败: ' + result.msg + '</div>';
         }
     }
 
     // 渲染测评问卷
-    renderQuestionnaire(questions) {
+    renderQuestionnaire(assessmentData) {
         const container = document.getElementById('questionnaireContainer');
         container.innerHTML = '';
 
-        questions.forEach((q, index) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.className = 'question-card';
+        const { dimensions, total_questions, estimated_time } = assessmentData;
+
+        dimensions.forEach((dimension, dimIndex) => {
+            const dimensionDiv = document.createElement('div');
+            dimensionDiv.className = 'dimension-section';
             
-            let optionsHtml = '';
-            q.options.forEach((option, optionIndex) => {
-                optionsHtml += `
-                    <label class="option-item">
-                        <input type="radio" name="question_${q.question_id}" value="${optionIndex}" data-score="${option.score}">
-                        <span>${option.text}</span>
-                    </label>
+            let questionsHtml = '';
+            dimension.questions.forEach((q, qIndex) => {
+                let optionsHtml = '';
+                
+                if (q.question_type === 'single_choice') {
+                    q.options.forEach((option, optionIndex) => {
+                        optionsHtml += `
+                            <label class="option-item">
+                                <input type="radio" name="question_${q.question_id}" value="${option.option_id}">
+                                <span>${option.option_text}</span>
+                            </label>
+                        `;
+                    });
+                } else if (q.question_type === 'scale') {
+                    q.options.forEach((option, optionIndex) => {
+                        optionsHtml += `
+                            <label class="option-item scale-option">
+                                <input type="radio" name="question_${q.question_id}" value="${option.option_id}">
+                                <span>${option.option_text}</span>
+                            </label>
+                        `;
+                    });
+                }
+
+                questionsHtml += `
+                    <div class="question-card" data-question-id="${q.question_id}" data-question-type="${q.question_type}">
+                        <div class="question-header">
+                            <div class="question-number">${qIndex + 1}</div>
+                            <div class="question-text">${q.question_text}</div>
+                        </div>
+                        <div class="options">${optionsHtml}</div>
+                    </div>
                 `;
             });
 
-            questionDiv.innerHTML = `
-                <div class="question-header">
-                    <div class="question-number">${index + 1}</div>
-                    <div class="question-text">${q.question_text}</div>
+            dimensionDiv.innerHTML = `
+                <div class="dimension-header">
+                    <h3>${dimension.dimension_name}</h3>
                 </div>
-                <div class="options">${optionsHtml}</div>
+                <div class="dimension-questions">
+                    ${questionsHtml}
+                </div>
             `;
 
-            container.appendChild(questionDiv);
+            container.appendChild(dimensionDiv);
         });
 
         // 显示提交按钮
@@ -844,58 +881,171 @@ class CareerPlanningApp {
     // 提交测评
     async submitAssessment() {
         const answers = [];
-        const questions = document.querySelectorAll('.question-card');
+        const questionCards = document.querySelectorAll('.question-card');
 
         // 收集答案
-        questions.forEach(questionCard => {
-            const questionHeader = questionCard.querySelector('.question-text');
+        questionCards.forEach(questionCard => {
+            const questionId = questionCard.dataset.questionId;
+            const questionType = questionCard.dataset.questionType;
             const selectedOption = questionCard.querySelector('input[type="radio"]:checked');
             
             if (selectedOption) {
-                const questionId = selectedOption.name.replace('question_', '');
+                let answer;
+                if (questionType === 'scale') {
+                    answer = parseInt(selectedOption.value);
+                } else {
+                    answer = selectedOption.value;
+                }
+                
                 answers.push({
                     question_id: questionId,
-                    answer_index: parseInt(selectedOption.value),
-                    score: parseFloat(selectedOption.dataset.score || 0)
+                    answer: answer
                 });
             }
         });
 
         // 检查是否所有问题都已回答
-        if (answers.length < questions.length) {
+        if (answers.length < questionCards.length) {
             this.showToast('请回答所有问题', 'error');
             return;
         }
 
         const userId = getCurrentUserId();
         this.showLoading();
-        const result = await submitAssessment(userId, answers);
+        const result = await submitAssessment(userId, this.assessmentId, answers);
         this.hideLoading();
 
         if (result.success) {
-            this.showToast('测评提交成功', 'success');
+            this.showToast('测评提交成功，正在生成报告...', 'success');
+            this.reportId = result.data.report_id;
             document.getElementById('viewReportBtn').classList.remove('hidden');
             
             // 显示测评报告
-            setTimeout(() => {
-                this.viewAssessmentReport();
-            }, 1000);
-        } else {
-            this.showToast(result.msg || '提交失败', 'error');
+            await this.loadAssessmentReport();
         }
     }
 
-    // 查看测评报告
-    async viewAssessmentReport() {
+    // 加载测评报告
+    async loadAssessmentReport() {
         const userId = getCurrentUserId();
+        if (!this.reportId) return;
+
         this.showLoading();
-        const result = await getAssessmentReport(userId);
+        const result = await getAssessmentReport(userId, this.reportId);
         this.hideLoading();
 
         if (result.success) {
-            alert('测评报告:\n' + JSON.stringify(result.data, null, 2));
-            // 实际项目中应该创建一个美观的展示页面
+            this.renderAssessmentReport(result.data);
         }
+    }
+
+    // 渲染测评报告
+    renderAssessmentReport(reportData) {
+        const container = document.getElementById('questionnaireContainer');
+        container.innerHTML = '';
+
+        const { interest_analysis, personality_analysis, ability_analysis, values_analysis, recommendations } = reportData;
+
+        container.innerHTML = `
+            <div class="assessment-report">
+                <h2>职业测评报告</h2>
+                
+                <div class="report-section">
+                    <h3>🎯 职业兴趣分析</h3>
+                    <div class="report-content">
+                        <p><strong>霍兰德代码：</strong>${interest_analysis.holland_code}</p>
+                        <p><strong>主要兴趣：</strong>${interest_analysis.primary_interest.type}（${interest_analysis.primary_interest.score}分）</p>
+                        <p>${interest_analysis.primary_interest.description}</p>
+                        <div class="suitable-fields">
+                            <strong>适合领域：</strong>
+                            <ul>
+                                ${interest_analysis.suitable_fields.map(field => `<li>${field}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>👤 性格特质分析</h3>
+                    <div class="report-content">
+                        <p><strong>MBTI类型：</strong>${personality_analysis.mbti_type}</p>
+                        <div class="traits-list">
+                            ${personality_analysis.traits.map(trait => `
+                                <div class="trait-item">
+                                    <span class="trait-name">${trait.trait_name}</span>
+                                    <span class="trait-score">${trait.score}分</span>
+                                    <span class="trait-level">${trait.level}</span>
+                                    <p class="trait-desc">${trait.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>💪 能力倾向分析</h3>
+                    <div class="report-content">
+                        <div class="strengths">
+                            <h4>优势能力</h4>
+                            <ul>
+                                ${ability_analysis.strengths.map(strength => `
+                                    <li><strong>${strength.ability}：</strong>${strength.score}分 - ${strength.description}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="improvements">
+                            <h4>提升建议</h4>
+                            <ul>
+                                ${ability_analysis.areas_to_improve.map(area => `
+                                    <li><strong>${area.ability}：</strong>${area.score}分</li>
+                                    ${area.suggestions ? `<ul>${area.suggestions.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>💎 职业价值观</h3>
+                    <div class="report-content">
+                        <div class="values-list">
+                            ${values_analysis.top_values.map(value => `
+                                <div class="value-item">
+                                    <span class="value-name">${value.value}</span>
+                                    <span class="value-score">${value.score}分</span>
+                                    <p class="value-desc">${value.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>🚀 职业建议</h3>
+                    <div class="report-content">
+                        <div class="recommendations">
+                            <h4>适合职业</h4>
+                            <ul>
+                                ${recommendations.suitable_careers.map(career => `
+                                    <li><strong>${career.career}：</strong>匹配度 ${career.match_score}分</li>
+                                    <ul>
+                                        ${career.reasons.map(reason => `<li>${reason}</li>`).join('')}
+                                    </ul>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="development-suggestions">
+                            <h4>发展建议</h4>
+                            <ul>
+                                ${recommendations.development_suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('assessmentActions').classList.add('hidden');
     }
 
     // 加载岗位匹配数据
