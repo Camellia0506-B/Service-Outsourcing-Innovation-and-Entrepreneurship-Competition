@@ -1,0 +1,871 @@
+"""
+题库向量数据库服务
+专门为Assessment模块提供题目检索
+使用独立的Collection: assessment_questions
+"""
+
+import os
+import json
+from langchain_core.documents import Document
+from langchain_chroma import Chroma
+from utils.logger_handler import logger
+from utils.config_handler import chroma_conf
+from utils.path_tool import get_abs_path
+from model.factory import embedding_model
+
+
+class QuestionBankVectorStore:
+    """
+    题库向量存储（独立Collection）
+    与原有RAG的rag_summarize collection隔离，不互相影响
+    """
+    
+    def __init__(self):
+        # 使用独立的collection名称
+        self.vector_store = Chroma(
+            collection_name="assessment_questions",  # 独立的题库collection
+            embedding_function=embedding_model,
+            persist_directory=get_abs_path(chroma_conf["persist_directory"])
+        )
+    
+    def get_retriever(self, k: int = 20):
+        """
+        创建检索器，用于按维度检索题目
+        k: 每次检索返回的题目数量（comprehensive需要63题，可分批检索）
+        """
+        return self.vector_store.as_retriever(search_kwargs={"k": k})
+    
+    def load_questions(self):
+        """
+        从题库数据文件加载题目到向量数据库
+        只需运行一次，后续直接检索即可
+        """
+        question_data_path = get_abs_path("data/assessment/question_bank.json")
+        
+        # 检查是否已经加载过
+        if self._is_loaded():
+            logger.info("[QuestionBank] 题库已存在，跳过加载")
+            return
+        
+        # 读取题库JSON
+        if not os.path.exists(question_data_path):
+            logger.warning(f"[QuestionBank] 题库文件不存在: {question_data_path}")
+            logger.info("[QuestionBank] 使用内置示例题库初始化")
+            question_bank = self._get_builtin_questions()
+        else:
+            with open(question_data_path, "r", encoding="utf-8") as f:
+                question_bank = json.load(f)
+        
+        # 转换为Document并存入向量数据库
+        documents = []
+        for dim_id, dim_data in question_bank.items():
+            for q in dim_data["questions"]:
+                # 构造检索文本（包含题目文本和维度信息，方便语义检索）
+                search_text = f"{dim_data['dimension_name']} {q['question_text']}"
+                
+                doc = Document(
+                    page_content=search_text,
+                    metadata={
+                        "question_id": q["question_id"],
+                        "dimension_id": dim_id,
+                        "dimension_name": dim_data["dimension_name"],
+                        "question_type": q["question_type"],
+                        "holland_type": q.get("holland_type", ""),
+                        "trait": q.get("trait", ""),
+                        "ability": q.get("ability", ""),
+                        "value_type": q.get("value_type", ""),
+                        # 完整题目数据序列化存储
+                        "question_data": json.dumps(q, ensure_ascii=False)
+                    }
+                )
+                documents.append(doc)
+        
+        # 批量存入向量数据库
+        if documents:
+            self.vector_store.add_documents(documents)
+            # 标记为已加载
+            self._mark_loaded()
+            logger.info(f"[QuestionBank] 题库加载完成，共 {len(documents)} 题")
+        else:
+            logger.warning("[QuestionBank] 没有有效题目数据")
+    
+    def retrieve_by_dimension(self, dimension_id: str, count: int) -> list:
+        """
+        按维度检索题目（通过metadata过滤）
+        dimension_id: interest/personality/ability/values
+        count: 需要的题目数量
+        """
+        # 使用向量数据库的过滤查询
+        results = self.vector_store.similarity_search(
+            query=dimension_id,  # 用维度ID作为查询
+            k=count * 2,  # 多检索一些，再过滤
+            filter={"dimension_id": dimension_id}
+        )
+        
+        # 提取题目数据并去重
+        questions = []
+        seen_ids = set()
+        for doc in results:
+            qid = doc.metadata["question_id"]
+            if qid not in seen_ids:
+                question_data = json.loads(doc.metadata["question_data"])
+                questions.append(question_data)
+                seen_ids.add(qid)
+                if len(questions) >= count:
+                    break
+        
+        return questions
+    
+    def _is_loaded(self) -> bool:
+        """检查题库是否已加载（通过标记文件）"""
+        marker_path = get_abs_path("data/assessment/.questions_loaded")
+        return os.path.exists(marker_path)
+    
+    def _mark_loaded(self):
+        """标记题库已加载"""
+        marker_path = get_abs_path("data/assessment/.questions_loaded")
+        os.makedirs(os.path.dirname(marker_path), exist_ok=True)
+        with open(marker_path, "w") as f:
+            f.write("loaded")
+    
+    def _get_builtin_questions(self) -> dict:
+        """
+        内置示例题库（用于初始化）
+        实际项目中应从question_bank.json加载完整题库
+        """
+        return {
+            "interest": {
+                "dimension_name": "职业兴趣",
+                "questions": [
+                    # 实用型(R) - 3题
+                    {
+                        "question_id": "interest_r001",
+                        "question_text": "你喜欢动手操作机械设备或工具吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "R",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "比较喜欢", "score": 3},
+                            {"option_id": "C", "option_text": "不太喜欢", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_r002",
+                        "question_text": "你更倾向于从事需要体力或技能的工作吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "R",
+                        "options": [
+                            {"option_id": "A", "option_text": "是的", "score": 5},
+                            {"option_id": "B", "option_text": "不确定", "score": 2},
+                            {"option_id": "C", "option_text": "不喜欢", "score": 0}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_r003",
+                        "question_text": "你喜欢在户外或工作现场环境工作吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "R",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "还可以", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢办公室", "score": 1}
+                        ]
+                    },
+                    
+                    # 研究型(I) - 3题
+                    {
+                        "question_id": "interest_i001",
+                        "question_text": "你喜欢深入研究理论和数据吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "I",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "比较喜欢", "score": 3},
+                            {"option_id": "C", "option_text": "不太喜欢", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_i002",
+                        "question_text": "你对科学实验和技术研发感兴趣吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "I",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常感兴趣", "score": 5},
+                            {"option_id": "B", "option_text": "有一些兴趣", "score": 3},
+                            {"option_id": "C", "option_text": "不感兴趣", "score": 0}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_i003",
+                        "question_text": "你喜欢分析问题并找出解决方案吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "I",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "一般", "score": 2},
+                            {"option_id": "C", "option_text": "不喜欢", "score": 0}
+                        ]
+                    },
+                    
+                    # 艺术型(A) - 3题  
+                    {
+                        "question_id": "interest_a001",
+                        "question_text": "你喜欢从事创意性的工作吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "A",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "有点喜欢", "score": 3},
+                            {"option_id": "C", "option_text": "不喜欢", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_a002",
+                        "question_text": "你对艺术、设计、音乐感兴趣吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "A",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常感兴趣", "score": 5},
+                            {"option_id": "B", "option_text": "一般", "score": 2},
+                            {"option_id": "C", "option_text": "不感兴趣", "score": 0}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_a003",
+                        "question_text": "你更喜欢自由发挥还是遵循规则？",
+                        "question_type": "single_choice",
+                        "holland_type": "A",
+                        "options": [
+                            {"option_id": "A", "option_text": "自由发挥", "score": 5},
+                            {"option_id": "B", "option_text": "两者结合", "score": 3},
+                            {"option_id": "C", "option_text": "遵循规则", "score": 0}
+                        ]
+                    },
+                    
+                    # 社会型(S) - 3题
+                    {
+                        "question_id": "interest_s001",
+                        "question_text": "你喜欢帮助和指导他人吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "S",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "还可以", "score": 3},
+                            {"option_id": "C", "option_text": "不太喜欢", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_s002",
+                        "question_text": "你对教育、医疗、社会服务类工作感兴趣吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "S",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常感兴趣", "score": 5},
+                            {"option_id": "B", "option_text": "有一些兴趣", "score": 3},
+                            {"option_id": "C", "option_text": "不感兴趣", "score": 0}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_s003",
+                        "question_text": "你擅长与人沟通交流吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "S",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常擅长", "score": 5},
+                            {"option_id": "B", "option_text": "一般", "score": 2},
+                            {"option_id": "C", "option_text": "不擅长", "score": 0}
+                        ]
+                    },
+                    
+                    # 企业型(E) - 3题
+                    {
+                        "question_id": "interest_e001",
+                        "question_text": "你喜欢领导和管理团队吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "E",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "还可以", "score": 3},
+                            {"option_id": "C", "option_text": "不喜欢", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_e002",
+                        "question_text": "你对商业、销售、管理类工作感兴趣吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "E",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常感兴趣", "score": 5},
+                            {"option_id": "B", "option_text": "有点兴趣", "score": 3},
+                            {"option_id": "C", "option_text": "不感兴趣", "score": 0}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_e003",
+                        "question_text": "你喜欢说服和影响他人吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "E",
+                        "options": [
+                            {"option_id": "A", "option_text": "喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "一般", "score": 2},
+                            {"option_id": "C", "option_text": "不喜欢", "score": 0}
+                        ]
+                    },
+                    
+                    # 常规型(C) - 3题
+                    {
+                        "question_id": "interest_c001",
+                        "question_text": "你喜欢处理数据和文档的工作吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "C",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "还可以", "score": 3},
+                            {"option_id": "C", "option_text": "不喜欢", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_c002",
+                        "question_text": "你对会计、文秘、档案管理类工作感兴趣吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "C",
+                        "options": [
+                            {"option_id": "A", "option_text": "感兴趣", "score": 5},
+                            {"option_id": "B", "option_text": "一般", "score": 2},
+                            {"option_id": "C", "option_text": "不感兴趣", "score": 0}
+                        ]
+                    },
+                    {
+                        "question_id": "interest_c003",
+                        "question_text": "你喜欢有规律、有条理的工作环境吗？",
+                        "question_type": "single_choice",
+                        "holland_type": "C",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "还行", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢灵活的", "score": 1}
+                        ]
+                    }
+                ]
+            },
+            
+            "personality": {
+                "dimension_name": "性格特质",
+                "questions": [
+                    # 外向性 - 4题
+                    {
+                        "question_id": "personality_e001",
+                        "question_text": "在团队中你通常是？",
+                        "question_type": "single_choice",
+                        "trait": "外向性",
+                        "options": [
+                            {"option_id": "A", "option_text": "积极发言的人", "score": 5},
+                            {"option_id": "B", "option_text": "适度参与", "score": 3},
+                            {"option_id": "C", "option_text": "安静倾听的人", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_e002",
+                        "question_text": "你喜欢参加社交活动吗？",
+                        "question_type": "single_choice",
+                        "trait": "外向性",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "偶尔参加", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢独处", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_e003",
+                        "question_text": "与陌生人交流时你感觉？",
+                        "question_type": "single_choice",
+                        "trait": "外向性",
+                        "options": [
+                            {"option_id": "A", "option_text": "很自在", "score": 5},
+                            {"option_id": "B", "option_text": "还可以", "score": 3},
+                            {"option_id": "C", "option_text": "有些紧张", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_e004",
+                        "question_text": "你更喜欢？",
+                        "question_type": "single_choice",
+                        "trait": "外向性",
+                        "options": [
+                            {"option_id": "A", "option_text": "和很多人一起工作", "score": 5},
+                            {"option_id": "B", "option_text": "小团队协作", "score": 3},
+                            {"option_id": "C", "option_text": "独立工作", "score": 1}
+                        ]
+                    },
+                    
+                    # 开放性 - 4题
+                    {
+                        "question_id": "personality_o001",
+                        "question_text": "面对新事物你的态度是？",
+                        "question_type": "single_choice",
+                        "trait": "开放性",
+                        "options": [
+                            {"option_id": "A", "option_text": "充满好奇，主动尝试", "score": 5},
+                            {"option_id": "B", "option_text": "观望后再决定", "score": 3},
+                            {"option_id": "C", "option_text": "倾向于坚持熟悉的方式", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_o002",
+                        "question_text": "你对学习新技能的态度？",
+                        "question_type": "single_choice",
+                        "trait": "开放性",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常积极", "score": 5},
+                            {"option_id": "B", "option_text": "根据需要学习", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢精通已有技能", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_o003",
+                        "question_text": "你喜欢探索未知领域吗？",
+                        "question_type": "single_choice",
+                        "trait": "开放性",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常喜欢", "score": 5},
+                            {"option_id": "B", "option_text": "偶尔尝试", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢在熟悉领域深耕", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_o004",
+                        "question_text": "对于变化你的反应是？",
+                        "question_type": "single_choice",
+                        "trait": "开放性",
+                        "options": [
+                            {"option_id": "A", "option_text": "拥抱变化", "score": 5},
+                            {"option_id": "B", "option_text": "适应变化", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢稳定", "score": 1}
+                        ]
+                    },
+                    
+                    # 尽责性 - 4题
+                    {
+                        "question_id": "personality_c001",
+                        "question_text": "你对工作完成质量的要求？",
+                        "question_type": "single_choice",
+                        "trait": "尽责性",
+                        "options": [
+                            {"option_id": "A", "option_text": "追求完美，注重细节", "score": 5},
+                            {"option_id": "B", "option_text": "高质量完成", "score": 3},
+                            {"option_id": "C", "option_text": "够用就好", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_c002",
+                        "question_text": "你的时间管理能力？",
+                        "question_type": "single_choice",
+                        "trait": "尽责性",
+                        "options": [
+                            {"option_id": "A", "option_text": "总是提前规划", "score": 5},
+                            {"option_id": "B", "option_text": "基本按时完成", "score": 3},
+                            {"option_id": "C", "option_text": "经常临时抱佛脚", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_c003",
+                        "question_text": "对待承诺你的态度是？",
+                        "question_type": "single_choice",
+                        "trait": "尽责性",
+                        "options": [
+                            {"option_id": "A", "option_text": "一定会做到", "score": 5},
+                            {"option_id": "B", "option_text": "尽量做到", "score": 3},
+                            {"option_id": "C", "option_text": "视情况而定", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_c004",
+                        "question_text": "你的工作环境通常是？",
+                        "question_type": "single_choice",
+                        "trait": "尽责性",
+                        "options": [
+                            {"option_id": "A", "option_text": "井井有条", "score": 5},
+                            {"option_id": "B", "option_text": "还算整洁", "score": 3},
+                            {"option_id": "C", "option_text": "比较混乱", "score": 1}
+                        ]
+                    },
+                    
+                    # 宜人性 - 4题
+                    {
+                        "question_id": "personality_a001",
+                        "question_text": "与他人意见不一致时你会？",
+                        "question_type": "single_choice",
+                        "trait": "宜人性",
+                        "options": [
+                            {"option_id": "A", "option_text": "优先考虑他人感受", "score": 5},
+                            {"option_id": "B", "option_text": "寻找折中方案", "score": 3},
+                            {"option_id": "C", "option_text": "坚持自己观点", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_a002",
+                        "question_text": "你对团队合作的态度？",
+                        "question_type": "single_choice",
+                        "trait": "宜人性",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常乐意配合", "score": 5},
+                            {"option_id": "B", "option_text": "根据情况配合", "score": 3},
+                            {"option_id": "C", "option_text": "更喜欢独立完成", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_a003",
+                        "question_text": "看到他人需要帮助时你会？",
+                        "question_type": "single_choice",
+                        "trait": "宜人性",
+                        "options": [
+                            {"option_id": "A", "option_text": "主动提供帮助", "score": 5},
+                            {"option_id": "B", "option_text": "对方请求时帮助", "score": 3},
+                            {"option_id": "C", "option_text": "优先完成自己的事", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_a004",
+                        "question_text": "你对批评的反应？",
+                        "question_type": "single_choice",
+                        "trait": "宜人性",
+                        "options": [
+                            {"option_id": "A", "option_text": "虚心接受并改进", "score": 5},
+                            {"option_id": "B", "option_text": "理性分析对错", "score": 3},
+                            {"option_id": "C", "option_text": "容易情绪化", "score": 1}
+                        ]
+                    },
+                    
+                    # 情绪稳定性 - 4题
+                    {
+                        "question_id": "personality_n001",
+                        "question_text": "面对压力你通常？",
+                        "question_type": "single_choice",
+                        "trait": "情绪稳定性",
+                        "options": [
+                            {"option_id": "A", "option_text": "保持冷静应对", "score": 5},
+                            {"option_id": "B", "option_text": "有点紧张但能控制", "score": 3},
+                            {"option_id": "C", "option_text": "容易焦虑", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_n002",
+                        "question_text": "遇到挫折时你的反应？",
+                        "question_type": "single_choice",
+                        "trait": "情绪稳定性",
+                        "options": [
+                            {"option_id": "A", "option_text": "快速调整，继续努力", "score": 5},
+                            {"option_id": "B", "option_text": "需要一段时间恢复", "score": 3},
+                            {"option_id": "C", "option_text": "情绪低落较久", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_n003",
+                        "question_text": "你的情绪波动大吗？",
+                        "question_type": "single_choice",
+                        "trait": "情绪稳定性",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常稳定", "score": 5},
+                            {"option_id": "B", "option_text": "偶尔波动", "score": 3},
+                            {"option_id": "C", "option_text": "波动较大", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "personality_n004",
+                        "question_text": "对未来的不确定性你感到？",
+                        "question_type": "single_choice",
+                        "trait": "情绪稳定性",
+                        "options": [
+                            {"option_id": "A", "option_text": "从容面对", "score": 5},
+                            {"option_id": "B", "option_text": "稍有担忧但能接受", "score": 3},
+                            {"option_id": "C", "option_text": "较为焦虑", "score": 1}
+                        ]
+                    }
+                ]
+            },
+            
+            "ability": {
+                "dimension_name": "能力倾向",
+                "questions": [
+                    # 逻辑分析能力 - 3题
+                    {
+                        "question_id": "ability_logic001",
+                        "question_text": "解决复杂问题时，你倾向于系统性分析吗？",
+                        "question_type": "scale",
+                        "ability": "逻辑分析能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_logic002",
+                        "question_text": "你擅长发现事物之间的规律和联系吗？",
+                        "question_type": "scale",
+                        "ability": "逻辑分析能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_logic003",
+                        "question_text": "面对数据和信息，你能快速抽取关键要点吗？",
+                        "question_type": "scale",
+                        "ability": "逻辑分析能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    
+                    # 学习能力 - 3题
+                    {
+                        "question_id": "ability_learn001",
+                        "question_text": "你能快速掌握新知识和技能吗？",
+                        "question_type": "scale",
+                        "ability": "学习能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_learn002",
+                        "question_text": "你善于从经验中总结和提炼吗？",
+                        "question_type": "scale",
+                        "ability": "学习能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_learn003",
+                        "question_text": "你对不熟悉的领域有强烈的学习欲望吗？",
+                        "question_type": "scale",
+                        "ability": "学习能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    
+                    # 沟通表达能力 - 3题
+                    {
+                        "question_id": "ability_comm001",
+                        "question_text": "你能清晰表达自己的想法和观点吗？",
+                        "question_type": "scale",
+                        "ability": "沟通表达能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_comm002",
+                        "question_text": "你擅长倾听并理解他人的意图吗？",
+                        "question_type": "scale",
+                        "ability": "沟通表达能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_comm003",
+                        "question_text": "在团队讨论中，你能有效推动共识吗？",
+                        "question_type": "scale",
+                        "ability": "沟通表达能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    
+                    # 执行能力 - 3题
+                    {
+                        "question_id": "ability_exec001",
+                        "question_text": "你能高效地将计划转化为行动吗？",
+                        "question_type": "scale",
+                        "ability": "执行能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_exec002",
+                        "question_text": "面对多任务时，你能合理安排优先级吗？",
+                        "question_type": "scale",
+                        "ability": "执行能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_exec003",
+                        "question_text": "你能在截止日期前高质量完成任务吗？",
+                        "question_type": "scale",
+                        "ability": "执行能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    
+                    # 创新能力 - 3题
+                    {
+                        "question_id": "ability_innov001",
+                        "question_text": "你能提出新颖的想法和解决方案吗？",
+                        "question_type": "scale",
+                        "ability": "创新能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_innov002",
+                        "question_text": "你善于从不同角度思考问题吗？",
+                        "question_type": "scale",
+                        "ability": "创新能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    },
+                    {
+                        "question_id": "ability_innov003",
+                        "question_text": "你对突破常规的方法持开放态度吗？",
+                        "question_type": "scale",
+                        "ability": "创新能力",
+                        "scale_min": 1,
+                        "scale_max": 5,
+                        "labels": ["完全不符合", "不太符合", "一般", "比较符合", "非常符合"]
+                    }
+                ]
+            },
+            
+            "values": {
+                "dimension_name": "职业价值观",
+                "questions": [
+                    # 成就感 - 2题
+                    {
+                        "question_id": "values_achieve001",
+                        "question_text": "你最看重工作带来的成就感吗？",
+                        "question_type": "single_choice",
+                        "value_type": "成就感",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常看重", "score": 5},
+                            {"option_id": "B", "option_text": "比较看重", "score": 3},
+                            {"option_id": "C", "option_text": "不太看重", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "values_achieve002",
+                        "question_text": "实现个人价值对你重要吗？",
+                        "question_type": "single_choice",
+                        "value_type": "成就感",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常重要", "score": 5},
+                            {"option_id": "B", "option_text": "比较重要", "score": 3},
+                            {"option_id": "C", "option_text": "一般", "score": 1}
+                        ]
+                    },
+                    
+                    # 学习发展 - 2题
+                    {
+                        "question_id": "values_growth001",
+                        "question_text": "持续学习和能力提升对你重要吗？",
+                        "question_type": "single_choice",
+                        "value_type": "学习发展",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常重要", "score": 5},
+                            {"option_id": "B", "option_text": "比较重要", "score": 3},
+                            {"option_id": "C", "option_text": "一般", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "values_growth002",
+                        "question_text": "你期望工作能提供成长机会吗？",
+                        "question_type": "single_choice",
+                        "value_type": "学习发展",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常期望", "score": 5},
+                            {"option_id": "B", "option_text": "有一定期望", "score": 3},
+                            {"option_id": "C", "option_text": "无所谓", "score": 1}
+                        ]
+                    },
+                    
+                    # 工作稳定 - 2题
+                    {
+                        "question_id": "values_stable001",
+                        "question_text": "工作稳定性对你重要吗？",
+                        "question_type": "single_choice",
+                        "value_type": "工作稳定",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常重要", "score": 5},
+                            {"option_id": "B", "option_text": "比较重要", "score": 3},
+                            {"option_id": "C", "option_text": "不太在意", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "values_stable002",
+                        "question_text": "你更倾向于？",
+                        "question_type": "single_choice",
+                        "value_type": "工作稳定",
+                        "options": [
+                            {"option_id": "A", "option_text": "稳定的大公司", "score": 5},
+                            {"option_id": "B", "option_text": "两者都可以", "score": 3},
+                            {"option_id": "C", "option_text": "有挑战的创业公司", "score": 0}
+                        ]
+                    },
+                    
+                    # 薪资待遇 - 2题
+                    {
+                        "question_id": "values_salary001",
+                        "question_text": "薪资水平是你选择工作的首要因素吗？",
+                        "question_type": "single_choice",
+                        "value_type": "薪资待遇",
+                        "options": [
+                            {"option_id": "A", "option_text": "是的", "score": 5},
+                            {"option_id": "B", "option_text": "比较重要", "score": 3},
+                            {"option_id": "C", "option_text": "不是首要因素", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "values_salary002",
+                        "question_text": "你期望获得与能力匹配的回报吗？",
+                        "question_type": "single_choice",
+                        "value_type": "薪资待遇",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常期望", "score": 5},
+                            {"option_id": "B", "option_text": "有一定期望", "score": 3},
+                            {"option_id": "C", "option_text": "顺其自然", "score": 1}
+                        ]
+                    },
+                    
+                    # 工作环境 - 2题
+                    {
+                        "question_id": "values_environ001",
+                        "question_text": "良好的工作环境对你重要吗？",
+                        "question_type": "single_choice",
+                        "value_type": "工作环境",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常重要", "score": 5},
+                            {"option_id": "B", "option_text": "比较重要", "score": 3},
+                            {"option_id": "C", "option_text": "不太在意", "score": 1}
+                        ]
+                    },
+                    {
+                        "question_id": "values_environ002",
+                        "question_text": "你看重团队氛围和企业文化吗？",
+                        "question_type": "single_choice",
+                        "value_type": "工作环境",
+                        "options": [
+                            {"option_id": "A", "option_text": "非常看重", "score": 5},
+                            {"option_id": "B", "option_text": "比较看重", "score": 3},
+                            {"option_id": "C", "option_text": "不太看重", "score": 1}
+                        ]
+                    }
+                ]
+            }
+        }
+
+
+if __name__ == "__main__":
+    # 初始化题库
+    store = QuestionBankVectorStore()
+    store.load_questions()
+    
+    # 测试检索
+    questions = store.retrieve_by_dimension("interest", 18)
+    print(f"检索到 {len(questions)} 道职业兴趣题目")

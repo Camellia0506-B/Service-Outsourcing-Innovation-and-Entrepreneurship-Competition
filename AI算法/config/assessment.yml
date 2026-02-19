@@ -1,0 +1,73 @@
+# ============================================================
+# 职业测评模块配置
+# 对应 API 文档第 3 章：Assessment 模块
+# ============================================================
+
+# 问卷数据存储路径
+questionnaire_store_path: data/assessment/questionnaires.json
+
+# 答案存储路径
+answers_store_path: data/assessment/answers.json
+
+# 报告存储路径（按 report_id 为键）
+reports_store_path: data/assessment/reports.json
+
+# 报告生成任务状态跟踪
+report_tasks_store_path: data/assessment/report_tasks.json
+
+# 测评维度配置（用于问卷生成和计分）
+dimensions:
+  interest:
+    name: 职业兴趣
+    holland_types:
+      - R: 实用型
+      - I: 研究型
+      - A: 艺术型
+      - S: 社会型
+      - E: 企业型
+      - C: 常规型
+    questions_count: 18  # 霍兰德6类型，每类3题
+
+  personality:
+    name: 性格特质
+    traits:
+      - 外向性
+      - 开放性
+      - 尽责性
+      - 宜人性
+      - 情绪稳定性
+    questions_count: 20  # 5个维度，每维度4题
+
+  ability:
+    name: 能力倾向
+    abilities:
+      - 逻辑分析能力
+      - 学习能力
+      - 沟通表达能力
+      - 执行能力
+      - 创新能力
+    questions_count: 15  # 5个能力，每能力3题
+
+  values:
+    name: 职业价值观
+    value_types:
+      - 成就感
+      - 学习发展
+      - 工作稳定
+      - 薪资待遇
+      - 工作环境
+    questions_count: 10  # 5个价值观，每个2题
+
+# 测评类型配置
+assessment_types:
+  comprehensive:
+    name: 综合测评
+    total_questions: 63  # 18+20+15+10
+    estimated_time: 20
+  quick:
+    name: 快速测评
+    total_questions: 30  # 简化版，每维度取关键题
+    estimated_time: 10
+
+# AI生成报告的置信度阈值
+report_confidence_threshold: 0.75

@@ -1,10 +1,8 @@
-#原有提示词配置
-main_prompt_path: prompts/main_prompt.txt
-rag_summarize_prompt_path: prompts/rag_summarize.txt
-report_prompt_path: prompts/report_prompt.txt
-
-#===== 新增：职业规划智能体提示词配置 =====
+# AI职业规划智能体 提示词配置
 job_profile_prompt_path: prompts/job_profile_prompt.txt
 job_graph_prompt_path: prompts/job_graph_prompt.txt
 student_profile_prompt_path: prompts/student_profile_prompt.txt
 career_report_prompt_path: prompts/career_report_prompt.txt
+resume_parse_prompt_path: prompts/resume_parse_prompt.txt
+
+assessment_report_prompt_path: prompts/assessment_report_prompt.txt
