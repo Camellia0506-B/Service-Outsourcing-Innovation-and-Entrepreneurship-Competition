@@ -3,10 +3,34 @@ AI职业规划智能体 - 主应用入口
 整合所有模块，启动Flask服务
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from utils.logger_handler import logger
 
 app = Flask(__name__)
+
+# ========== CORS：允许前端 (localhost:8080) 跨域访问 ==========
+def _cors_headers():
+    return {
+        "Access-Control-Allow-Origin": request.origin if request.origin and ("localhost" in request.origin or "127.0.0.1" in request.origin) else "http://localhost:8080",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "3600",
+    }
+
+@app.after_request
+def _add_cors(resp):
+    for k, v in _cors_headers().items():
+        resp.headers[k] = v
+    return resp
+
+@app.before_request
+def _handle_preflight():
+    if request.method == "OPTIONS":
+        from flask import make_response
+        r = make_response("", 204)
+        for k, v in _cors_headers().items():
+            r.headers[k] = v
+        return r
 
 # ========== 注册路由蓝图 ==========
 
@@ -66,4 +90,5 @@ def server_error(e):
 
 if __name__ == "__main__":
     logger.info("启动 AI职业规划智能体 服务...")
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    # 使用 5001 端口，避免与前端静态服务(常占 8080) 冲突
+    app.run(host="0.0.0.0", port=5001, debug=True)

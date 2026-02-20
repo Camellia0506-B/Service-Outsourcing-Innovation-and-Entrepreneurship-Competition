@@ -1,6 +1,7 @@
 // API配置
 const API_CONFIG = {
-    baseURL: 'http://localhost:5000/api/v1',  // 后端地址（后端默认端口 5000）
+    baseURL: 'http://localhost:5000/api/v1',  // Java 后端（登录、个人档案等）
+    assessmentBaseURL: 'http://localhost:5001/api/v1',  // AI 算法服务（职业测评），端口 5001 避免与前端 8080 冲突
     timeout: 30000,
     mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
@@ -11,9 +12,10 @@ class API {
         this.baseURL = API_CONFIG.baseURL;
     }
 
-    // 通用请求方法
+    // 通用请求方法（职业测评等走 AI 服务 5001，其余走 Java 5000）
     async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
+        const base = endpoint.startsWith('/assessment/') ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
+        const url = `${base}${endpoint}`;
         const token = localStorage.getItem('token');
         
         // 模拟模式
@@ -38,8 +40,18 @@ class API {
 
         try {
             const response = await fetch(url, config);
-            const result = await response.json();
-            
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (_) {
+                // 服务返回了 HTML 或非 JSON（如 501 错误页），给出明确提示
+                const isAssessment = endpoint.startsWith('/assessment/');
+                const hint = response.status === 501
+                    ? '当前地址不支持 POST，请确认已启动 AI 测评服务 (http://localhost:5001)'
+                    : (isAssessment ? '请确认 AI 测评服务已运行 (http://localhost:5001)' : '请确认后端服务已运行');
+                return { success: false, msg: `服务返回异常 (${response.status}): ${hint}` };
+            }
             // 根据code判断是否成功
             if (result.code === 200) {
                 return { success: true, data: result.data, msg: result.msg };
@@ -54,7 +66,7 @@ class API {
         } catch (error) {
             console.error('API请求错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch')) 
-                ? '无法连接后端，请确认已启动后端服务 (http://localhost:5000)' 
+                ? '无法连接后端，请确认已启动对应服务 (Java:5000 / 测评:5001)' 
                 : (error.message || '网络错误，请稍后重试');
             return { success: false, msg };
         }
@@ -66,6 +78,14 @@ class API {
             method: 'POST',
             body: data
         });
+    }
+
+    // GET请求（query 参数对象）
+    async get(endpoint, params = {}) {
+        if (!Object.keys(params).length) return this.request(endpoint, { method: 'GET' });
+        const qs = new URLSearchParams(params).toString();
+        const sep = endpoint.indexOf('?') !== -1 ? '&' : '?';
+        return this.request(endpoint + sep + qs, { method: 'GET' });
     }
 
     // 文件上传请求
@@ -161,7 +181,7 @@ class API {
             case '/career/view-report':
                 return { success: true, data: this.mockCareerReport() };
             case '/career/report-history':
-                return { success: true, data: { reports: [this.mockCareerReport()] } };
+                return { success: true, data: { total: 1, list: [this.mockCareerReport()] } };
             default:
                 return { success: false, msg: '未知的API端点' };
         }
@@ -713,12 +733,9 @@ async function getReportContent(reportId) {
 }
 
 // 获取历史报告列表
-async function getReportHistory(userId, page = 1, size = 10) {
-    return await api.post('/career/report-history', {
-        user_id: userId,
-        page,
-        size
-    });
+// 获取测评历史报告列表（GET，走测评服务 5001）
+async function getReportHistory(userId) {
+    return await api.get('/assessment/report-history', { user_id: userId });
 }
 
 // 导出报告
