@@ -251,16 +251,51 @@ public class ProfileServiceImpl implements ProfileService {
                 userMapper.updateById(user);
             }
 
+            // 先按标题切出各区块，再在对应区块内解析，避免“专业”匹配到“专业技能”等错位
+            String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
+            String skillsBlock = findSectionBlock(text, "技能|专业技能|技术技能|个人技能|Skills?");
+            String internshipBlock = findSectionBlock(text, "实习(?:经历)?|工作经历|实习经历|Experience");
+            String projectBlock = findSectionBlock(text, "项目(?:经历|经验)?|Projects?");
+
+            // 教育信息：仅在教育区块内匹配 学校/专业/学历 等
+            applyEducationFromText(educationBlock != null ? educationBlock : text, profile);
+            userProfileMapper.updateById(profile);
+
+            // 技能：优先技能区块，无则从全文再试一次（兼容不同标题）
+            profileSkillMapper.delete(new LambdaQueryWrapper<ProfileSkill>().eq(ProfileSkill::getUserId, userId));
+            List<ProfileSkill> parsedSkills = extractSkillsFromText(skillsBlock != null ? skillsBlock : text);
+            for (ProfileSkill ps : parsedSkills) {
+                ps.setUserId(userId);
+                profileSkillMapper.insert(ps);
+            }
+
+            // 实习：优先实习区块，无则从全文再试
+            profileInternshipMapper.delete(new LambdaQueryWrapper<ProfileInternship>().eq(ProfileInternship::getUserId, userId));
+            List<ProfileInternship> parsedInterns = extractInternshipsFromText(internshipBlock != null ? internshipBlock : text);
+            for (ProfileInternship pi : parsedInterns) {
+                pi.setUserId(userId);
+                profileInternshipMapper.insert(pi);
+            }
+
+            // 项目：优先项目区块，无则从全文再试
+            profileProjectMapper.delete(new LambdaQueryWrapper<ProfileProject>().eq(ProfileProject::getUserId, userId));
+            List<ProfileProject> parsedProjs = extractProjectsFromText(projectBlock != null ? projectBlock : text);
+            for (ProfileProject pp : parsedProjs) {
+                pp.setUserId(userId);
+                profileProjectMapper.insert(pp);
+            }
+
+            // 构建 parsed_data 供 resume-parse-result 返回
             Map<String, Object> parsed = new LinkedHashMap<>();
             Map<String, Object> basic = new LinkedHashMap<>();
             basic.put("name", name != null ? name : "");
             basic.put("phone", phone != null ? phone : "");
             basic.put("email", email != null ? email : "");
             parsed.put("basic_info", basic);
-            parsed.put("education", List.of());
-            parsed.put("skills", List.of());
-            parsed.put("internships", List.of());
-            parsed.put("projects", List.of());
+            parsed.put("education", toEducationMap(profile));
+            parsed.put("skills", parsedSkills.stream().map(s -> Map.<String, Object>of("category", s.getCategory(), "items", parseJsonList(s.getItems()))).collect(Collectors.toList()));
+            parsed.put("internships", parsedInterns.stream().map(i -> Map.of("company", nullToEmpty(i.getCompany()), "position", nullToEmpty(i.getPosition()), "start_date", nullToEmpty(i.getStartDate()), "end_date", nullToEmpty(i.getEndDate()), "description", nullToEmpty(i.getDescription()))).collect(Collectors.toList()));
+            parsed.put("projects", parsedProjs.stream().map(p -> Map.<String, Object>of("name", nullToEmpty(p.getName()), "role", nullToEmpty(p.getRole()), "start_date", nullToEmpty(p.getStartDate()), "end_date", nullToEmpty(p.getEndDate()), "description", nullToEmpty(p.getDescription()), "tech_stack", parseJsonList(p.getTechStack()))).collect(Collectors.toList()));
             task.setStatus("completed");
             task.setParsedData(JSON.writeValueAsString(parsed));
             task.setConfidenceScore(java.math.BigDecimal.valueOf(0.85));
@@ -373,5 +408,204 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
         return null;
+    }
+
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
+    }
+
+    /** 从正文中抽取教育信息并只填充空字段；排除奖项、政治面貌等错位内容 */
+    private void applyEducationFromText(String text, UserProfile profile) {
+        if (text == null || profile == null) return;
+        // 学校：必须为“教育”区块内、且不能是奖项/荣誉类
+        if (profile.getSchool() == null || profile.getSchool().isBlank()) {
+            String school = matchAfterKeyword(text, "(毕业院校|毕业学校|学校|院校|School)\\s*[:：]\\s*([^\\n\\r]{2,40})");
+            if (school != null && isValidSchool(school)) profile.setSchool(school.trim());
+        }
+        // 专业：不能是政治面貌、奖项等
+        if (profile.getMajor() == null || profile.getMajor().isBlank()) {
+            String major = matchAfterKeyword(text, "(所学专业|专业|Major)\\s*[:：]\\s*([^\\n\\r]{2,40})");
+            if (major != null && isValidMajor(major)) profile.setMajor(major.trim());
+        }
+        if (profile.getDegree() == null || profile.getDegree().isBlank()) {
+            String degree = matchAfterKeyword(text, "(学历|学位|Degree)\\s*[:：]\\s*([^\\n\\r]{2,20})");
+            if (degree != null && !isAwardOrPolitical(degree)) profile.setDegree(degree.trim());
+        }
+        if (profile.getGrade() == null || profile.getGrade().isBlank()) {
+            String grade = matchAfterKeyword(text, "(年级|Grade)\\s*[:：]\\s*([^\\n\\r]{1,20})");
+            if (grade != null && isValidGrade(grade)) profile.setGrade(grade.trim());
+        }
+        if (profile.getExpectedGraduation() == null || profile.getExpectedGraduation().isBlank()) {
+            String exp = matchAfterKeyword(text, "(预计毕业|毕业时间|Expected Graduation|Graduation)\\s*[:：]\\s*([^\\n\\r]{2,30})");
+            if (exp != null && !isAwardOrPolitical(exp)) profile.setExpectedGraduation(exp.trim());
+        }
+        if (profile.getGpa() == null || profile.getGpa().isBlank()) {
+            Matcher gpaM = Pattern.compile("(?:GPA|绩点|平均绩点)\\s*[:：]?\\s*([\\d.]+)").matcher(text);
+            if (gpaM.find()) profile.setGpa(gpaM.group(1).trim());
+        }
+    }
+
+    /** 学校名：不能是奖学金、奖项、竞赛、政治等 */
+    private static boolean isValidSchool(String s) {
+        if (s == null || s.length() < 2) return false;
+        return !isAwardOrPolitical(s) && !s.contains("奖学金") && !s.contains("奖状") && !s.contains("竞赛");
+    }
+
+    /** 专业：不能是政治面貌、党员、奖学金等 */
+    private static boolean isValidMajor(String s) {
+        if (s == null || s.length() < 2) return false;
+        return !isAwardOrPolitical(s);
+    }
+
+    /** 年级：允许 2021级、大一 等，排除纯奖项描述 */
+    private static boolean isValidGrade(String s) {
+        if (s == null) return false;
+        return !isAwardOrPolitical(s) && (s.matches(".*\\d+级?.*") || s.contains("大") || s.contains("研") || s.contains("博") || s.length() <= 15);
+    }
+
+    private static boolean isAwardOrPolitical(String s) {
+        if (s == null) return true;
+        return s.contains("政治面貌") || s.contains("党员") || s.contains("团员") || s.contains("群众")
+                || s.contains("奖学金") || s.contains("一等奖") || s.contains("二等奖") || s.contains("三等奖")
+                || s.contains("奖状") || s.contains("荣誉") || s.contains("竞赛");
+    }
+
+    private static String matchAfterKeyword(String text, String regex) {
+        if (text == null || text.isBlank()) return null;
+        Matcher m = Pattern.compile(regex).matcher(text);
+        return m.find() ? m.group(2).trim() : null;
+    }
+
+    /** 按标题切出区块内容，避免“专业”匹配到“专业技能”、奖项/政治面貌进入教育区块。返回该区块正文，无则返回 null。 */
+    private static String findSectionBlock(String text, String sectionTitlePattern) {
+        if (text == null || text.isBlank()) return null;
+        // 下一段落的常见标题（用于截断），教育区块必须在 获奖/政治面貌 之前结束
+        String nextSection = "获奖|荣誉|政治面貌|证书|教育(?:经历|背景)?|技能|专业技能|实习|工作经历|项目(?:经历|经验)?|自我|Education|Skills?|Experience|Project";
+        Pattern p = Pattern.compile(
+            "(?:" + sectionTitlePattern + ")\\s*[:：]?\\s*\\n?([\\s\\S]*?)(?=\\n\\s*(?:" + nextSection + ")\\s*[:：]?|\\n\\s*\\n\\s*\\n|$)"
+        );
+        Matcher m = p.matcher(text);
+        return m.find() ? m.group(1).trim() : null;
+    }
+
+    /** 教育信息转 map 供 parsed_data */
+    private static Map<String, Object> toEducationMap(UserProfile p) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("school", nullToEmpty(p != null ? p.getSchool() : null));
+        m.put("major", nullToEmpty(p != null ? p.getMajor() : null));
+        m.put("degree", nullToEmpty(p != null ? p.getDegree() : null));
+        m.put("grade", nullToEmpty(p != null ? p.getGrade() : null));
+        m.put("expected_graduation", nullToEmpty(p != null ? p.getExpectedGraduation() : null));
+        m.put("gpa", nullToEmpty(p != null ? p.getGpa() : null));
+        return m;
+    }
+
+    /** 从正文抽取技能：找“技能/专业技能”等段落，按行或逗号拆分 */
+    private static List<ProfileSkill> extractSkillsFromText(String text) {
+        List<ProfileSkill> list = new ArrayList<>();
+        if (text == null || text.isBlank()) return list;
+        String lower = text;
+        // 找技能段落：从标题到下一个大标题或空行
+        Pattern section = Pattern.compile("(?:技能|专业技能|技术技能|个人技能|Skills?)[:：\\s]*([\\s\\S]*?)(?=\\n\\s*[\\u4e00-\\u9fa5]{2,8}[:：]|\\n\\s*\\n|$)");
+        Matcher m = section.matcher(lower);
+        if (m.find()) {
+            String block = m.group(1).replaceAll("\\r", "").trim();
+            List<String> items = new ArrayList<>();
+            for (String line : block.split("\\n")) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                // 每行可能是 "• xxx" 或 " - xxx" 或逗号分隔
+                for (String part : line.split("[,，、;；]")) {
+                    String s = part.replaceAll("^[•\\-*\\d.\\s]+", "").trim();
+                    if (s.length() >= 1 && s.length() <= 80) items.add(s);
+                }
+            }
+            if (!items.isEmpty()) {
+                ProfileSkill ps = new ProfileSkill();
+                ps.setCategory("专业技能");
+                try {
+                    ps.setItems(JSON.writeValueAsString(items));
+                } catch (Exception ignored) {
+                    ps.setItems("[]");
+                }
+                list.add(ps);
+            }
+        }
+        return list;
+    }
+
+    /** 从正文抽取实习经历：找“实习”段落，按条解析公司/职位/时间/描述 */
+    private static List<ProfileInternship> extractInternshipsFromText(String text) {
+        List<ProfileInternship> list = new ArrayList<>();
+        if (text == null || text.isBlank()) return list;
+        Pattern section = Pattern.compile("(?:实习|工作经历|实习经历|Experience)[:：\\s]*([\\s\\S]*?)(?=\\n\\s*[\\u4e00-\\u9fa5]{2,8}[:：]|\\n\\s*\\n{2,}|$)");
+        Matcher m = section.matcher(text);
+        if (!m.find()) return list;
+        String block = m.group(1);
+        // 按行或明显条目拆分（公司名 + 时间 或 职位）
+        String[] parts = block.split("(?=\\d{4}[年\\-/.]\\d|\\d{4}[年\\-/.]\\d{2}|[\\u4e00-\\u9fa5]{2,}[有限公司|科技|集团])");
+        for (String part : parts) {
+            part = part.trim();
+            if (part.length() < 5) continue;
+            ProfileInternship i = new ProfileInternship();
+            Matcher dateRange = Pattern.compile("(\\d{4})[年\\-/.](\\d{1,2})?[月]?[至到\\-~]?(\\d{4})?[年\\-/.]?(\\d{1,2})?[月]?").matcher(part);
+            if (dateRange.find()) {
+                i.setStartDate(dateRange.group(1) + (dateRange.group(2) != null && !dateRange.group(2).isEmpty() ? "-" + dateRange.group(2) : "-01"));
+                i.setEndDate(dateRange.group(3) != null ? dateRange.group(3) + (dateRange.group(4) != null && !dateRange.group(4).isEmpty() ? "-" + dateRange.group(4) : "-12") : null);
+            }
+            Matcher company = Pattern.compile("([\\u4e00-\\u9fa5a-zA-Z0-9]+(?:有限公司|科技|集团|公司|股份有限公司)?)").matcher(part);
+            if (company.find()) i.setCompany(company.group(1).trim());
+            Matcher pos = Pattern.compile("(?:职位|岗位|Position|岗位名称)[:：\\s]*([^\\n]{1,40})").matcher(part);
+            if (pos.find()) i.setPosition(pos.group(1).trim());
+            if (i.getPosition() == null) {
+                String firstLine = part.split("\\n")[0].trim();
+                if (firstLine.length() > 0 && firstLine.length() < 50) i.setPosition(firstLine);
+            }
+            i.setDescription(part.length() > 200 ? part.substring(0, 200) + "…" : part);
+            if (i.getCompany() != null || i.getPosition() != null) list.add(i);
+        }
+        if (list.isEmpty()) {
+            // 退化为整块作为一条
+            String desc = block.trim();
+            if (desc.length() > 10) {
+                ProfileInternship one = new ProfileInternship();
+                one.setDescription(desc.length() > 500 ? desc.substring(0, 500) + "…" : desc);
+                list.add(one);
+            }
+        }
+        return list;
+    }
+
+    /** 从正文抽取项目经历 */
+    private static List<ProfileProject> extractProjectsFromText(String text) {
+        List<ProfileProject> list = new ArrayList<>();
+        if (text == null || text.isBlank()) return list;
+        Pattern section = Pattern.compile("(?:项目|项目经历|项目经验|Projects?)[:：\\s]*([\\s\\S]*?)(?=\\n\\s*[\\u4e00-\\u9fa5]{2,8}[:：]|\\n\\s*\\n{2,}|$)");
+        Matcher m = section.matcher(text);
+        if (!m.find()) return list;
+        String block = m.group(1);
+        String[] entries = block.split("(?=\\d{4}[年\\-/.]|项目名称|项目描述|[\\u4e00-\\u9fa5]{3,}项目)");
+        for (String entry : entries) {
+            entry = entry.trim();
+            if (entry.length() < 5) continue;
+            ProfileProject p = new ProfileProject();
+            Matcher dateRange = Pattern.compile("(\\d{4})[年\\-/.](\\d{1,2})?[至到\\-~]?(\\d{4})?[年\\-/.]?(\\d{1,2})?").matcher(entry);
+            if (dateRange.find()) {
+                p.setStartDate(dateRange.group(1) + (dateRange.group(2) != null && !dateRange.group(2).isEmpty() ? "-" + dateRange.group(2) : "-01"));
+                p.setEndDate(dateRange.group(3) != null ? dateRange.group(3) + (dateRange.group(4) != null && !dateRange.group(4).isEmpty() ? "-" + dateRange.group(4) : "-12") : null);
+            }
+            String firstLine = entry.split("\\n")[0].trim();
+            if (firstLine.length() > 0 && firstLine.length() <= 100) p.setName(firstLine);
+            p.setDescription(entry.length() > 300 ? entry.substring(0, 300) + "…" : entry);
+            Matcher role = Pattern.compile("(?:角色|职务|Role)[:：\\s]*([^\\n]{1,30})").matcher(entry);
+            if (role.find()) p.setRole(role.group(1).trim());
+            if (p.getName() != null || p.getDescription() != null) list.add(p);
+        }
+        if (list.isEmpty() && block.trim().length() > 10) {
+            ProfileProject one = new ProfileProject();
+            one.setDescription(block.trim().length() > 500 ? block.trim().substring(0, 500) + "…" : block.trim());
+            list.add(one);
+        }
+        return list;
     }
 }
