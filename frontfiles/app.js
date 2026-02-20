@@ -1302,17 +1302,21 @@ class CareerPlanningApp {
                 `<span class="job-tag">${tag}</span>`
             ).join('') : '';
 
+            const skills = job.skills ? job.skills.slice(0, 4).map(skill => 
+                `<span class="skill-badge">${skill}</span>`
+            ).join('') : '';
+
             jobCard.innerHTML = `
                 <div class="job-card-header">
                     <div class="job-title">${job.job_name || '-'}</div>
                     <div class="job-meta">
                         <span>${job.industry || '-'}</span> | 
-                        <span>${job.level || '-'}</span> | 
-                        <span>${job.avg_salary || '-'}</span>
+                        <span>${job.level || '-'}</span>
                     </div>
                 </div>
-                <div class="job-description">${job.description || '暂无描述'}</div>
+                <div class="job-salary">${job.avg_salary || '-'}</div>
                 <div class="job-tags">${tags}</div>
+                <div class="job-skills">${skills}</div>
                 <div class="job-footer">
                     <span class="demand-score">需求热度: ${job.demand_score || '--'}</span>
                     <span class="growth-trend">${job.growth_trend || '--'}</span>
