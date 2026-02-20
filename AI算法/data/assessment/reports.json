@@ -2695,5 +2695,192 @@
     "assessment_date": "2026-02-20",
     "created_at": "2026-02-20 17:45:02",
     "status": "completed"
+  },
+  "report_20260220192045749_1": {
+    "interest_analysis": {
+      "holland_code": "AIE",
+      "primary_interest": {
+        "type": "艺术型(A)",
+        "score": 85,
+        "description": "喜欢通过创造性的活动表达自我，重视原创性、审美和自由表达"
+      },
+      "interest_distribution": [
+        {
+          "type": "艺术型(A)",
+          "score": 85
+        },
+        {
+          "type": "研究型(I)",
+          "score": 72
+        },
+        {
+          "type": "企业型(E)",
+          "score": 65
+        },
+        {
+          "type": "实用型(R)",
+          "score": 48
+        },
+        {
+          "type": "社会型(S)",
+          "score": 48
+        },
+        {
+          "type": "常规型(C)",
+          "score": 48
+        }
+      ],
+      "suitable_fields": [
+        "创意设计",
+        "内容创作",
+        "用户体验研究",
+        "品牌策划",
+        "数字媒体"
+      ]
+    },
+    "personality_analysis": {
+      "mbti_type": "ENFP",
+      "traits": [
+        {
+          "trait_name": "外向性",
+          "score": 60,
+          "level": "偏高",
+          "description": "倾向于从社交互动中获取能量，乐于表达想法和参与团队协作"
+        },
+        {
+          "trait_name": "开放性",
+          "score": 60,
+          "level": "偏高",
+          "description": "对新观念、新体验持开放态度，富有想象力和创造力"
+        },
+        {
+          "trait_name": "尽责性",
+          "score": 0,
+          "level": "低",
+          "description": "更注重灵活性和即兴发挥，可能在结构化任务中感到受限"
+        },
+        {
+          "trait_name": "宜人性",
+          "score": 80,
+          "level": "高",
+          "description": "善于理解他人，合作意愿强，重视人际关系和谐"
+        },
+        {
+          "trait_name": "情绪稳定性",
+          "score": 60,
+          "level": "偏高",
+          "description": "通常能较好应对压力，情绪反应较为平稳"
+        }
+      ]
+    },
+    "ability_analysis": {
+      "strengths": [
+        {
+          "ability": "沟通表达能力",
+          "score": 160,
+          "description": "擅长清晰传达观点，具备良好的语言组织与人际互动能力"
+        },
+        {
+          "ability": "执行能力",
+          "score": 140,
+          "description": "能够有效推进任务落地，行动力强"
+        },
+        {
+          "ability": "创新能力",
+          "score": 80,
+          "description": "具备提出新颖想法和解决方案的能力"
+        }
+      ],
+      "areas_to_improve": [
+        {
+          "ability": "逻辑分析能力",
+          "score": 0,
+          "suggestions": [
+            "通过结构化思维训练（如金字塔原理）提升问题拆解能力",
+            "参与数据分析或逻辑推理类课程，培养系统性思考习惯"
+          ]
+        },
+        {
+          "ability": "学习能力",
+          "score": 0,
+          "suggestions": [
+            "建立定期学习计划，采用费曼技巧强化知识内化",
+            "选择与兴趣结合的学习主题，提升持续学习动力"
+          ]
+        }
+      ]
+    },
+    "values_analysis": {
+      "top_values": [
+        {
+          "value": "工作稳定",
+          "score": 80,
+          "description": "高度重视职业的安全性和可预测性，倾向选择制度健全、风险较低的工作环境"
+        },
+        {
+          "value": "成就感",
+          "score": 40,
+          "description": "希望工作成果获得认可，但相比稳定性，成就感并非首要驱动力"
+        },
+        {
+          "value": "薪资待遇",
+          "score": 50,
+          "description": "关注收入水平，但愿意在稳定前提下接受适度的薪酬弹性"
+        }
+      ]
+    },
+    "recommendations": {
+      "suitable_careers": [
+        {
+          "career": "品牌策划专员",
+          "match_score": 88,
+          "reasons": [
+            "契合艺术型与企业型兴趣，融合创意表达与市场策略",
+            "依赖沟通表达与执行能力优势",
+            "大型企业或成熟机构提供稳定工作环境"
+          ]
+        },
+        {
+          "career": "用户研究分析师",
+          "match_score": 82,
+          "reasons": [
+            "结合研究型兴趣与沟通能力，通过访谈与观察理解用户需求",
+            "需一定创新思维设计调研方案",
+            "多在制度完善的互联网或咨询公司任职，保障稳定性"
+          ]
+        },
+        {
+          "career": "内容运营经理",
+          "match_score": 85,
+          "reasons": [
+            "发挥艺术型创造力进行内容生产，同时运用企业型特质推动传播效果",
+            "高度依赖沟通与执行能力",
+            "中大型平台型企业提供稳定职业路径"
+          ]
+        },
+        {
+          "career": "公关专员",
+          "match_score": 80,
+          "reasons": [
+            "匹配高宜人性与沟通能力，擅长维护组织形象与媒体关系",
+            "工作流程相对标准化，符合稳定性偏好",
+            "需创意撰写新闻稿与活动策划，呼应艺术型兴趣"
+          ]
+        }
+      ],
+      "development_suggestions": [
+        "针对性提升逻辑分析能力，可通过参与产品需求文档撰写或基础数据分析项目实践",
+        "在保持创意优势的同时，建立个人工作流程模板，弥补尽责性不足带来的执行波动",
+        "优先选择组织架构成熟、业务稳定的行业（如金融、教育科技、大型消费品企业）以契合价值观",
+        "利用高宜人性特质主动承担跨部门协作角色，积累项目管理经验",
+        "将创新能力和沟通优势结合，发展为‘创意+落地’复合型人才，增强职场竞争力"
+      ]
+    },
+    "confidence_score": 0.86,
+    "report_id": "report_20260220192045749_1",
+    "user_id": 1,
+    "assessment_date": "2026-02-20",
+    "created_at": "2026-02-20 19:21:13",
+    "status": "completed"
   }
 }

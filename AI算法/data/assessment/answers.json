@@ -1318,5 +1318,93 @@
     ],
     "time_spent": 0,
     "submitted_at": "2026-02-20 17:44:30"
+  },
+  "assess_20260220191919630_1": {
+    "assessment_id": "assess_20260220191919630_1",
+    "user_id": 1,
+    "answers": [
+      {
+        "question_id": "interest_e003",
+        "answer": "B"
+      },
+      {
+        "question_id": "interest_e002",
+        "answer": "C"
+      },
+      {
+        "question_id": "interest_a002",
+        "answer": "B"
+      },
+      {
+        "question_id": "interest_i002",
+        "answer": "B"
+      },
+      {
+        "question_id": "interest_a001",
+        "answer": "B"
+      },
+      {
+        "question_id": "personality_o004",
+        "answer": "B"
+      },
+      {
+        "question_id": "personality_a004",
+        "answer": "C"
+      },
+      {
+        "question_id": "personality_e004",
+        "answer": "B"
+      },
+      {
+        "question_id": "personality_a001",
+        "answer": "B"
+      },
+      {
+        "question_id": "personality_n003",
+        "answer": "B"
+      },
+      {
+        "question_id": "ability_exec001",
+        "answer": 3
+      },
+      {
+        "question_id": "ability_comm003",
+        "answer": 4
+      },
+      {
+        "question_id": "ability_innov003",
+        "answer": 4
+      },
+      {
+        "question_id": "ability_exec003",
+        "answer": 4
+      },
+      {
+        "question_id": "ability_comm001",
+        "answer": 4
+      },
+      {
+        "question_id": "values_stable002",
+        "answer": "A"
+      },
+      {
+        "question_id": "values_stable001",
+        "answer": "B"
+      },
+      {
+        "question_id": "values_achieve002",
+        "answer": "C"
+      },
+      {
+        "question_id": "values_salary002",
+        "answer": "A"
+      },
+      {
+        "question_id": "values_achieve001",
+        "answer": "B"
+      }
+    ],
+    "time_spent": 1,
+    "submitted_at": "2026-02-20 19:20:45"
   }
 }

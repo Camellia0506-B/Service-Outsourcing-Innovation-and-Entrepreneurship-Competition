@@ -19582,5 +19582,3250 @@
       }
     ],
     "created_at": "2026-02-20 18:34:38"
+  },
+  "assess_20260220183700618_1": {
+    "assessment_id": "assess_20260220183700618_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:37:03"
+  },
+  "assess_20260220183733831_1": {
+    "assessment_id": "assess_20260220183733831_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:37:36"
+  },
+  "assess_20260220183957550_1": {
+    "assessment_id": "assess_20260220183957550_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:40:00"
+  },
+  "assess_20260220184157761_1": {
+    "assessment_id": "assess_20260220184157761_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:42:00"
+  },
+  "assess_20260220185120391_1": {
+    "assessment_id": "assess_20260220185120391_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:51:23"
+  },
+  "assess_20260220185126035_1": {
+    "assessment_id": "assess_20260220185126035_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:51:29"
+  },
+  "assess_20260220185639352_1": {
+    "assessment_id": "assess_20260220185639352_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:56:42"
+  },
+  "assess_20260220185645435_1": {
+    "assessment_id": "assess_20260220185645435_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:56:48"
+  },
+  "assess_20260220190525710_1": {
+    "assessment_id": "assess_20260220190525710_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 19:05:28"
+  },
+  "assess_20260220190827312_1": {
+    "assessment_id": "assess_20260220190827312_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 19:08:30"
+  },
+  "assess_20260220191919630_1": {
+    "assessment_id": "assess_20260220191919630_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 20,
+    "estimated_time": 10,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": [
+          {
+            "question_id": "interest_e003",
+            "question_text": "你喜欢说服和影响他人吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_e002",
+            "question_text": "你对商业、销售、管理类工作感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a002",
+            "question_text": "你对艺术、设计、音乐感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_i002",
+            "question_text": "你对科学实验和技术研发感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "I",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一些兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a001",
+            "question_text": "你喜欢从事创意性的工作吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点喜欢",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": [
+          {
+            "question_id": "personality_o004",
+            "question_text": "对于变化你的反应是？",
+            "question_type": "single_choice",
+            "trait": "开放性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "拥抱变化",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "适应变化",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "更喜欢稳定",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a004",
+            "question_text": "你对批评的反应？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "虚心接受并改进",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "理性分析对错",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "容易情绪化",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_e004",
+            "question_text": "你更喜欢？",
+            "question_type": "single_choice",
+            "trait": "外向性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "和很多人一起工作",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "小团队协作",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "独立工作",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a001",
+            "question_text": "与他人意见不一致时你会？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "优先考虑他人感受",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "寻找折中方案",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "坚持自己观点",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_n003",
+            "question_text": "你的情绪波动大吗？",
+            "question_type": "single_choice",
+            "trait": "情绪稳定性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常稳定",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "偶尔波动",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "波动较大",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": [
+          {
+            "question_id": "ability_exec001",
+            "question_text": "你能高效地将计划转化为行动吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm003",
+            "question_text": "在团队讨论中，你能有效推动共识吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_innov003",
+            "question_text": "你对突破常规的方法持开放态度吗？",
+            "question_type": "scale",
+            "ability": "创新能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_exec003",
+            "question_text": "你能在截止日期前高质量完成任务吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm001",
+            "question_text": "你能清晰表达自己的想法和观点吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": [
+          {
+            "question_id": "values_stable002",
+            "question_text": "你更倾向于？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "稳定的大公司",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "两者都可以",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "有挑战的创业公司",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "values_stable001",
+            "question_text": "工作稳定性对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太在意",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve002",
+            "question_text": "实现个人价值对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "一般",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_salary002",
+            "question_text": "你期望获得与能力匹配的回报吗？",
+            "question_type": "single_choice",
+            "value_type": "薪资待遇",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常期望",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一定期望",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "顺其自然",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve001",
+            "question_text": "你最看重工作带来的成就感吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常看重",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较看重",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太看重",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "created_at": "2026-02-20 19:19:22"
+  },
+  "assess_20260220194214488_4": {
+    "assessment_id": "assess_20260220194214488_4",
+    "user_id": 4,
+    "assessment_type": "comprehensive",
+    "total_questions": 20,
+    "estimated_time": 10,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": [
+          {
+            "question_id": "interest_e003",
+            "question_text": "你喜欢说服和影响他人吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_e002",
+            "question_text": "你对商业、销售、管理类工作感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a002",
+            "question_text": "你对艺术、设计、音乐感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_i002",
+            "question_text": "你对科学实验和技术研发感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "I",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一些兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a001",
+            "question_text": "你喜欢从事创意性的工作吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点喜欢",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": [
+          {
+            "question_id": "personality_o004",
+            "question_text": "对于变化你的反应是？",
+            "question_type": "single_choice",
+            "trait": "开放性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "拥抱变化",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "适应变化",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "更喜欢稳定",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a004",
+            "question_text": "你对批评的反应？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "虚心接受并改进",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "理性分析对错",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "容易情绪化",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_e004",
+            "question_text": "你更喜欢？",
+            "question_type": "single_choice",
+            "trait": "外向性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "和很多人一起工作",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "小团队协作",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "独立工作",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a001",
+            "question_text": "与他人意见不一致时你会？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "优先考虑他人感受",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "寻找折中方案",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "坚持自己观点",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_n003",
+            "question_text": "你的情绪波动大吗？",
+            "question_type": "single_choice",
+            "trait": "情绪稳定性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常稳定",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "偶尔波动",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "波动较大",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": [
+          {
+            "question_id": "ability_exec001",
+            "question_text": "你能高效地将计划转化为行动吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm003",
+            "question_text": "在团队讨论中，你能有效推动共识吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_innov003",
+            "question_text": "你对突破常规的方法持开放态度吗？",
+            "question_type": "scale",
+            "ability": "创新能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_exec003",
+            "question_text": "你能在截止日期前高质量完成任务吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm001",
+            "question_text": "你能清晰表达自己的想法和观点吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": [
+          {
+            "question_id": "values_stable002",
+            "question_text": "你更倾向于？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "稳定的大公司",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "两者都可以",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "有挑战的创业公司",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "values_stable001",
+            "question_text": "工作稳定性对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太在意",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve002",
+            "question_text": "实现个人价值对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "一般",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_salary002",
+            "question_text": "你期望获得与能力匹配的回报吗？",
+            "question_type": "single_choice",
+            "value_type": "薪资待遇",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常期望",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一定期望",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "顺其自然",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve001",
+            "question_text": "你最看重工作带来的成就感吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常看重",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较看重",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太看重",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "created_at": "2026-02-20 19:42:17"
+  },
+  "assess_20260220194300583_4": {
+    "assessment_id": "assess_20260220194300583_4",
+    "user_id": 4,
+    "assessment_type": "comprehensive",
+    "total_questions": 20,
+    "estimated_time": 10,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": [
+          {
+            "question_id": "interest_e003",
+            "question_text": "你喜欢说服和影响他人吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_e002",
+            "question_text": "你对商业、销售、管理类工作感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a002",
+            "question_text": "你对艺术、设计、音乐感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_i002",
+            "question_text": "你对科学实验和技术研发感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "I",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一些兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a001",
+            "question_text": "你喜欢从事创意性的工作吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点喜欢",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": [
+          {
+            "question_id": "personality_o004",
+            "question_text": "对于变化你的反应是？",
+            "question_type": "single_choice",
+            "trait": "开放性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "拥抱变化",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "适应变化",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "更喜欢稳定",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a004",
+            "question_text": "你对批评的反应？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "虚心接受并改进",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "理性分析对错",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "容易情绪化",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_e004",
+            "question_text": "你更喜欢？",
+            "question_type": "single_choice",
+            "trait": "外向性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "和很多人一起工作",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "小团队协作",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "独立工作",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a001",
+            "question_text": "与他人意见不一致时你会？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "优先考虑他人感受",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "寻找折中方案",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "坚持自己观点",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_n003",
+            "question_text": "你的情绪波动大吗？",
+            "question_type": "single_choice",
+            "trait": "情绪稳定性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常稳定",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "偶尔波动",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "波动较大",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": [
+          {
+            "question_id": "ability_exec001",
+            "question_text": "你能高效地将计划转化为行动吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm003",
+            "question_text": "在团队讨论中，你能有效推动共识吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_innov003",
+            "question_text": "你对突破常规的方法持开放态度吗？",
+            "question_type": "scale",
+            "ability": "创新能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_exec003",
+            "question_text": "你能在截止日期前高质量完成任务吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm001",
+            "question_text": "你能清晰表达自己的想法和观点吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": [
+          {
+            "question_id": "values_stable002",
+            "question_text": "你更倾向于？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "稳定的大公司",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "两者都可以",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "有挑战的创业公司",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "values_stable001",
+            "question_text": "工作稳定性对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太在意",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve002",
+            "question_text": "实现个人价值对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "一般",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_salary002",
+            "question_text": "你期望获得与能力匹配的回报吗？",
+            "question_type": "single_choice",
+            "value_type": "薪资待遇",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常期望",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一定期望",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "顺其自然",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve001",
+            "question_text": "你最看重工作带来的成就感吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常看重",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较看重",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太看重",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "created_at": "2026-02-20 19:43:03"
+  },
+  "assess_20260220194342592_4": {
+    "assessment_id": "assess_20260220194342592_4",
+    "user_id": 4,
+    "assessment_type": "comprehensive",
+    "total_questions": 20,
+    "estimated_time": 10,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": [
+          {
+            "question_id": "interest_e003",
+            "question_text": "你喜欢说服和影响他人吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_e002",
+            "question_text": "你对商业、销售、管理类工作感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a002",
+            "question_text": "你对艺术、设计、音乐感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_i002",
+            "question_text": "你对科学实验和技术研发感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "I",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一些兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a001",
+            "question_text": "你喜欢从事创意性的工作吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点喜欢",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": [
+          {
+            "question_id": "personality_o004",
+            "question_text": "对于变化你的反应是？",
+            "question_type": "single_choice",
+            "trait": "开放性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "拥抱变化",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "适应变化",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "更喜欢稳定",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a004",
+            "question_text": "你对批评的反应？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "虚心接受并改进",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "理性分析对错",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "容易情绪化",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_e004",
+            "question_text": "你更喜欢？",
+            "question_type": "single_choice",
+            "trait": "外向性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "和很多人一起工作",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "小团队协作",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "独立工作",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a001",
+            "question_text": "与他人意见不一致时你会？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "优先考虑他人感受",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "寻找折中方案",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "坚持自己观点",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_n003",
+            "question_text": "你的情绪波动大吗？",
+            "question_type": "single_choice",
+            "trait": "情绪稳定性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常稳定",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "偶尔波动",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "波动较大",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": [
+          {
+            "question_id": "ability_exec001",
+            "question_text": "你能高效地将计划转化为行动吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm003",
+            "question_text": "在团队讨论中，你能有效推动共识吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_innov003",
+            "question_text": "你对突破常规的方法持开放态度吗？",
+            "question_type": "scale",
+            "ability": "创新能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_exec003",
+            "question_text": "你能在截止日期前高质量完成任务吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm001",
+            "question_text": "你能清晰表达自己的想法和观点吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": [
+          {
+            "question_id": "values_stable002",
+            "question_text": "你更倾向于？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "稳定的大公司",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "两者都可以",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "有挑战的创业公司",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "values_stable001",
+            "question_text": "工作稳定性对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太在意",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve002",
+            "question_text": "实现个人价值对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "一般",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_salary002",
+            "question_text": "你期望获得与能力匹配的回报吗？",
+            "question_type": "single_choice",
+            "value_type": "薪资待遇",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常期望",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一定期望",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "顺其自然",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve001",
+            "question_text": "你最看重工作带来的成就感吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常看重",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较看重",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太看重",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "created_at": "2026-02-20 19:43:45"
+  },
+  "assess_20260220200414722_4": {
+    "assessment_id": "assess_20260220200414722_4",
+    "user_id": 4,
+    "assessment_type": "comprehensive",
+    "total_questions": 20,
+    "estimated_time": 10,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": [
+          {
+            "question_id": "interest_e003",
+            "question_text": "你喜欢说服和影响他人吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_e002",
+            "question_text": "你对商业、销售、管理类工作感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "E",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a002",
+            "question_text": "你对艺术、设计、音乐感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "一般",
+                "score": 2
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_i002",
+            "question_text": "你对科学实验和技术研发感兴趣吗？",
+            "question_type": "single_choice",
+            "holland_type": "I",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常感兴趣",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一些兴趣",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不感兴趣",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "interest_a001",
+            "question_text": "你喜欢从事创意性的工作吗？",
+            "question_type": "single_choice",
+            "holland_type": "A",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常喜欢",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有点喜欢",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不喜欢",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": [
+          {
+            "question_id": "personality_o004",
+            "question_text": "对于变化你的反应是？",
+            "question_type": "single_choice",
+            "trait": "开放性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "拥抱变化",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "适应变化",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "更喜欢稳定",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a004",
+            "question_text": "你对批评的反应？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "虚心接受并改进",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "理性分析对错",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "容易情绪化",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_e004",
+            "question_text": "你更喜欢？",
+            "question_type": "single_choice",
+            "trait": "外向性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "和很多人一起工作",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "小团队协作",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "独立工作",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_a001",
+            "question_text": "与他人意见不一致时你会？",
+            "question_type": "single_choice",
+            "trait": "宜人性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "优先考虑他人感受",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "寻找折中方案",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "坚持自己观点",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "personality_n003",
+            "question_text": "你的情绪波动大吗？",
+            "question_type": "single_choice",
+            "trait": "情绪稳定性",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常稳定",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "偶尔波动",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "波动较大",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": [
+          {
+            "question_id": "ability_exec001",
+            "question_text": "你能高效地将计划转化为行动吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm003",
+            "question_text": "在团队讨论中，你能有效推动共识吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_innov003",
+            "question_text": "你对突破常规的方法持开放态度吗？",
+            "question_type": "scale",
+            "ability": "创新能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_exec003",
+            "question_text": "你能在截止日期前高质量完成任务吗？",
+            "question_type": "scale",
+            "ability": "执行能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          },
+          {
+            "question_id": "ability_comm001",
+            "question_text": "你能清晰表达自己的想法和观点吗？",
+            "question_type": "scale",
+            "ability": "沟通表达能力",
+            "scale_min": 1,
+            "scale_max": 5,
+            "labels": [
+              "完全不符合",
+              "不太符合",
+              "一般",
+              "比较符合",
+              "非常符合"
+            ],
+            "options": [
+              {
+                "option_id": "1",
+                "option_text": "完全不符合",
+                "score": 1
+              },
+              {
+                "option_id": "2",
+                "option_text": "不太符合",
+                "score": 2
+              },
+              {
+                "option_id": "3",
+                "option_text": "一般",
+                "score": 3
+              },
+              {
+                "option_id": "4",
+                "option_text": "比较符合",
+                "score": 4
+              },
+              {
+                "option_id": "5",
+                "option_text": "非常符合",
+                "score": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": [
+          {
+            "question_id": "values_stable002",
+            "question_text": "你更倾向于？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "稳定的大公司",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "两者都可以",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "有挑战的创业公司",
+                "score": 0
+              }
+            ]
+          },
+          {
+            "question_id": "values_stable001",
+            "question_text": "工作稳定性对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "工作稳定",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太在意",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve002",
+            "question_text": "实现个人价值对你重要吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常重要",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较重要",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "一般",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_salary002",
+            "question_text": "你期望获得与能力匹配的回报吗？",
+            "question_type": "single_choice",
+            "value_type": "薪资待遇",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常期望",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "有一定期望",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "顺其自然",
+                "score": 1
+              }
+            ]
+          },
+          {
+            "question_id": "values_achieve001",
+            "question_text": "你最看重工作带来的成就感吗？",
+            "question_type": "single_choice",
+            "value_type": "成就感",
+            "options": [
+              {
+                "option_id": "A",
+                "option_text": "非常看重",
+                "score": 5
+              },
+              {
+                "option_id": "B",
+                "option_text": "比较看重",
+                "score": 3
+              },
+              {
+                "option_id": "C",
+                "option_text": "不太看重",
+                "score": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "created_at": "2026-02-20 20:04:18"
   }
 }
