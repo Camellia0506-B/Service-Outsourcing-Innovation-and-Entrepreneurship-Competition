@@ -24,6 +24,7 @@
                     <a href="#" class="nav-link" data-page="dashboard">首页</a>
                     <a href="#" class="nav-link" data-page="profile">个人档案</a>
                     <a href="#" class="nav-link" data-page="assessment">职业测评</a>
+                    <a href="#" class="nav-link" data-page="jobProfile">岗位画像</a>
                     <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
                     <a href="#" class="nav-link" data-page="report">职业规划</a>
                 </div>
@@ -333,6 +334,82 @@
                     <button id="submitAssessmentBtn" class="btn-primary">提交测评</button>
                     <button id="viewReportBtn" class="btn-secondary hidden">查看测评报告</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 岗位画像页面 -->
+        <div id="jobProfilePage" class="page hidden">
+            <div class="job-profile-container">
+                <h2>岗位画像</h2>
+                
+                <div class="job-profile-tabs">
+                    <button class="tab-btn active" data-tab="list">岗位列表</button>
+                    <button class="tab-btn" data-tab="graph">关联图谱</button>
+                    <button class="tab-btn" data-tab="ai">AI生成</button>
+                </div>
+
+                <!-- 岗位列表 Tab -->
+                <div class="tab-content active" id="listTab">
+                    <div class="job-profile-filters">
+                        <input type="text" id="jobProfileKeyword" placeholder="搜索岗位名称..." style="flex: 1; padding: 8px; margin-right: 10px;">
+                        <select id="jobProfileIndustry" style="padding: 8px; margin-right: 10px;">
+                            <option value="">全部行业</option>
+                            <option value="互联网">互联网</option>
+                            <option value="金融">金融</option>
+                            <option value="制造业">制造业</option>
+                        </select>
+                        <select id="jobProfileLevel" style="padding: 8px; margin-right: 10px;">
+                            <option value="">全部级别</option>
+                            <option value="初级">初级</option>
+                            <option value="中级">中级</option>
+                            <option value="高级">高级</option>
+                        </select>
+                        <button id="jobProfileSearchBtn" class="btn-primary">搜索</button>
+                    </div>
+                    <div id="jobProfileList" class="jobs-grid">
+                        <div class="loading-message">加载岗位列表中...</div>
+                    </div>
+                </div>
+
+                <!-- 关联图谱 Tab -->
+                <div class="tab-content" id="graphTab">
+                    <div class="graph-controls">
+                        <input type="text" id="graphJobId" placeholder="请输入岗位ID (如: job_001)" style="flex: 1; padding: 8px; margin-right: 10px;">
+                        <select id="graphTypeSelect" style="padding: 8px; margin-right: 10px;">
+                            <option value="all">全部</option>
+                            <option value="vertical">垂直晋升</option>
+                            <option value="transfer">横向转岗</option>
+                        </select>
+                        <button id="jobProfileGraphBtn" class="btn-primary">加载图谱</button>
+                    </div>
+                    <div id="jobProfileGraph" class="graph-container">
+                        <p class="hint-text">请输入岗位ID并选择图谱类型</p>
+                    </div>
+                </div>
+
+                <!-- AI生成 Tab -->
+                <div class="tab-content" id="aiTab">
+                    <div class="ai-generate-form">
+                        <div class="form-group">
+                            <label>岗位名称 *</label>
+                            <input type="text" id="aiJobName" placeholder="如: AI产品经理" required>
+                        </div>
+                        <div class="form-group">
+                            <label>岗位描述（可选，每行一个JD）</label>
+                            <textarea id="aiJobDescriptions" rows="5" placeholder="可以从招聘网站复制多个岗位描述，每行一个..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>样本数量</label>
+                            <input type="number" id="aiSampleSize" value="30" min="10" max="100">
+                        </div>
+                        <button id="aiGenerateJobBtn" class="btn-primary">开始生成</button>
+                        <div id="aiGenerateStatus" class="generate-status"></div>
+                        <div id="aiGenerateResult" class="generate-result"></div>
+                    </div>
+                </div>
+
+                <!-- 岗位详情（隐藏，点击列表项时显示） -->
+                <div id="jobProfileDetail" class="job-profile-detail hidden"></div>
             </div>
         </div>
 
