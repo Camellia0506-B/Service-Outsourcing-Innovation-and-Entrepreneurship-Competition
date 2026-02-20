@@ -27,6 +27,8 @@ class CareerPlanningApp {
             e.preventDefault();
             this.handleLogin();
         });
+        
+
 
         // 创建账户 - 注册表单提交
         document.getElementById('registerForm')?.addEventListener('submit', (e) => {
@@ -34,11 +36,65 @@ class CareerPlanningApp {
             this.handleRegisterForm();
         });
 
-        // 登录页「创建账户」跳转到注册页
+        // 登录页「创建账户」- 打开快速注册模态框
         document.getElementById('goRegister')?.addEventListener('click', (e) => {
             e.preventDefault();
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.remove('hidden');
+            this.showQuickRegisterModal();
+        });
+        
+        // 关闭快速注册模态框
+        document.getElementById('closeQuickRegisterModal')?.addEventListener('click', () => {
+            this.hideQuickRegisterModal();
+        });
+        
+        // 点击模态框外部关闭
+        document.getElementById('quickRegisterModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'quickRegisterModal') {
+                this.hideQuickRegisterModal();
+            }
+        });
+        
+        // ESC键关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !document.getElementById('quickRegisterModal')?.classList.contains('hidden')) {
+                this.hideQuickRegisterModal();
+            }
+        });
+        
+        // 快速注册提交按钮
+        document.getElementById('handleQuickRegisterBtn')?.addEventListener('click', () => {
+            this.handleQuickRegister();
+        });
+        
+        // 字符计数
+        document.getElementById('quickRegisterText')?.addEventListener('input', (e) => {
+            const count = e.target.value.length;
+            const counterEl = document.getElementById('quickRegisterCharCount');
+            if (counterEl) {
+                counterEl.textContent = count;
+                if (count > 200) {
+                    counterEl.style.color = 'var(--danger-color)';
+                } else {
+                    counterEl.style.color = 'var(--text-secondary)';
+                }
+            }
+            // 限制最大长度
+            if (count > 200) {
+                e.target.value = e.target.value.substring(0, 200);
+            }
+        });
+        
+        // 示例标签点击填充
+        document.querySelectorAll('.example-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                const textarea = document.getElementById('quickRegisterText');
+                if (textarea) {
+                    textarea.value = tag.textContent.trim();
+                    textarea.focus();
+                    // 触发input事件以更新字符计数
+                    textarea.dispatchEvent(new Event('input'));
+                }
+            });
         });
 
         // 注册页「立即登录」跳转到登录页
@@ -270,10 +326,23 @@ class CareerPlanningApp {
     // 处理快速注册
     async handleQuickRegister() {
         const introduction = document.getElementById('quickRegisterText').value.trim();
+        const submitBtn = document.getElementById('handleQuickRegisterBtn');
         
         if (!introduction) {
-            this.showToast('请介绍一下自己', 'error');
+            this.showToast('请介绍一下自己，帮助我们更好地为您服务', 'error');
+            document.getElementById('quickRegisterText').focus();
             return;
+        }
+        
+        if (introduction.length < 5) {
+            this.showToast('介绍内容太短，请至少输入5个字符', 'error');
+            return;
+        }
+
+        // 禁用按钮，显示加载状态
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="btn-text">正在生成账号...</span>';
         }
 
         // 根据介绍生成用户信息
@@ -284,13 +353,18 @@ class CareerPlanningApp {
         this.hideLoading();
 
         if (result.success) {
-            this.showToast('注册成功，正在登录...', 'success');
+            this.showToast('注册成功！正在为您登录...', 'success');
             // 自动登录
             setTimeout(() => {
                 this.autoLogin(userInfo.username, userInfo.password);
             }, 1000);
         } else {
-            this.showToast(result.msg || '注册失败', 'error');
+            this.showToast(result.msg || '注册失败，请稍后重试', 'error');
+            // 恢复按钮
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="btn-text">开始我的职业规划</span><span class="btn-arrow">→</span>';
+            }
         }
     }
 
