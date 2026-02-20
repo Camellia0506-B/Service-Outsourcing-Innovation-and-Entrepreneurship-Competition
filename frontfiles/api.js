@@ -1,5 +1,5 @@
 const mockMode = false 
-const BASE_URL = 'http://127.0.0.1:8080/api/v1'
+const BASE_URL = 'http://localhost:5000/api/v1'
 const AI_BASE_URL = 'http://127.0.0.1:8080/api/v1'
 
 // API工具类
