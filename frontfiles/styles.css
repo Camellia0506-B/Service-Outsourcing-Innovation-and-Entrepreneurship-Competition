@@ -541,6 +541,25 @@ body {
     margin-bottom: 32px;
 }
 
+.assessment-welcome-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+.assessment-welcome-text {
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    font-size: 16px;
+}
+.assessment-welcome-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 .question-card {
     background: var(--card-bg);
     border-radius: 16px;

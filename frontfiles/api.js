@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-const mockMode = false 
-const BASE_URL = 'http://localhost:5000/api/v1'
-const AI_BASE_URL = 'http://127.0.0.1:8080/api/v1'
-=======
 // API配置
 const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',  // Java 后端（登录、个人档案等）
@@ -10,20 +5,19 @@ const API_CONFIG = {
     timeout: 30000,
     mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
->>>>>>> 148564fc (测评模块实现)
 
 // API工具类
 class API {
     constructor() {
-        this.baseURL = BASE_URL;
-        this.aiBaseURL = AI_BASE_URL;
+        this.baseURL = API_CONFIG.baseURL;
+        this.aiBaseURL = API_CONFIG.assessmentBaseURL || this.baseURL;
     }
 
     // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }
     async requestToAI(endpoint, options = {}) {
         const url = `${this.aiBaseURL}${endpoint}`;
         const token = localStorage.getItem('token');
-        if (mockMode) {
+        if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, options);
         }
         const config = {
@@ -65,7 +59,7 @@ class API {
         const token = localStorage.getItem('token');
         
         // 模拟模式
-        if (mockMode) {
+        if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, options);
         }
         
@@ -140,7 +134,7 @@ class API {
         const url = `${this.baseURL}${endpoint}`;
         
         // 模拟模式
-        if (mockMode) {
+        if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, { formData });
         }
         

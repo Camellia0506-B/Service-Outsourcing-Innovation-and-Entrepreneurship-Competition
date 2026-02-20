@@ -10,54 +10,64 @@ class CareerPlanningApp {
 
     // 初始化应用
     init() {
-        // 检查登录状态
-        if (isLoggedIn()) {
-            this.currentUser = getUserInfo();
-            this.showMainApp();
-        } else {
-            this.showPage('loginPage');
+        try {
+            // 检查登录状态
+            if (isLoggedIn()) {
+                this.currentUser = getUserInfo();
+                this.showMainApp();
+            } else {
+                this.showPage('loginPage');
+            }
+        } catch (e) {
+            console.error('[App] init 异常，仍继续绑定事件', e);
+            try {
+                this.showPage('loginPage');
+            } catch (_) {}
         }
-
-        // 绑定事件
+        // 绑定事件（确保无论 init 是否报错都会执行）
         this.bindEvents();
     }
 
     // 绑定所有事件
     bindEvents() {
-        // 登录表单提交
-        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
+        var self = this;
 
-        // 创建账户 - 注册表单提交
-        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleRegisterForm();
+        // 登录页：用事件委托，避免因 DOM 未就绪或元素未找到导致点击无反应
+        document.body.addEventListener('submit', function(e) {
+            var form = e.target;
+            if (form && form.id === 'loginForm') {
+                e.preventDefault();
+                self.handleLogin();
+            }
+            if (form && form.id === 'registerForm') {
+                e.preventDefault();
+                self.handleRegisterForm();
+            }
         });
-
-        // 登录页「创建账户」跳转到注册页
-        document.getElementById('goRegister')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.remove('hidden');
+        document.body.addEventListener('click', function(e) {
+            var el = e.target.closest ? e.target.closest('[id]') : e.target;
+            if (!el || !el.id) return;
+            if (el.id === 'goRegister') {
+                e.preventDefault();
+                var loginPage = document.getElementById('loginPage');
+                var registerPage = document.getElementById('registerPage');
+                if (loginPage) loginPage.classList.add('hidden');
+                if (registerPage) registerPage.classList.remove('hidden');
+            }
+            if (el.id === 'showLogin') {
+                e.preventDefault();
+                self.showPage('loginPage');
+                var rp = document.getElementById('registerPage');
+                if (rp) rp.classList.add('hidden');
+            }
+            if (el.id === 'forgotPasswordLink') {
+                e.preventDefault();
+                self.openForgotPasswordModal();
+            }
+            if (el.id === 'forgotPasswordClose') self.closeForgotPasswordModal();
+            if (el.id === 'forgotSendCodeBtn') self.handleForgotSendCode();
+            if (el.id === 'forgotResetBtn') self.handleForgotReset();
         });
-
-        // 注册页「立即登录」跳转到登录页
-        document.getElementById('showLogin')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showPage('loginPage');
-            document.getElementById('registerPage').classList.add('hidden');
-        });
-
-        // 忘记密码
-        document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.openForgotPasswordModal();
-        });
-        document.getElementById('forgotPasswordClose')?.addEventListener('click', () => this.closeForgotPasswordModal());
-        document.getElementById('forgotSendCodeBtn')?.addEventListener('click', () => this.handleForgotSendCode());
-        document.getElementById('forgotResetBtn')?.addEventListener('click', () => this.handleForgotReset());
 
         // 导航链接
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -1076,37 +1086,92 @@ class CareerPlanningApp {
         return userId ? localStorage.getItem('last_assessment_report_id_' + userId) : null;
     }
 
+    // 是否有历史报告（兼容 last_assessment_report_id_ 与 report_history_ 两种 key）
+    hasHistoryReport() {
+        const id1 = this.getLastAssessmentReportId();
+        if (id1) return true;
+        const userId = getCurrentUserId();
+        if (!userId) return false;
+        const raw = localStorage.getItem('report_history_' + userId);
+        if (!raw) return false;
+        try {
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.length > 0 : !!raw;
+        } catch (_) {
+            return !!raw;
+        }
+    }
+
     // 加载职业测评数据
     async loadAssessmentData() {
         const userId = getCurrentUserId();
-        console.log('loadAssessmentData - userId:', userId);
         if (!userId) return;
 
-        // 恢复上次的报告 ID，便于返回后仍可查看报告
         const savedReportId = this.getLastAssessmentReportId();
         if (savedReportId) this.currentReportId = savedReportId;
 
-        // 获取测评类型（默认 comprehensive）
-        const assessmentType = 'comprehensive';  // 可以后续添加选择UI
+        // 有历史报告时：不显示问卷，显示「查看最新报告」和「重新测评」
+        if (this.hasHistoryReport() && this.currentReportId) {
+            this.showAssessmentWelcomeWithHistory();
+            return;
+        }
+
+        // 无历史报告：拉取问卷并直接显示
+        await this.fetchAndShowQuestionnaire();
+    }
+
+    // 有历史报告时展示的入口（两个按钮）
+    showAssessmentWelcomeWithHistory() {
+        const container = document.getElementById('questionnaireContainer');
+        const actionsEl = document.getElementById('assessmentActions');
+        if (actionsEl) actionsEl.classList.add('hidden');
+        container.innerHTML = `
+            <div class="assessment-welcome-card">
+                <p class="assessment-welcome-text">您已有测评报告，可查看最新报告或重新测评。</p>
+                <div class="assessment-welcome-actions">
+                    <button type="button" id="btnViewLatestReport" class="btn-primary">查看最新报告</button>
+                    <button type="button" id="btnRetakeAssessment" class="btn-secondary">重新测评</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('btnViewLatestReport')?.addEventListener('click', () => {
+            this.showPage('reportPage');
+            this.loadAssessmentReportContent(this.currentReportId);
+        });
+        document.getElementById('btnRetakeAssessment')?.addEventListener('click', () => {
+            if (!confirm('重新测评将生成新报告，是否继续？')) return;
+            this.fetchAndShowQuestionnaire();
+        });
+    }
+
+    // 拉取问卷并显示（用于首次进入或点击「重新测评」后）
+    async fetchAndShowQuestionnaire() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+        const assessmentType = 'comprehensive';
+        const container = document.getElementById('questionnaireContainer');
+        const actionsEl = document.getElementById('assessmentActions');
+        container.innerHTML = '<div class="loading-message">加载问卷中...</div>';
+        if (actionsEl) actionsEl.classList.add('hidden');
 
         this.showLoading();
         const result = await getQuestionnaire(userId, assessmentType);
         this.hideLoading();
 
-        console.log('loadAssessmentData - API result:', result);
-
         if (result.success) {
-            console.log('loadAssessmentData - assessmentData:', result.data);
             this.currentAssessmentId = result.data.assessment_id || null;
             this._assessmentStartTime = Date.now();
             this.renderQuestionnaire(result.data);
-            // 若有已保存的报告，显示「查看测评报告」按钮（已生成完成，可点击查看）
-            if (this.currentReportId) {
-                this.setViewReportButtonState('ready');
+            if (actionsEl) actionsEl.classList.remove('hidden');
+            document.getElementById('submitAssessmentBtn').classList.remove('hidden');
+            const viewBtn = document.getElementById('viewReportBtn');
+            if (viewBtn) {
+                viewBtn.classList.add('hidden');
+                viewBtn.disabled = false;
+                viewBtn.classList.remove('view-report-generating');
             }
         } else {
-            console.error('loadAssessmentData - API failed:', result.msg);
-            document.getElementById('questionnaireContainer').innerHTML = '<div class="hint-text">加载失败: ' + result.msg + '</div>';
+            container.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '') + '</div>';
         }
     }
 
@@ -1160,13 +1225,6 @@ class CareerPlanningApp {
                         `;
                     });
 
-<<<<<<< HEAD
-                questionsHtml += `
-                    <div class="question-card" data-question-id="${q.question_id}" data-question-type="${q.question_type || 'single_choice'}">
-                        <div class="question-header">
-                            <div class="question-number">${qIndex + 1}</div>
-                            <div class="question-text">${q.question_text}</div>
-=======
                     questionsHtml += `
                         <div class="question-card" data-question-id="${q.question_id || ''}" data-question-type="${q.question_type || 'single_choice'}">
                             <div class="question-header">
@@ -1174,7 +1232,6 @@ class CareerPlanningApp {
                                 <div class="question-text">${q.question_text != null ? q.question_text : ''}</div>
                             </div>
                             <div class="options">${optionsHtml}</div>
->>>>>>> 148564fc (测评模块实现)
                         </div>
                     `;
                 });
@@ -1258,12 +1315,6 @@ class CareerPlanningApp {
         this.hideLoading();
 
         if (result.success) {
-<<<<<<< HEAD
-            this.currentReportId = result.data && result.data.report_id ? result.data.report_id : null;
-            this.showToast('测评提交成功', 'success');
-            document.getElementById('viewReportBtn').classList.remove('hidden');
-            setTimeout(() => this.viewAssessmentReport(), 1000);
-=======
             const reportId = result.data.report_id;
             this.currentReportId = reportId;
             this.saveLastAssessmentReportId(reportId);
@@ -1274,15 +1325,11 @@ class CareerPlanningApp {
             setTimeout(() => {
                 this.pollAssessmentReport();
             }, 2000);
->>>>>>> 148564fc (测评模块实现)
         } else {
             this.showToast(result.msg || '提交失败', 'error');
         }
     }
 
-<<<<<<< HEAD
-    // 查看测评报告（需传 report_id，来自提交测评返回）
-=======
     // 轮询测评报告（3.3）
     async pollAssessmentReport(maxAttempts = 40) {
         if (!this.currentReportId) {
@@ -1356,7 +1403,6 @@ class CareerPlanningApp {
     }
 
     // 查看测评报告（手动触发）
->>>>>>> 148564fc (测评模块实现)
     async viewAssessmentReport() {
         if (!this.currentReportId) {
             this.showToast('请先完成并提交测评', 'error');
@@ -2132,15 +2178,23 @@ class CareerPlanningApp {
                 </div>
                 ` : ''}
                 <div class="report-footer-text">本报告由 AI 职业规划智能体生成 · 仅供参考，具体决策请结合个人实际情况</div>
+                <div class="report-export-bar report-export-bottom no-print" style="margin-top:24px;">
+                    <button type="button" id="reportExportPdfDirectBtn" class="btn-export-pdf">导出 PDF</button>
+                </div>
             </div>
         `;
 
         contentDiv.innerHTML = html;
 
-        // 导出 PDF：打开打印页
+        // 顶部：导出 PDF 打开打印页
         document.getElementById('reportExportPdfBtn')?.addEventListener('click', () => {
             const id = reportId || this.currentReportId;
             if (id) window.open('report/print.html?id=' + encodeURIComponent(id), '_blank');
+        });
+
+        // 底部：导出 PDF 直接下载（html2canvas + jsPDF）
+        document.getElementById('reportExportPdfDirectBtn')?.addEventListener('click', () => {
+            this.exportReportPdfDirect();
         });
 
         // 绘制图表
@@ -2197,6 +2251,41 @@ class CareerPlanningApp {
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 13 }, padding: 20, usePointStyle: true } } }, scales: { r: { min: 0, max: 100, grid: { color: '#e8e8e8' }, angleLines: { color: '#e8e8e8' }, ticks: { display: false }, pointLabels: { font: { size: 13 }, color: '#4a5568' } } } }
             });
+        }
+    }
+
+    // 报告页底部「导出 PDF」：html2canvas + jsPDF 直接下载，不跳转
+    async exportReportPdfDirect() {
+        const el = document.getElementById('reportPdfContent');
+        if (!el) {
+            this.showToast('未找到报告内容', 'error');
+            return;
+        }
+        if (typeof html2canvas === 'undefined') {
+            this.showToast('请刷新页面后重试', 'error');
+            return;
+        }
+        const JsPDF = window.jspdf && window.jspdf.jsPDF;
+        if (!JsPDF) {
+            this.showToast('PDF 库未加载，请刷新后重试', 'error');
+            return;
+        }
+        const btn = document.getElementById('reportExportPdfDirectBtn');
+        if (btn) { btn.disabled = true; btn.textContent = '导出中...'; }
+        try {
+            const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pdf = new JsPDF('p', 'mm', 'a4');
+            const pdfW = pdf.internal.pageSize.getWidth();
+            const pdfH = (canvas.height * pdfW) / canvas.width;
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+            pdf.save('职业测评报告.pdf');
+            this.showToast('导出成功', 'success');
+        } catch (e) {
+            console.error('exportReportPdfDirect', e);
+            this.showToast('导出失败，请重试', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '导出 PDF'; }
         }
     }
 
