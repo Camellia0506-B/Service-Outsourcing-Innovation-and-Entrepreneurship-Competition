@@ -1,8 +1,10 @@
 // API配置
 const API_CONFIG = {
-    baseURL: 'http://localhost:5000/api/v1',  // 后端地址（后端默认端口 5000）
+    baseURL: 'http://localhost:8080/api/v1',  // AI 算法服务地址（Flask 默认端口 8080，见 AI算法/app.py）
     timeout: 30000,
-    mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    mockMode: false,  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    // 测评题目由 AI 算法 RAG+ChromaDB 动态抽题，报告由 qwen3-max 生成，始终走真实后端
+    assessmentUseRealAPI: true
 };
 
 // API工具类
@@ -16,8 +18,8 @@ class API {
         const url = `${this.baseURL}${endpoint}`;
         const token = localStorage.getItem('token');
         
-        // 模拟模式
-        if (API_CONFIG.mockMode) {
+        // 模拟模式（测评模块始终走真实 API：RAG 题库 + 异步报告）
+        if (API_CONFIG.mockMode && !(API_CONFIG.assessmentUseRealAPI && endpoint.startsWith('/assessment/'))) {
             return this.mockRequest(endpoint, options);
         }
         
@@ -54,7 +56,7 @@ class API {
         } catch (error) {
             console.error('API请求错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch')) 
-                ? '无法连接后端，请确认已启动后端服务 (http://localhost:5000)' 
+                ? '无法连接后端，请确认已启动 AI 算法服务 (http://localhost:8080)' 
                 : (error.message || '网络错误，请稍后重试');
             return { success: false, msg };
         }
@@ -97,7 +99,7 @@ class API {
         } catch (error) {
             console.error('文件上传错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch'))
-                ? '无法连接后端，请确认已启动后端服务 (http://localhost:5000)'
+                ? '无法连接后端，请确认已启动 AI 算法服务 (http://localhost:8080)'
                 : (error.message || '上传失败');
             return { success: false, msg };
         }
@@ -128,7 +130,7 @@ class API {
             case '/assessment/questionnaire':
                 return { success: true, data: this.mockQuestions() };
             case '/assessment/submit':
-                return { success: true, data: { report_id: 'report_' + Date.now() }, msg: '测评提交成功' };
+                return { success: true, data: { report_id: 'report_' + Date.now(), status: 'processing' }, msg: '测评提交成功，正在生成报告...' };
             case '/assessment/report':
                 return { success: true, data: this.mockAssessmentReport() };
             case '/job/list':
@@ -560,23 +562,32 @@ async function getResumeParseResult(userId, taskId) {
 }
 
 // ==================== 职业测评模块 ====================
+// 严格遵循 API 文档 3.1 / 3.2 / 3.3：user_id 为数字，time_spent 为分钟，answers 格式见文档
 
-// 获取测评问卷
-async function getQuestionnaire(userId) {
-    return await api.post('/assessment/questionnaire', { user_id: userId });
-}
-
-// 提交测评答案
-async function submitAssessment(userId, answers) {
-    return await api.post('/assessment/submit', {
-        user_id: userId,
-        answers: answers
+// 3.1 获取测评问卷（请求体：user_id 数字, assessment_type: "comprehensive"|"quick"）
+async function getQuestionnaire(userId, assessmentType = 'comprehensive') {
+    return await api.post('/assessment/questionnaire', {
+        user_id: parseInt(userId, 10),
+        assessment_type: assessmentType
     });
 }
 
-// 获取测评报告
-async function getAssessmentReport(userId) {
-    return await api.post('/assessment/report', { user_id: userId });
+// 3.2 提交测评答案（请求体：user_id 数字, assessment_id, answers, time_spent 分钟）
+async function submitAssessment(userId, assessmentId, answers, timeSpentMinutes = 0) {
+    return await api.post('/assessment/submit', {
+        user_id: parseInt(userId, 10),
+        assessment_id: assessmentId,
+        answers: answers,
+        time_spent: parseInt(timeSpentMinutes, 10)
+    });
+}
+
+// 3.3 获取测评报告（请求体：user_id 数字, report_id）
+async function getAssessmentReport(userId, reportId) {
+    return await api.post('/assessment/report', {
+        user_id: parseInt(userId, 10),
+        report_id: reportId
+    });
 }
 
 // ==================== 岗位画像模块 ====================

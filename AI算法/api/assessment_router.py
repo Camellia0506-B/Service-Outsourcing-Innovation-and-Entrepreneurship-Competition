@@ -50,7 +50,7 @@ def get_questionnaire():
         service = get_assessment_service()
         questionnaire = service.get_questionnaire(int(user_id), assessment_type)
 
-        return success_response(questionnaire, msg="问卷获取成功")
+        return success_response(questionnaire, msg="success")
 
     except ValueError as ve:
         logger.warning(f"[API] /assessment/questionnaire 参数错误: {ve}")
@@ -144,8 +144,8 @@ def get_report():
         if report.get("status") == "failed":
             return error_response(500, f"报告生成失败: {report.get('error', '未知错误')}")
 
-        # 成功
-        return success_response(report, msg="报告获取成功")
+        # 成功（API 文档 3.3 响应示例 msg: "success"）
+        return success_response(report, msg="success")
 
     except Exception as e:
         logger.error(f"[API] /assessment/report 异常: {e}", exc_info=True)

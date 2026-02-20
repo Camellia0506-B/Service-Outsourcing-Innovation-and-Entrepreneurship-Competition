@@ -91,9 +91,15 @@ class CareerPlanningApp {
             this.handleResumeUpload(e.target.files[0]);
         });
 
-        // 职业测评相关
+        // 职业测评相关（题目由后端 RAG 动态抽题）
+        document.getElementById('loadQuestionnaireBtn')?.addEventListener('click', () => {
+            this.loadAssessmentData();
+        });
         document.getElementById('submitAssessmentBtn')?.addEventListener('click', () => {
             this.submitAssessment();
+        });
+        document.getElementById('viewReportBtn')?.addEventListener('click', () => {
+            this.viewAssessmentReport();
         });
 
         // 岗位匹配相关
@@ -468,13 +474,9 @@ class CareerPlanningApp {
             document.getElementById('profileCompleteness').textContent = completeness + '%';
         }
 
-        // 获取测评状态
-        const assessmentResult = await getAssessmentReport(userId);
-        if (assessmentResult.success) {
-            document.getElementById('assessmentStatus').textContent = '已完成';
-        } else {
-            document.getElementById('assessmentStatus').textContent = '未完成';
-        }
+        // 测评状态：有本地缓存的 report_id 视为已完成（报告由异步任务生成）
+        const reportId = localStorage.getItem('assessment_report_id_' + userId);
+        document.getElementById('assessmentStatus').textContent = reportId ? '已完成' : '未完成';
 
         // 获取推荐岗位数量
         const matchingResult = await getRecommendedJobs(userId, 10);
@@ -899,40 +901,35 @@ class CareerPlanningApp {
         poll();
     }
 
-    // 加载职业测评数据
+    // 加载职业测评数据（题目由后端 RAG+ChromaDB 动态抽题，不写死在前端）
     async loadAssessmentData() {
         const userId = getCurrentUserId();
-        console.log('loadAssessmentData - userId:', userId);
+        const assessmentType = document.getElementById('assessmentTypeSelect')?.value || 'comprehensive';
         if (!userId) return;
 
         this.showLoading();
-        const result = await getQuestionnaire(userId);
+        const result = await getQuestionnaire(userId, assessmentType);
         this.hideLoading();
 
-        console.log('loadAssessmentData - API result:', result);
-
         if (result.success) {
-            console.log('loadAssessmentData - assessmentData:', result.data);
             this.renderQuestionnaire(result.data);
         } else {
-            console.error('loadAssessmentData - API failed:', result.msg);
-            document.getElementById('questionnaireContainer').innerHTML = '<div class="hint-text">加载失败: ' + result.msg + '</div>';
+            document.getElementById('questionnaireContainer').innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '请确认 AI 算法服务已启动') + '</div>';
         }
     }
 
-    // 渲染测评问卷
+    // 渲染测评问卷（记录 assessment_id 与开始时间，用于提交与计时）
     renderQuestionnaire(assessmentData) {
         const container = document.getElementById('questionnaireContainer');
         container.innerHTML = '';
 
-        console.log('renderQuestionnaire - assessmentData:', assessmentData);
-
         if (!assessmentData || !assessmentData.dimensions) {
-            console.error('renderQuestionnaire - Invalid assessmentData:', assessmentData);
             container.innerHTML = '<div class="hint-text">数据格式错误，请重试</div>';
             return;
         }
 
+        container.dataset.assessmentId = assessmentData.assessment_id || '';
+        container.dataset.assessmentStartTime = String(Date.now());
         const { dimensions, total_questions, estimated_time } = assessmentData;
 
         dimensions.forEach((dimension, dimIndex) => {
@@ -1007,61 +1004,113 @@ class CareerPlanningApp {
         });
     }
 
-    // 提交测评
+    // 提交测评（答案格式 { question_id, answer: option_id }，带 assessment_id 与 time_spent，提交后轮询 report_id）
     async submitAssessment() {
+        const container = document.getElementById('questionnaireContainer');
+        const assessmentId = container?.dataset?.assessmentId;
+        if (!assessmentId) {
+            this.showToast('问卷无效，请重新进入测评页加载题目', 'error');
+            return;
+        }
+
         const answers = [];
         const questions = document.querySelectorAll('.question-card');
-
-        // 收集答案
         questions.forEach(questionCard => {
-            const questionHeader = questionCard.querySelector('.question-text');
             const selectedOption = questionCard.querySelector('input[type="radio"]:checked');
-            
             if (selectedOption) {
                 const questionId = selectedOption.name.replace('question_', '');
-                answers.push({
-                    question_id: questionId,
-                    answer_index: parseInt(selectedOption.value),
-                    score: parseFloat(selectedOption.dataset.score || 0)
-                });
+                const questionType = questionCard.dataset.questionType || 'single_choice';
+                // API 文档 3.2：single_choice 为 "A"，scale 为数字 1-5
+                const raw = selectedOption.value;
+                const answer = questionType === 'scale' ? parseInt(raw, 10) : raw;
+                answers.push({ question_id: questionId, answer: answer });
             }
         });
 
-        // 检查是否所有问题都已回答
         if (answers.length < questions.length) {
             this.showToast('请回答所有问题', 'error');
             return;
         }
 
+        // API 文档 3.2：time_spent 为实际耗时（分钟）
+        const startTime = parseInt(container.dataset.assessmentStartTime || '0', 10);
+        const timeSpentMinutes = startTime ? Math.max(0, Math.floor((Date.now() - startTime) / 60000)) : 0;
         const userId = getCurrentUserId();
+
         this.showLoading();
-        const result = await submitAssessment(userId, answers);
+        const result = await submitAssessment(userId, assessmentId, answers, timeSpentMinutes);
         this.hideLoading();
 
-        if (result.success) {
-            this.showToast('测评提交成功', 'success');
-            document.getElementById('viewReportBtn').classList.remove('hidden');
-            
-            // 显示测评报告
-            setTimeout(() => {
-                this.viewAssessmentReport();
-            }, 1000);
-        } else {
+        if (!result.success) {
             this.showToast(result.msg || '提交失败', 'error');
+            return;
         }
+
+        const reportId = result.data?.report_id;
+        if (!reportId) {
+            this.showToast('提交成功，但未返回报告任务 ID', 'error');
+            return;
+        }
+
+        this.showToast('测评已提交，正在生成个性化报告…', 'success');
+        document.getElementById('viewReportBtn').classList.remove('hidden');
+        try {
+            localStorage.setItem('assessment_report_id_' + userId, reportId);
+        } catch (e) {}
+
+        // 异步报告：轮询 report 接口直至完成或失败
+        this.pollAssessmentReport(userId, reportId);
     }
 
-    // 查看测评报告
+    // 轮询测评报告（异步任务，优化体验）
+    async pollAssessmentReport(userId, reportId) {
+        const maxAttempts = 60;
+        const intervalMs = 2000;
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(r => setTimeout(r, intervalMs));
+            const result = await getAssessmentReport(userId, reportId);
+            if (!result.success) {
+                if (result.code === 404) continue;
+                this.showToast('获取报告失败: ' + (result.msg || '未知错误'), 'error');
+                return;
+            }
+            const data = result.data;
+            if (data.status === 'processing') {
+                this.showToast('报告生成中，请稍候…', 'success');
+                continue;
+            }
+            if (data.status === 'failed') {
+                this.showToast('报告生成失败: ' + (data.error || '未知错误'), 'error');
+                return;
+            }
+            this.showPage('reportPage');
+            this.renderReportContent(data);
+            return;
+        }
+        this.showToast('报告生成超时，请稍后在「查看测评报告」中重试', 'error');
+    }
+
+    // 查看测评报告（按 report_id 拉取，支持异步报告）
     async viewAssessmentReport() {
         const userId = getCurrentUserId();
+        const reportId = localStorage.getItem('assessment_report_id_' + userId);
+        if (!reportId) {
+            this.showToast('请先完成测评并等待报告生成', 'error');
+            return;
+        }
         this.showLoading();
-        const result = await getAssessmentReport(userId);
+        const result = await getAssessmentReport(userId, reportId);
         this.hideLoading();
-
         if (result.success) {
-            // 切换到报告页面
+            if (result.data?.status === 'processing') {
+                this.showToast('报告仍在生成中，请稍候再试', 'success');
+                return;
+            }
+            if (result.data?.status === 'failed') {
+                this.showToast('报告生成失败: ' + (result.data?.error || '未知错误'), 'error');
+                return;
+            }
             this.showPage('reportPage');
-            // 渲染报告内容
             this.renderReportContent(result.data);
         } else {
             this.showToast('获取报告失败: ' + (result.msg || '未知错误'), 'error');

@@ -323,8 +323,15 @@
         <div id="assessmentPage" class="page hidden">
             <div class="assessment-container">
                 <h2>职业测评问卷</h2>
-                <p class="assessment-intro">请根据您的真实情况回答以下问题,帮助我们更好地了解您的职业倾向</p>
-                
+                <p class="assessment-intro">题目由系统从题库中动态抽取，请根据您的真实情况作答。</p>
+                <div class="assessment-type-row" style="margin-bottom:1rem;">
+                    <label>测评类型：</label>
+                    <select id="assessmentTypeSelect">
+                        <option value="comprehensive">综合测评（约63题）</option>
+                        <option value="quick">快速测评（约35题）</option>
+                    </select>
+                    <button type="button" class="btn-secondary" id="loadQuestionnaireBtn">加载问卷</button>
+                </div>
                 <div id="questionnaireContainer">
                     <div class="loading-message">加载问卷中...</div>
                 </div>
