@@ -1,6 +1,7 @@
 // API配置
 const API_CONFIG = {
-    baseURL: 'http://localhost:5000/api/v1',  // 后端地址（后端默认端口 5000）
+    baseURL: 'http://localhost:5000/api/v1',   // Java 后端：Auth、Profile
+    aiBaseURL: 'http://localhost:8080/api/v1',  // AI 服务：Assessment、Job（符合文档 3、4）
     timeout: 30000,
     mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
@@ -9,6 +10,46 @@ const API_CONFIG = {
 class API {
     constructor() {
         this.baseURL = API_CONFIG.baseURL;
+        this.aiBaseURL = API_CONFIG.aiBaseURL;
+    }
+
+    // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }
+    async requestToAI(endpoint, options = {}) {
+        const url = `${this.aiBaseURL}${endpoint}`;
+        const token = localStorage.getItem('token');
+        if (API_CONFIG.mockMode) {
+            return this.mockRequest(endpoint, options);
+        }
+        const config = {
+            method: options.method || 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` }),
+                ...options.headers
+            },
+            ...options
+        };
+        if (options.body && !(options.body instanceof FormData)) {
+            config.body = JSON.stringify(options.body);
+        }
+        try {
+            const response = await fetch(url, config);
+            const result = await response.json();
+            if (result.code === 200) {
+                return { success: true, data: result.data, msg: result.msg };
+            }
+            return { success: false, msg: result.msg, code: result.code };
+        } catch (error) {
+            console.error('API请求错误(AI):', error);
+            const msg = (error.message && error.message.toLowerCase().includes('fetch'))
+                ? '无法连接 AI 服务 (http://localhost:8080)，请确认已启动'
+                : (error.message || '网络错误');
+            return { success: false, msg };
+        }
+    }
+
+    postToAI(endpoint, data) {
+        return this.requestToAI(endpoint, { method: 'POST', body: data });
     }
 
     // 通用请求方法
@@ -117,6 +158,10 @@ class API {
                 return this.mockRegister(data);
             case '/auth/logout':
                 return { success: true, msg: '退出成功' };
+            case '/auth/forgot-password/send-code':
+                return { success: true, data: { email: options.body?.email || '', expire_minutes: 10 }, msg: '验证码已发送' };
+            case '/auth/forgot-password/reset':
+                return { success: true, msg: '密码重置成功' };
             case '/profile/info':
                 return { success: true, data: this.mockProfileData() };
             case '/profile/update':
@@ -132,22 +177,19 @@ class API {
             case '/assessment/report':
                 return { success: true, data: this.mockAssessmentReport() };
             case '/job/profiles':
-                return { success: true, data: { total: 5, page: data.page || 1, size: data.size || 20, list: this.mockJobs() } };
+            case '/job/list':
+                return { success: true, data: { total: 5, page: 1, size: 20, list: this.mockJobs() } };
             case '/job/profile/detail':
-                return { success: true, data: this.mockJobDetail(data.job_name || data.job_id) };
+            case '/job/detail':
+                return { success: true, data: this.mockJobDetail(options.body?.job_id || options.body?.job_name) };
             case '/job/relation-graph':
-                return { success: true, data: { center_job: { job_id: data.job_id, job_name: '算法工程师' }, vertical_graph: { nodes: [], edges: [] }, transfer_graph: { nodes: [], edges: [] } } };
+                return { success: true, data: { center_job: { job_id: options.body?.job_id, job_name: '算法工程师' }, vertical_graph: { nodes: [], edges: [] }, transfer_graph: { nodes: [], edges: [] } } };
             case '/job/ai-generate-profile':
                 return { success: true, data: { task_id: 'task_' + Date.now(), status: 'processing', estimated_time: 30 } };
             case '/job/ai-generate-result':
-                return { success: true, data: { status: 'completed', job_profile: this.mockJobDetail(data.job_name), ai_confidence: 0.88, data_sources: { total_samples: 50, valid_samples: 47 } } };
-            // 兼容旧接口
-            case '/job/list':
-                return { success: true, data: { list: this.mockJobs(), total: 5 } };
-            case '/job/detail':
-                return { success: true, data: this.mockJobDetail(data.job_name) };
+                return { success: true, data: { status: 'completed', job_profile: this.mockJobDetail(options.body?.job_name), ai_confidence: 0.88, data_sources: { total_samples: 50, valid_samples: 47 } } };
             case '/job/search':
-                return { success: true, data: { list: this.mockJobs(), total: 5 } };
+                return { success: true, data: { total: 5, list: this.mockJobs() } };
             case '/student/ability-profile':
                 return { success: true, data: this.mockAbilityProfile() };
             case '/matching/recommend-jobs':
@@ -253,7 +295,7 @@ class API {
 
     mockQuestions() {
         return {
-            assessment_id: 'assess_' + Date.now(),
+            assessment_id: 'assess_mock_' + Date.now(),
             total_questions: 12,
             estimated_time: 10,
             dimensions: [
@@ -538,6 +580,20 @@ async function logout(userId) {
     return await api.post('/auth/logout', { user_id: userId });
 }
 
+// 1.4.1 发送验证码（忘记密码）
+async function sendForgotPasswordCode(username, email) {
+    return await api.post('/auth/forgot-password/send-code', { username, email });
+}
+
+// 1.4.2 重置密码
+async function resetPassword(username, code, newPassword) {
+    return await api.post('/auth/forgot-password/reset', {
+        username,
+        code,
+        new_password: newPassword
+    });
+}
+
 // ==================== 个人档案模块 ====================
 
 // 获取个人档案
@@ -570,78 +626,68 @@ async function getResumeParseResult(userId, taskId) {
     });
 }
 
-// ==================== 职业测评模块（对应 API 文档 §3） ====================
+// ==================== 职业测评模块（走 AI 服务，符合文档 3） ====================
 
-// 3.1 获取测评问卷
+// 3.1 获取测评问卷，返回含 assessment_id、dimensions
 async function getQuestionnaire(userId, assessmentType = 'comprehensive') {
-    return await api.post('/assessment/questionnaire', {
+    return await api.postToAI('/assessment/questionnaire', {
         user_id: userId,
-        assessment_type: assessmentType  // comprehensive | quick
+        assessment_type: assessmentType
     });
 }
 
-// 3.2 提交测评答案
-async function submitAssessment(userId, assessmentId, answers, timeSpent = 0) {
-    return await api.post('/assessment/submit', {
+// 3.2 提交测评答案，answers 格式 [{ question_id, answer }]，answer 为选项 id（如 "A"）或量表 1-5
+async function submitAssessment(userId, assessmentId, answers, timeSpentMinutes = 0) {
+    return await api.postToAI('/assessment/submit', {
         user_id: userId,
         assessment_id: assessmentId,
-        answers: answers,  // [{ question_id, answer }]，answer 为选项ID或量表分数
-        time_spent: timeSpent
+        answers: answers,
+        time_spent: timeSpentMinutes
     });
 }
 
-// 3.3 获取测评报告
+// 3.3 获取测评报告，需传 report_id（来自 3.2 返回）
 async function getAssessmentReport(userId, reportId) {
-    return await api.post('/assessment/report', {
+    return await api.postToAI('/assessment/report', {
         user_id: userId,
         report_id: reportId
     });
 }
 
-// ==================== 岗位画像模块（对应 API 文档 §4） ====================
+// ==================== 岗位画像模块（走 AI 服务，符合文档 4） ====================
 
 // 4.1 获取岗位画像列表
 async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', level = '') {
-    return await api.post('/job/profiles', {
-        page,
-        size,
-        ...(keyword && { keyword }),
-        ...(industry && { industry }),
-        ...(level && { level })
-    });
+    const body = { page, size };
+    if (keyword) body.keyword = keyword;
+    if (industry) body.industry = industry;
+    if (level) body.level = level;
+    return await api.postToAI('/job/profiles', body);
 }
 
-// 兼容旧调用：岗位列表（内部用 4.1）
-async function getJobList(page = 1, size = 20, keyword = '') {
-    const res = await getJobProfiles(page, size, keyword, '', '');
-    if (res.success && res.data && res.data.list) {
-        return { success: true, data: { list: res.data.list, total: res.data.total } };
-    }
-    return res;
+// 兼容旧调用：获取岗位列表（等同 getJobProfiles，返回 data.list）
+async function getJobList(page = 1, size = 20, keyword = '', industry = '', level = '') {
+    return await getJobProfiles(page, size, keyword, industry, level);
 }
 
-// 4.2 获取岗位详细画像
-async function getJobProfileDetail(jobIdOrName, byId = true) {
-    const body = byId ? { job_id: jobIdOrName } : { job_name: jobIdOrName };
-    return await api.post('/job/profile/detail', body);
+// 4.2 获取岗位详细画像，参数为 job_id
+async function getJobDetailByJobId(jobId) {
+    return await api.postToAI('/job/profile/detail', { job_id: jobId });
 }
 
-// 兼容旧调用
-async function getJobDetail(jobName) {
-    return await getJobProfileDetail(jobName, false);
+// 兼容旧调用：按岗位名查详情（若仅有 job_name 可先列表再取 job_id，或部分服务支持 job_name）
+async function getJobDetail(jobIdOrName) {
+    return await api.postToAI('/job/profile/detail', { job_id: jobIdOrName });
 }
 
 // 4.3 获取岗位关联图谱
 async function getJobRelationGraph(jobId, graphType = 'all') {
-    return await api.post('/job/relation-graph', {
-        job_id: jobId,
-        graph_type: graphType  // vertical | transfer | all
-    });
+    return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
 }
 
-// 4.4 AI 生成岗位画像（异步）
-async function aiGenerateJobProfile(jobName, jobDescriptions = [], sampleSize = 30) {
-    return await api.post('/job/ai-generate-profile', {
+// 4.4 AI 生成岗位画像
+async function jobAiGenerateProfile(jobName, jobDescriptions, sampleSize = 50) {
+    return await api.postToAI('/job/ai-generate-profile', {
         job_name: jobName,
         job_descriptions: jobDescriptions,
         sample_size: sampleSize
@@ -650,16 +696,12 @@ async function aiGenerateJobProfile(jobName, jobDescriptions = [], sampleSize = 
 
 // 4.5 获取 AI 生成结果
 async function getJobAiGenerateResult(taskId) {
-    return await api.post('/job/ai-generate-result', { task_id: taskId });
+    return await api.postToAI('/job/ai-generate-result', { task_id: taskId });
 }
 
-// 搜索岗位（使用 4.1 的 keyword）
-async function searchJobs(keyword) {
-    const res = await getJobProfiles(1, 20, keyword || '', '', '');
-    if (res.success && res.data && res.data.list) {
-        return { success: true, data: { jobs: res.data.list } };
-    }
-    return res;
+// 搜索岗位（使用 4.1 带 keyword）
+async function searchJobs(keyword, page = 1, size = 20) {
+    return await getJobProfiles(page, size, keyword);
 }
 
 // ==================== 学生能力画像模块 ====================

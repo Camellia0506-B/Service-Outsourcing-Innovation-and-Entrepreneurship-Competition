@@ -3,9 +3,8 @@ class CareerPlanningApp {
     constructor() {
         this.currentPage = 'login';
         this.currentUser = null;
-        this.currentAssessmentId = null;  // 当前测评ID
-        this.currentReportId = null;      // 当前报告ID
-        this.assessmentStartTime = null;  // 测评开始时间
+        this.currentAssessmentId = null;  // 3.1 返回，提交测评时使用
+        this.currentReportId = null;       // 3.2 返回，获取报告时使用
         this.init();
     }
 
@@ -50,6 +49,15 @@ class CareerPlanningApp {
             this.showPage('loginPage');
             document.getElementById('registerPage').classList.add('hidden');
         });
+
+        // 忘记密码
+        document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.openForgotPasswordModal();
+        });
+        document.getElementById('forgotPasswordClose')?.addEventListener('click', () => this.closeForgotPasswordModal());
+        document.getElementById('forgotSendCodeBtn')?.addEventListener('click', () => this.handleForgotSendCode());
+        document.getElementById('forgotResetBtn')?.addEventListener('click', () => this.handleForgotReset());
 
         // 导航链接
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -366,6 +374,59 @@ class CareerPlanningApp {
         }
     }
 
+    // 忘记密码弹窗
+    openForgotPasswordModal() {
+        document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        document.getElementById('forgotPasswordStep1').classList.remove('hidden');
+        document.getElementById('forgotPasswordStep2').classList.add('hidden');
+        document.getElementById('forgotUsername').value = '';
+        document.getElementById('forgotEmail').value = '';
+        document.getElementById('forgotCode').value = '';
+        document.getElementById('forgotNewPassword').value = '';
+        document.getElementById('forgotPasswordMsg').textContent = '';
+    }
+
+    closeForgotPasswordModal() {
+        document.getElementById('forgotPasswordModal').classList.add('hidden');
+    }
+
+    async handleForgotSendCode() {
+        const username = document.getElementById('forgotUsername').value.trim();
+        const email = document.getElementById('forgotEmail').value.trim();
+        if (!username || !email) {
+            document.getElementById('forgotPasswordMsg').textContent = '请填写账号和邮箱';
+            return;
+        }
+        document.getElementById('forgotPasswordMsg').textContent = '发送中...';
+        const result = await sendForgotPasswordCode(username, email);
+        if (result.success) {
+            document.getElementById('forgotPasswordMsg').textContent = '验证码已发送到邮箱，' + (result.data.expire_minutes || 10) + ' 分钟内有效';
+            document.getElementById('forgotPasswordStep1').classList.add('hidden');
+            document.getElementById('forgotPasswordStep2').classList.remove('hidden');
+            document.getElementById('forgotPasswordMsg').textContent = '';
+        } else {
+            document.getElementById('forgotPasswordMsg').textContent = result.msg || '发送失败';
+        }
+    }
+
+    async handleForgotReset() {
+        const username = document.getElementById('forgotUsername').value.trim();
+        const code = document.getElementById('forgotCode').value.trim();
+        const newPassword = document.getElementById('forgotNewPassword').value.trim();
+        if (!username || !code || !newPassword) {
+            document.getElementById('forgotPasswordMsg').textContent = '请填写验证码和新密码';
+            return;
+        }
+        document.getElementById('forgotPasswordMsg').textContent = '提交中...';
+        const result = await resetPassword(username, code, newPassword);
+        if (result.success) {
+            this.showToast('密码已重置，请登录', 'success');
+            this.closeForgotPasswordModal();
+        } else {
+            document.getElementById('forgotPasswordMsg').textContent = result.msg || '重置失败';
+        }
+    }
+
     // 创建账户表单：注册后自动登录并进入首页
     async handleRegisterForm() {
         const usernameInput = document.getElementById('regUsername');
@@ -499,13 +560,9 @@ class CareerPlanningApp {
             document.getElementById('profileCompleteness').textContent = completeness + '%';
         }
 
-        // 获取测评状态
-        const assessmentResult = await getAssessmentReport(userId);
-        if (assessmentResult.success) {
-            document.getElementById('assessmentStatus').textContent = '已完成';
-        } else {
-            document.getElementById('assessmentStatus').textContent = '未完成';
-        }
+        // 测评状态：以登录返回的 assessment_completed 为准（3.3 获取报告需 report_id，不在此轮询）
+        const completed = this.currentUser && this.currentUser.assessment_completed;
+        document.getElementById('assessmentStatus').textContent = completed ? '已完成' : '未完成';
 
         // 获取推荐岗位数量
         const matchingResult = await getRecommendedJobs(userId, 10);
@@ -947,9 +1004,8 @@ class CareerPlanningApp {
 
         if (result.success) {
             console.log('loadAssessmentData - assessmentData:', result.data);
-            // 保存 assessment_id
-            this.currentAssessmentId = result.data.assessment_id;
-            this.assessmentStartTime = Date.now();
+            this.currentAssessmentId = result.data.assessment_id || null;
+            this._assessmentStartTime = Date.now();
             this.renderQuestionnaire(result.data);
         } else {
             console.error('loadAssessmentData - API failed:', result.msg);
@@ -1001,7 +1057,7 @@ class CareerPlanningApp {
                 }
 
                 questionsHtml += `
-                    <div class="question-card" data-question-id="${q.question_id}" data-question-type="${q.question_type}">
+                    <div class="question-card" data-question-id="${q.question_id}" data-question-type="${q.question_type || 'single_choice'}">
                         <div class="question-header">
                             <div class="question-number">${qIndex + 1}</div>
                             <div class="question-text">${q.question_text}</div>
@@ -1044,7 +1100,7 @@ class CareerPlanningApp {
         });
     }
 
-    // 提交测评
+    // 提交测评（答案格式符合文档：{ question_id, answer }，answer 为 option_id 如 "A" 或量表 1-5）
     async submitAssessment() {
         if (!this.currentAssessmentId) {
             this.showToast('请先加载测评问卷', 'error');
@@ -1054,125 +1110,58 @@ class CareerPlanningApp {
         const answers = [];
         const questions = document.querySelectorAll('.question-card');
 
-        // 收集答案（格式：{ question_id, answer }，answer 为选项ID或量表分数）
         questions.forEach(questionCard => {
             const selectedOption = questionCard.querySelector('input[type="radio"]:checked');
-            
             if (selectedOption) {
                 const questionId = selectedOption.name.replace('question_', '');
-                const answerValue = selectedOption.value;  // option_id 或量表分数（1-5）
-                
-                answers.push({
-                    question_id: questionId,
-                    answer: answerValue  // 直接使用选项ID或分数，符合API文档格式
-                });
+                let answer = selectedOption.value;
+                if (questionCard.dataset.questionType === 'scale') {
+                    answer = parseInt(answer, 10) || answer;
+                }
+                answers.push({ question_id: questionId, answer: answer });
             }
         });
 
-        // 检查是否所有问题都已回答
         if (answers.length < questions.length) {
             this.showToast('请回答所有问题', 'error');
             return;
         }
 
-        // 计算耗时（分钟）
-        const timeSpent = this.assessmentStartTime 
-            ? Math.round((Date.now() - this.assessmentStartTime) / 60000)
-            : 0;
+        if (!this.currentAssessmentId) {
+            this.showToast('请先加载问卷', 'error');
+            return;
+        }
 
         const userId = getCurrentUserId();
+        const timeSpent = Math.max(0, Math.round((Date.now() - (this._assessmentStartTime || Date.now())) / 60000));
         this.showLoading();
         const result = await submitAssessment(userId, this.currentAssessmentId, answers, timeSpent);
         this.hideLoading();
 
         if (result.success) {
-            // 保存 report_id
-            this.currentReportId = result.data.report_id;
-            this.showToast('测评提交成功，正在生成报告...', 'success');
+            this.currentReportId = result.data && result.data.report_id ? result.data.report_id : null;
+            this.showToast('测评提交成功', 'success');
             document.getElementById('viewReportBtn').classList.remove('hidden');
-            
-            // 轮询获取报告
-            setTimeout(() => {
-                this.pollAssessmentReport();
-            }, 2000);
+            setTimeout(() => this.viewAssessmentReport(), 1000);
         } else {
             this.showToast(result.msg || '提交失败', 'error');
         }
     }
 
-    // 轮询测评报告（3.3）
-    async pollAssessmentReport(maxAttempts = 40) {
-        if (!this.currentReportId) {
-            this.showToast('报告ID不存在', 'error');
-            return;
-        }
-
-        const userId = getCurrentUserId();
-        let attempts = 0;
-        const container = document.getElementById('questionnaireContainer');
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'assessment-status';
-        statusDiv.style.cssText = 'padding: 20px; text-align: center; background: #f0f9ff; border-radius: 8px; margin: 20px 0;';
-        container.appendChild(statusDiv);
-
-        const poll = async () => {
-            if (attempts >= maxAttempts) {
-                statusDiv.innerHTML = '<p style="color: #dc2626;">报告生成超时，请稍后查看</p>';
-                return;
-            }
-
-            const result = await getAssessmentReport(userId, this.currentReportId);
-
-            if (result.success) {
-                if (result.data.status === 'completed') {
-                    statusDiv.remove();
-                    // 切换到报告页面
-                    this.showPage('reportPage');
-                    // 渲染报告内容
-                    this.renderReportContent(result.data);
-                    this.showToast('报告生成完成！', 'success');
-                } else if (result.data.status === 'failed') {
-                    statusDiv.innerHTML = `<p style="color: #dc2626;">报告生成失败: ${result.data.error || '未知错误'}</p>`;
-                } else {
-                    // processing
-                    attempts++;
-                    statusDiv.innerHTML = `<p>报告生成中... (${attempts * 3}秒)</p>`;
-                    setTimeout(poll, 3000);
-                }
-            } else {
-                attempts++;
-                statusDiv.innerHTML = `<p>获取报告状态中... (${attempts * 3}秒)</p>`;
-                setTimeout(poll, 3000);
-            }
-        };
-
-        poll();
-    }
-
-    // 查看测评报告（手动触发）
+    // 查看测评报告（需传 report_id，来自提交测评返回）
     async viewAssessmentReport() {
         if (!this.currentReportId) {
-            this.showToast('请先完成测评', 'error');
+            this.showToast('请先完成并提交测评', 'error');
             return;
         }
-
         const userId = getCurrentUserId();
         this.showLoading();
         const result = await getAssessmentReport(userId, this.currentReportId);
         this.hideLoading();
 
         if (result.success) {
-            if (result.data.status === 'processing') {
-                this.showToast('报告还在生成中，请稍候...', 'info');
-                this.pollAssessmentReport();
-            } else if (result.data.status === 'completed') {
-                // 切换到报告页面
-                this.showPage('reportPage');
-                // 渲染报告内容
-                this.renderReportContent(result.data);
-            } else {
-                this.showToast('获取报告失败: ' + (result.data.error || '未知错误'), 'error');
-            }
+            this.showPage('reportPage');
+            this.renderReportContent(result.data);
         } else {
             this.showToast('获取报告失败: ' + (result.msg || '未知错误'), 'error');
         }
@@ -1246,10 +1235,9 @@ class CareerPlanningApp {
             const select = document.getElementById('jobSelect');
             if (select) {
                 select.innerHTML = '<option value="">选择一个岗位进行分析</option>';
-                
                 result.data.list.forEach(job => {
                     const option = document.createElement('option');
-                    option.value = job.job_name;
+                    option.value = job.job_id || job.job_name;
                     option.textContent = job.job_name;
                     select.appendChild(option);
                 });
@@ -1611,9 +1599,10 @@ class CareerPlanningApp {
         container.innerHTML = '<div class="loading-message">搜索中...</div>';
 
         const result = await searchJobs(keyword);
+        const list = (result.data && (result.data.list || result.data.jobs)) || [];
 
-        if (result.success && result.data.jobs && result.data.jobs.length > 0) {
-            this.renderJobs(result.data.jobs, container);
+        if (result.success && list.length > 0) {
+            this.renderJobs(list, container);
         } else {
             container.innerHTML = '<div class="hint-text">未找到相关岗位</div>';
         }

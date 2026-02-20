@@ -110,6 +110,9 @@
                                 <input type="password" id="loginPassword" placeholder="请输入密码" required>
                             </div>
                             <div class="error-message" id="loginPasswordError"></div>
+                            <div class="form-options" style="margin-top:6px;text-align:right;">
+                                <a href="#" id="forgotPasswordLink" class="link-secondary">忘记密码</a>
+                            </div>
                         </div>
                         <button type="submit" class="career-btn-login">登录</button>
                         
@@ -120,6 +123,39 @@
                         <button type="button" id="goRegister" class="career-btn-register">用一句话描述注册</button>
                     </form>
                 </div>
+            </div>
+        </div>
+
+        <!-- 忘记密码弹窗 -->
+        <div id="forgotPasswordModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width:400px;">
+                <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h3 style="margin:0;">忘记密码</h3>
+                    <button type="button" id="forgotPasswordClose" class="btn-ghost" aria-label="关闭">&times;</button>
+                </div>
+                <div id="forgotPasswordStep1">
+                    <div class="form-group">
+                        <label>账号</label>
+                        <input type="text" id="forgotUsername" placeholder="请输入注册时的用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="forgotEmail" placeholder="请输入绑定邮箱">
+                    </div>
+                    <button type="button" id="forgotSendCodeBtn" class="btn-primary">发送验证码</button>
+                </div>
+                <div id="forgotPasswordStep2" class="hidden">
+                    <div class="form-group">
+                        <label>验证码</label>
+                        <input type="text" id="forgotCode" placeholder="请输入邮箱收到的验证码">
+                    </div>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" id="forgotNewPassword" placeholder="请输入新密码">
+                    </div>
+                    <button type="button" id="forgotResetBtn" class="btn-primary">重置密码</button>
+                </div>
+                <p id="forgotPasswordMsg" class="hint-text" style="margin-top:12px;"></p>
             </div>
         </div>
 
