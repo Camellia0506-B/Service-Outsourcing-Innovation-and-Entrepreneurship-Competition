@@ -251,14 +251,13 @@ public class ProfileServiceImpl implements ProfileService {
                 userMapper.updateById(user);
             }
 
-            // 先按标题切出各区块，再在对应区块内解析，避免“专业”匹配到“专业技能”等错位
-            String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
+            // 按标题切出技能/实习/项目区块；教育信息用全文解析（见 applyEducationFromText）
             String skillsBlock = findSectionBlock(text, "技能|专业技能|技术技能|个人技能|Skills?");
             String internshipBlock = findSectionBlock(text, "实习(?:经历)?|工作经历|实习经历|Experience");
             String projectBlock = findSectionBlock(text, "项目(?:经历|经验)?|Projects?");
 
-            // 教育信息：仅在教育区块内匹配 学校/专业/学历 等
-            applyEducationFromText(educationBlock != null ? educationBlock : text, profile);
+            // 教育信息：用全文做解析（PDF 换行会导致区块截断），内部会做文本归一化以支持跨行匹配
+            applyEducationFromText(text, profile);
             userProfileMapper.updateById(profile);
 
             // 技能：优先技能区块，无则从全文再试一次（兼容不同标题）
@@ -384,27 +383,59 @@ public class ProfileServiceImpl implements ProfileService {
 
     private static String extractPhone(String text) {
         if (text == null) return null;
-        // 中国大陆手机号：1[3-9]xxxxxxxxx（允许中间有空格/短横线）
-        Pattern p = Pattern.compile("1[3-9]\\d[-\\s]?\\d{4}[-\\s]?\\d{4}");
+        // 中国大陆手机号：1[3-9]xxxxxxxxx（允许中间有空格/短横线，支持3-4-4、3-3-4等格式）
+        Pattern p = Pattern.compile("1[3-9]\\d[-\\s]?\\d{3,4}[-\\s]?\\d{4}");
         Matcher m = p.matcher(text);
         if (m.find()) {
-            return m.group().replaceAll("[-\\s]", "");
+            String phone = m.group().replaceAll("[-\\s]", "");
+            // 确保是11位数字
+            if (phone.length() == 11) return phone;
+        }
+        // 备用：直接匹配11位连续数字（1开头）
+        Pattern p2 = Pattern.compile("1[3-9]\\d{9}");
+        Matcher m2 = p2.matcher(text.replaceAll("[-\\s]", ""));
+        if (m2.find()) {
+            return m2.group();
         }
         return null;
     }
 
     private static String extractName(String text) {
         if (text == null) return null;
-        // 简单策略：取前 5 行内第一个“姓名/Name”字段；找不到则返回 null
         String[] lines = text.split("\\R");
-        int max = Math.min(lines.length, 5);
-        Pattern p1 = Pattern.compile("^(姓名|Name)[:：\\s]+(.+)$");
+        // 策略1：前几行中找"姓名/Name"标签后的值，且优先使用含中文的姓名
+        int max = Math.min(lines.length, 10);
+        Pattern p1 = Pattern.compile("^(姓名|Name)[:：\\s]+(.+)$", Pattern.CASE_INSENSITIVE);
         for (int i = 0; i < max; i++) {
             String line = lines[i].trim();
             Matcher m = p1.matcher(line);
             if (m.find()) {
                 String v = m.group(2).trim();
-                if (!v.isEmpty() && v.length() <= 20) return v;
+                // 取第一个词（可能姓名后面有联系方式）
+                String[] parts = v.split("[\\s\\|\\/\\-]");
+                if (parts.length > 0) v = parts[0].trim();
+                if (!v.isEmpty() && v.length() <= 20 && !v.contains("@") && !v.matches(".*\\d{11}.*")) {
+                    // 若为纯英文/数字且很短（如 AA），不采纳，改由中文行推断
+                    if (!v.matches(".*[\\u4e00-\\u9fa5].*") && v.length() <= 4) continue;
+                    return v;
+                }
+            }
+        }
+        // 策略2：前几行中提取2-4个连续汉字作为姓名（允许前后有其他字符）
+        for (int i = 0; i < Math.min(8, lines.length); i++) {
+            String line = lines[i].trim();
+            // 匹配2-4个连续汉字，前后可以有空格或标点
+            Pattern namePattern = Pattern.compile("([\\u4e00-\\u9fa5]{2,4})");
+            Matcher nameMatcher = namePattern.matcher(line);
+            if (nameMatcher.find()) {
+                String candidate = nameMatcher.group(1);
+                // 排除包含日期、数字、邮箱、电话的行
+                if (!line.contains("@") && !line.matches(".*\\d{11}.*") 
+                        && !line.matches(".*\\d{4}[年\\-.]\\d.*") && !line.contains("年") && !line.contains("月")
+                        && !candidate.contains("教育") && !candidate.contains("专业") && !candidate.contains("大学")
+                        && candidate.length() >= 2 && candidate.length() <= 4) {
+                    return candidate;
+                }
             }
         }
         return null;
@@ -414,47 +445,203 @@ public class ProfileServiceImpl implements ProfileService {
         return s == null ? "" : s;
     }
 
+    /** 将 PDF 提取文本归一化：换行、多空格合并为单空格，便于跨行匹配 */
+    private static String normalizeTextForParse(String text) {
+        if (text == null) return null;
+        return text.replaceAll("\\s+", " ").trim();
+    }
+
     /** 从正文中抽取教育信息并只填充空字段；排除奖项、政治面貌等错位内容 */
     private void applyEducationFromText(String text, UserProfile profile) {
         if (text == null || profile == null) return;
-        // 学校：必须为“教育”区块内、且不能是奖项/荣誉类
+        String normalized = normalizeTextForParse(text);
+        if (normalized == null || normalized.isEmpty()) return;
+
+        // 学校：优先在教育背景区块内匹配，排除竞赛、奖项中的"大学"字样
         if (profile.getSchool() == null || profile.getSchool().isBlank()) {
-            String school = matchAfterKeyword(text, "(毕业院校|毕业学校|学校|院校|School)\\s*[:：]\\s*([^\\n\\r]{2,40})");
+            String school = null;
+            // 策略1：先尝试在教育背景区块内查找（更准确）
+            String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
+            if (educationBlock != null && !educationBlock.isEmpty()) {
+                String eduNormalized = normalizeTextForParse(educationBlock);
+                school = matchAfterKeyword(eduNormalized, "(毕业院校|毕业学校|学校|院校|School)\\s*[:：]\\s*([^\\s]{2,40})");
+                if (school != null && (school.contains("全国") || school.contains("竞赛") || school.contains("比赛"))) {
+                    school = null;
+                }
+                if (school == null || !isValidSchool(school)) {
+                    // 在教育区块内匹配学校名
+                    Matcher schoolM = Pattern.compile("([\\u4e00-\\u9fa5]{2,}(?:大学|理工大学|科技大学|师范大学|工业大学|交通大学|农业大学|财经大学|医科大学))").matcher(eduNormalized);
+                    while (schoolM.find()) {
+                        String found = schoolM.group(1);
+                        int start = schoolM.start();
+                        int end = schoolM.end();
+                        String contextBefore = start > 0 ? eduNormalized.substring(Math.max(0, start - 15), start) : "";
+                        String contextAfter = end < eduNormalized.length() ? eduNormalized.substring(end, Math.min(eduNormalized.length(), end + 15)) : "";
+                        String fullContext = contextBefore + found + contextAfter;
+                        // 严格排除：如果上下文包含"全国"、"第X届"、"竞赛"、"比赛"、"奖"，则跳过
+                        if (fullContext.contains("全国") || fullContext.matches(".*第[\\d一二三四五六七八九十]+届.*") 
+                                || fullContext.contains("竞赛") || fullContext.contains("比赛") || fullContext.contains("奖")
+                                || found.contains("全国") || found.matches(".*第[\\d一二三四五六七八九十]+届.*")) {
+                            continue;
+                        }
+                        if (isValidSchool(found)) {
+                            school = found;
+                            break;
+                        }
+                    }
+                }
+            }
+            // 策略2：如果教育区块内没找到，在全文查找（但更严格地排除竞赛/奖项）
+            if (school == null || !isValidSchool(school)) {
+                school = matchAfterKeyword(normalized, "(毕业院校|毕业学校|学校|院校|School)\\s*[:：]\\s*([^\\s]{2,40})");
+                if (school != null && (school.contains("全国") || school.contains("竞赛") || school.contains("比赛"))) {
+                    school = null;
+                }
+                if (school == null || !isValidSchool(school)) {
+                    Matcher schoolM = Pattern.compile("([\\u4e00-\\u9fa5]{2,}(?:大学|理工大学|科技大学|师范大学|工业大学|交通大学|农业大学|财经大学|医科大学))").matcher(normalized);
+                    while (schoolM.find()) {
+                        String found = schoolM.group(1);
+                        // 扩大上下文检查范围到30个字符
+                        int start = schoolM.start();
+                        int end = schoolM.end();
+                        String contextBefore = start > 0 ? normalized.substring(Math.max(0, start - 30), start) : "";
+                        String contextAfter = end < normalized.length() ? normalized.substring(end, Math.min(normalized.length(), end + 30)) : "";
+                        String fullContext = contextBefore + found + contextAfter;
+                        // 严格排除：如果上下文或学校名本身包含"全国"、"第X届"、"竞赛"、"比赛"、"奖"，则跳过
+                        if (fullContext.contains("全国") || fullContext.matches(".*第[\\d一二三四五六七八九十]+届.*") 
+                                || fullContext.contains("竞赛") || fullContext.contains("比赛") || fullContext.contains("奖")
+                                || found.contains("全国") || found.matches(".*第[\\d一二三四五六七八九十]+届.*")) {
+                            continue;
+                        }
+                        // 额外检查：如果学校名前后紧跟着"竞赛"、"比赛"、"奖"等词，也排除
+                        if (contextAfter.matches("^[\\s]*[竞赛比赛奖].*") || contextBefore.matches(".*[竞赛比赛奖][\\s]*$")) {
+                            continue;
+                        }
+                        if (isValidSchool(found)) {
+                            school = found;
+                            break;
+                        }
+                    }
+                }
+            }
             if (school != null && isValidSchool(school)) profile.setSchool(school.trim());
         }
-        // 专业：不能是政治面貌、奖项等
+        // 专业：匹配"XX专业"、"计算机科学与技术"等
         if (profile.getMajor() == null || profile.getMajor().isBlank()) {
-            String major = matchAfterKeyword(text, "(所学专业|专业|Major)\\s*[:：]\\s*([^\\n\\r]{2,40})");
+            String major = matchAfterKeyword(normalized, "(所学专业|专业|Major)\\s*[:：]\\s*([^\\s]{2,40})");
+            if (major != null) major = major.replaceAll("专业$", "").trim();
+            if (major == null || !isValidMajor(major)) {
+                Matcher majorM = Pattern.compile("([\\u4e00-\\u9fa5]{2,}(?:专业|学专业|与技术专业|工程专业))").matcher(normalized);
+                if (majorM.find()) {
+                    String found = majorM.group(1).replaceAll("专业$", "").trim();
+                    if (isValidMajor(found) && !isAwardOrPolitical(found)) major = found;
+                }
+                if (major == null) {
+                    majorM = Pattern.compile("(计算机科学与技术|软件工程|人工智能|数据科学|电子信息工程|自动化)").matcher(normalized);
+                    if (majorM.find()) major = majorM.group(1);
+                }
+            }
             if (major != null && isValidMajor(major)) profile.setMajor(major.trim());
         }
+        // 学历
         if (profile.getDegree() == null || profile.getDegree().isBlank()) {
-            String degree = matchAfterKeyword(text, "(学历|学位|Degree)\\s*[:：]\\s*([^\\n\\r]{2,20})");
+            String degree = matchAfterKeyword(normalized, "(学历|学位|Degree)\\s*[:：]\\s*([^\\s]{2,20})");
+            if (degree == null || isAwardOrPolitical(degree)) {
+                if (normalized.contains("研究生") || normalized.contains("硕士")) degree = "硕士";
+                else if (normalized.contains("博士")) degree = "博士";
+                else if (normalized.contains("本科") || normalized.contains("学士")) degree = "本科";
+                else degree = "本科";
+            }
             if (degree != null && !isAwardOrPolitical(degree)) profile.setDegree(degree.trim());
         }
+        // 年级：从入学时间推断（支持多种格式：2023.09 至今、2023年9月至今、2023.09-至今等）
         if (profile.getGrade() == null || profile.getGrade().isBlank()) {
-            String grade = matchAfterKeyword(text, "(年级|Grade)\\s*[:：]\\s*([^\\n\\r]{1,20})");
+            String grade = matchAfterKeyword(normalized, "(年级|Grade)\\s*[:：]\\s*([^\\s]{1,20})");
+            if (grade == null || !isValidGrade(grade)) {
+                // 优先在教育背景区块内查找入学时间
+                String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
+                String searchText = (educationBlock != null && !educationBlock.isEmpty()) 
+                    ? normalizeTextForParse(educationBlock) : normalized;
+                
+                // 匹配多种时间格式：2023.09 至今、2023年9月 至今、2023.09-至今、2023/09 至今
+                // 更宽松的匹配：允许空格、短横线、点号等分隔符
+                Matcher yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s*[-至到]?\\s*(?:至今|现在|当前|入学|开始)", Pattern.CASE_INSENSITIVE).matcher(searchText);
+                if (!yearM.find()) {
+                    // 备用1：匹配 2023.09 至今（点号后可能有空格）
+                    yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s+(?:至今|现在|当前|入学|开始)", Pattern.CASE_INSENSITIVE).matcher(searchText);
+                }
+                if (!yearM.find()) {
+                    // 备用2：匹配 2023.09（即使没有"至今"，但在教育背景区块内）
+                    if (educationBlock != null && !educationBlock.isEmpty()) {
+                        yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?").matcher(searchText);
+                        if (yearM.find()) {
+                            // 验证这个日期在教育背景区块内，且年份合理（2000-2030）
+                            int year = Integer.parseInt(yearM.group(1));
+                            if (year >= 2000 && year <= 2030) {
+                                grade = year + "级";
+                            }
+                        }
+                    }
+                } else {
+                    grade = yearM.group(1) + "级";
+                }
+            }
             if (grade != null && isValidGrade(grade)) profile.setGrade(grade.trim());
         }
+        // 预计毕业：从入学时间+4年推断
         if (profile.getExpectedGraduation() == null || profile.getExpectedGraduation().isBlank()) {
-            String exp = matchAfterKeyword(text, "(预计毕业|毕业时间|Expected Graduation|Graduation)\\s*[:：]\\s*([^\\n\\r]{2,30})");
+            String exp = matchAfterKeyword(normalized, "(预计毕业|毕业时间|Expected Graduation|Graduation)\\s*[:：]\\s*([^\\s]{2,30})");
+            if (exp == null || isAwardOrPolitical(exp)) {
+                // 匹配入学时间：2023.09 至今、2023年9月 至今等
+                Matcher yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s*[-至到]?\\s*(?:至今|现在|当前|入学|开始)").matcher(normalized);
+                if (!yearM.find()) {
+                    yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s+(?:至今|现在|当前|入学|开始)").matcher(normalized);
+                }
+                if (yearM.find()) {
+                    try {
+                        int startYear = Integer.parseInt(yearM.group(1));
+                        // 默认4年制，6月毕业
+                        exp = (startYear + 4) + "-06";
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
             if (exp != null && !isAwardOrPolitical(exp)) profile.setExpectedGraduation(exp.trim());
         }
+        // GPA：支持 4.347/5 等形式
         if (profile.getGpa() == null || profile.getGpa().isBlank()) {
-            Matcher gpaM = Pattern.compile("(?:GPA|绩点|平均绩点)\\s*[:：]?\\s*([\\d.]+)").matcher(text);
+            Matcher gpaM = Pattern.compile("(?:GPA|绩点|平均绩点)\\s*[:：]?\\s*([\\d.]+)(?:/\\d+)?", Pattern.CASE_INSENSITIVE).matcher(normalized);
             if (gpaM.find()) profile.setGpa(gpaM.group(1).trim());
         }
     }
 
-    /** 学校名：不能是奖学金、奖项、竞赛、政治等 */
+    /** 学校名：必须包含"大学"、"学院"、"理工"等关键词，且不能是奖学金、奖项、竞赛、政治等 */
     private static boolean isValidSchool(String s) {
         if (s == null || s.length() < 2) return false;
-        return !isAwardOrPolitical(s) && !s.contains("奖学金") && !s.contains("奖状") && !s.contains("竞赛");
+        // 必须包含学校相关关键词
+        if (!s.contains("大学") && !s.contains("学院") && !s.contains("理工") && !s.contains("科技") 
+                && !s.contains("师范") && !s.contains("工业") && !s.contains("交通") && !s.contains("农业")) {
+            return false;
+        }
+        // 排除明显的错误内容：竞赛、奖项、政治等
+        if (isAwardOrPolitical(s) || s.contains("奖学金") || s.contains("奖状") || s.contains("竞赛")
+                || s.contains("政治面貌") || s.contains("党员") || s.contains("团员")) {
+            return false;
+        }
+        // 特别排除：包含"全国"、"第X届"的匹配（如"第十七届全国大学生数学竞赛"）
+        if (s.contains("全国") || s.matches(".*第[\\d一二三四五六七八九十]+届.*") 
+                || s.contains("竞赛") || s.contains("比赛") || s.contains("奖")) {
+            return false;
+        }
+        return true;
     }
 
-    /** 专业：不能是政治面貌、党员、奖学金等 */
+    /** 专业：不能是政治面貌、党员、奖学金等，且应该包含专业相关关键词 */
     private static boolean isValidMajor(String s) {
         if (s == null || s.length() < 2) return false;
-        return !isAwardOrPolitical(s);
+        // 排除明显的错误内容
+        if (isAwardOrPolitical(s)) return false;
+        // 如果包含"专业"关键词，或者长度合理（2-30字符），认为是有效专业
+        return s.contains("专业") || s.contains("学") || (s.length() >= 2 && s.length() <= 30);
     }
 
     /** 年级：允许 2021级、大一 等，排除纯奖项描述 */
@@ -500,36 +687,66 @@ public class ProfileServiceImpl implements ProfileService {
         return m;
     }
 
-    /** 从正文抽取技能：找“技能/专业技能”等段落，按行或逗号拆分 */
+    /** 从正文抽取技能：找“技能/专业技能”等段落，或从项目经历/核心课程中提取技术关键词 */
     private static List<ProfileSkill> extractSkillsFromText(String text) {
         List<ProfileSkill> list = new ArrayList<>();
         if (text == null || text.isBlank()) return list;
-        String lower = text;
-        // 找技能段落：从标题到下一个大标题或空行
+        List<String> items = new ArrayList<>();
+        
+        // 策略1：找明确的"技能"段落
         Pattern section = Pattern.compile("(?:技能|专业技能|技术技能|个人技能|Skills?)[:：\\s]*([\\s\\S]*?)(?=\\n\\s*[\\u4e00-\\u9fa5]{2,8}[:：]|\\n\\s*\\n|$)");
-        Matcher m = section.matcher(lower);
+        Matcher m = section.matcher(text);
         if (m.find()) {
             String block = m.group(1).replaceAll("\\r", "").trim();
-            List<String> items = new ArrayList<>();
             for (String line : block.split("\\n")) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
-                // 每行可能是 "• xxx" 或 " - xxx" 或逗号分隔
                 for (String part : line.split("[,，、;；]")) {
                     String s = part.replaceAll("^[•\\-*\\d.\\s]+", "").trim();
                     if (s.length() >= 1 && s.length() <= 80) items.add(s);
                 }
             }
-            if (!items.isEmpty()) {
-                ProfileSkill ps = new ProfileSkill();
-                ps.setCategory("专业技能");
-                try {
-                    ps.setItems(JSON.writeValueAsString(items));
-                } catch (Exception ignored) {
-                    ps.setItems("[]");
+        }
+        
+        // 策略2：如果没有明确技能段落，从核心课程和项目经历中提取技术关键词
+        if (items.isEmpty()) {
+            // 核心课程关键词（编程语言、技术栈）
+            String[] techKeywords = {
+                "Java", "Python", "C\\+\\+", "C#", "JavaScript", "TypeScript", "Go", "Rust", "Kotlin",
+                "Spring", "Django", "Flask", "React", "Vue", "Angular", "Node\\.js",
+                "MySQL", "PostgreSQL", "MongoDB", "Redis", "SQL",
+                "Linux", "Docker", "Kubernetes", "Git",
+                "机器学习", "深度学习", "人工智能", "AI", "神经网络",
+                "数据结构", "算法", "编译原理", "操作系统", "计算机网络",
+                "SLR", "LR", "词法分析", "语法分析", "进程调度", "内存管理"
+            };
+            for (String keyword : techKeywords) {
+                Pattern p = Pattern.compile(keyword, Pattern.CASE_INSENSITIVE);
+                if (p.matcher(text).find() && !items.contains(keyword.replaceAll("\\\\", ""))) {
+                    items.add(keyword.replaceAll("\\\\", ""));
                 }
-                list.add(ps);
             }
+            
+            // 从项目描述中提取技术栈（如"基于SLR(1)"、"进程调度"等）
+            Pattern projectTech = Pattern.compile("(?:基于|使用|采用|涉及)([\\u4e00-\\u9fa5A-Za-z0-9+()]+(?:系统|算法|框架|语言|技术))");
+            Matcher pm = projectTech.matcher(text);
+            while (pm.find() && items.size() < 15) {
+                String tech = pm.group(1).trim();
+                if (tech.length() >= 2 && tech.length() <= 30 && !items.contains(tech)) {
+                    items.add(tech);
+                }
+            }
+        }
+        
+        if (!items.isEmpty()) {
+            ProfileSkill ps = new ProfileSkill();
+            ps.setCategory("专业技能");
+            try {
+                ps.setItems(JSON.writeValueAsString(items));
+            } catch (Exception ignored) {
+                ps.setItems("[]");
+            }
+            list.add(ps);
         }
         return list;
     }
