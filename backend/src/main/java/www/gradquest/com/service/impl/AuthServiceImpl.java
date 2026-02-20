@@ -19,26 +19,6 @@ import www.gradquest.com.utils.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-import java.util.Optional;
->>>>>>> Stashed changes
-=======
-import java.util.Optional;
->>>>>>> Stashed changes
-=======
-import java.util.Optional;
->>>>>>> Stashed changes
-=======
-import java.util.Optional;
->>>>>>> Stashed changes
-=======
-import java.util.Optional;
->>>>>>> Stashed changes
 import java.util.Random;
 
 /**
