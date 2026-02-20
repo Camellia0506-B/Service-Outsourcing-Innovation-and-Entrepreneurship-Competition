@@ -643,9 +643,10 @@ class CareerPlanningApp {
         if (!parsed || typeof parsed !== 'object') return {};
 
         const basic = parsed.basic_info || {};
-        const firstEdu = Array.isArray(parsed.education) && parsed.education.length > 0
-            ? parsed.education[0]
-            : {};
+        // 后端可能返回 education 为对象（map），也可能是数组；两者都兼容
+        const firstEdu = Array.isArray(parsed.education)
+            ? (parsed.education[0] || {})
+            : (parsed.education || {});
         const skillsFromResume = Array.isArray(parsed.skills) ? parsed.skills : [];
 
         const profileData = {
@@ -662,7 +663,7 @@ class CareerPlanningApp {
                 ...(firstEdu.major ? { major: firstEdu.major } : {}),
                 ...(firstEdu.degree || firstEdu.education ? { degree: firstEdu.degree || firstEdu.education } : {}),
                 ...(firstEdu.grade ? { grade: firstEdu.grade } : {}),
-                ...(firstEdu.graduation_date || firstEdu.end_date ? { expected_graduation: firstEdu.graduation_date || firstEdu.end_date } : {}),
+                ...(firstEdu.expected_graduation || firstEdu.graduation_date || firstEdu.end_date ? { expected_graduation: firstEdu.expected_graduation || firstEdu.graduation_date || firstEdu.end_date } : {}),
                 ...(firstEdu.gpa ? { gpa: firstEdu.gpa } : {})
             },
             skills: []

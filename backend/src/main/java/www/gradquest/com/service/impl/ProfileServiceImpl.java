@@ -445,10 +445,32 @@ public class ProfileServiceImpl implements ProfileService {
         return s == null ? "" : s;
     }
 
-    /** 将 PDF 提取文本归一化：换行、多空格合并为单空格，便于跨行匹配 */
+    /** 将 PDF 提取文本归一化：全角转半角、换行/多空格合并为单空格，便于跨行匹配和正则匹配 */
     private static String normalizeTextForParse(String text) {
         if (text == null) return null;
-        return text.replaceAll("\\s+", " ").trim();
+        String half = toHalfWidth(text);
+        return half.replaceAll("\\s+", " ").trim();
+    }
+
+    /** 将全角数字/字母/符号统一转成半角，避免 PDF 中使用全角导致正则匹配不到年份等信息 */
+    private static String toHalfWidth(String src) {
+        if (src == null || src.isEmpty()) return src;
+        StringBuilder sb = new StringBuilder(src.length());
+        for (int i = 0; i < src.length(); i++) {
+            char c = src.charAt(i);
+            // 全角空格
+            if (c == '\u3000') {
+                sb.append(' ');
+                continue;
+            }
+            // 全角字符（！-～）
+            if (c >= '\uFF01' && c <= '\uFF5E') {
+                sb.append((char) (c - 0xFEE0));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     /** 从正文中抽取教育信息并只填充空字段；排除奖项、政治面貌等错位内容 */
@@ -457,13 +479,21 @@ public class ProfileServiceImpl implements ProfileService {
         String normalized = normalizeTextForParse(text);
         if (normalized == null || normalized.isEmpty()) return;
 
+        // 教育区块（用于优先匹配入学时间/院校等）
+        String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
+        String eduNormalized = (educationBlock != null && !educationBlock.isEmpty())
+                ? normalizeTextForParse(educationBlock)
+                : null;
+
+        // 若历史数据为明显错误内容（竞赛/奖项/全国/第X届等），允许覆盖为新解析结果
+        java.util.function.Predicate<String> isBadSchool = (s) -> s == null || s.isBlank() || !isValidSchool(s);
+        java.util.function.Predicate<String> isBadMajor = (s) -> s == null || s.isBlank() || !isValidMajor(s) || isAwardOrPolitical(s);
+
         // 学校：优先在教育背景区块内匹配，排除竞赛、奖项中的"大学"字样
-        if (profile.getSchool() == null || profile.getSchool().isBlank()) {
+        if (isBadSchool.test(profile.getSchool())) {
             String school = null;
             // 策略1：先尝试在教育背景区块内查找（更准确）
-            String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
-            if (educationBlock != null && !educationBlock.isEmpty()) {
-                String eduNormalized = normalizeTextForParse(educationBlock);
+            if (eduNormalized != null && !eduNormalized.isEmpty()) {
                 school = matchAfterKeyword(eduNormalized, "(毕业院校|毕业学校|学校|院校|School)\\s*[:：]\\s*([^\\s]{2,40})");
                 if (school != null && (school.contains("全国") || school.contains("竞赛") || school.contains("比赛"))) {
                     school = null;
@@ -527,7 +557,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (school != null && isValidSchool(school)) profile.setSchool(school.trim());
         }
         // 专业：匹配"XX专业"、"计算机科学与技术"等
-        if (profile.getMajor() == null || profile.getMajor().isBlank()) {
+        if (isBadMajor.test(profile.getMajor())) {
             String major = matchAfterKeyword(normalized, "(所学专业|专业|Major)\\s*[:：]\\s*([^\\s]{2,40})");
             if (major != null) major = major.replaceAll("专业$", "").trim();
             if (major == null || !isValidMajor(major)) {
@@ -555,54 +585,98 @@ public class ProfileServiceImpl implements ProfileService {
             if (degree != null && !isAwardOrPolitical(degree)) profile.setDegree(degree.trim());
         }
         // 年级：从入学时间推断（支持多种格式：2023.09 至今、2023年9月至今、2023.09-至今等）
-        if (profile.getGrade() == null || profile.getGrade().isBlank()) {
+        // 说明：这里不再依赖原有的年级值，而是每次根据简历文本重新计算，避免历史错误值（如 2025级）一直保留
+        {
             String grade = matchAfterKeyword(normalized, "(年级|Grade)\\s*[:：]\\s*([^\\s]{1,20})");
             if (grade == null || !isValidGrade(grade)) {
                 // 优先在教育背景区块内查找入学时间
-                String educationBlock = findSectionBlock(text, "教育(?:经历|背景)?|Education");
-                String searchText = (educationBlock != null && !educationBlock.isEmpty()) 
-                    ? normalizeTextForParse(educationBlock) : normalized;
+                String searchText = (eduNormalized != null && !eduNormalized.isEmpty())
+                        ? eduNormalized
+                        : normalized;
                 
-                // 匹配多种时间格式：2023.09 至今、2023年9月 至今、2023.09-至今、2023/09 至今
-                // 更宽松的匹配：允许空格、短横线、点号等分隔符
-                Matcher yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s*[-至到]?\\s*(?:至今|现在|当前|入学|开始)", Pattern.CASE_INSENSITIVE).matcher(searchText);
+                // 匹配多种时间格式：2023.09至今、2023.09 至今、2023年9月 至今、2023-09 至今、2023/09 至今 等
+                // 更宽松的匹配：允许空格、短横线、点号等分隔符（注意这里不把“至”放进分隔符，避免吃掉“至今”的第一个字）
+                Matcher yearM = Pattern.compile("(\\d{4})[.年/\\-]\\s*\\d{1,2}[.月/\\-]?\\s*[-到~]?\\s*(?:至今|现在|当前|入学|开始)", Pattern.CASE_INSENSITIVE).matcher(searchText);
                 if (!yearM.find()) {
-                    // 备用1：匹配 2023.09 至今（点号后可能有空格）
-                    yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s+(?:至今|现在|当前|入学|开始)", Pattern.CASE_INSENSITIVE).matcher(searchText);
+                    // 备用1：匹配 2023.09 至今 / 2023-09 至今（年月后有空格再接“至今”）
+                    yearM = Pattern.compile("(\\d{4})[.年/\\-]\\s*\\d{1,2}[.月/\\-]?\\s+(?:至今|现在|当前|入学|开始)", Pattern.CASE_INSENSITIVE).matcher(searchText);
                 }
                 if (!yearM.find()) {
-                    // 备用2：匹配 2023.09（即使没有"至今"，但在教育背景区块内）
+                    // 备用2：匹配 2023.09 / 2023-09（即使没有"至今"，但在教育背景区块内）
                     if (educationBlock != null && !educationBlock.isEmpty()) {
-                        yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?").matcher(searchText);
+                        yearM = Pattern.compile("(\\d{4})[.年/\\-]\\s*\\d{1,2}[.月/\\-]?").matcher(searchText);
                         if (yearM.find()) {
-                            // 验证这个日期在教育背景区块内，且年份合理（2000-2030）
                             int year = Integer.parseInt(yearM.group(1));
-                            if (year >= 2000 && year <= 2030) {
+                            if (year >= 2000 && year <= 2035) {
                                 grade = year + "级";
                             }
                         }
                     }
                 } else {
-                    grade = yearM.group(1) + "级";
+                    int year = Integer.parseInt(yearM.group(1));
+                    if (year >= 2000 && year <= 2035) {
+                        grade = year + "级";
+                    }
+                }
+
+                // 兜底1：如果依然没有匹配到格式化时间，在教育区块中寻找最早的 2000–2035 年份
+                if ((grade == null || !isValidGrade(grade)) && eduNormalized != null && !eduNormalized.isEmpty()) {
+                    Integer earliest = findEarliestYear(eduNormalized);
+                    if (earliest != null) {
+                        grade = earliest + "级";
+                    }
+                }
+
+                // 兜底2：如果连教育区块都没切到，则在全文中寻找最早的 2000–2035 年份
+                if ((grade == null || !isValidGrade(grade))) {
+                    Integer earliest = findEarliestYear(normalized);
+                    if (earliest != null) {
+                        grade = earliest + "级";
+                    }
                 }
             }
             if (grade != null && isValidGrade(grade)) profile.setGrade(grade.trim());
         }
-        // 预计毕业：从入学时间+4年推断
-        if (profile.getExpectedGraduation() == null || profile.getExpectedGraduation().isBlank()) {
+        // 预计毕业：从入学时间+4年推断（同样每次根据简历文本重新计算）
+        {
             String exp = matchAfterKeyword(normalized, "(预计毕业|毕业时间|Expected Graduation|Graduation)\\s*[:：]\\s*([^\\s]{2,30})");
             if (exp == null || isAwardOrPolitical(exp)) {
                 // 匹配入学时间：2023.09 至今、2023年9月 至今等
-                Matcher yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s*[-至到]?\\s*(?:至今|现在|当前|入学|开始)").matcher(normalized);
+                String searchText = (eduNormalized != null && !eduNormalized.isEmpty())
+                        ? eduNormalized
+                        : normalized;
+                Matcher yearM = Pattern.compile("(\\d{4})[.年/\\-]\\s*\\d{1,2}[.月/\\-]?\\s*[-到~]?\\s*(?:至今|现在|当前|入学|开始)").matcher(searchText);
                 if (!yearM.find()) {
-                    yearM = Pattern.compile("(\\d{4})[.年/]\\s*\\d{1,2}[.月/]?\\s+(?:至今|现在|当前|入学|开始)").matcher(normalized);
+                    yearM = Pattern.compile("(\\d{4})[.年/\\-]\\s*\\d{1,2}[.月/\\-]?\\s+(?:至今|现在|当前|入学|开始)").matcher(searchText);
+                }
+                if (!yearM.find() && eduNormalized != null && !eduNormalized.isEmpty()) {
+                    // 备用：教育区块内出现起始年月，但没写“至今”（2023.09 / 2023-09 / 2023/09）
+                    yearM = Pattern.compile("(\\d{4})[.年/\\-]\\s*\\d{1,2}[.月/\\-]?").matcher(searchText);
                 }
                 if (yearM.find()) {
                     try {
                         int startYear = Integer.parseInt(yearM.group(1));
-                        // 默认4年制，6月毕业
-                        exp = (startYear + 4) + "-06";
+                        if (startYear >= 2000 && startYear <= 2035) {
+                            // 默认4年制，6月毕业
+                            exp = (startYear + 4) + "-06";
+                        }
                     } catch (NumberFormatException ignored) {}
+                }
+
+                // 兜底1：如果还是没找到，以教育区块中的最早 2000–2035 年份作为入学年份
+                if ((exp == null || isAwardOrPolitical(exp)) && eduNormalized != null && !eduNormalized.isEmpty()) {
+                    Integer earliest = findEarliestYear(eduNormalized);
+                    if (earliest != null) {
+                        exp = (earliest + 4) + "-06";
+                    }
+                }
+
+                // 兜底2：如果没有教育区块或依然没命中，则在全文中找最早 2000–2035 年份推断毕业时间
+                if ((exp == null || isAwardOrPolitical(exp))) {
+                    Integer earliest = findEarliestYear(normalized);
+                    if (earliest != null) {
+                        exp = (earliest + 4) + "-06";
+                    }
                 }
             }
             if (exp != null && !isAwardOrPolitical(exp)) profile.setExpectedGraduation(exp.trim());
@@ -661,6 +735,25 @@ public class ProfileServiceImpl implements ProfileService {
         if (text == null || text.isBlank()) return null;
         Matcher m = Pattern.compile(regex).matcher(text);
         return m.find() ? m.group(2).trim() : null;
+    }
+
+    /** 在文本中查找 2000–2035 之间最早出现的年份；用于作为入学年份的兜底推断 */
+    private static Integer findEarliestYear(String text) {
+        if (text == null || text.isBlank()) return null;
+        Matcher m = Pattern.compile("(20\\d{2})").matcher(text);
+        int best = Integer.MAX_VALUE;
+        int currentYear = LocalDate.now().getYear();
+        while (m.find()) {
+            try {
+                int y = Integer.parseInt(m.group(1));
+                // 只接受合理范围内，并且不晚于当前年份+1 的年份
+                if (y >= 2000 && y <= 2035 && y <= currentYear + 1 && y < best) {
+                    best = y;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return best == Integer.MAX_VALUE ? null : best;
     }
 
     /** 按标题切出区块内容，避免“专业”匹配到“专业技能”、奖项/政治面貌进入教育区块。返回该区块正文，无则返回 null。 */
