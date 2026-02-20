@@ -861,11 +861,25 @@ class QuestionBankVectorStore:
         }
 
 
+def export_builtin_to_json():
+    """将内置题库导出为 question_bank.json，便于 RAG 题库管理与后续编辑。"""
+    store = QuestionBankVectorStore()
+    data = store._get_builtin_questions()
+    out_path = get_abs_path("data/assessment/question_bank.json")
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    logger.info(f"[QuestionBank] 已导出内置题库到 {out_path}")
+    return out_path
+
+
 if __name__ == "__main__":
-    # 初始化题库
+    import sys
+    if "--export" in sys.argv:
+        export_builtin_to_json()
+        sys.exit(0)
+    # 初始化题库（从 question_bank.json 或内置题目加载到 ChromaDB）
     store = QuestionBankVectorStore()
     store.load_questions()
-    
-    # 测试检索
     questions = store.retrieve_by_dimension("interest", 18)
     print(f"检索到 {len(questions)} 道职业兴趣题目")
