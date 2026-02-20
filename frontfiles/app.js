@@ -1940,14 +1940,35 @@ class CareerPlanningApp {
     // 加载职业规划报告数据（进入本页时尝试恢复上次的测评报告）
     async loadReportData() {
         const userId = getCurrentUserId();
-        if (!userId) return;
-        const reportId = this.getLastAssessmentReportId();
-        if (!reportId) return;
         const contentDiv = document.getElementById('reportContent');
+        if (!userId) {
+            if (contentDiv) contentDiv.innerHTML = '<p class="hint-text">请先登录</p>';
+            return;
+        }
+        const reportId = this.getLastAssessmentReportId();
+        if (!reportId) {
+            if (contentDiv) contentDiv.innerHTML = '<p class="hint-text">点击「生成新报告」或前往职业测评完成测评后查看报告</p>';
+            return;
+        }
+        if (contentDiv) contentDiv.innerHTML = '<div class="loading-message">加载报告中...</div>';
+        this.currentReportId = reportId;
         const result = await getAssessmentReport(userId, reportId);
         if (result.success && result.data && result.data.status === 'completed') {
-            this.currentReportId = reportId;
             this.renderReportContent(result.data);
+        } else {
+            const msg = (result && result.msg) ? result.msg : '请求失败或报告未就绪';
+            if (contentDiv) {
+                contentDiv.innerHTML = '<div class="hint-text">' +
+                    '<p>加载失败：' + (msg || '未知原因') + '</p>' +
+                    '<p style="margin-top:12px;"><button type="button" class="btn-secondary" id="retryLoadReport">重试</button> ' +
+                    '<button type="button" class="btn-secondary" id="viewHistoryReportFromFail">查看历史报告</button></p>' +
+                    '</div>';
+                document.getElementById('retryLoadReport')?.addEventListener('click', () => this.loadReportData());
+                document.getElementById('viewHistoryReportFromFail')?.addEventListener('click', () => {
+                    this.showPage('reportPage');
+                    this.viewReportHistory();
+                });
+            }
         }
     }
 
@@ -2023,9 +2044,10 @@ class CareerPlanningApp {
         }
     }
 
-    // 加载测评报告内容（用于历史报告列表点击，走 POST /assessment/report）
+    // 加载测评报告内容（用于历史报告列表点击、查看最新报告，走 POST /assessment/report）
     async loadAssessmentReportContent(reportId) {
         const contentDiv = document.getElementById('reportContent');
+        if (!contentDiv) return;
         contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
         const userId = getCurrentUserId();
         if (!userId) {
@@ -2037,7 +2059,12 @@ class CareerPlanningApp {
             this.currentReportId = reportId;
             this.renderReportContent(result.data);
         } else {
-            contentDiv.innerHTML = '<div class="hint-text">加载失败</div>';
+            const msg = (result && result.msg) ? result.msg : (result && result.data && result.data.status === 'processing' ? '报告仍在生成中，请稍后再试' : '请求失败或报告不存在');
+            contentDiv.innerHTML = '<div class="hint-text">' +
+                '<p>加载失败：' + msg + '</p>' +
+                '<p style="margin-top:12px;"><button type="button" class="btn-secondary" id="retryLoadAssessmentReport">重试</button></p>' +
+                '</div>';
+            document.getElementById('retryLoadAssessmentReport')?.addEventListener('click', () => this.loadAssessmentReportContent(reportId));
         }
     }
 

@@ -1,7 +1,7 @@
 // API配置
 const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',           // Java 后端（登录、个人档案等）
-    assessmentBaseURL: 'http://127.0.0.1:8080/api/v1', // AI 算法服务（职业测评 / 岗位画像），Flask 日志显示运行在 8080 端口
+    assessmentBaseURL: 'http://localhost:5001/api/v1', // AI 算法服务（Flask 测评/岗位画像），Java 无 assessment 接口
     timeout: 30000,
     mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
 };
@@ -42,7 +42,7 @@ class API {
         } catch (error) {
             console.error('API请求错误(AI):', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch'))
-                ? '无法连接 AI 服务 (http://localhost:8080)，请确认已启动'
+                ? '无法连接 AI 服务 (http://localhost:5001)，请确认已启动'
                 : (error.message || '网络错误');
             return { success: false, msg };
         }
