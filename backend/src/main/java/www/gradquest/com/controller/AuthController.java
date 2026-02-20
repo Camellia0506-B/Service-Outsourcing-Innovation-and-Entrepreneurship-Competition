@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import www.gradquest.com.common.ApiResponse;
 import www.gradquest.com.dto.LoginResponse;
 import www.gradquest.com.dto.RegisterResponse;
+import www.gradquest.com.dto.SendCodeResponse;
 import www.gradquest.com.service.AuthService;
 
 import java.util.Set;
@@ -71,6 +72,28 @@ public class AuthController {
         return ApiResponse.success("退出成功", null);
     }
 
+    /** 1.4.1 发送验证码 */
+    @PostMapping("/forgot-password/send-code")
+    public ApiResponse<SendCodeResponse> sendForgotPasswordCode(@RequestBody @Validated SendCodeRequest request) {
+        try {
+            SendCodeResponse data = authService.sendForgotPasswordCode(request.getUsername(), request.getEmail());
+            return ApiResponse.success("验证码已发送", data);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.badRequest(e.getMessage());
+        }
+    }
+
+    /** 1.4.2 重置密码 */
+    @PostMapping("/forgot-password/reset")
+    public ApiResponse<Void> resetPassword(@RequestBody @Validated ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request.getUsername(), request.getCode(), request.getNewPassword());
+            return ApiResponse.success("密码重置成功", null);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.badRequest(e.getMessage());
+        }
+    }
+
     @Data
     private static class RegisterRequest {
         @NotBlank(message = "用户名不能为空")
@@ -95,5 +118,24 @@ public class AuthController {
         @NotNull(message = "user_id 不能为空")
         @JsonProperty("user_id")
         private Long userId;
+    }
+
+    @Data
+    private static class SendCodeRequest {
+        @NotBlank(message = "username 不能为空")
+        private String username;
+        @NotBlank(message = "email 不能为空")
+        private String email;
+    }
+
+    @Data
+    private static class ResetPasswordRequest {
+        @NotBlank(message = "username 不能为空")
+        private String username;
+        @NotBlank(message = "code 不能为空")
+        private String code;
+        @NotBlank(message = "new_password 不能为空")
+        @JsonProperty("new_password")
+        private String newPassword;
     }
 }

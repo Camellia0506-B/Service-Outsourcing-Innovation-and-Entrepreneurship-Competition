@@ -75,3 +75,11 @@ __pycache__/
 # 环境变量
 .env
 
+
+
+# 虚拟环境
+venv/
+AI算法/venv/
+backend/venv/
+
+ 

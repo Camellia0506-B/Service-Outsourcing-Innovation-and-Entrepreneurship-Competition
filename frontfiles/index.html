@@ -27,6 +27,7 @@
                     <a href="#" class="nav-link" data-page="dashboard">首页</a>
                     <a href="#" class="nav-link" data-page="profile">个人档案</a>
                     <a href="#" class="nav-link" data-page="assessment">职业测评</a>
+                    <a href="#" class="nav-link" data-page="jobProfile">岗位画像</a>
                     <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
                     <a href="#" class="nav-link" data-page="report">职业规划</a>
                 </div>
@@ -194,6 +195,39 @@
             </div>
         </div>
 
+        <!-- 忘记密码弹窗 -->
+        <div id="forgotPasswordModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width:400px;">
+                <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <h3 style="margin:0;">忘记密码</h3>
+                    <button type="button" id="forgotPasswordClose" class="btn-ghost" aria-label="关闭">&times;</button>
+                </div>
+                <div id="forgotPasswordStep1">
+                    <div class="form-group">
+                        <label>账号</label>
+                        <input type="text" id="forgotUsername" placeholder="请输入注册时的用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="forgotEmail" placeholder="请输入绑定邮箱">
+                    </div>
+                    <button type="button" id="forgotSendCodeBtn" class="btn-primary">发送验证码</button>
+                </div>
+                <div id="forgotPasswordStep2" class="hidden">
+                    <div class="form-group">
+                        <label>验证码</label>
+                        <input type="text" id="forgotCode" placeholder="请输入邮箱收到的验证码">
+                    </div>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" id="forgotNewPassword" placeholder="请输入新密码">
+                    </div>
+                    <button type="button" id="forgotResetBtn" class="btn-primary">重置密码</button>
+                </div>
+                <p id="forgotPasswordMsg" class="hint-text" style="margin-top:12px;"></p>
+            </div>
+        </div>
+
         <!-- 注册页面 -->
         <div id="registerPage" class="page hidden">
             <div class="login-container">
@@ -304,7 +338,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>出生日期</label>
-                                    <input type="text" id="birthDate" placeholder="年/月/日">
+                                    <div class="date-input-wrapper">
+                                        <input type="text" id="birthDate" placeholder="年/月/日" autocomplete="bday" inputmode="numeric">
+                                        <button type="button" class="date-picker-btn" id="birthDatePickerBtn" aria-label="选择日期"></button>
+                                        <input type="date" id="birthDateNative" class="date-native-input" tabindex="-1" aria-hidden="true">
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>手机号</label>
@@ -408,6 +446,86 @@
             </div>
         </div>
 
+        <!-- 岗位画像页面 -->
+        <div id="jobProfilePage" class="page hidden">
+            <div class="job-profile-container">
+                <h2>📊 岗位画像</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">AI驱动的智能岗位分析系统 | GradQuest职业规划平台</p>
+                
+                <div class="job-profile-tabs">
+                    <button class="tab-btn active" data-tab="list">📋 岗位列表</button>
+                    <button class="tab-btn" data-tab="graph">🔗 关联图谱</button>
+                    <button class="tab-btn" data-tab="ai">✨ AI生成</button>
+                </div>
+
+                <!-- 岗位列表 Tab -->
+                <div class="tab-content active" id="listTab">
+                    <div class="job-profile-filters">
+                        <input type="text" id="jobProfileKeyword" placeholder="搜索岗位名称...">
+                        <select id="jobProfileIndustry">
+                            <option value="">全部行业</option>
+                            <option value="互联网">互联网</option>
+                            <option value="金融">金融</option>
+                            <option value="制造业">制造业</option>
+                            <option value="教育">教育</option>
+                            <option value="医疗">医疗</option>
+                        </select>
+                        <select id="jobProfileLevel">
+                            <option value="">全部级别</option>
+                            <option value="初级">初级</option>
+                            <option value="中级">中级</option>
+                            <option value="高级">高级</option>
+                        </select>
+                        <button id="jobProfileSearchBtn" class="btn-primary">搜索</button>
+                    </div>
+                    <div id="jobProfileList" class="jobs-grid">
+                        <div class="loading-message">加载岗位列表中...</div>
+                    </div>
+                </div>
+
+                <!-- 关联图谱 Tab -->
+                <div class="tab-content" id="graphTab">
+                    <div class="graph-controls">
+                        <input type="text" id="graphJobId" placeholder="请输入岗位ID (如: job_001)" style="flex: 1;">
+                        <select id="graphTypeSelect">
+                            <option value="all">全部</option>
+                            <option value="vertical">垂直晋升</option>
+                            <option value="transfer">横向转岗</option>
+                        </select>
+                        <button id="jobProfileGraphBtn" class="btn-primary">加载图谱</button>
+                    </div>
+                    <div id="jobProfileGraph" class="graph-container">
+                        <p class="hint-text">请输入岗位ID并选择图谱类型</p>
+                    </div>
+                </div>
+
+                <!-- AI生成 Tab -->
+                <div class="tab-content" id="aiTab">
+                    <div class="ai-generate-form" style="background: var(--card-bg); padding: 32px; border-radius: 16px; box-shadow: var(--shadow);">
+                        <h3 style="margin-bottom: 24px; font-size: 20px; color: var(--text-primary);">AI生成岗位画像</h3>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">岗位名称 *</label>
+                            <input type="text" id="aiJobName" placeholder="如: AI产品经理" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">岗位描述（可选，每行一个JD）</label>
+                            <textarea id="aiJobDescriptions" rows="5" placeholder="可以从招聘网站复制多个岗位描述，每行一个..." style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit;"></textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">样本数量</label>
+                            <input type="number" id="aiSampleSize" value="30" min="10" max="100" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+                        </div>
+                        <button id="aiGenerateJobBtn" class="btn-primary" style="width: 100%;">开始生成</button>
+                        <div id="aiGenerateStatus" class="generate-status" style="margin-top: 16px;"></div>
+                        <div id="aiGenerateResult" class="generate-result" style="margin-top: 16px;"></div>
+                    </div>
+                </div>
+
+                <!-- 岗位详情（隐藏，点击列表项时显示） -->
+                <div id="jobProfileDetail" class="job-profile-detail hidden"></div>
+            </div>
+        </div>
+
         <!-- 岗位匹配页面 -->
         <div id="matchingPage" class="page hidden">
             <div class="matching-container">
@@ -453,7 +571,7 @@
         <!-- 职业规划报告页面 -->
         <div id="reportPage" class="page hidden">
             <div class="report-container">
-                <h2>职业规划报告</h2>
+                <h2>职业测评报告</h2>
                 
                 <div class="report-actions">
                     <button id="generateReportBtn" class="btn-primary">生成新报告</button>
@@ -559,6 +677,9 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="api.js?v=8&t=20240219"></script>
     <script src="app.js?v=8&t=20240219"></script>
     <link rel="stylesheet" href="styles.css?v=8&t=20240219">

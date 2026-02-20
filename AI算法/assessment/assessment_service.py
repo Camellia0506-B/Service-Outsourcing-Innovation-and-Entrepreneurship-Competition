@@ -82,6 +82,23 @@ def _extract_json(raw_text: str) -> dict:
     return json.loads(text)
 
 
+def _ensure_question_options(q: dict) -> dict:
+    """确保题目有 options 供前端渲染。量表题若只有 labels 则转为 options。"""
+    if not q or not isinstance(q, dict):
+        return q
+    opts = q.get("options")
+    if opts and isinstance(opts, list) and len(opts) > 0:
+        return q
+    labels = q.get("labels")
+    if isinstance(labels, list) and len(labels) > 0 and q.get("question_type") == "scale":
+        q = dict(q)
+        q["options"] = [
+            {"option_id": str(i + 1), "option_text": labels[i], "score": i + 1}
+            for i in range(len(labels))
+        ]
+    return q
+
+
 # ===== 核心服务类 =====
 
 class AssessmentService:
@@ -118,15 +135,16 @@ class AssessmentService:
         if not type_config:
             raise ValueError(f"Invalid assessment_type: {assessment_type}")
 
-        # 生成问卷（调用问卷生成算法）
+        # 生成问卷（调用问卷生成算法，每维度 5 题）
         dimensions_data = self._generate_questions(assessment_type)
+        total = sum(len(d.get("questions", [])) for d in dimensions_data)
 
         questionnaire = {
             "assessment_id": assessment_id,
             "user_id": user_id,
             "assessment_type": assessment_type,
-            "total_questions": type_config["total_questions"],
-            "estimated_time": type_config["estimated_time"],
+            "total_questions": total,
+            "estimated_time": min(10, max(5, total // 2)),  # 约 5–10 分钟
             "dimensions": dimensions_data,
             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -141,46 +159,26 @@ class AssessmentService:
     def _generate_questions(self, assessment_type: str) -> List[dict]:
         """
         问卷生成算法：从题库向量数据库检索题目（RAG方式）。
-        根据assessment_type决定题目数量：
-        - comprehensive: 职业兴趣18题 + 性格20题 + 能力15题 + 价值观10题 = 63题
-        - quick: 职业兴趣12题 + 性格10题 + 能力8题 + 价值观5题 = 35题（简化）
+        每个维度固定 5 题，共 20 题。
         """
-        dimensions_config = self.config["dimensions"]
-        is_comprehensive = (assessment_type == "comprehensive")
-
+        # 每个维度均 5 题
+        QUESTIONS_PER_DIMENSION = 5
+        dim_configs = {
+            "interest": {"dimension_id": "interest", "dimension_name": "职业兴趣", "count": QUESTIONS_PER_DIMENSION},
+            "personality": {"dimension_id": "personality", "dimension_name": "性格特质", "count": QUESTIONS_PER_DIMENSION},
+            "ability": {"dimension_id": "ability", "dimension_name": "能力倾向", "count": QUESTIONS_PER_DIMENSION},
+            "values": {"dimension_id": "values", "dimension_name": "职业价值观", "count": QUESTIONS_PER_DIMENSION},
+        }
         dimensions = []
 
-        # 从配置读取每个维度需要的题目数量
-        dim_configs = {
-            "interest": {
-                "dimension_id": "interest",
-                "dimension_name": "职业兴趣",
-                "count": 18 if is_comprehensive else 12
-            },
-            "personality": {
-                "dimension_id": "personality",
-                "dimension_name": "性格特质",
-                "count": 20 if is_comprehensive else 10
-            },
-            "ability": {
-                "dimension_id": "ability",
-                "dimension_name": "能力倾向",
-                "count": 15 if is_comprehensive else 8
-            },
-            "values": {
-                "dimension_id": "values",
-                "dimension_name": "职业价值观",
-                "count": 10 if is_comprehensive else 5
-            }
-        }
-
-        # 从向量数据库检索各维度题目
         for dim_id, dim_cfg in dim_configs.items():
             try:
                 questions = self.question_bank.retrieve_by_dimension(
                     dimension_id=dim_id,
                     count=dim_cfg["count"]
                 )
+                # 确保每题都有 options（量表题从 labels 转为 options）
+                questions = [_ensure_question_options(q) for q in questions]
                 dimensions.append({
                     "dimension_id": dim_id,
                     "dimension_name": dim_cfg["dimension_name"],
@@ -189,7 +187,6 @@ class AssessmentService:
                 logger.info(f"[Assessment] 从RAG检索 {dim_id} 维度题目: {len(questions)}题")
             except Exception as e:
                 logger.error(f"[Assessment] 检索 {dim_id} 维度题目失败: {e}")
-                # 降级：使用空列表（前端会提示错误）
                 dimensions.append({
                     "dimension_id": dim_id,
                     "dimension_name": dim_cfg["dimension_name"],
@@ -247,6 +244,7 @@ class AssessmentService:
                 report["report_id"] = report_id
                 report["user_id"] = user_id
                 report["assessment_date"] = datetime.now().strftime("%Y-%m-%d")
+                report["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 report["status"] = "completed"
                 self.reports[report_id] = report
                 _save_store("reports_store_path", self.reports)
@@ -408,6 +406,39 @@ class AssessmentService:
             if not report:
                 return None
             return report
+
+    # ==================================================
+    # 历史报告列表（供 GET /assessment/report-history）
+    # ==================================================
+    def list_reports_for_user(self, user_id: int) -> List[dict]:
+        """
+        查询该用户所有已完成的测评报告，按创建时间倒序。
+        返回简要信息：report_id, created_at, holland_code, mbti, match_score
+        """
+        out = []
+        for rid, report in self.reports.items():
+            if report.get("user_id") != user_id:
+                continue
+            if report.get("status") != "completed":
+                continue
+            interest = report.get("interest_analysis") or {}
+            primary = interest.get("primary_interest") or {}
+            personality = report.get("personality_analysis") or {}
+            created = report.get("created_at") or ""
+            # 格式化为 "2026-02-20 17:28"
+            if len(created) >= 16:
+                created = created[:16].rstrip()
+            elif created and len(created) == 19:
+                created = created[:16]
+            out.append({
+                "report_id": rid,
+                "created_at": created,
+                "holland_code": interest.get("holland_code") or "",
+                "mbti": personality.get("mbti_type") or "",
+                "match_score": primary.get("score") if primary.get("score") is not None else 0
+            })
+        out.sort(key=lambda x: x["created_at"] or "", reverse=True)
+        return out
 
 
 # ===== 单例获取 =====
