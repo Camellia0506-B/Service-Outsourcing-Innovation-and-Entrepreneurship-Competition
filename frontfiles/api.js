@@ -183,12 +183,15 @@ class API {
             case '/job/detail':
                 return { success: true, data: this.mockJobDetail(options.body?.job_id || options.body?.job_name) };
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             case '/job/relation-graph':
                 return { success: true, data: { center_job: { job_id: options.body?.job_id, job_name: '算法工程师' }, vertical_graph: { nodes: [], edges: [] }, transfer_graph: { nodes: [], edges: [] } } };
             case '/job/ai-generate-profile':
                 return { success: true, data: { task_id: 'task_' + Date.now(), status: 'processing', estimated_time: 30 } };
             case '/job/ai-generate-result':
                 return { success: true, data: { status: 'completed', job_profile: this.mockJobDetail(options.body?.job_name), ai_confidence: 0.88, data_sources: { total_samples: 50, valid_samples: 47 } } };
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
             case '/job/search':
