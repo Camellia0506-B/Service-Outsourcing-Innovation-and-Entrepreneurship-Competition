@@ -791,6 +791,281 @@ body {
     border: 1px solid var(--border-color);
 }
 
+/* 岗位画像页面 */
+.job-profile-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.job-profile-container > h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.job-profile-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 24px 0;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.job-profile-tabs .tab-btn {
+    padding: 10px 20px;
+    border-radius: 999px 999px 0 0;
+}
+
+.job-profile-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.job-profile-filters input,
+.job-profile-filters select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.job-profile-filters input {
+    flex: 1;
+}
+
+.job-profile-filters select {
+    min-width: 120px;
+}
+
+/* 岗位列表卡片在岗位画像中的扩展样式 */
+.job-card .job-meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.job-card .job-salary {
+    margin: 6px 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--danger-color);
+}
+
+.job-card .job-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.skill-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.job-footer {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.job-footer .demand-score {
+    font-weight: 600;
+}
+
+.job-footer .growth-trend {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(74, 144, 226, 0.06);
+    color: var(--primary-color);
+}
+
+/* 岗位画像详情面板 */
+.job-profile-detail {
+    margin-top: 24px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px 28px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.job-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.job-detail-header h3 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.detail-section {
+    margin-top: 18px;
+}
+
+.detail-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    position: relative;
+    padding-left: 10px;
+}
+
+.detail-section h4::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 3px;
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.detail-section h5 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 10px 0 6px;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.detail-table th,
+.detail-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-table th {
+    width: 120px;
+    text-align: left;
+    color: var(--text-secondary);
+    background: #edf2f7;
+}
+
+.detail-table tr:last-child th,
+.detail-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* 岗位关联图谱 */
+.graph-container {
+    margin-top: 16px;
+    padding: 24px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.graph-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.graph-controls input,
+.graph-controls select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.graph-nodes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.graph-node {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* 岗位画像分页 */
+.pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    align-items: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.pagination button {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.pagination button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* AI 生成岗位画像卡片（统一风格） */
+.ai-generate-form {
+    background: var(--card-bg);
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.ai-generate-form h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.ai-generate-form .form-group label {
+    font-size: 14px;
+}
+
+.generate-status,
+.generate-result {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .job-profile-filters {
+        flex-direction: column;
+    }
+
+    .graph-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
 /* 职业规划报告页面 */
 .report-container {
     max-width: 1200px;
