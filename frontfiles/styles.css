@@ -2616,8 +2616,8 @@ body::before {
 
 /* 调整卡片大小 */
 .career-login-card {
-    max-width: 460px;
-    padding: 36px 44px;
+    max-width: 420px;
+    padding: 28px 36px;
 }
 
 
