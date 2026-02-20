@@ -68,10 +68,6 @@ AI算法/test_feature1.py
 node_modules/
 frontend/node_modules/
 
-# Python
-__pycache__/
-*.pyc
-
 # 环境变量
 .env
 
@@ -81,5 +77,9 @@ __pycache__/
 venv/
 AI算法/venv/
 backend/venv/
+
+# 测评缓存数据
+AI算法/data/assessment/questionnaires.json
+AI算法/data/assessment/*.json
 
  
