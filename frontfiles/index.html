@@ -269,7 +269,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>出生日期</label>
-                                    <input type="text" id="birthDate" placeholder="年/月/日">
+                                    <div class="date-input-wrapper">
+                                        <input type="text" id="birthDate" placeholder="年/月/日" autocomplete="bday" inputmode="numeric">
+                                        <button type="button" class="date-picker-btn" id="birthDatePickerBtn" aria-label="选择日期"></button>
+                                        <input type="date" id="birthDateNative" class="date-native-input" tabindex="-1" aria-hidden="true">
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>手机号</label>

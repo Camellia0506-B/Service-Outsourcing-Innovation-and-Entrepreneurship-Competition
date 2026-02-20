@@ -601,6 +601,9 @@ class CareerPlanningApp {
             if (basic.phone) phoneInput.value = basic.phone;
             if (basic.email) emailInput.value = basic.email;
         }
+        
+        // 初始化日期输入框的手动输入处理
+        this.initDateInput();
 
         if (data.education_info) {
             const edu = data.education_info;
@@ -699,19 +702,87 @@ class CareerPlanningApp {
     // 将后端日期 YYYY-MM-DD → 界面显示 YYYY/MM/DD
     formatDateForDisplay(value) {
         if (!value) return '';
-        return value.replace(/-/g, '/');
+        // HTML5 date input 需要 YYYY-MM-DD 格式，直接返回（浏览器会自动本地化显示）
+        // 如果后端返回的是其他格式，先转换为 YYYY-MM-DD
+        const dateStr = value.trim();
+        // 如果已经是 YYYY-MM-DD 格式，直接返回
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return dateStr;
+        }
+        // 如果是 YYYY/MM/DD 或其他格式，转换为 YYYY-MM-DD
+        const normalized = dateStr.replace(/[./年月日]/g, '-').replace(/\/+/g, '-');
+        const m = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (m) {
+            const mm = m[2].padStart(2, '0');
+            const dd = m[3].padStart(2, '0');
+            return `${m[1]}-${mm}-${dd}`;
+        }
+        return value; // 格式不对就原样返回
     }
 
-    // 将界面输入 YYYY/MM/DD 或 YYYY-MM-DD → 后端存储 YYYY-MM-DD
+    // 初始化出生日期输入框（稳定版）：文本框手输 + 右侧按钮弹出原生日历
+    initDateInput() {
+        const textInput = document.getElementById('birthDate');
+        const nativeInput = document.getElementById('birthDateNative');
+        if (!textInput || !nativeInput) return;
+
+        if (textInput.dataset.dateInitDone === '1') return;
+        textInput.dataset.dateInitDone = '1';
+
+        const toYmd = (value) => {
+            if (!value) return '';
+            const v = String(value).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+            const normalized = v.replace(/[年月日]/g, '-').replace(/[./]/g, '-').replace(/-+/g, '-');
+            const m = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+            if (!m) return v;
+            const mm = m[2].padStart(2, '0');
+            const dd = m[3].padStart(2, '0');
+            const formatted = `${m[1]}-${mm}-${dd}`;
+            const d = new Date(formatted);
+            if (d.getFullYear() === Number(m[1]) && (d.getMonth() + 1) === Number(m[2]) && d.getDate() === Number(m[3])) {
+                return formatted;
+            }
+            return v;
+        };
+
+        // 初始同步：如果文本框已有值，写回 native；如果 native 有值，写回文本框
+        if (textInput.value && !nativeInput.value) nativeInput.value = toYmd(textInput.value);
+        if (nativeInput.value && !textInput.value) textInput.value = toYmd(nativeInput.value);
+
+        textInput.addEventListener('blur', () => {
+            const v = toYmd(textInput.value);
+            textInput.value = v;
+            nativeInput.value = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
+        });
+
+        nativeInput.addEventListener('change', () => {
+            const v = toYmd(nativeInput.value);
+            if (v) textInput.value = v;
+        });
+    }
+
+    // 将界面输入 YYYY-MM-DD（HTML5 date input 格式）→ 后端存储 YYYY-MM-DD
     normalizeDateForStorage(value) {
         if (!value) return '';
-        const v = value.trim().replace(/[./年月日]/g, '-').replace(/\/+/g, '-');
-        // 简单校验：YYYY-MM-DD
+        // HTML5 date input 的值已经是 YYYY-MM-DD 格式
+        const v = value.trim();
+        // 验证格式：YYYY-MM-DD
         const m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-        if (!m) return value; // 格式不对就原样返回，避免卡死用户
-        const mm = m[2].padStart(2, '0');
-        const dd = m[3].padStart(2, '0');
-        return `${m[1]}-${mm}-${dd}`;
+        if (m) {
+            const mm = m[2].padStart(2, '0');
+            const dd = m[3].padStart(2, '0');
+            return `${m[1]}-${mm}-${dd}`;
+        }
+        // 如果不是标准格式，尝试转换（兼容旧的手动输入）
+        const normalized = v.replace(/[./年月日]/g, '-').replace(/\/+/g, '-');
+        const m2 = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (m2) {
+            const mm = m2[2].padStart(2, '0');
+            const dd = m2[3].padStart(2, '0');
+            return `${m2[1]}-${mm}-${dd}`;
+        }
+        return value; // 格式不对就原样返回，避免卡死用户
     }
 
     // 将后端月份 YYYY-MM → 界面显示 YYYY/MM
@@ -2023,4 +2094,11 @@ class CareerPlanningApp {
 // 页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new CareerPlanningApp();
+
+    // 初始化日期输入框（即使没有加载档案数据）
+    if (window.app && typeof window.app.initDateInput === 'function') {
+        setTimeout(() => {
+            window.app.initDateInput();
+        }, 200);
+    }
 });
