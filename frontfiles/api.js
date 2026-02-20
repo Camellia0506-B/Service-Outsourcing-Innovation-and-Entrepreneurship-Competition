@@ -52,9 +52,10 @@ class API {
         return this.requestToAI(endpoint, { method: 'POST', body: data });
     }
 
-    // 通用请求方法（职业测评等走 AI 服务 5001，其余走 Java 5000）
+    // 通用请求方法（职业测评、职业规划报告走 AI 服务 5001，其余走 Java 5000）
     async request(endpoint, options = {}) {
-        const base = endpoint.startsWith('/assessment/') ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
+        const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/');
+        const base = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
         const url = `${base}${endpoint}`;
         const token = localStorage.getItem('token');
         

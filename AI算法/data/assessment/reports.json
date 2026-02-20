@@ -2695,5 +2695,309 @@
     "assessment_date": "2026-02-20",
     "created_at": "2026-02-20 17:45:02",
     "status": "completed"
+  },
+  "report_20260220195855010_4": {
+    "interest_analysis": {
+      "holland_code": "AEI",
+      "primary_interest": {
+        "type": "艺术型(A)",
+        "score": 35,
+        "description": "喜欢通过创造性的活动表达自我，重视美感、原创性和自由表达"
+      },
+      "interest_distribution": [
+        {
+          "type": "艺术型(A)",
+          "score": 35
+        },
+        {
+          "type": "企业型(E)",
+          "score": 35
+        },
+        {
+          "type": "研究型(I)",
+          "score": 0
+        },
+        {
+          "type": "实用型(R)",
+          "score": 0
+        },
+        {
+          "type": "社会型(S)",
+          "score": 0
+        },
+        {
+          "type": "常规型(C)",
+          "score": 0
+        }
+      ],
+      "suitable_fields": [
+        "产品经理",
+        "前端开发工程师",
+        "UI/UX设计师",
+        "运维工程师",
+        "项目经理",
+        "后端开发工程师",
+        "算法工程师",
+        "数据分析师",
+        "测试工程师",
+        "网络安全工程师"
+      ]
+    },
+    "personality_analysis": {
+      "mbti_type": "ENFJ",
+      "traits": [
+        {
+          "trait_name": "外向性",
+          "score": 15,
+          "level": "低",
+          "description": "倾向于内向，偏好独处或小范围深度交流"
+        },
+        {
+          "trait_name": "开放性",
+          "score": 25,
+          "level": "偏低",
+          "description": "对新经验持谨慎态度，更偏好熟悉和结构化的环境"
+        },
+        {
+          "trait_name": "尽责性",
+          "score": 0,
+          "level": "低",
+          "description": "在目标设定和计划执行方面可能缺乏系统性"
+        },
+        {
+          "trait_name": "宜人性",
+          "score": 50,
+          "level": "中等",
+          "description": "在人际互动中保持基本合作意愿，但不刻意迎合"
+        },
+        {
+          "trait_name": "情绪稳定性",
+          "score": 25,
+          "level": "偏低",
+          "description": "面对压力时可能出现情绪波动，需加强调节能力"
+        }
+      ]
+    },
+    "ability_analysis": {
+      "strengths": [],
+      "areas_to_improve": [
+        {
+          "ability": "逻辑分析能力",
+          "score": 60,
+          "suggestions": [
+            "通过编程练习（如LeetCode）提升问题拆解与算法思维",
+            "学习结构化思维方法（如MECE原则）增强分析框架"
+          ]
+        },
+        {
+          "ability": "沟通表达能力",
+          "score": 60,
+          "suggestions": [
+            "参与技术文档撰写或团队站会发言，锻炼清晰表达观点",
+            "录制技术讲解视频进行自我复盘，提升语言组织能力"
+          ]
+        },
+        {
+          "ability": "执行能力",
+          "score": 60,
+          "suggestions": [
+            "使用任务管理工具（如Todoist）拆分目标并追踪进度",
+            "设定每日微目标并坚持完成，逐步建立执行力习惯"
+          ]
+        }
+      ]
+    },
+    "values_analysis": {
+      "top_values": [
+        {
+          "value": "成就感",
+          "score": 100,
+          "description": "高度重视通过工作成果获得认可与自我实现"
+        },
+        {
+          "value": "工作稳定",
+          "score": 60,
+          "description": "希望职业路径具备一定可预测性和保障性"
+        },
+        {
+          "value": "薪资待遇",
+          "score": 50,
+          "description": "关注收入水平，但非首要决定因素"
+        }
+      ]
+    },
+    "recommendations": {
+      "suitable_careers": [],
+      "development_suggestions": [
+        "优先提升前端技术栈（HTML/CSS/JavaScript）以支撑UI/UX或前端岗位转型",
+        "通过参与开源项目或实习积累可展示的成果案例，强化成就感反馈",
+        "制定分阶段能力提升计划，重点突破执行能力短板",
+        "选择兼具创意空间与技术深度的细分领域（如交互开发、可视化编程）"
+      ]
+    },
+    "confidence_score": 0.76,
+    "report_id": "report_20260220195855010_4",
+    "user_id": 4,
+    "assessment_date": "2026-02-20",
+    "created_at": "2026-02-20 19:59:32",
+    "status": "completed"
+  },
+  "report_20260220200635549_4": {
+    "interest_analysis": {
+      "holland_code": "AIE",
+      "primary_interest": {
+        "type": "艺术型(A)",
+        "score": 50,
+        "description": "喜欢通过创造、设计、表达等方式进行工作，重视审美、原创性和自我表达"
+      },
+      "interest_distribution": [
+        {
+          "type": "艺术型(A)",
+          "score": 50
+        },
+        {
+          "type": "研究型(I)",
+          "score": 25
+        },
+        {
+          "type": "企业型(E)",
+          "score": 25
+        },
+        {
+          "type": "实用型(R)",
+          "score": 0
+        },
+        {
+          "type": "社会型(S)",
+          "score": 0
+        },
+        {
+          "type": "常规型(C)",
+          "score": 0
+        }
+      ],
+      "suitable_fields": [
+        "产品经理",
+        "前端开发工程师",
+        "UI/UX设计师",
+        "后端开发工程师",
+        "算法工程师",
+        "数据分析师",
+        "运维工程师",
+        "项目经理",
+        "测试工程师",
+        "网络安全工程师"
+      ]
+    },
+    "personality_analysis": {
+      "mbti_type": "INFP",
+      "traits": [
+        {
+          "trait_name": "外向性",
+          "score": 25,
+          "level": "低",
+          "description": "偏好独处和深度思考，社交互动较少但注重有意义的交流"
+        },
+        {
+          "trait_name": "开放性",
+          "score": 25,
+          "level": "低",
+          "description": "倾向于熟悉和稳定的事物，对新奇或抽象概念兴趣有限"
+        },
+        {
+          "trait_name": "尽责性",
+          "score": 0,
+          "level": "低",
+          "description": "在结构化任务和规则约束下可能感到不适，更倾向灵活自主的工作方式"
+        },
+        {
+          "trait_name": "宜人性",
+          "score": 50,
+          "level": "中等",
+          "description": "在合作中能兼顾他人感受，但也会坚持个人立场"
+        },
+        {
+          "trait_name": "情绪稳定性",
+          "score": 25,
+          "level": "低",
+          "description": "可能对压力或不确定性较为敏感，需关注情绪调节"
+        }
+      ]
+    },
+    "ability_analysis": {
+      "strengths": [],
+      "areas_to_improve": [
+        {
+          "ability": "逻辑分析能力",
+          "score": 60,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "学习能力",
+          "score": 60,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "创新能力",
+          "score": 63,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "执行能力",
+          "score": 65,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "沟通表达能力",
+          "score": 68,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        }
+      ]
+    },
+    "values_analysis": {
+      "top_values": [
+        {
+          "value": "成就感",
+          "score": 100,
+          "description": "高度重视通过工作实现个人价值和可见成果"
+        },
+        {
+          "value": "工作稳定",
+          "score": 100,
+          "description": "强烈偏好可预测、低风险的职业环境"
+        },
+        {
+          "value": "薪资待遇",
+          "score": 50,
+          "description": "对收入有一定关注，但非首要驱动力"
+        }
+      ]
+    },
+    "recommendations": {
+      "suitable_careers": [],
+      "development_suggestions": [
+        "优先提升前端开发技能（HTML/CSS/JavaScript框架），强化艺术兴趣与技术能力的结合点",
+        "选择稳定性较高的企业（如大型科技公司或成熟SaaS企业）作为职业起点",
+        "通过参与开源项目或内部工具开发积累可展示的成果作品集，增强成就感体验",
+        "制定渐进式学习计划，重点补强逻辑分析与执行能力短板",
+        "在团队中主动承担小型模块开发或文档撰写任务，逐步提升沟通与协作信心"
+      ]
+    },
+    "confidence_score": 0.82,
+    "report_id": "report_20260220200635549_4",
+    "user_id": 4,
+    "assessment_date": "2026-02-20",
+    "created_at": "2026-02-20 20:07:01",
+    "status": "completed"
   }
 }

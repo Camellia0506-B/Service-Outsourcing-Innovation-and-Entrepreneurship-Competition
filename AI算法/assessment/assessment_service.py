@@ -240,6 +240,14 @@ class AssessmentService:
                 scores = self._calculate_scores(assessment_id, answers)
                 # 2. 调用AI生成报告
                 report = self._generate_report_with_ai(user_id, assessment_id, answers, scores)
+                # 2.5 用后端计分覆盖能力分析、兴趣匹配度（保证能力有区分度、兴趣匹配度基于 Holland）
+                report = self._inject_scores_into_report(report, scores)
+                # 2.6 注入计算机相关岗位推荐（适合职业领域 + 最匹配职业，来自数据集 + Holland/MBTI）
+                try:
+                    from assessment.career_recommender import inject_career_recommendations
+                    report = inject_career_recommendations(report)
+                except Exception as inj:
+                    logger.warning("[Assessment] 注入职业推荐失败，保留AI原结果: %s", inj)
                 # 3. 保存报告
                 report["report_id"] = report_id
                 report["user_id"] = user_id
@@ -293,34 +301,68 @@ class AssessmentService:
 
                 # 根据题目类型计分
                 if q["question_type"] == "single_choice":
-                    for opt in q["options"]:
-                        if opt["option_id"] == user_answer:
+                    options = q.get("options") or []
+                    score = None
+                    for idx, opt in enumerate(options):
+                        # 兼容 option_id 与 user_answer 类型不一致（如 "A" vs "A"，或前端传索引 0/1/2）
+                        if str(opt.get("option_id", "")) == str(user_answer):
                             score = opt.get("score", 0)
-                            if dim_id == "interest":
-                                holland_type = q.get("holland_type", "R")
-                                holland_scores[holland_type] += score
-                            elif dim_id == "personality":
-                                trait = q.get("trait", "外向性")
-                                trait_scores[trait] += score
-                            elif dim_id == "values":
-                                val_type = q.get("value_type", "成就感")
-                                value_scores[val_type] += score
                             break
+                    if score is None and options and isinstance(user_answer, (int, float)):
+                        # 前端可能传的是选项索引 0/1/2
+                        idx = int(user_answer)
+                        if 0 <= idx < len(options):
+                            score = options[idx].get("score", 0)
+                    if score is not None:
+                        if dim_id == "interest":
+                            holland_type = q.get("holland_type", "R")
+                            holland_scores[holland_type] += score
+                        elif dim_id == "personality":
+                            trait = q.get("trait", "外向性")
+                            trait_scores[trait] += score
+                            logger.debug(
+                                "[性格计分] qid=%s trait=%s user_answer=%s score=%s",
+                                qid, trait, user_answer, score
+                            )
+                        elif dim_id == "values":
+                            val_type = q.get("value_type", "成就感")
+                            value_scores[val_type] += score
+                    elif dim_id == "personality":
+                        logger.warning(
+                            "[性格计分] 未匹配到选项 qid=%s trait=%s user_answer=%s options=%s",
+                            qid, q.get("trait"), user_answer,
+                            [{"option_id": o.get("option_id"), "score": o.get("score")} for o in options]
+                        )
 
                 elif q["question_type"] == "scale":
                     # 量表题（1-5分）
                     scale_score = int(user_answer) if isinstance(user_answer, (int, str)) else 3
                     if dim_id == "ability":
                         ability = q.get("ability", "逻辑分析能力")
-                        ability_scores[ability] += scale_score * 20  # 归一化到0-100
+                        ability_scores[ability] += scale_score * 20  # 每题 20–100，3 题合计 60–300
 
-        # 归一化到0-100
-        for k in holland_scores:
-            holland_scores[k] = min(100, int(holland_scores[k] * 5))  # 假设每类型最多20分原始分
+        # 性格特质：每维度 4 题、每题 1–5 分，原始分 4–20，*5 归一为 20–100
+        logger.info("[性格计分] 归一前原始分 trait_scores=%s", dict(trait_scores))
         for k in trait_scores:
             trait_scores[k] = min(100, int(trait_scores[k] * 5))
+        logger.info("[性格计分] 归一后 trait_scores=%s", dict(trait_scores))
+
+        # 归一化到 0–100
+        for k in holland_scores:
+            holland_scores[k] = min(100, int(holland_scores[k] * 5))  # 假设每类型最多20分原始分
         for k in value_scores:
             value_scores[k] = min(100, int(value_scores[k] * 10))
+        # 能力分数：每题 1–5 分×20=20–100，每能力 3 题共 60–300，归一为 60–100（有区分度，避免全 60）
+        raw_ability = dict(ability_scores)
+        for k in ability_scores:
+            raw = ability_scores[k]
+            # 映射 0–300 -> 60–100：0->60, 150->80, 300->100
+            if raw <= 0:
+                normalized = 60
+            else:
+                normalized = 60 + (raw / 300.0) * 40
+            ability_scores[k] = max(60, min(100, int(round(normalized))))
+        logger.info("[能力计分] 原始分 raw_ability=%s 归一后 abilities=%s", raw_ability, dict(ability_scores))
 
         return {
             "holland": holland_scores,
@@ -328,6 +370,49 @@ class AssessmentService:
             "abilities": ability_scores,
             "values": value_scores
         }
+
+    def _inject_scores_into_report(self, report: dict, scores: dict) -> dict:
+        """
+        用后端计分结果覆盖报告中的能力分析、兴趣匹配度，保证数据有区分度且基于 Holland 计算。
+        """
+        # 1) 能力分析：按实际能力分数拆成优势(>=75)与待提升(<70)
+        abilities = scores.get("abilities") or {}
+        type_names = {"R": "实用型(R)", "I": "研究型(I)", "A": "艺术型(A)", "S": "社会型(S)", "E": "企业型(E)", "C": "常规型(C)"}
+        strengths = []
+        areas_to_improve = []
+        for name, score in abilities.items():
+            item = {"ability": name, "score": score}
+            if score >= 75:
+                strengths.append({**item, "description": "该项能力表现突出"})
+            elif score < 70:
+                areas_to_improve.append({**item, "suggestions": ["可通过练习与项目实践持续提升"]})
+        strengths.sort(key=lambda x: -x["score"])
+        areas_to_improve.sort(key=lambda x: x["score"])
+        if "ability_analysis" not in report:
+            report["ability_analysis"] = {}
+        report["ability_analysis"]["strengths"] = strengths
+        report["ability_analysis"]["areas_to_improve"] = areas_to_improve
+
+        # 2) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
+        holland = scores.get("holland") or {}
+        if holland:
+            order = sorted(holland.keys(), key=lambda k: -holland[k])
+            top_letter = order[0] if order else "I"
+            top_score = holland.get(top_letter, 0)
+            code = "".join(order[:3]) if len(order) >= 3 else (order[0] * 3)
+            if "interest_analysis" not in report:
+                report["interest_analysis"] = {}
+            if "primary_interest" not in report["interest_analysis"]:
+                report["interest_analysis"]["primary_interest"] = {}
+            desc_map = {"R": "喜欢动手、操作与机械", "I": "喜欢观察、研究与分析", "A": "喜欢创作、表达与审美", "S": "喜欢与人沟通、助人", "E": "喜欢影响他人、领导", "C": "喜欢条理、数据与规范"}
+            report["interest_analysis"]["primary_interest"]["type"] = type_names.get(top_letter, top_letter)
+            report["interest_analysis"]["primary_interest"]["score"] = min(100, max(0, int(top_score)))
+            report["interest_analysis"]["primary_interest"]["description"] = report["interest_analysis"]["primary_interest"].get("description") or desc_map.get(top_letter, "")
+            report["interest_analysis"]["holland_code"] = code
+            dist = [{"type": type_names.get(k, k), "score": holland[k]} for k in ["R", "I", "A", "S", "E", "C"]]
+            dist.sort(key=lambda x: -x["score"])
+            report["interest_analysis"]["interest_distribution"] = dist
+        return report
 
     def _generate_report_with_ai(self, user_id: int, assessment_id: str, answers: List[dict], scores: dict) -> dict:
         """

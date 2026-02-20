@@ -72,7 +72,10 @@
             var v = Number(n);
             return (typeof v === 'number' && isFinite(v)) ? Math.max(0, Math.min(100, v)) : 0;
         }
-
+        function safeAbilityScore(n) {
+            var v = Number(n);
+            return (typeof v === 'number' && isFinite(v)) ? Math.max(60, Math.min(100, v)) : 60;
+        }
         function toNum(v) { var n = Number(v); return (typeof n === 'number' && isFinite(n)) ? n : 0; }
 
         function renderReport(data) {
@@ -90,7 +93,17 @@
             var careers = rec.suitable_careers || [];
             var suggestions = rec.development_suggestions || [];
             var genTime = formatDateTime(data.created_at || data.assessment_date);
-            var allAbilities = (strengths || []).concat(areas || []);
+            var allAbilitiesRaw = (strengths || []).concat(areas || []);
+            var uniqueAbilities = [];
+            var seen = {};
+            allAbilitiesRaw.forEach(function(a) {
+                var key = a.ability || a.name || '';
+                if (key && !seen[key]) { seen[key] = true; uniqueAbilities.push(a); }
+            });
+            var allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
+            var sortedByScore = allAbilities.slice().sort(function(a, b) { return (Number(b.score) || 0) - (Number(a.score) || 0); });
+            var topAbility = sortedByScore[0] || null;
+            var secondAbility = sortedByScore[1] || null;
             var careerFields = (fields.length ? fields : careers.map(function(c) { return c.career; })).slice(0, 5);
 
             var traitsHtml = '';
@@ -107,7 +120,7 @@
 
             var abilityCardsHtml = '';
             allAbilities.forEach(function(a) {
-                var score = safePct(a.score);
+                var score = safeAbilityScore(a.score);
                 var color = score >= 75 ? '#48bb78' : score >= 60 ? '#f5a623' : '#e94560';
                 var level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '重点提升';
                 var levelTag = score >= 70 ? 'report-level-high' : score >= 50 ? 'report-level-mid' : 'report-level-low';
@@ -125,7 +138,7 @@
 
             container.innerHTML = '<div id="report-content" class="report-wrap">' +
                 '<div class="report-header-card"><div class="header-tag">CAREER ASSESSMENT REPORT</div><h3>' + (data.title || '职业测评报告') + '</h3><p class="header-sub">基于 Holland RIASEC × MBTI 双维度综合分析</p><div class="header-meta"><div class="meta-item"><span class="meta-label">Holland Code</span><span class="meta-value">' + (interest.holland_code || '—') + '</span></div><div class="meta-item"><span class="meta-label">MBTI 类型</span><span class="meta-value">' + mbti + '</span></div><div class="meta-item"><span class="meta-label">兴趣匹配度</span><span class="meta-value">' + (primary.score != null ? primary.score + '分' : '—') + '</span></div><div class="meta-item"><span class="meta-label">生成时间</span><span class="meta-value">' + genTime + '</span></div></div></div>' +
-                '<div class="report-summary-grid"><div class="report-summary-card c1"><div class="card-icon">✨</div><div class="card-label">主要兴趣类型</div><div class="card-value">' + (primary.type || '—') + '</div><div class="card-sub">' + ((primary.description || '').slice(0, 40)) + '</div></div><div class="report-summary-card c2"><div class="card-icon">☀️</div><div class="card-label">优势能力</div><div class="card-value">' + (strengths[0] ? strengths[0].ability + ' ' + strengths[0].score + '分' : '—') + '</div><div class="card-sub">' + (strengths[1] ? strengths[1].ability + ' ' + strengths[1].score + '分' : '') + '</div></div><div class="report-summary-card c3"><div class="card-icon">🎯</div><div class="card-label">最匹配职业</div><div class="card-value">' + (careers[0] ? careers[0].career : (fields[0] || '—')) + '</div><div class="card-sub">' + (fields.slice(1, 3).join(' · ') || '') + '</div></div></div>' +
+                '<div class="report-summary-grid"><div class="report-summary-card c1"><div class="card-icon">✨</div><div class="card-label">主要兴趣类型</div><div class="card-value">' + (primary.type || '—') + '</div><div class="card-sub">' + ((primary.description || '').slice(0, 40)) + '</div></div><div class="report-summary-card c2"><div class="card-icon">☀️</div><div class="card-label">优势能力</div><div class="card-value">' + ((strengths[0] || topAbility) ? (strengths[0] || topAbility).ability + ' ' + safeAbilityScore((strengths[0] || topAbility).score) + '分' : '—') + '</div><div class="card-sub">' + ((strengths[1] || secondAbility) ? (strengths[1] || secondAbility).ability + ' ' + safeAbilityScore((strengths[1] || secondAbility).score) + '分' : '') + '</div></div><div class="report-summary-card c3"><div class="card-icon">🎯</div><div class="card-label">最匹配职业</div><div class="card-value">' + (careers[0] ? careers[0].career : (fields[0] || '—')) + '</div><div class="card-sub">' + (fields.slice(1, 3).join(' · ') || '') + '</div></div></div>' +
                 '<div class="report-charts-grid"><div class="report-chart-card"><div class="report-chart-title">Holland 兴趣分布</div><div class="report-chart-wrap"><canvas id="reportHollandChart"></canvas></div></div><div class="report-chart-card"><div class="report-chart-title">能力评分对比</div><div class="report-chart-wrap"><canvas id="reportAbilityBar"></canvas></div></div>' +
                 '<div class="report-section-card"><div class="report-section-title"><span class="dot"></span>综合能力图谱</div><div class="report-radar-wrap"><canvas id="reportRadarChart"></canvas></div></div>' +
                 traitsHtml +
@@ -137,7 +150,7 @@
             var hollandLabels = dist.length ? dist.map(function(d) { return d.type; }) : ['艺术型(A)', '企业型(E)', '研究型(I)', '社会型(S)', '常规型(C)', '实用型(R)'];
             var hollandValues = (dist.length ? dist.map(function(d) { return d.score; }) : [35, 25, 20, 10, 6, 4]).map(toNum);
             var abilityLabels = allAbilities.map(function(a) { return a.ability; });
-            var abilityValues = allAbilities.map(function(a) { return toNum(a.score); });
+            var abilityValues = allAbilities.map(function(a) { return safeAbilityScore(a.score); });
             var radarLabels = traits.map(function(t) { return t.trait_name; });
             var radarValues = traits.map(function(t) { return Math.min(100, toNum(t.score) * 4); });
             var colors = ['#e94560', '#f5a623', '#667eea', '#48bb78', '#4facfe', '#a8dadc'];

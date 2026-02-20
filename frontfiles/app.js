@@ -2105,14 +2105,22 @@ class CareerPlanningApp {
         // 霍兰德饼图数据（从 interest_distribution 或默认）
         const hollandLabels = dist.length ? dist.map(d => d.type) : ['艺术型(A)', '企业型(E)', '研究型(I)', '社会型(S)', '常规型(C)', '实用型(R)'];
         const hollandValues = dist.length ? dist.map(d => d.score) : [35, 25, 20, 10, 6, 4];
-        // 能力柱状图：合并 strengths + areas
-        const allAbilities = strengths.concat(areas);
-        const abilityLabels = allAbilities.map(a => a.ability);
-        const abilityValues = allAbilities.map(a => a.score);
+        const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
+        // 能力分：总分 100，最低 60，避免出现 0 分或超过 100
+        const safeAbilityScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(60, Math.min(100, v)) : 60; };
+        // 能力柱状图：合并 strengths + areas，按能力名去重（保留首次出现，避免「沟通表达能力」等重复）
+        const allAbilitiesRaw = strengths.concat(areas);
+        const uniqueAbilities = [...new Map(allAbilitiesRaw.map(a => [a.ability || a.name || '', a])).values()].filter(a => a.ability || a.name);
+        const allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
+        const abilityLabels = allAbilities.map(a => a.ability || a.name);
+        const abilityValues = allAbilities.map(a => safeAbilityScore(a.score));
+        // 优势能力卡片：无 strengths[0] 时从能力详细分析中取分数最高的两项
+        const sortedByScore = allAbilities.length ? [...allAbilities].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)) : [];
+        const topAbility = sortedByScore[0] || null;
+        const secondAbility = sortedByScore[1] || null;
         // 雷达图：性格特质分数（0-100 归一化）
         const radarLabels = traits.map(t => t.trait_name);
         const radarValues = traits.map(t => Math.min(100, Math.max(0, Number(t.score) || 0) * 4));
-        const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
 
         const reportId = this.currentReportId;
         let html = `
@@ -2141,9 +2149,9 @@ class CareerPlanningApp {
                     <div class="report-summary-card c2">
                         <div class="card-icon">☀️</div>
                         <div class="card-label">优势能力</div>
-                        <div class="card-value">${strengths[0] ? strengths[0].ability + ' ' + strengths[0].score + '分' : '—'}</div>
-                        <div class="card-sub">${strengths[1] ? strengths[1].ability + ' ' + strengths[1].score + '分' : ''}</div>
-                        ${strengths[1] ? `<div class="card-sub-bar"><div class="card-sub-bar-inner" style="width:${safePct(strengths[1].score)}%"></div></div>` : ''}
+                        <div class="card-value">${(strengths[0] || topAbility) ? (strengths[0] || topAbility).ability + ' ' + safeAbilityScore((strengths[0] || topAbility).score) + '分' : '—'}</div>
+                        <div class="card-sub">${(strengths[1] || secondAbility) ? (strengths[1] || secondAbility).ability + ' ' + safeAbilityScore((strengths[1] || secondAbility).score) + '分' : ''}</div>
+                        ${(strengths[1] || secondAbility) ? `<div class="card-sub-bar"><div class="card-sub-bar-inner" style="width:${safeAbilityScore((strengths[1] || secondAbility).score)}%"></div></div>` : ''}
                     </div>
                     <div class="report-summary-card c3">
                         <div class="card-icon">🎯</div>
@@ -2195,7 +2203,7 @@ class CareerPlanningApp {
                     <div class="report-section-title"><span class="dot"></span>能力详细分析</div>
                     <div class="report-ability-grid">
                         ${allAbilities.map(a => {
-                            const score = safePct(a.score);
+                            const score = safeAbilityScore(a.score);
                             const cls = score >= 75 ? 'excellent' : score >= 60 ? 'good' : 'needs';
                             const color = score >= 75 ? '#48bb78' : score >= 60 ? '#f5a623' : '#e94560';
                             const level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '重点提升';
