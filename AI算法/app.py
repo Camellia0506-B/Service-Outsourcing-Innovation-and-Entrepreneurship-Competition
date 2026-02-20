@@ -49,13 +49,16 @@ app.register_blueprint(assessment_bp)
 logger.info("[App] 注册路由: 职业测评模块 /api/v1/assessment/*")
 logger.info("[App] 注册路由: 个人档案模块 /api/v1/profile/*")
 
+# 职业规划报告模块（与测评报告打通，走同一份报告数据）
+from api.career_report_router import career_bp
+app.register_blueprint(career_bp)
+logger.info("[App] 注册路由: 职业规划报告模块 /api/v1/career/*")
+
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp
 # app.register_blueprint(auth_bp)
 # from api.student_profile_router import student_bp
 # app.register_blueprint(student_bp)
-# from api.career_report_router import career_bp
-# app.register_blueprint(career_bp)
 
 
 # ========== 健康检查接口 ==========

@@ -30,43 +30,30 @@ class CareerPlanningApp {
 
     // 绑定所有事件
     bindEvents() {
-        var self = this;
-
-        // 登录页：用事件委托，避免因 DOM 未就绪或元素未找到导致点击无反应
-        document.body.addEventListener('submit', function(e) {
-            var form = e.target;
-            if (form && form.id === 'loginForm') {
-                e.preventDefault();
-                self.handleLogin();
-            }
-            if (form && form.id === 'registerForm') {
-                e.preventDefault();
-                self.handleRegisterForm();
-            }
+        // 登录表单提交
+        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleLogin();
         });
-        document.body.addEventListener('click', function(e) {
-            var el = e.target.closest ? e.target.closest('[id]') : e.target;
-            if (!el || !el.id) return;
-            if (el.id === 'goRegister') {
-                e.preventDefault();
-                var loginPage = document.getElementById('loginPage');
-                var registerPage = document.getElementById('registerPage');
-                if (loginPage) loginPage.classList.add('hidden');
-                if (registerPage) registerPage.classList.remove('hidden');
-            }
-            if (el.id === 'showLogin') {
-                e.preventDefault();
-                self.showPage('loginPage');
-                var rp = document.getElementById('registerPage');
-                if (rp) rp.classList.add('hidden');
-            }
-            if (el.id === 'forgotPasswordLink') {
-                e.preventDefault();
-                self.openForgotPasswordModal();
-            }
-            if (el.id === 'forgotPasswordClose') self.closeForgotPasswordModal();
-            if (el.id === 'forgotSendCodeBtn') self.handleForgotSendCode();
-            if (el.id === 'forgotResetBtn') self.handleForgotReset();
+
+        // 创建账户 - 注册表单提交
+        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleRegisterForm();
+        });
+
+        // 登录页「创建账户」跳转到注册页
+        document.getElementById('goRegister')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+        });
+
+        // 注册页「立即登录」跳转到登录页
+        document.getElementById('showLogin')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showPage('loginPage');
+            document.getElementById('registerPage').classList.add('hidden');
         });
 
         // 导航链接
@@ -340,10 +327,23 @@ class CareerPlanningApp {
     // 处理快速注册
     async handleQuickRegister() {
         const introduction = document.getElementById('quickRegisterText').value.trim();
+        const submitBtn = document.getElementById('handleQuickRegisterBtn');
         
         if (!introduction) {
-            this.showToast('请介绍一下自己', 'error');
+            this.showToast('请介绍一下自己，帮助我们更好地为您服务', 'error');
+            document.getElementById('quickRegisterText').focus();
             return;
+        }
+        
+        if (introduction.length < 5) {
+            this.showToast('介绍内容太短，请至少输入5个字符', 'error');
+            return;
+        }
+
+        // 禁用按钮，显示加载状态
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="btn-text">正在生成账号...</span>';
         }
 
         // 根据介绍生成用户信息
@@ -354,13 +354,18 @@ class CareerPlanningApp {
         this.hideLoading();
 
         if (result.success) {
-            this.showToast('注册成功，正在登录...', 'success');
+            this.showToast('注册成功！正在为您登录...', 'success');
             // 自动登录
             setTimeout(() => {
                 this.autoLogin(userInfo.username, userInfo.password);
             }, 1000);
         } else {
-            this.showToast(result.msg || '注册失败', 'error');
+            this.showToast(result.msg || '注册失败，请稍后重试', 'error');
+            // 恢复按钮
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="btn-text">开始我的职业规划</span><span class="btn-arrow">→</span>';
+            }
         }
     }
 
@@ -2078,14 +2083,22 @@ class CareerPlanningApp {
         // 霍兰德饼图数据（从 interest_distribution 或默认）
         const hollandLabels = dist.length ? dist.map(d => d.type) : ['艺术型(A)', '企业型(E)', '研究型(I)', '社会型(S)', '常规型(C)', '实用型(R)'];
         const hollandValues = dist.length ? dist.map(d => d.score) : [35, 25, 20, 10, 6, 4];
-        // 能力柱状图：合并 strengths + areas
-        const allAbilities = strengths.concat(areas);
-        const abilityLabels = allAbilities.map(a => a.ability);
-        const abilityValues = allAbilities.map(a => a.score);
+        const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
+        // 能力分：总分 100，最低 60，避免出现 0 分或超过 100
+        const safeAbilityScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(60, Math.min(100, v)) : 60; };
+        // 能力柱状图：合并 strengths + areas，按能力名去重（保留首次出现，避免「沟通表达能力」等重复）
+        const allAbilitiesRaw = strengths.concat(areas);
+        const uniqueAbilities = [...new Map(allAbilitiesRaw.map(a => [a.ability || a.name || '', a])).values()].filter(a => a.ability || a.name);
+        const allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
+        const abilityLabels = allAbilities.map(a => a.ability || a.name);
+        const abilityValues = allAbilities.map(a => safeAbilityScore(a.score));
+        // 优势能力卡片：无 strengths[0] 时从能力详细分析中取分数最高的两项
+        const sortedByScore = allAbilities.length ? [...allAbilities].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)) : [];
+        const topAbility = sortedByScore[0] || null;
+        const secondAbility = sortedByScore[1] || null;
         // 雷达图：性格特质分数（0-100 归一化）
         const radarLabels = traits.map(t => t.trait_name);
         const radarValues = traits.map(t => Math.min(100, Math.max(0, Number(t.score) || 0) * 4));
-        const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
 
         const reportId = this.currentReportId;
         let html = `
@@ -2114,9 +2127,9 @@ class CareerPlanningApp {
                     <div class="report-summary-card c2">
                         <div class="card-icon">☀️</div>
                         <div class="card-label">优势能力</div>
-                        <div class="card-value">${strengths[0] ? strengths[0].ability + ' ' + strengths[0].score + '分' : '—'}</div>
-                        <div class="card-sub">${strengths[1] ? strengths[1].ability + ' ' + strengths[1].score + '分' : ''}</div>
-                        ${strengths[1] ? `<div class="card-sub-bar"><div class="card-sub-bar-inner" style="width:${safePct(strengths[1].score)}%"></div></div>` : ''}
+                        <div class="card-value">${(strengths[0] || topAbility) ? (strengths[0] || topAbility).ability + ' ' + safeAbilityScore((strengths[0] || topAbility).score) + '分' : '—'}</div>
+                        <div class="card-sub">${(strengths[1] || secondAbility) ? (strengths[1] || secondAbility).ability + ' ' + safeAbilityScore((strengths[1] || secondAbility).score) + '分' : ''}</div>
+                        ${(strengths[1] || secondAbility) ? `<div class="card-sub-bar"><div class="card-sub-bar-inner" style="width:${safeAbilityScore((strengths[1] || secondAbility).score)}%"></div></div>` : ''}
                     </div>
                     <div class="report-summary-card c3">
                         <div class="card-icon">🎯</div>
@@ -2168,7 +2181,7 @@ class CareerPlanningApp {
                     <div class="report-section-title"><span class="dot"></span>能力详细分析</div>
                     <div class="report-ability-grid">
                         ${allAbilities.map(a => {
-                            const score = safePct(a.score);
+                            const score = safeAbilityScore(a.score);
                             const cls = score >= 75 ? 'excellent' : score >= 60 ? 'good' : 'needs';
                             const color = score >= 75 ? '#48bb78' : score >= 60 ? '#f5a623' : '#e94560';
                             const level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '重点提升';

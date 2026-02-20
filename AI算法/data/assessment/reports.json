@@ -2696,116 +2696,113 @@
     "created_at": "2026-02-20 17:45:02",
     "status": "completed"
   },
-  "report_20260220192045749_1": {
+  "report_20260220195855010_4": {
     "interest_analysis": {
-      "holland_code": "AIE",
+      "holland_code": "AEI",
       "primary_interest": {
         "type": "艺术型(A)",
-        "score": 85,
-        "description": "喜欢通过创造性的活动表达自我，重视原创性、审美和自由表达"
+        "score": 35,
+        "description": "喜欢通过创造性的活动表达自我，重视美感、原创性和自由表达"
       },
       "interest_distribution": [
         {
           "type": "艺术型(A)",
-          "score": 85
-        },
-        {
-          "type": "研究型(I)",
-          "score": 72
+          "score": 35
         },
         {
           "type": "企业型(E)",
-          "score": 65
+          "score": 35
+        },
+        {
+          "type": "研究型(I)",
+          "score": 0
         },
         {
           "type": "实用型(R)",
-          "score": 48
+          "score": 0
         },
         {
           "type": "社会型(S)",
-          "score": 48
+          "score": 0
         },
         {
           "type": "常规型(C)",
-          "score": 48
+          "score": 0
         }
       ],
       "suitable_fields": [
-        "创意设计",
-        "内容创作",
-        "用户体验研究",
-        "品牌策划",
-        "数字媒体"
+        "产品经理",
+        "前端开发工程师",
+        "UI/UX设计师",
+        "运维工程师",
+        "项目经理",
+        "后端开发工程师",
+        "算法工程师",
+        "数据分析师",
+        "测试工程师",
+        "网络安全工程师"
       ]
     },
     "personality_analysis": {
-      "mbti_type": "ENFP",
+      "mbti_type": "ENFJ",
       "traits": [
         {
           "trait_name": "外向性",
-          "score": 60,
-          "level": "偏高",
-          "description": "倾向于从社交互动中获取能量，乐于表达想法和参与团队协作"
+          "score": 15,
+          "level": "低",
+          "description": "倾向于内向，偏好独处或小范围深度交流"
         },
         {
           "trait_name": "开放性",
-          "score": 60,
-          "level": "偏高",
-          "description": "对新观念、新体验持开放态度，富有想象力和创造力"
+          "score": 25,
+          "level": "偏低",
+          "description": "对新经验持谨慎态度，更偏好熟悉和结构化的环境"
         },
         {
           "trait_name": "尽责性",
           "score": 0,
           "level": "低",
-          "description": "更注重灵活性和即兴发挥，可能在结构化任务中感到受限"
+          "description": "在目标设定和计划执行方面可能缺乏系统性"
         },
         {
           "trait_name": "宜人性",
-          "score": 80,
-          "level": "高",
-          "description": "善于理解他人，合作意愿强，重视人际关系和谐"
+          "score": 50,
+          "level": "中等",
+          "description": "在人际互动中保持基本合作意愿，但不刻意迎合"
         },
         {
           "trait_name": "情绪稳定性",
-          "score": 60,
-          "level": "偏高",
-          "description": "通常能较好应对压力，情绪反应较为平稳"
+          "score": 25,
+          "level": "偏低",
+          "description": "面对压力时可能出现情绪波动，需加强调节能力"
         }
       ]
     },
     "ability_analysis": {
-      "strengths": [
-        {
-          "ability": "沟通表达能力",
-          "score": 160,
-          "description": "擅长清晰传达观点，具备良好的语言组织与人际互动能力"
-        },
-        {
-          "ability": "执行能力",
-          "score": 140,
-          "description": "能够有效推进任务落地，行动力强"
-        },
-        {
-          "ability": "创新能力",
-          "score": 80,
-          "description": "具备提出新颖想法和解决方案的能力"
-        }
-      ],
+      "strengths": [],
       "areas_to_improve": [
         {
           "ability": "逻辑分析能力",
-          "score": 0,
+          "score": 60,
           "suggestions": [
-            "通过结构化思维训练（如金字塔原理）提升问题拆解能力",
-            "参与数据分析或逻辑推理类课程，培养系统性思考习惯"
+            "通过编程练习（如LeetCode）提升问题拆解与算法思维",
+            "学习结构化思维方法（如MECE原则）增强分析框架"
           ]
         },
         {
-          "ability": "学习能力",
-          "score": 0,
+          "ability": "沟通表达能力",
+          "score": 60,
           "suggestions": [
-            "建立定期学习计划，采用费曼技巧强化知识内化",
-            "选择与兴趣结合的学习主题，提升持续学习动力"
+            "参与技术文档撰写或团队站会发言，锻炼清晰表达观点",
+            "录制技术讲解视频进行自我复盘，提升语言组织能力"
+          ]
+        },
+        {
+          "ability": "执行能力",
+          "score": 60,
+          "suggestions": [
+            "使用任务管理工具（如Todoist）拆分目标并追踪进度",
+            "设定每日微目标并坚持完成，逐步建立执行力习惯"
           ]
         }
       ]
@@ -2813,74 +2810,194 @@
     "values_analysis": {
       "top_values": [
         {
-          "value": "工作稳定",
-          "score": 80,
-          "description": "高度重视职业的安全性和可预测性，倾向选择制度健全、风险较低的工作环境"
+          "value": "成就感",
+          "score": 100,
+          "description": "高度重视通过工作成果获得认可与自我实现"
         },
         {
-          "value": "成就感",
-          "score": 40,
-          "description": "希望工作成果获得认可，但相比稳定性，成就感并非首要驱动力"
+          "value": "工作稳定",
+          "score": 60,
+          "description": "希望职业路径具备一定可预测性和保障性"
         },
         {
           "value": "薪资待遇",
           "score": 50,
-          "description": "关注收入水平，但愿意在稳定前提下接受适度的薪酬弹性"
+          "description": "关注收入水平，但非首要决定因素"
         }
       ]
     },
     "recommendations": {
-      "suitable_careers": [
-        {
-          "career": "品牌策划专员",
-          "match_score": 88,
-          "reasons": [
-            "契合艺术型与企业型兴趣，融合创意表达与市场策略",
-            "依赖沟通表达与执行能力优势",
-            "大型企业或成熟机构提供稳定工作环境"
-          ]
-        },
-        {
-          "career": "用户研究分析师",
-          "match_score": 82,
-          "reasons": [
-            "结合研究型兴趣与沟通能力，通过访谈与观察理解用户需求",
-            "需一定创新思维设计调研方案",
-            "多在制度完善的互联网或咨询公司任职，保障稳定性"
-          ]
-        },
-        {
-          "career": "内容运营经理",
-          "match_score": 85,
-          "reasons": [
-            "发挥艺术型创造力进行内容生产，同时运用企业型特质推动传播效果",
-            "高度依赖沟通与执行能力",
-            "中大型平台型企业提供稳定职业路径"
-          ]
-        },
-        {
-          "career": "公关专员",
-          "match_score": 80,
-          "reasons": [
-            "匹配高宜人性与沟通能力，擅长维护组织形象与媒体关系",
-            "工作流程相对标准化，符合稳定性偏好",
-            "需创意撰写新闻稿与活动策划，呼应艺术型兴趣"
-          ]
-        }
-      ],
+      "suitable_careers": [],
       "development_suggestions": [
-        "针对性提升逻辑分析能力，可通过参与产品需求文档撰写或基础数据分析项目实践",
-        "在保持创意优势的同时，建立个人工作流程模板，弥补尽责性不足带来的执行波动",
-        "优先选择组织架构成熟、业务稳定的行业（如金融、教育科技、大型消费品企业）以契合价值观",
-        "利用高宜人性特质主动承担跨部门协作角色，积累项目管理经验",
-        "将创新能力和沟通优势结合，发展为‘创意+落地’复合型人才，增强职场竞争力"
+        "优先提升前端技术栈（HTML/CSS/JavaScript）以支撑UI/UX或前端岗位转型",
+        "通过参与开源项目或实习积累可展示的成果案例，强化成就感反馈",
+        "制定分阶段能力提升计划，重点突破执行能力短板",
+        "选择兼具创意空间与技术深度的细分领域（如交互开发、可视化编程）"
       ]
     },
-    "confidence_score": 0.86,
-    "report_id": "report_20260220192045749_1",
-    "user_id": 1,
+    "confidence_score": 0.76,
+    "report_id": "report_20260220195855010_4",
+    "user_id": 4,
     "assessment_date": "2026-02-20",
-    "created_at": "2026-02-20 19:21:13",
+    "created_at": "2026-02-20 19:59:32",
+    "status": "completed"
+  },
+  "report_20260220200635549_4": {
+    "interest_analysis": {
+      "holland_code": "AIE",
+      "primary_interest": {
+        "type": "艺术型(A)",
+        "score": 50,
+        "description": "喜欢通过创造、设计、表达等方式进行工作，重视审美、原创性和自我表达"
+      },
+      "interest_distribution": [
+        {
+          "type": "艺术型(A)",
+          "score": 50
+        },
+        {
+          "type": "研究型(I)",
+          "score": 25
+        },
+        {
+          "type": "企业型(E)",
+          "score": 25
+        },
+        {
+          "type": "实用型(R)",
+          "score": 0
+        },
+        {
+          "type": "社会型(S)",
+          "score": 0
+        },
+        {
+          "type": "常规型(C)",
+          "score": 0
+        }
+      ],
+      "suitable_fields": [
+        "产品经理",
+        "前端开发工程师",
+        "UI/UX设计师",
+        "后端开发工程师",
+        "算法工程师",
+        "数据分析师",
+        "运维工程师",
+        "项目经理",
+        "测试工程师",
+        "网络安全工程师"
+      ]
+    },
+    "personality_analysis": {
+      "mbti_type": "INFP",
+      "traits": [
+        {
+          "trait_name": "外向性",
+          "score": 25,
+          "level": "低",
+          "description": "偏好独处和深度思考，社交互动较少但注重有意义的交流"
+        },
+        {
+          "trait_name": "开放性",
+          "score": 25,
+          "level": "低",
+          "description": "倾向于熟悉和稳定的事物，对新奇或抽象概念兴趣有限"
+        },
+        {
+          "trait_name": "尽责性",
+          "score": 0,
+          "level": "低",
+          "description": "在结构化任务和规则约束下可能感到不适，更倾向灵活自主的工作方式"
+        },
+        {
+          "trait_name": "宜人性",
+          "score": 50,
+          "level": "中等",
+          "description": "在合作中能兼顾他人感受，但也会坚持个人立场"
+        },
+        {
+          "trait_name": "情绪稳定性",
+          "score": 25,
+          "level": "低",
+          "description": "可能对压力或不确定性较为敏感，需关注情绪调节"
+        }
+      ]
+    },
+    "ability_analysis": {
+      "strengths": [],
+      "areas_to_improve": [
+        {
+          "ability": "逻辑分析能力",
+          "score": 60,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "学习能力",
+          "score": 60,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "创新能力",
+          "score": 63,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "执行能力",
+          "score": 65,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        },
+        {
+          "ability": "沟通表达能力",
+          "score": 68,
+          "suggestions": [
+            "可通过练习与项目实践持续提升"
+          ]
+        }
+      ]
+    },
+    "values_analysis": {
+      "top_values": [
+        {
+          "value": "成就感",
+          "score": 100,
+          "description": "高度重视通过工作实现个人价值和可见成果"
+        },
+        {
+          "value": "工作稳定",
+          "score": 100,
+          "description": "强烈偏好可预测、低风险的职业环境"
+        },
+        {
+          "value": "薪资待遇",
+          "score": 50,
+          "description": "对收入有一定关注，但非首要驱动力"
+        }
+      ]
+    },
+    "recommendations": {
+      "suitable_careers": [],
+      "development_suggestions": [
+        "优先提升前端开发技能（HTML/CSS/JavaScript框架），强化艺术兴趣与技术能力的结合点",
+        "选择稳定性较高的企业（如大型科技公司或成熟SaaS企业）作为职业起点",
+        "通过参与开源项目或内部工具开发积累可展示的成果作品集，增强成就感体验",
+        "制定渐进式学习计划，重点补强逻辑分析与执行能力短板",
+        "在团队中主动承担小型模块开发或文档撰写任务，逐步提升沟通与协作信心"
+      ]
+    },
+    "confidence_score": 0.82,
+    "report_id": "report_20260220200635549_4",
+    "user_id": 4,
+    "assessment_date": "2026-02-20",
+    "created_at": "2026-02-20 20:07:01",
     "status": "completed"
   }
 }
