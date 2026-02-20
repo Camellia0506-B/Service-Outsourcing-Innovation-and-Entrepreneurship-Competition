@@ -19552,5 +19552,35 @@
       }
     ],
     "created_at": "2026-02-20 18:03:21"
+  },
+  "assess_20260220183434600_1": {
+    "assessment_id": "assess_20260220183434600_1",
+    "user_id": 1,
+    "assessment_type": "comprehensive",
+    "total_questions": 0,
+    "estimated_time": 5,
+    "dimensions": [
+      {
+        "dimension_id": "interest",
+        "dimension_name": "职业兴趣",
+        "questions": []
+      },
+      {
+        "dimension_id": "personality",
+        "dimension_name": "性格特质",
+        "questions": []
+      },
+      {
+        "dimension_id": "ability",
+        "dimension_name": "能力倾向",
+        "questions": []
+      },
+      {
+        "dimension_id": "values",
+        "dimension_name": "职业价值观",
+        "questions": []
+      }
+    ],
+    "created_at": "2026-02-20 18:34:38"
   }
 }
