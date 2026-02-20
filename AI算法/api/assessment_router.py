@@ -150,3 +150,32 @@ def get_report():
     except Exception as e:
         logger.error(f"[API] /assessment/report 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ================================================================
+# 历史报告列表
+# ================================================================
+@assessment_bp.route("/report-history", methods=["GET"])
+def report_history():
+    """
+    获取当前用户的历史测评报告列表。
+    从 query 获取 user_id（前端已登录时传入）；可选：后续可从 token/session 解析。
+    返回：{ code: 200, data: [ { report_id, created_at, holland_code, mbti, match_score } ] }
+    """
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return error_response(400, "请提供 user_id 参数")
+
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            return error_response(400, "user_id 必须为数字")
+
+        service = get_assessment_service()
+        data = service.list_reports_for_user(user_id)
+        return jsonify({"code": 200, "msg": "success", "data": data}), 200
+
+    except Exception as e:
+        logger.error(f"[API] /assessment/report-history 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")

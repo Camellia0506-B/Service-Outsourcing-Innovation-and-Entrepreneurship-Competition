@@ -10,54 +10,64 @@ class CareerPlanningApp {
 
     // 初始化应用
     init() {
-        // 检查登录状态
-        if (isLoggedIn()) {
-            this.currentUser = getUserInfo();
-            this.showMainApp();
-        } else {
-            this.showPage('loginPage');
+        try {
+            // 检查登录状态
+            if (isLoggedIn()) {
+                this.currentUser = getUserInfo();
+                this.showMainApp();
+            } else {
+                this.showPage('loginPage');
+            }
+        } catch (e) {
+            console.error('[App] init 异常，仍继续绑定事件', e);
+            try {
+                this.showPage('loginPage');
+            } catch (_) {}
         }
-
-        // 绑定事件
+        // 绑定事件（确保无论 init 是否报错都会执行）
         this.bindEvents();
     }
 
     // 绑定所有事件
     bindEvents() {
-        // 登录表单提交
-        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
+        var self = this;
 
-        // 创建账户 - 注册表单提交
-        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleRegisterForm();
+        // 登录页：用事件委托，避免因 DOM 未就绪或元素未找到导致点击无反应
+        document.body.addEventListener('submit', function(e) {
+            var form = e.target;
+            if (form && form.id === 'loginForm') {
+                e.preventDefault();
+                self.handleLogin();
+            }
+            if (form && form.id === 'registerForm') {
+                e.preventDefault();
+                self.handleRegisterForm();
+            }
         });
-
-        // 登录页「创建账户」跳转到注册页
-        document.getElementById('goRegister')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('registerPage').classList.remove('hidden');
+        document.body.addEventListener('click', function(e) {
+            var el = e.target.closest ? e.target.closest('[id]') : e.target;
+            if (!el || !el.id) return;
+            if (el.id === 'goRegister') {
+                e.preventDefault();
+                var loginPage = document.getElementById('loginPage');
+                var registerPage = document.getElementById('registerPage');
+                if (loginPage) loginPage.classList.add('hidden');
+                if (registerPage) registerPage.classList.remove('hidden');
+            }
+            if (el.id === 'showLogin') {
+                e.preventDefault();
+                self.showPage('loginPage');
+                var rp = document.getElementById('registerPage');
+                if (rp) rp.classList.add('hidden');
+            }
+            if (el.id === 'forgotPasswordLink') {
+                e.preventDefault();
+                self.openForgotPasswordModal();
+            }
+            if (el.id === 'forgotPasswordClose') self.closeForgotPasswordModal();
+            if (el.id === 'forgotSendCodeBtn') self.handleForgotSendCode();
+            if (el.id === 'forgotResetBtn') self.handleForgotReset();
         });
-
-        // 注册页「立即登录」跳转到登录页
-        document.getElementById('showLogin')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showPage('loginPage');
-            document.getElementById('registerPage').classList.add('hidden');
-        });
-
-        // 忘记密码
-        document.getElementById('forgotPasswordLink')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.openForgotPasswordModal();
-        });
-        document.getElementById('forgotPasswordClose')?.addEventListener('click', () => this.closeForgotPasswordModal());
-        document.getElementById('forgotSendCodeBtn')?.addEventListener('click', () => this.handleForgotSendCode());
-        document.getElementById('forgotResetBtn')?.addEventListener('click', () => this.handleForgotReset());
 
         // 导航链接
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -105,6 +115,12 @@ class CareerPlanningApp {
         // 职业测评相关
         document.getElementById('submitAssessmentBtn')?.addEventListener('click', () => {
             this.submitAssessment();
+        });
+
+        document.getElementById('viewReportBtn')?.addEventListener('click', () => {
+            const btn = document.getElementById('viewReportBtn');
+            if (btn && btn.disabled) return;
+            this.viewAssessmentReport();
         });
 
         // 岗位匹配相关 Tab 切换
@@ -1059,117 +1075,206 @@ class CareerPlanningApp {
         poll();
     }
 
+    // 持久化：保存最近一次测评报告 ID（按用户）
+    saveLastAssessmentReportId(reportId) {
+        const userId = getCurrentUserId();
+        if (userId && reportId) localStorage.setItem('last_assessment_report_id_' + userId, reportId);
+    }
+
+    // 恢复：读取当前用户最近一次测评报告 ID
+    getLastAssessmentReportId() {
+        const userId = getCurrentUserId();
+        return userId ? localStorage.getItem('last_assessment_report_id_' + userId) : null;
+    }
+
+    // 是否有历史报告（兼容 last_assessment_report_id_ 与 report_history_ 两种 key）
+    hasHistoryReport() {
+        const id1 = this.getLastAssessmentReportId();
+        if (id1) return true;
+        const userId = getCurrentUserId();
+        if (!userId) return false;
+        const raw = localStorage.getItem('report_history_' + userId);
+        if (!raw) return false;
+        try {
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.length > 0 : !!raw;
+        } catch (_) {
+            return !!raw;
+        }
+    }
+
     // 加载职业测评数据
     async loadAssessmentData() {
         const userId = getCurrentUserId();
-        console.log('loadAssessmentData - userId:', userId);
         if (!userId) return;
 
-        // 获取测评类型（默认 comprehensive）
-        const assessmentType = 'comprehensive';  // 可以后续添加选择UI
+        const savedReportId = this.getLastAssessmentReportId();
+        if (savedReportId) this.currentReportId = savedReportId;
+
+        // 有历史报告时：不显示问卷，显示「查看最新报告」和「重新测评」
+        if (this.hasHistoryReport() && this.currentReportId) {
+            this.showAssessmentWelcomeWithHistory();
+            return;
+        }
+
+        // 无历史报告：拉取问卷并直接显示
+        await this.fetchAndShowQuestionnaire();
+    }
+
+    // 有历史报告时展示的入口（两个按钮）
+    showAssessmentWelcomeWithHistory() {
+        const container = document.getElementById('questionnaireContainer');
+        const actionsEl = document.getElementById('assessmentActions');
+        if (actionsEl) actionsEl.classList.add('hidden');
+        container.innerHTML = `
+            <div class="assessment-welcome-card">
+                <p class="assessment-welcome-text">您已有测评报告，可查看最新报告或重新测评。</p>
+                <div class="assessment-welcome-actions">
+                    <button type="button" id="btnViewLatestReport" class="btn-primary">查看最新报告</button>
+                    <button type="button" id="btnRetakeAssessment" class="btn-secondary">重新测评</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('btnViewLatestReport')?.addEventListener('click', () => {
+            this.showPage('reportPage');
+            this.loadAssessmentReportContent(this.currentReportId);
+        });
+        document.getElementById('btnRetakeAssessment')?.addEventListener('click', () => {
+            if (!confirm('重新测评将生成新报告，是否继续？')) return;
+            this.fetchAndShowQuestionnaire();
+        });
+    }
+
+    // 拉取问卷并显示（用于首次进入或点击「重新测评」后）
+    async fetchAndShowQuestionnaire() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+        const assessmentType = 'comprehensive';
+        const container = document.getElementById('questionnaireContainer');
+        const actionsEl = document.getElementById('assessmentActions');
+        container.innerHTML = '<div class="loading-message">加载问卷中...</div>';
+        if (actionsEl) actionsEl.classList.add('hidden');
 
         this.showLoading();
         const result = await getQuestionnaire(userId, assessmentType);
         this.hideLoading();
 
-        console.log('loadAssessmentData - API result:', result);
-
         if (result.success) {
-            console.log('loadAssessmentData - assessmentData:', result.data);
             this.currentAssessmentId = result.data.assessment_id || null;
             this._assessmentStartTime = Date.now();
             this.renderQuestionnaire(result.data);
+            if (actionsEl) actionsEl.classList.remove('hidden');
+            document.getElementById('submitAssessmentBtn').classList.remove('hidden');
+            const viewBtn = document.getElementById('viewReportBtn');
+            if (viewBtn) {
+                viewBtn.classList.add('hidden');
+                viewBtn.disabled = false;
+                viewBtn.classList.remove('view-report-generating');
+            }
         } else {
-            console.error('loadAssessmentData - API failed:', result.msg);
-            document.getElementById('questionnaireContainer').innerHTML = '<div class="hint-text">加载失败: ' + result.msg + '</div>';
+            container.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '') + '</div>';
         }
     }
 
     // 渲染测评问卷
     renderQuestionnaire(assessmentData) {
         const container = document.getElementById('questionnaireContainer');
+        const actionsEl = document.getElementById('assessmentActions');
         container.innerHTML = '';
 
         console.log('renderQuestionnaire - assessmentData:', assessmentData);
 
-        if (!assessmentData || !assessmentData.dimensions) {
+        if (!assessmentData || assessmentData.dimensions == null) {
             console.error('renderQuestionnaire - Invalid assessmentData:', assessmentData);
             container.innerHTML = '<div class="hint-text">数据格式错误，请重试</div>';
+            if (actionsEl) actionsEl.classList.remove('hidden');
             return;
         }
 
-        const { dimensions, total_questions, estimated_time } = assessmentData;
+        const dimensions = assessmentData.dimensions;
+        const dimensionsList = Array.isArray(dimensions) ? dimensions : [];
 
-        dimensions.forEach((dimension, dimIndex) => {
-            const dimensionDiv = document.createElement('div');
-            dimensionDiv.className = 'dimension-section';
-            
-            let questionsHtml = '';
-            dimension.questions.forEach((q, qIndex) => {
-                let optionsHtml = '';
-                
-                if (q.question_type === 'single_choice') {
-                    q.options.forEach((option, optionIndex) => {
+        try {
+            dimensionsList.forEach((dimension, dimIndex) => {
+                if (!dimension || typeof dimension !== 'object') return;
+                const dimensionDiv = document.createElement('div');
+                dimensionDiv.className = 'dimension-section';
+                const questions = Array.isArray(dimension.questions) ? dimension.questions : [];
+                let questionsHtml = '';
+                questions.forEach((q, qIndex) => {
+                    if (!q || typeof q !== 'object') return;
+                    let optionsHtml = '';
+                    let options = Array.isArray(q.options) ? q.options : [];
+                    // 量表题可能只有 labels 没有 options，前端兜底生成选项
+                    if (options.length === 0 && Array.isArray(q.labels) && q.labels.length > 0) {
+                        options = q.labels.map((text, i) => ({
+                            option_id: String(i + 1),
+                            option_text: text || '',
+                            score: i + 1
+                        }));
+                    }
+                    const safeOption = (opt) => (opt && typeof opt === 'object' ? opt : { option_id: '', option_text: '' });
+                    options.forEach((option) => {
+                        const o = safeOption(option);
+                        const name = `question_${q.question_id || qIndex}`;
+                        const type = (q.question_type === 'scale') ? 'scale' : 'single_choice';
                         optionsHtml += `
-                            <label class="option-item">
-                                <input type="radio" name="question_${q.question_id}" value="${option.option_id}">
-                                <span>${option.option_text}</span>
+                            <label class="option-item ${type === 'scale' ? 'scale-option' : ''}">
+                                <input type="radio" name="${name}" value="${o.option_id || ''}">
+                                <span>${o.option_text || ''}</span>
                             </label>
                         `;
                     });
-                } else if (q.question_type === 'scale') {
-                    q.options.forEach((option, optionIndex) => {
-                        optionsHtml += `
-                            <label class="option-item scale-option">
-                                <input type="radio" name="question_${q.question_id}" value="${option.option_id}">
-                                <span>${option.option_text}</span>
-                            </label>
-                        `;
-                    });
-                }
 
-                questionsHtml += `
-                    <div class="question-card" data-question-id="${q.question_id}" data-question-type="${q.question_type || 'single_choice'}">
-                        <div class="question-header">
-                            <div class="question-number">${qIndex + 1}</div>
-                            <div class="question-text">${q.question_text}</div>
+                    questionsHtml += `
+                        <div class="question-card" data-question-id="${q.question_id || ''}" data-question-type="${q.question_type || 'single_choice'}">
+                            <div class="question-header">
+                                <div class="question-number">${qIndex + 1}</div>
+                                <div class="question-text">${q.question_text != null ? q.question_text : ''}</div>
+                            </div>
+                            <div class="options">${optionsHtml}</div>
                         </div>
-                        <div class="options">${optionsHtml}</div>
+                    `;
+                });
+
+                const dimName = (dimension.dimension_name != null) ? dimension.dimension_name : '未命名维度';
+                dimensionDiv.innerHTML = `
+                    <div class="dimension-header">
+                        <h3>${dimName}</h3>
+                    </div>
+                    <div class="dimension-questions">
+                        ${questionsHtml}
                     </div>
                 `;
+
+                container.appendChild(dimensionDiv);
             });
+        } catch (err) {
+            console.error('renderQuestionnaire 渲染异常:', err);
+            container.innerHTML = '<div class="hint-text">部分题目渲染失败，请刷新重试。若可看到题目，仍可作答并提交。</div>';
+        }
 
-            dimensionDiv.innerHTML = `
-                <div class="dimension-header">
-                    <h3>${dimension.dimension_name}</h3>
-                </div>
-                <div class="dimension-questions">
-                    ${questionsHtml}
-                </div>
-            `;
+        // 无论是否报错都显示提交按钮
+        if (actionsEl) actionsEl.classList.remove('hidden');
 
-            container.appendChild(dimensionDiv);
-        });
-
-        // 显示提交按钮
-        document.getElementById('assessmentActions').classList.remove('hidden');
-
-        // 添加选项点击效果
-        document.querySelectorAll('.option-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
-                
-                // 移除同组其他选项的选中样式
-                const name = radio.name;
-                document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
-                    r.closest('.option-item').classList.remove('selected');
+        // 添加选项点击效果（安全：querySelectorAll 总返回 NodeList，可 forEach）
+        const optionItems = container.querySelectorAll('.option-item');
+        if (optionItems && optionItems.forEach) {
+            optionItems.forEach((item) => {
+                item.addEventListener('click', function() {
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                    const name = radio && radio.name;
+                    if (name) {
+                        container.querySelectorAll(`input[name="${name}"]`).forEach((r) => {
+                            const parent = r.closest('.option-item');
+                            if (parent) parent.classList.remove('selected');
+                        });
+                    }
+                    this.classList.add('selected');
                 });
-                
-                // 添加当前选项的选中样式
-                this.classList.add('selected');
             });
-        });
+        }
     }
 
     // 提交测评（答案格式符合文档：{ question_id, answer }，answer 为 option_id 如 "A" 或量表 1-5）
@@ -1211,16 +1316,94 @@ class CareerPlanningApp {
         this.hideLoading();
 
         if (result.success) {
-            this.currentReportId = result.data && result.data.report_id ? result.data.report_id : null;
-            this.showToast('测评提交成功', 'success');
-            document.getElementById('viewReportBtn').classList.remove('hidden');
-            setTimeout(() => this.viewAssessmentReport(), 1000);
+            const reportId = result.data.report_id;
+            this.currentReportId = reportId;
+            this.saveLastAssessmentReportId(reportId);
+            this.showToast('测评提交成功，正在生成报告...', 'success');
+            this.setViewReportButtonState('generating');
+            
+            // 轮询获取报告
+            setTimeout(() => {
+                this.pollAssessmentReport();
+            }, 2000);
         } else {
             this.showToast(result.msg || '提交失败', 'error');
         }
     }
 
-    // 查看测评报告（需传 report_id，来自提交测评返回）
+    // 轮询测评报告（3.3）
+    async pollAssessmentReport(maxAttempts = 40) {
+        if (!this.currentReportId) {
+            this.showToast('报告ID不存在', 'error');
+            return;
+        }
+
+        const userId = getCurrentUserId();
+        let attempts = 0;
+        const container = document.getElementById('questionnaireContainer');
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'assessment-status';
+        statusDiv.style.cssText = 'padding: 20px; text-align: center; background: #f0f9ff; border-radius: 8px; margin: 20px 0;';
+        container.appendChild(statusDiv);
+
+        const poll = async () => {
+            if (attempts >= maxAttempts) {
+                statusDiv.innerHTML = '<p style="color: #dc2626;">报告生成超时，请稍后查看</p>';
+                return;
+            }
+
+            const result = await getAssessmentReport(userId, this.currentReportId);
+
+            if (result.success) {
+                if (result.data.status === 'completed') {
+                    this.saveLastAssessmentReportId(this.currentReportId);
+                    statusDiv.remove();
+                    this.setViewReportButtonState('ready');
+                    // 切换到报告页面
+                    this.showPage('reportPage');
+                    // 渲染报告内容
+                    this.renderReportContent(result.data);
+                    this.showToast('报告生成完成！', 'success');
+                } else if (result.data.status === 'failed') {
+                    statusDiv.innerHTML = `<p style="color: #dc2626;">报告生成失败: ${result.data.error || '未知错误'}</p>`;
+                    this.setViewReportButtonState('ready');
+                } else {
+                    // processing：保持按钮为「报告生成中…」禁用态
+                    this.setViewReportButtonState('generating');
+                    attempts++;
+                    statusDiv.innerHTML = `<p>报告生成中... (${attempts * 3}秒)</p>`;
+                    setTimeout(poll, 3000);
+                }
+            } else {
+                this.setViewReportButtonState('generating');
+                attempts++;
+                statusDiv.innerHTML = `<p>获取报告状态中... (${attempts * 3}秒)</p>`;
+                setTimeout(poll, 3000);
+            }
+        };
+
+        poll();
+    }
+
+    // 更新「查看测评报告」按钮状态：generating = 禁用灰字「报告生成中…」，ready = 可点「查看测评报告 →」
+    setViewReportButtonState(state) {
+        const btn = document.getElementById('viewReportBtn');
+        if (!btn) return;
+        btn.classList.remove('hidden');
+        if (state === 'generating') {
+            btn.disabled = true;
+            btn.classList.add('view-report-generating');
+            btn.textContent = '报告生成中…';
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('view-report-generating');
+            btn.textContent = '查看测评报告 →';
+            btn.classList.add('view-report-ready-flash');
+            setTimeout(() => btn.classList.remove('view-report-ready-flash'), 600);
+        }
+    }
+
+    // 查看测评报告（手动触发）
     async viewAssessmentReport() {
         if (!this.currentReportId) {
             this.showToast('请先完成并提交测评', 'error');
@@ -1739,9 +1922,18 @@ class CareerPlanningApp {
         `;
     }
 
-    // 加载职业规划报告数据
-    loadReportData() {
-        // 初始化时不加载，等待用户操作
+    // 加载职业规划报告数据（进入本页时尝试恢复上次的测评报告）
+    async loadReportData() {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+        const reportId = this.getLastAssessmentReportId();
+        if (!reportId) return;
+        const contentDiv = document.getElementById('reportContent');
+        const result = await getAssessmentReport(userId, reportId);
+        if (result.success && result.data && result.data.status === 'completed') {
+            this.currentReportId = reportId;
+            this.renderReportContent(result.data);
+        }
     }
 
     // 生成职业规划报告
@@ -1802,7 +1994,7 @@ class CareerPlanningApp {
         poll();
     }
 
-    // 加载报告内容
+    // 加载职业规划报告内容（POST /career/view-report）
     async loadReportContent(reportId) {
         const contentDiv = document.getElementById('reportContent');
         contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
@@ -1816,222 +2008,326 @@ class CareerPlanningApp {
         }
     }
 
+    // 加载测评报告内容（用于历史报告列表点击，走 POST /assessment/report）
+    async loadAssessmentReportContent(reportId) {
+        const contentDiv = document.getElementById('reportContent');
+        contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
+        const userId = getCurrentUserId();
+        if (!userId) {
+            contentDiv.innerHTML = '<div class="hint-text">请先登录</div>';
+            return;
+        }
+        const result = await getAssessmentReport(userId, reportId);
+        if (result.success && result.data && result.data.status === 'completed') {
+            this.currentReportId = reportId;
+            this.renderReportContent(result.data);
+        } else {
+            contentDiv.innerHTML = '<div class="hint-text">加载失败</div>';
+        }
+    }
+
     // 渲染报告内容
-    // 格式化时间（北京时间）
+    // 格式化时间（支持 created_at / assessment_date，无则显示当前日期）
     formatDateTime(dateString) {
-        if (!dateString) return '未知时间';
-        
+        if (!dateString) return new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         try {
             const date = new Date(dateString);
-            // 转换为北京时间（UTC+8）
-            const beijingTime = new Date(date.getTime() + (8 * 60 * 60 * 1000) + (date.getTimezoneOffset() * 60 * 1000));
-            
-            const year = beijingTime.getFullYear();
-            const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
-            const day = String(beijingTime.getDate()).padStart(2, '0');
-            const hours = String(beijingTime.getHours()).padStart(2, '0');
-            const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
-            
-            return `${year}年${month}月${day}日 ${hours}:${minutes} (北京时间)`;
-        } catch (error) {
-            console.error('时间格式化错误:', error);
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const h = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            return `${y}年${m}月${d}日 ${h}:${min}`;
+        } catch (e) {
             return dateString;
         }
     }
 
     renderReportContent(data) {
         const contentDiv = document.getElementById('reportContent');
-        
+        const genTime = this.formatDateTime(data.created_at || data.assessment_date);
+        const interest = data.interest_analysis || {};
+        const primary = interest.primary_interest || {};
+        const dist = interest.interest_distribution || [];
+        const fields = interest.suitable_fields || [];
+        const personality = data.personality_analysis || {};
+        const mbti = personality.mbti_type || '—';
+        const traits = personality.traits || [];
+        const ability = data.ability_analysis || {};
+        const strengths = ability.strengths || [];
+        const areas = ability.areas_to_improve || [];
+        const rec = data.recommendations || {};
+        const careers = rec.suitable_careers || [];
+        const suggestions = rec.development_suggestions || [];
+
+        // 霍兰德饼图数据（从 interest_distribution 或默认）
+        const hollandLabels = dist.length ? dist.map(d => d.type) : ['艺术型(A)', '企业型(E)', '研究型(I)', '社会型(S)', '常规型(C)', '实用型(R)'];
+        const hollandValues = dist.length ? dist.map(d => d.score) : [35, 25, 20, 10, 6, 4];
+        // 能力柱状图：合并 strengths + areas
+        const allAbilities = strengths.concat(areas);
+        const abilityLabels = allAbilities.map(a => a.ability);
+        const abilityValues = allAbilities.map(a => a.score);
+        // 雷达图：性格特质分数（0-100 归一化）
+        const radarLabels = traits.map(t => t.trait_name);
+        const radarValues = traits.map(t => Math.min(100, Math.max(0, Number(t.score) || 0) * 4));
+        const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
+
+        const reportId = this.currentReportId;
         let html = `
-            <h3 style="color: var(--primary-color); margin-bottom: 20px;">
-                ${data.title || '职业测评报告'}
-            </h3>
-            <div style="color: var(--text-secondary); margin-bottom: 32px;">
-                生成时间: ${this.formatDateTime(data.created_at)}
+            <div class="report-export-bar no-print">
+                <button type="button" id="reportExportPdfBtn" class="btn-export-pdf">导出 PDF</button>
+            </div>
+            <div id="reportPdfContent" class="report-wrap">
+                <div class="report-header-card">
+                    <div class="header-tag">CAREER ASSESSMENT REPORT</div>
+                    <h3>${data.title || '职业测评报告'}</h3>
+                    <p class="header-sub">基于 Holland RIASEC × MBTI 双维度综合分析</p>
+                    <div class="header-meta">
+                        <div class="meta-item"><span class="meta-label">Holland Code</span><span class="meta-value">${interest.holland_code || '—'}</span></div>
+                        <div class="meta-item"><span class="meta-label">MBTI 类型</span><span class="meta-value">${mbti}</span></div>
+                        <div class="meta-item"><span class="meta-label">兴趣匹配度</span><span class="meta-value">${primary.score != null ? primary.score + '分' : '—'}</span></div>
+                        <div class="meta-item"><span class="meta-label">生成时间</span><span class="meta-value" id="reportGenTime">${genTime}</span></div>
+                    </div>
+                </div>
+                <div class="report-summary-grid">
+                    <div class="report-summary-card c1">
+                        <div class="card-icon">✨</div>
+                        <div class="card-label">主要兴趣类型</div>
+                        <div class="card-value">${primary.type || '—'}</div>
+                        <div class="card-sub">${(primary.description || '').replace(/[,，]/g, ' · ').slice(0, 28)}${(primary.description || '').length > 28 ? '…' : ''}</div>
+                    </div>
+                    <div class="report-summary-card c2">
+                        <div class="card-icon">☀️</div>
+                        <div class="card-label">优势能力</div>
+                        <div class="card-value">${strengths[0] ? strengths[0].ability + ' ' + strengths[0].score + '分' : '—'}</div>
+                        <div class="card-sub">${strengths[1] ? strengths[1].ability + ' ' + strengths[1].score + '分' : ''}</div>
+                        ${strengths[1] ? `<div class="card-sub-bar"><div class="card-sub-bar-inner" style="width:${safePct(strengths[1].score)}%"></div></div>` : ''}
+                    </div>
+                    <div class="report-summary-card c3">
+                        <div class="card-icon">🎯</div>
+                        <div class="card-label">最匹配职业</div>
+                        <div class="card-value">${careers[0] ? careers[0].career : (fields[0] || '—')}</div>
+                        <div class="card-sub">${(fields.length ? fields.slice(1, 3) : careers.slice(1, 3).map(c => c.career)).join(' · ') || ''}</div>
+                    </div>
+                </div>
+                <div class="report-charts-grid">
+                    <div class="report-chart-card">
+                        <div class="report-chart-title">Holland 兴趣分布</div>
+                        <div class="report-chart-wrap"><canvas id="reportHollandChart"></canvas></div>
+                    </div>
+                    <div class="report-chart-card">
+                        <div class="report-chart-title">能力评分对比</div>
+                        <div class="report-chart-wrap"><canvas id="reportAbilityBar"></canvas></div>
+                    </div>
+                </div>
+                <div class="report-section-card">
+                    <div class="report-section-title"><span class="dot"></span>综合能力图谱</div>
+                    <div class="report-radar-wrap"><canvas id="reportRadarChart"></canvas></div>
+                </div>
+                ${traits.length ? `
+                <div class="report-section-card">
+                    <div class="report-section-title"><span class="dot"></span>性格特质分析 — ${mbti}</div>
+                    <div class="report-trait-list">
+                        ${traits.map(t => {
+                            const pct = safePct(Math.min(100, (Number(t.score) || 0) * 4));
+                            const levelClass = pct >= 60 ? 'report-level-high' : pct >= 40 ? 'report-level-mid' : 'report-level-low';
+                            const levelText = pct >= 60 ? '偏强' : pct >= 40 ? '中等' : '偏低';
+                            return `<div class="report-trait-item">
+                                <span class="report-trait-name">${t.trait_name}</span>
+                                <div class="report-trait-bar-bg"><div class="report-trait-bar" style="width:${pct}%; background:linear-gradient(90deg,#667eea,#764ba2)"></div></div>
+                                <span class="report-trait-score">${t.score}分 <span class="report-level-tag ${levelClass}">${t.level || levelText}</span></span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                <div class="report-section-card">
+                    <div class="report-section-title"><span class="dot"></span>适合职业领域推荐</div>
+                    <div class="report-career-grid">
+                        ${(fields.length ? fields : careers.map(c => c.career)).slice(0, 5).map((name, i) => `
+                            <div class="report-career-chip"><span class="num">${String(i + 1).padStart(2, '0')}</span>${name}</div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="report-section-card">
+                    <div class="report-section-title"><span class="dot"></span>能力详细分析</div>
+                    <div class="report-ability-grid">
+                        ${allAbilities.map(a => {
+                            const score = safePct(a.score);
+                            const cls = score >= 75 ? 'excellent' : score >= 60 ? 'good' : 'needs';
+                            const color = score >= 75 ? '#48bb78' : score >= 60 ? '#f5a623' : '#e94560';
+                            const level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '重点提升';
+                            const levelTag = score >= 70 ? 'report-level-high' : score >= 50 ? 'report-level-mid' : 'report-level-low';
+                            return `<div class="report-ability-card">
+                                <div class="report-ability-name">${a.ability}</div>
+                                <div class="report-ability-score-row">
+                                    <span class="report-ability-score" style="color:${color}">${score}分</span>
+                                    <span class="report-level-tag ${levelTag}">${level}</span>
+                                </div>
+                                <div class="report-ability-bar-bg"><div class="report-ability-bar" style="width:${score}%; background:linear-gradient(90deg,${color},${color}99)"></div></div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+                ${suggestions.length ? `
+                <div class="report-section-card">
+                    <div class="report-section-title"><span class="dot"></span>AI 个性化发展建议</div>
+                    <div class="report-suggestion-block">
+                        <span class="report-suggestion-icon">💭</span>
+                        <div class="report-suggestion-text">${suggestions.length ? suggestions.map((s, i) => (i ? ' ' : '') + s).join('') : '结合兴趣与能力，建议持续学习、实践，并关注目标行业动态。'}</div>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="report-footer-text">本报告由 AI 职业规划智能体生成 · 仅供参考，具体决策请结合个人实际情况</div>
+                <div class="report-export-bar report-export-bottom no-print" style="margin-top:24px;">
+                    <button type="button" id="reportExportPdfDirectBtn" class="btn-export-pdf">导出 PDF</button>
+                </div>
             </div>
         `;
 
-        // 兴趣分析表格
-        if (data.interest_analysis) {
-            html += `
-                <div class="report-section">
-                    <h4 style="color: var(--primary-color); margin-bottom: 16px;">职业兴趣分析</h4>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>分析项目</th>
-                                <th>结果</th>
-                                <th>说明</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>霍兰德代码</td>
-                                <td><strong>${data.interest_analysis.holland_code}</strong></td>
-                                <td>职业兴趣类型组合</td>
-                            </tr>
-                            <tr>
-                                <td>主要兴趣类型</td>
-                                <td><strong>${data.interest_analysis.primary_interest.type}</strong></td>
-                                <td>${data.interest_analysis.primary_interest.description}</td>
-                            </tr>
-                            <tr>
-                                <td>兴趣匹配度</td>
-                                <td><strong>${data.interest_analysis.primary_interest.score}分</strong></td>
-                                <td>兴趣倾向强度</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <h5 style="margin-top: 20px; margin-bottom: 12px;">适合的职业领域</h5>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>序号</th>
-                                <th>职业领域</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            data.interest_analysis.suitable_fields.forEach((field, index) => {
-                html += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${field}</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        // 性格特质分析表格
-        if (data.personality_analysis) {
-            html += `
-                <div class="report-section">
-                    <h4 style="color: var(--primary-color); margin-bottom: 16px;">性格特质分析</h4>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>MBTI类型</th>
-                                <th colspan="3">${data.personality_analysis.mbti_type}</th>
-                            </tr>
-                            <tr>
-                                <th>特质维度</th>
-                                <th>得分</th>
-                                <th>水平</th>
-                                <th>说明</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            data.personality_analysis.traits.forEach(trait => {
-                html += `
-                    <tr>
-                        <td>${trait.trait_name}</td>
-                        <td><strong>${trait.score}分</strong></td>
-                        <td><span class="trait-level">${trait.level}</span></td>
-                        <td>基于测评结果的性格倾向</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        // 能力分析表格
-        if (data.ability_analysis) {
-            html += `
-                <div class="report-section">
-                    <h4 style="color: var(--primary-color); margin-bottom: 16px;">能力分析</h4>
-                    
-                    <h5 style="margin-bottom: 12px;">优势能力</h5>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>能力项</th>
-                                <th>得分</th>
-                                <th>水平</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            data.ability_analysis.strengths.forEach(strength => {
-                const level = strength.score >= 80 ? '优秀' : strength.score >= 70 ? '良好' : '一般';
-                html += `
-                    <tr>
-                        <td>${strength.ability}</td>
-                        <td><strong>${strength.score}分</strong></td>
-                        <td><span class="ability-level excellent">${level}</span></td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                    
-                    <h5 style="margin-top: 20px; margin-bottom: 12px;">待提升能力</h5>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>能力项</th>
-                                <th>得分</th>
-                                <th>水平</th>
-                                <th>建议</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            data.ability_analysis.areas_to_improve.forEach(area => {
-                const level = area.score >= 70 ? '一般' : area.score >= 60 ? '需提升' : '重点提升';
-                html += `
-                    <tr>
-                        <td>${area.ability}</td>
-                        <td><strong>${area.score}分</strong></td>
-                        <td><span class="ability-level improve">${level}</span></td>
-                        <td>建议通过学习和实践提升此项能力</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
         contentDiv.innerHTML = html;
+
+        // 顶部：导出 PDF 打开打印页
+        document.getElementById('reportExportPdfBtn')?.addEventListener('click', () => {
+            const id = reportId || this.currentReportId;
+            if (id) window.open('report/print.html?id=' + encodeURIComponent(id), '_blank');
+        });
+
+        // 底部：导出 PDF 直接下载（html2canvas + jsPDF）
+        document.getElementById('reportExportPdfDirectBtn')?.addEventListener('click', () => {
+            this.exportReportPdfDirect();
+        });
+
+        // 绘制图表
+        this.drawReportCharts(contentDiv, {
+            hollandLabels,
+            hollandValues,
+            abilityLabels,
+            abilityValues,
+            radarLabels,
+            radarValues
+        });
+    }
+
+    drawReportCharts(container, chartData) {
+        if (typeof Chart === 'undefined') return;
+        const toNum = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+        const { hollandLabels, hollandValues, abilityLabels, abilityValues, radarLabels, radarValues } = chartData;
+        const hollandData = (hollandValues || []).map(toNum);
+        const abilityData = (abilityValues || []).map(toNum);
+        const radarData = (radarValues || []).map(toNum);
+        const colors = ['#e94560', '#f5a623', '#667eea', '#48bb78', '#4facfe', '#a8dadc'];
+        const pie = container.querySelector('#reportHollandChart');
+        if (pie && pie.getContext) {
+            new Chart(pie.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: hollandLabels,
+                    datasets: [{ data: hollandData, backgroundColor: colors.slice(0, hollandLabels.length), borderWidth: 0, hoverOffset: 8 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } } } }
+            });
+        }
+        const bar = container.querySelector('#reportAbilityBar');
+        if (bar && bar.getContext) {
+            new Chart(bar.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: abilityLabels,
+                    datasets: [{ label: '得分', data: abilityData, backgroundColor: abilityData.map((v) => v >= 70 ? '#48bb78cc' : v >= 50 ? '#f5a623cc' : '#e94560cc'), borderRadius: 8, borderSkipped: false }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { max: 100, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } }, x: { grid: { display: false }, ticks: { font: { size: 11 } } } } }
+            });
+        }
+        const radar = container.querySelector('#reportRadarChart');
+        if (radar && radar.getContext && radarLabels.length > 0) {
+            new Chart(radar.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: radarLabels,
+                    datasets: [
+                        { label: '我的得分', data: radarData, backgroundColor: 'rgba(233,69,96,0.18)', borderColor: '#e94560', borderWidth: 2, pointBackgroundColor: '#e94560', pointRadius: 4 },
+                        { label: '行业平均', data: radarLabels.map(() => 60), backgroundColor: 'rgba(102,126,234,0.08)', borderColor: '#667eea', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 13 }, padding: 20, usePointStyle: true } } }, scales: { r: { min: 0, max: 100, grid: { color: '#e8e8e8' }, angleLines: { color: '#e8e8e8' }, ticks: { display: false }, pointLabels: { font: { size: 13 }, color: '#4a5568' } } } }
+            });
+        }
+    }
+
+    // 报告页底部「导出 PDF」：html2canvas + jsPDF 直接下载，不跳转
+    async exportReportPdfDirect() {
+        const el = document.getElementById('reportPdfContent');
+        if (!el) {
+            this.showToast('未找到报告内容', 'error');
+            return;
+        }
+        if (typeof html2canvas === 'undefined') {
+            this.showToast('请刷新页面后重试', 'error');
+            return;
+        }
+        const JsPDF = window.jspdf && window.jspdf.jsPDF;
+        if (!JsPDF) {
+            this.showToast('PDF 库未加载，请刷新后重试', 'error');
+            return;
+        }
+        const btn = document.getElementById('reportExportPdfDirectBtn');
+        if (btn) { btn.disabled = true; btn.textContent = '导出中...'; }
+        try {
+            const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pdf = new JsPDF('p', 'mm', 'a4');
+            const pdfW = pdf.internal.pageSize.getWidth();
+            const pdfH = (canvas.height * pdfW) / canvas.width;
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+            pdf.save('职业测评报告.pdf');
+            this.showToast('导出成功', 'success');
+        } catch (e) {
+            console.error('exportReportPdfDirect', e);
+            this.showToast('导出失败，请重试', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '导出 PDF'; }
+        }
     }
 
     // 查看历史报告
     async viewReportHistory() {
+        console.log('查看历史报告被点击');
         const userId = getCurrentUserId();
         const historyDiv = document.getElementById('reportHistory');
         const listDiv = document.getElementById('historyList');
-        
+        if (!historyDiv || !listDiv) {
+            console.warn('viewReportHistory: reportHistory 或 historyList 元素不存在');
+            return;
+        }
+        if (!userId) {
+            this.showToast('请先登录', 'error');
+            return;
+        }
+
         historyDiv.classList.remove('hidden');
         listDiv.innerHTML = '<div class="loading-message">加载历史报告中...</div>';
 
-        const result = await getReportHistory(userId);
+        try {
+            const result = await getReportHistory(userId);
+            console.log('历史报告接口原始 result:', result);
+            console.log('历史报告数据:', result.data);
 
-        if (result.success && result.data.list) {
-            this.renderReportHistory(result.data.list);
-        } else {
-            listDiv.innerHTML = '<div class="hint-text">暂无历史报告</div>';
+            const list = result.success && result.data
+                ? (Array.isArray(result.data) ? result.data : (result.data.list || result.data.reports || []))
+                : [];
+            console.log('解析后 list 条数:', list.length, 'list:', list);
+
+            if (list.length > 0) {
+                this.renderReportHistory(list);
+                historyDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                this.showToast('已加载 ' + list.length + ' 条历史报告', 'success');
+            } else {
+                listDiv.innerHTML = '<div class="hint-text">暂无历史报告</div>';
+            }
+        } catch (e) {
+            console.error('查看历史报告失败', e);
+            listDiv.innerHTML = '<div class="hint-text">加载失败，请稍后重试</div>';
         }
     }
 
@@ -2047,23 +2343,24 @@ class CareerPlanningApp {
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="font-weight: 600; margin-bottom: 4px;">
-                            ${report.primary_career || '职业规划报告'}
+                            ${(report.holland_code || '') + (report.mbti ? ' · ' + report.mbti : '') || '职业测评报告'}
                         </div>
                         <div style="color: var(--text-secondary); font-size: 14px;">
-                            生成于 ${this.formatDateTime(report.created_at)}
+                            生成于 ${report.created_at || this.formatDateTime(report.created_at)}
                         </div>
                     </div>
                     <div style="text-align: right;">
                         <div style="color: var(--primary-color); font-weight: 600;">
-                            完整度 ${report.completeness}%
+                            匹配度 ${report.match_score != null ? report.match_score : (report.completeness != null ? report.completeness : '—')}%
                         </div>
                     </div>
                 </div>
             `;
             
             item.addEventListener('click', () => {
-                this.loadReportContent(report.report_id);
-                historyDiv.classList.add('hidden');
+                this.loadAssessmentReportContent(report.report_id);
+                var historyEl = document.getElementById('reportHistory');
+                if (historyEl) historyEl.classList.add('hidden');
             });
 
             listDiv.appendChild(item);

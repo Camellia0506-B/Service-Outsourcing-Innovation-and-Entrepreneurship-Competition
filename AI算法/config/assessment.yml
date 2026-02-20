@@ -58,15 +58,15 @@ dimensions:
       - 工作环境
     questions_count: 10  # 5个价值观，每个2题
 
-# 测评类型配置
+# 测评类型配置（每维度 5 题，共 20 题）
 assessment_types:
   comprehensive:
     name: 综合测评
-    total_questions: 63  # 18+20+15+10
-    estimated_time: 20
+    total_questions: 20  # 4 维度 × 5 题
+    estimated_time: 10
   quick:
     name: 快速测评
-    total_questions: 30  # 简化版，每维度取关键题
+    total_questions: 20
     estimated_time: 10
 
 # AI生成报告的置信度阈值
