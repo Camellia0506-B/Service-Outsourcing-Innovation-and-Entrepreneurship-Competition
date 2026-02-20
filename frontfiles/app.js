@@ -30,43 +30,30 @@ class CareerPlanningApp {
 
     // 绑定所有事件
     bindEvents() {
-        var self = this;
-
-        // 登录页：用事件委托，避免因 DOM 未就绪或元素未找到导致点击无反应
-        document.body.addEventListener('submit', function(e) {
-            var form = e.target;
-            if (form && form.id === 'loginForm') {
-                e.preventDefault();
-                self.handleLogin();
-            }
-            if (form && form.id === 'registerForm') {
-                e.preventDefault();
-                self.handleRegisterForm();
-            }
+        // 登录表单提交
+        document.getElementById('loginForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleLogin();
         });
-        document.body.addEventListener('click', function(e) {
-            var el = e.target.closest ? e.target.closest('[id]') : e.target;
-            if (!el || !el.id) return;
-            if (el.id === 'goRegister') {
-                e.preventDefault();
-                var loginPage = document.getElementById('loginPage');
-                var registerPage = document.getElementById('registerPage');
-                if (loginPage) loginPage.classList.add('hidden');
-                if (registerPage) registerPage.classList.remove('hidden');
-            }
-            if (el.id === 'showLogin') {
-                e.preventDefault();
-                self.showPage('loginPage');
-                var rp = document.getElementById('registerPage');
-                if (rp) rp.classList.add('hidden');
-            }
-            if (el.id === 'forgotPasswordLink') {
-                e.preventDefault();
-                self.openForgotPasswordModal();
-            }
-            if (el.id === 'forgotPasswordClose') self.closeForgotPasswordModal();
-            if (el.id === 'forgotSendCodeBtn') self.handleForgotSendCode();
-            if (el.id === 'forgotResetBtn') self.handleForgotReset();
+
+        // 创建账户 - 注册表单提交
+        document.getElementById('registerForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleRegisterForm();
+        });
+
+        // 登录页「创建账户」跳转到注册页
+        document.getElementById('goRegister')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+        });
+
+        // 注册页「立即登录」跳转到登录页
+        document.getElementById('showLogin')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showPage('loginPage');
+            document.getElementById('registerPage').classList.add('hidden');
         });
 
         // 导航链接
@@ -340,10 +327,23 @@ class CareerPlanningApp {
     // 处理快速注册
     async handleQuickRegister() {
         const introduction = document.getElementById('quickRegisterText').value.trim();
+        const submitBtn = document.getElementById('handleQuickRegisterBtn');
         
         if (!introduction) {
-            this.showToast('请介绍一下自己', 'error');
+            this.showToast('请介绍一下自己，帮助我们更好地为您服务', 'error');
+            document.getElementById('quickRegisterText').focus();
             return;
+        }
+        
+        if (introduction.length < 5) {
+            this.showToast('介绍内容太短，请至少输入5个字符', 'error');
+            return;
+        }
+
+        // 禁用按钮，显示加载状态
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="btn-text">正在生成账号...</span>';
         }
 
         // 根据介绍生成用户信息
@@ -354,13 +354,18 @@ class CareerPlanningApp {
         this.hideLoading();
 
         if (result.success) {
-            this.showToast('注册成功，正在登录...', 'success');
+            this.showToast('注册成功！正在为您登录...', 'success');
             // 自动登录
             setTimeout(() => {
                 this.autoLogin(userInfo.username, userInfo.password);
             }, 1000);
         } else {
-            this.showToast(result.msg || '注册失败', 'error');
+            this.showToast(result.msg || '注册失败，请稍后重试', 'error');
+            // 恢复按钮
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="btn-text">开始我的职业规划</span><span class="btn-arrow">→</span>';
+            }
         }
     }
 
@@ -1940,35 +1945,14 @@ class CareerPlanningApp {
     // 加载职业规划报告数据（进入本页时尝试恢复上次的测评报告）
     async loadReportData() {
         const userId = getCurrentUserId();
-        const contentDiv = document.getElementById('reportContent');
-        if (!userId) {
-            if (contentDiv) contentDiv.innerHTML = '<p class="hint-text">请先登录</p>';
-            return;
-        }
+        if (!userId) return;
         const reportId = this.getLastAssessmentReportId();
-        if (!reportId) {
-            if (contentDiv) contentDiv.innerHTML = '<p class="hint-text">点击「生成新报告」或前往职业测评完成测评后查看报告</p>';
-            return;
-        }
-        if (contentDiv) contentDiv.innerHTML = '<div class="loading-message">加载报告中...</div>';
-        this.currentReportId = reportId;
+        if (!reportId) return;
+        const contentDiv = document.getElementById('reportContent');
         const result = await getAssessmentReport(userId, reportId);
         if (result.success && result.data && result.data.status === 'completed') {
+            this.currentReportId = reportId;
             this.renderReportContent(result.data);
-        } else {
-            const msg = (result && result.msg) ? result.msg : '请求失败或报告未就绪';
-            if (contentDiv) {
-                contentDiv.innerHTML = '<div class="hint-text">' +
-                    '<p>加载失败：' + (msg || '未知原因') + '</p>' +
-                    '<p style="margin-top:12px;"><button type="button" class="btn-secondary" id="retryLoadReport">重试</button> ' +
-                    '<button type="button" class="btn-secondary" id="viewHistoryReportFromFail">查看历史报告</button></p>' +
-                    '</div>';
-                document.getElementById('retryLoadReport')?.addEventListener('click', () => this.loadReportData());
-                document.getElementById('viewHistoryReportFromFail')?.addEventListener('click', () => {
-                    this.showPage('reportPage');
-                    this.viewReportHistory();
-                });
-            }
         }
     }
 
@@ -2044,10 +2028,9 @@ class CareerPlanningApp {
         }
     }
 
-    // 加载测评报告内容（用于历史报告列表点击、查看最新报告，走 POST /assessment/report）
+    // 加载测评报告内容（用于历史报告列表点击，走 POST /assessment/report）
     async loadAssessmentReportContent(reportId) {
         const contentDiv = document.getElementById('reportContent');
-        if (!contentDiv) return;
         contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
         const userId = getCurrentUserId();
         if (!userId) {
@@ -2059,12 +2042,7 @@ class CareerPlanningApp {
             this.currentReportId = reportId;
             this.renderReportContent(result.data);
         } else {
-            const msg = (result && result.msg) ? result.msg : (result && result.data && result.data.status === 'processing' ? '报告仍在生成中，请稍后再试' : '请求失败或报告不存在');
-            contentDiv.innerHTML = '<div class="hint-text">' +
-                '<p>加载失败：' + msg + '</p>' +
-                '<p style="margin-top:12px;"><button type="button" class="btn-secondary" id="retryLoadAssessmentReport">重试</button></p>' +
-                '</div>';
-            document.getElementById('retryLoadAssessmentReport')?.addEventListener('click', () => this.loadAssessmentReportContent(reportId));
+            contentDiv.innerHTML = '<div class="hint-text">加载失败</div>';
         }
     }
 

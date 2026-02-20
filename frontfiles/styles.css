@@ -1,25 +1,32 @@
 /* 全局变量 */
 :root {
-    --primary-color: #4A90E2; /* 柔和的蓝色 */
-    --primary-dark: #357ABD;
+    /* 高级感蓝色主题配色方案 */
+    --bg-color: #f0f4fb; /* 冷调浅蓝灰 */
+    --primary-blue: #2563eb; /* 主蓝色 */
+    --medium-blue: #3b82f6; /* 中蓝 */
+    --sky-blue: #0ea5e9; /* 天蓝 */
+    --indigo-blue: #4f46e5; /* 靛蓝 */
+    --deep-navy: #0f1c3f; /* 深墨色 */
+    --soft-blue-text: #2e4070; /* 柔蓝文字 */
+    --gray-blue: #7e93c0; /* 灰蓝辅助 */
+    
+    /* 基础变量 */
+    --primary-color: var(--primary-blue);
+    --primary-dark: var(--deep-navy);
     --secondary-color: #10b981;
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
-    --bg-color: #f5f7fa; /* 浅灰背景 */
     --card-bg: #ffffff;
-    --text-primary: #333333; /* 深灰色文字 */
-    --text-secondary: #64748b;
+    --text-primary: var(--deep-navy);
+    --text-secondary: var(--gray-blue);
     --border-color: #e2e8f0;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --font-sans: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     
-    /* 职业罗盘主题色 */
-    --career-dark: #1A1A1A;
-    --career-gold: #FFD700;
-    --career-light: #F8F9FA;
-    --career-text-light: #FFFFFF;
-    --career-border: #E5E7EB;
+    /* 字体 */
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-body: 'DM Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 /* 重置样式 */
@@ -35,6 +42,73 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
+    position: relative;
+}
+
+/* 背景网格纹理 */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 漂移光晕 */
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.blob-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(37, 99, 235, 0.13);
+    top: -100px;
+    left: -100px;
+    animation: drift 20s ease-in-out infinite alternate;
+}
+
+.blob-2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(14, 165, 233, 0.10);
+    bottom: -50px;
+    right: -50px;
+    animation: drift 15s ease-in-out infinite alternate-reverse;
+}
+
+.blob-3 {
+    width: 250px;
+    height: 250px;
+    background: rgba(79, 70, 229, 0.07);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: drift 18s ease-in-out infinite alternate;
+}
+
+/* 漂移动画 */
+@keyframes drift {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(20px, 20px) scale(1.1);
+    }
+    100% {
+        transform: translate(-20px, -20px) scale(0.9);
+    }
 }
 
 /* 工具类 */
@@ -409,6 +483,11 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
 }
 
 .action-card:hover {
@@ -419,12 +498,14 @@ body {
 .action-card h3 {
     font-size: 20px;
     margin-bottom: 12px;
+    text-align: center;
 }
 
 .action-card p {
     font-size: 14px;
     margin-bottom: 20px;
     opacity: 0.9;
+    text-align: center;
 }
 
 .action-card button {
@@ -1604,53 +1685,454 @@ body {
     font-size: 16px;
 }
 
+/* 登录页淡入动画 */
+@keyframes loginFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes circleFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+    50% { transform: translate(4%, -3%) scale(1.02); opacity: 0.5; }
+}
+
+/* 背景特效动画 - 漂移光晕 */
+@keyframes blobFloat {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(10%, 10%) rotate(90deg);
+    }
+    50% {
+        transform: translate(0, 20%) rotate(180deg);
+    }
+    75% {
+        transform: translate(-10%, 10%) rotate(270deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(360deg);
+    }
+}
+
+/* 背景特效动画 - 上浮粒子 */
+@keyframes particleFloat {
+    0% {
+        transform: translateY(0) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.5;
+    }
+    90% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-100vh) scale(1);
+        opacity: 0;
+    }
+}
+
+/* 页面载入动画 - fadeUp */
+@keyframes loginFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 交互元素过渡 */
+* {
+    transition: all 0.2s ease;
+}
+
 /* 职业登录界面样式 */
 .career-login-container {
     display: flex;
     min-height: 100vh;
     background: var(--bg-color);
-}
-
-/* 左侧品牌区域 */
-.brand-section {
-    flex: 1;
-    background: var(--card-bg);
-    padding: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     position: relative;
     overflow: hidden;
-    border-right: 1px solid var(--border-color);
-    min-height: 100vh;
+    align-items: stretch;
 }
 
-/* 网格背景图案 */
-.brand-section::before {
-    content: '';
+/* 柔和装饰圆形 */
+.login-bg-circles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.login-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201, 162, 39, 0.12) 0%, transparent 70%);
+}
+
+.login-circle-1 {
+    width: 420px;
+    height: 420px;
+    top: -120px;
+    right: -80px;
+    animation: circleFloat 8s ease-in-out infinite;
+}
+
+.login-circle-2 {
+    width: 280px;
+    height: 280px;
+    bottom: 10%;
+    left: -60px;
+    background: radial-gradient(circle, rgba(135, 169, 107, 0.15) 0%, transparent 70%);
+    animation: circleFloat 10s ease-in-out infinite 1s;
+}
+
+.login-circle-3 {
+    width: 180px;
+    height: 180px;
+    top: 40%;
+    right: 15%;
+    background: radial-gradient(circle, rgba(232, 212, 139, 0.18) 0%, transparent 70%);
+    animation: circleFloat 6s ease-in-out infinite 0.5s;
+}
+
+.login-circle-4 {
+    width: 320px;
+    height: 320px;
+    bottom: -80px;
+    right: 20%;
+    background: radial-gradient(circle, rgba(184, 201, 164, 0.1) 0%, transparent 70%);
+    animation: circleFloat 9s ease-in-out infinite 2s;
+}
+
+/* 背景特效 - 漂移光晕 blob */
+.bg-blobs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.3;
+    animation: blobFloat linear infinite;
+}
+
+.bg-blob-1 {
+    width: 500px;
+    height: 500px;
+    top: -100px;
+    left: -100px;
+    background: radial-gradient(circle, var(--primary-blue), transparent 70%);
+    animation-duration: 20s;
+    animation-delay: 0s;
+}
+
+.bg-blob-2 {
+    width: 400px;
+    height: 400px;
+    bottom: -100px;
+    right: -100px;
+    background: radial-gradient(circle, var(--sky-blue), transparent 70%);
+    animation-duration: 25s;
+    animation-delay: 5s;
+}
+
+.bg-blob-3 {
+    width: 300px;
+    height: 300px;
+    top: 50%;
+    right: 10%;
+    background: radial-gradient(circle, var(--indigo-blue), transparent 70%);
+    animation-duration: 15s;
+    animation-delay: 2s;
+}
+
+/* 背景特效 - 细网格纹理 */
+.bg-grid {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background-image: 
-        linear-gradient(rgba(74, 144, 226, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(74, 144, 226, 0.1) 1px, transparent 1px);
-    background-size: 30px 30px;
+        linear-gradient(to right, rgba(37, 99, 235, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
     z-index: 0;
 }
 
-/* 蓝色装饰曲线 */
-.brand-section::after {
-    content: '';
+/* 背景特效 - 上浮粒子 */
+.bg-particles {
     position: absolute;
-    top: 10%;
-    right: 10%;
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-    border: 1px solid rgba(74, 144, 226, 0.2);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
     z-index: 0;
+}
+
+.bg-particle {
+    position: absolute;
+    background: var(--primary-blue);
+    border-radius: 50%;
+    opacity: 0.5;
+    animation: particleFloat linear infinite;
+}
+
+/* 手动定义20个粒子的样式 */
+.bg-particle-1 {
+    width: 4px;
+    height: 4px;
+    left: 10%;
+    bottom: -20px;
+    animation-duration: 12s;
+    animation-delay: 0s;
+    opacity: 0.3;
+    background: var(--primary-blue);
+}
+
+.bg-particle-2 {
+    width: 6px;
+    height: 6px;
+    left: 20%;
+    bottom: -20px;
+    animation-duration: 15s;
+    animation-delay: 1s;
+    opacity: 0.4;
+    background: var(--medium-blue);
+}
+
+.bg-particle-3 {
+    width: 3px;
+    height: 3px;
+    left: 30%;
+    bottom: -20px;
+    animation-duration: 18s;
+    animation-delay: 0.5s;
+    opacity: 0.2;
+    background: var(--sky-blue);
+}
+
+.bg-particle-4 {
+    width: 5px;
+    height: 5px;
+    left: 40%;
+    bottom: -20px;
+    animation-duration: 14s;
+    animation-delay: 2s;
+    opacity: 0.5;
+    background: var(--indigo-blue);
+}
+
+.bg-particle-5 {
+    width: 7px;
+    height: 7px;
+    left: 50%;
+    bottom: -20px;
+    animation-duration: 16s;
+    animation-delay: 1.5s;
+    opacity: 0.3;
+    background: var(--primary-blue);
+}
+
+.bg-particle-6 {
+    width: 4px;
+    height: 4px;
+    left: 60%;
+    bottom: -20px;
+    animation-duration: 13s;
+    animation-delay: 0.8s;
+    opacity: 0.4;
+    background: var(--medium-blue);
+}
+
+.bg-particle-7 {
+    width: 8px;
+    height: 8px;
+    left: 70%;
+    bottom: -20px;
+    animation-duration: 17s;
+    animation-delay: 2.5s;
+    opacity: 0.2;
+    background: var(--sky-blue);
+}
+
+.bg-particle-8 {
+    width: 5px;
+    height: 5px;
+    left: 80%;
+    bottom: -20px;
+    animation-duration: 19s;
+    animation-delay: 1.2s;
+    opacity: 0.5;
+    background: var(--indigo-blue);
+}
+
+.bg-particle-9 {
+    width: 6px;
+    height: 6px;
+    left: 90%;
+    bottom: -20px;
+    animation-duration: 14s;
+    animation-delay: 0.3s;
+    opacity: 0.3;
+    background: var(--primary-blue);
+}
+
+.bg-particle-10 {
+    width: 3px;
+    height: 3px;
+    left: 15%;
+    bottom: -20px;
+    animation-duration: 15s;
+    animation-delay: 1.8s;
+    opacity: 0.4;
+    background: var(--medium-blue);
+}
+
+.bg-particle-11 {
+    width: 7px;
+    height: 7px;
+    left: 25%;
+    bottom: -20px;
+    animation-duration: 16s;
+    animation-delay: 0.6s;
+    opacity: 0.2;
+    background: var(--sky-blue);
+}
+
+.bg-particle-12 {
+    width: 4px;
+    height: 4px;
+    left: 35%;
+    bottom: -20px;
+    animation-duration: 18s;
+    animation-delay: 2.2s;
+    opacity: 0.5;
+    background: var(--indigo-blue);
+}
+
+.bg-particle-13 {
+    width: 5px;
+    height: 5px;
+    left: 45%;
+    bottom: -20px;
+    animation-duration: 13s;
+    animation-delay: 1s;
+    opacity: 0.3;
+    background: var(--primary-blue);
+}
+
+.bg-particle-14 {
+    width: 8px;
+    height: 8px;
+    left: 55%;
+    bottom: -20px;
+    animation-duration: 17s;
+    animation-delay: 0.4s;
+    opacity: 0.4;
+    background: var(--medium-blue);
+}
+
+.bg-particle-15 {
+    width: 6px;
+    height: 6px;
+    left: 65%;
+    bottom: -20px;
+    animation-duration: 19s;
+    animation-delay: 1.6s;
+    opacity: 0.2;
+    background: var(--sky-blue);
+}
+
+.bg-particle-16 {
+    width: 3px;
+    height: 3px;
+    left: 75%;
+    bottom: -20px;
+    animation-duration: 14s;
+    animation-delay: 2.4s;
+    opacity: 0.5;
+    background: var(--indigo-blue);
+}
+
+.bg-particle-17 {
+    width: 4px;
+    height: 4px;
+    left: 85%;
+    bottom: -20px;
+    animation-duration: 15s;
+    animation-delay: 0.7s;
+    opacity: 0.3;
+    background: var(--primary-blue);
+}
+
+.bg-particle-18 {
+    width: 7px;
+    height: 7px;
+    left: 20%;
+    bottom: -20px;
+    animation-duration: 16s;
+    animation-delay: 1.3s;
+    opacity: 0.4;
+    background: var(--medium-blue);
+}
+
+.bg-particle-19 {
+    width: 5px;
+    height: 5px;
+    left: 40%;
+    bottom: -20px;
+    animation-duration: 18s;
+    animation-delay: 2s;
+    opacity: 0.2;
+    background: var(--sky-blue);
+}
+
+.bg-particle-20 {
+    width: 6px;
+    height: 6px;
+    left: 60%;
+    bottom: -20px;
+    animation-duration: 17s;
+    animation-delay: 1s;
+    opacity: 0.5;
+    background: var(--indigo-blue);
+}
+
+/* 左侧品牌区域 */
+.brand-section {
+    flex: 1;
+    padding: 80px 80px 80px 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    background: transparent;
+    animation: loginFadeIn 0.8s cubic-bezier(0.16,1,0.3,1) both;
 }
 
 .brand-logo {
@@ -1660,35 +2142,41 @@ body {
     position: relative;
     z-index: 1;
     margin-bottom: 60px;
+    animation: loginFadeIn 0.6s ease-out both;
 }
 
-.logo-icon {
+.logo-square {
+    width: 48px;
+    height: 48px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
     flex-shrink: 0;
-}
-
-/* 调整logo图标颜色 */
-.logo-icon svg rect {
-    fill: var(--primary-color) !important;
-}
-
-.logo-icon svg path {
-    stroke: white !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
 .brand-name h1 {
-    font-size: 28px;
+    font-family: var(--font-heading);
+    font-size: 40px;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--deep-navy);
     margin: 0;
     letter-spacing: 0.5px;
 }
 
 .brand-name p {
-    font-size: 14px;
-    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 18px;
+    color: var(--gray-blue);
     margin: 4px 0 0 0;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    opacity: 0.9;
 }
 
 .brand-title {
@@ -1696,39 +2184,102 @@ body {
     z-index: 1;
     margin-bottom: 40px;
     text-align: left;
+    animation: loginFadeIn 0.6s ease-out 0.1s both;
 }
 
 .brand-title h3 {
-    font-size: 20px;
+    font-family: var(--font-body);
+    font-size: 22px;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--primary-blue);
     margin: 0 0 20px 0;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-title h3::before {
+    content: '';
+    width: 40px;
+    height: 2px;
+    background: var(--primary-blue);
+    border-radius: 1px;
 }
 
 .brand-title h2 {
-    font-size: 56px;
+    font-family: var(--font-heading);
+    font-size: 84px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--deep-navy);
     line-height: 1.1;
     margin: 0 0 24px 0;
 }
 
-.gold-text {
-    color: var(--primary-color);
+.blue-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    color: #2563eb;
+}
+
+/* 统计数据样式 */
+.stats-section {
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(126, 147, 192, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.stats-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-number {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--deep-navy);
+    line-height: 1;
+}
+
+.stat-suffix {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 24px;
+    font-style: italic;
+    color: var(--primary-blue);
+    margin-left: 4px;
+}
+
+.stat-label {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--gray-blue);
+    font-weight: 400;
 }
 
 .brand-description {
     position: relative;
     z-index: 1;
     margin-bottom: 50px;
+    animation: loginFadeIn 0.6s ease-out 0.2s both;
 }
 
 .brand-description p {
-    font-size: 16px;
-    color: var(--text-secondary);
-    line-height: 1.6;
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--soft-blue-text);
+    line-height: 1.7;
     max-width: 500px;
     margin-bottom: 16px;
 }
@@ -1737,49 +2288,163 @@ body {
     margin-bottom: 0;
 }
 
-/* 功能亮点 */
+/* 功能亮点 - 卡片悬浮与阴影层次 */
 .brand-features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
-    margin-top: 40px;
-    margin-bottom: 0;
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+    margin-bottom: 20px;
     position: relative;
     z-index: 1;
+    flex-wrap: wrap;
 }
 
 .feature-item {
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
     align-items: center;
-    text-align: center;
-    gap: 16px;
-    background: rgba(74, 144, 226, 0.05);
-    padding: 32px 24px;
-    border-radius: 16px;
-    border: 1px solid rgba(74, 144, 226, 0.1);
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--primary-blue);
     transition: all 0.3s ease;
-    min-height: 160px;
+    min-height: auto;
     justify-content: center;
+    animation: loginFadeIn 0.6s ease-out 0.25s both;
+    box-shadow: none;
 }
 
 .feature-item:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(74, 144, 226, 0.2);
-    border-color: var(--primary-color);
-    background: rgba(74, 144, 226, 0.08);
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    background: var(--primary-blue);
+}
+
+.feature-item:hover .feature-text {
+    color: white;
 }
 
 .feature-icon {
-    font-size: 36px;
+    font-size: 14px;
     flex-shrink: 0;
+    color: var(--primary-blue);
+}
+
+.feature-item:hover .feature-icon {
+    color: white;
 }
 
 .feature-text {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--soft-blue-text);
     line-height: 1.3;
+}
+
+/* 统计数据行 */
+.stats-section {
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(126, 147, 192, 0.1);
+    animation: loginFadeIn 0.6s ease-out 0.3s both;
+}
+
+.stats-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-number {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--deep-navy);
+    line-height: 1;
+}
+
+.stat-suffix {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-style: italic;
+    color: var(--primary-blue);
+    margin-left: 4px;
+}
+
+.stat-label {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--gray-blue);
+    font-weight: 400;
+}
+
+/* 热门岗位推荐 */
+.hot-jobs-section {
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(126, 147, 192, 0.1);
+    animation: loginFadeIn 0.6s ease-out 0.3s both;
+}
+
+.hot-jobs-section h4 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--deep-navy);
+    margin: 0 0 24px 0;
+}
+
+.hot-jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hot-job-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(37, 99, 235, 0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    animation: loginFadeIn 0.6s ease-out 0.35s both;
+}
+
+.hot-job-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.15);
+    border-color: var(--primary-blue);
+}
+
+.job-name {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--deep-navy);
+}
+
+.job-salary {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-blue);
+    background: rgba(37, 99, 235, 0.1);
+    padding: 6px 12px;
+    border-radius: 8px;
 }
 
 
@@ -1791,30 +2456,186 @@ body {
     align-items: center;
     justify-content: center;
     padding: 80px;
-    background: var(--bg-color);
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    background: transparent;
+    animation: loginFadeIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+}
+
+/* 登录卡片 - 细腻阴影层次 + 悬浮动效 */
+.career-login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 32px 40px;
+    background: var(--card-bg);
+    border-radius: 28px;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.08), 0 24px 64px rgba(15, 28, 63, 0.10), 0 8px 24px rgba(37, 99, 235, 0.06);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    animation: loginFadeIn 0.7s ease-out 0.2s both;
+    position: relative;
+    overflow: hidden;
+}
+
+.career-login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue), var(--indigo-blue));
+    border-radius: 3px 3px 0 0;
+}
+
+.career-login-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 40px rgba(37, 99, 235, 0.15), 0 4px 16px rgba(37, 99, 235, 0.1);
 }
 
 .career-login-form {
     width: 100%;
-    max-width: 500px;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 16px;
 }
 
-.form-group {
+/* 登录标题和副标题 */
+.login-header {
+    margin-bottom: 8px;
+}
+
+.login-title {
+    font-family: var(--font-heading);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--deep-navy);
+    margin: 0 0 8px 0;
+}
+
+.login-subtitle {
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--gray-blue);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 登录Tab切换栏 */
+.login-tabs {
+    display: flex;
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 8px;
+}
+
+.login-tab {
+    flex: 1;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--soft-blue-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-tab.active {
+    background: var(--card-bg);
+    color: var(--primary-blue);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+/* 记住我和忘记密码 */
+.login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remember-me input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-blue);
+}
+
+.remember-me label {
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--soft-blue-text);
+    cursor: pointer;
+}
+
+.forgot-password {
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--primary-blue);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+    color: var(--medium-blue);
+    text-decoration: underline;
+}
+
+/* 服务条款和隐私政策 */
+.login-terms {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.login-terms p {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--gray-blue);
+    line-height: 1.4;
+}
+
+.login-terms a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.login-terms a:hover {
+    color: var(--medium-blue);
+    text-decoration: underline;
+}
+
+/* 调整卡片大小 */
+.career-login-card {
+    max-width: 460px;
+    padding: 36px 44px;
+}
+
+
+
+.form-section .form-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
 .form-label {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 8px;
-    letter-spacing: 0.3px;
-    line-height: 1.2;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--soft-blue-text);
+    margin-bottom: 4px;
+    letter-spacing: 0.2px;
+    line-height: 1.3;
 }
 
 .input-with-icon {
@@ -1825,41 +2646,82 @@ body {
 
 .input-icon {
     position: absolute;
-    left: 20px;
+    left: 18px;
     pointer-events: none;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
+}
+
+.input-icon path {
+    stroke: var(--gray-blue);
 }
 
 .career-login-form input {
     width: 100%;
-    padding: 20px 20px 20px 60px;
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    font-size: 18px;
-    background: var(--card-bg);
-    color: var(--text-primary);
+    padding: 18px 20px 18px 50px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    font-size: 16px;
+    font-family: var(--font-body);
+    background: var(--bg-color);
+    color: var(--deep-navy);
     transition: all 0.3s ease;
-    font-family: inherit;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.career-login-form input::placeholder {
+    color: var(--gray-blue);
+    opacity: 0.8;
 }
 
 .career-login-form input:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    background: var(--bg-color);
+}
+
+.send-code-btn {
+    position: absolute;
+    right: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--primary-blue);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-blue);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.send-code-btn:hover {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.send-code-btn:disabled {
+    border-color: var(--gray-blue);
+    color: var(--gray-blue);
+    cursor: not-allowed;
+}
+
+.send-code-btn:disabled:hover {
+    background: transparent;
+    color: var(--gray-blue);
 }
 
 .career-login-form input.error {
     border-color: var(--danger-color);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 
 .career-login-form .error-message {
     color: var(--danger-color);
-    font-size: 12px;
-    margin-top: 4px;
+    font-size: 13px;
+    margin-top: 6px;
     display: none;
+    font-family: var(--font-body);
 }
 
 .career-login-form .error-message.show {
@@ -1868,28 +2730,31 @@ body {
 
 .career-btn-login {
     width: 100%;
-    padding: 20px;
-    background: var(--primary-color);
-    color: white;
+    padding: 18px;
+    background: var(--primary-blue);
+    color: #fff;
     border: none;
-    border-radius: 16px;
-    font-size: 18px;
+    border-radius: 14px;
+    font-size: 17px;
     font-weight: 600;
+    font-family: var(--font-body);
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    position: relative;
+    overflow: hidden;
 }
 
 .career-btn-login:hover {
-    background: var(--primary-dark);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(74, 144, 226, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(37, 99, 235, 0.2);
+    background: linear-gradient(135deg, var(--sky-blue), var(--indigo-blue));
 }
 
 .form-divider {
     position: relative;
     text-align: center;
-    margin: 32px 0;
+    margin: 28px 0;
 }
 
 .form-divider::before {
@@ -1899,37 +2764,39 @@ body {
     left: 0;
     right: 0;
     height: 1px;
-    background: var(--border-color);
+    background: linear-gradient(90deg, transparent, rgba(126, 147, 192, 0.1), transparent);
     transform: translateY(-50%);
 }
 
 .form-divider span {
     position: relative;
-    background: var(--bg-color);
-    padding: 0 24px;
-    font-size: 16px;
-    color: var(--text-secondary);
+    background: var(--card-bg);
+    padding: 0 20px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    color: var(--gray-blue);
     z-index: 1;
 }
 
 .career-btn-register {
     width: 100%;
-    padding: 20px;
+    padding: 18px;
     background: transparent;
-    color: var(--text-primary);
-    border: 2px solid var(--border-color);
-    border-radius: 16px;
-    font-size: 18px;
+    color: var(--primary-blue);
+    border: 1px solid var(--primary-blue);
+    border-radius: 14px;
+    font-size: 16px;
     font-weight: 600;
+    font-family: var(--font-body);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .career-btn-register:hover {
-    border-color: var(--primary-color);
-    background: rgba(74, 144, 226, 0.05);
+    border-color: var(--primary-blue);
+    background: rgba(37, 99, 235, 0.05);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
 }
 
 /* AI登录界面样式（保留旧样式以兼容其他功能） */
@@ -2117,8 +2984,10 @@ body {
     .brand-section {
         padding: 40px 30px;
         min-height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .career-login-card {
+        padding: 36px 28px;
     }
     
     .brand-logo {
@@ -2155,8 +3024,7 @@ body {
     }
     
     .form-section {
-        padding: 40px 30px;
-        background: var(--bg-color);
+        padding: 40px 24px;
     }
     
     .career-login-form {
@@ -2292,4 +3160,405 @@ body {
     border-radius: 20px;
     font-weight: 600;
     font-size: 14px;
+}
+
+/* 通用模态框样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--bg-color);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 32px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 快速注册模态框 - 精美设计 */
+.quick-register-modal {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border-radius: 24px;
+    box-shadow: 0 24px 80px rgba(37, 99, 235, 0.25), 0 0 0 1px rgba(37, 99, 235, 0.1);
+    max-width: 580px;
+    width: 90vw;
+    overflow: hidden;
+    position: relative;
+    animation: quickRegisterSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.quick-register-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb 0%, #4f46e5 50%, #2563eb 100%);
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes quickRegisterSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.quick-register-header {
+    padding: 32px 32px 24px;
+    text-align: center;
+    position: relative;
+    background: linear-gradient(180deg, rgba(37, 99, 235, 0.05) 0%, transparent 100%);
+}
+
+.quick-register-icon {
+    margin: 0 auto 16px;
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.quick-register-header h2 {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--login-dark-blue);
+    margin: 0 0 8px 0;
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.quick-register-subtitle {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.quick-register-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(37, 99, 235, 0.1);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 24px;
+    color: #2563eb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.quick-register-close:hover {
+    background: rgba(37, 99, 235, 0.2);
+    transform: rotate(90deg);
+}
+
+.quick-register-body {
+    padding: 0 32px 24px;
+}
+
+.quick-register-examples {
+    margin-bottom: 20px;
+}
+
+.example-label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 10px;
+}
+
+.example-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.example-tag {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+.example-tag:hover {
+    background: rgba(37, 99, 235, 0.15);
+    border-color: rgba(37, 99, 235, 0.3);
+    transform: translateX(4px);
+}
+
+.quick-register-input-wrapper {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.quick-register-textarea {
+    width: 100%;
+    padding: 18px 20px;
+    border: 2px solid rgba(37, 99, 235, 0.15);
+    border-radius: 14px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--text-primary);
+    background: #fafbfc;
+    resize: vertical;
+    transition: all 0.3s;
+    line-height: 1.6;
+}
+
+.quick-register-textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.quick-register-textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.quick-register-counter {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.quick-register-features {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.quick-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    background: rgba(37, 99, 235, 0.06);
+    border-radius: 8px;
+}
+
+.quick-feature-icon {
+    font-size: 16px;
+}
+
+.quick-feature-text {
+    font-weight: 500;
+}
+
+.quick-register-footer {
+    padding: 24px 32px 32px;
+    background: linear-gradient(180deg, transparent 0%, rgba(37, 99, 235, 0.03) 100%);
+    border-top: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.quick-register-submit-btn {
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-register-submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.quick-register-submit-btn:hover::before {
+    left: 100%;
+}
+
+.quick-register-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+}
+
+.quick-register-submit-btn:active {
+    transform: translateY(0);
+}
+
+.btn-text {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-arrow {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s;
+}
+
+.quick-register-submit-btn:hover .btn-arrow {
+    transform: translateX(4px);
+}
+
+.quick-register-hint {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 12px 0 0 0;
+    opacity: 0.7;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .quick-register-modal {
+        width: 95vw;
+        border-radius: 20px;
+    }
+    
+    .quick-register-header {
+        padding: 24px 24px 20px;
+    }
+    
+    .quick-register-header h2 {
+        font-size: 24px;
+    }
+    
+    .quick-register-body {
+        padding: 0 24px 20px;
+    }
+    
+    .quick-register-footer {
+        padding: 20px 24px 24px;
+    }
+    
+    .quick-register-features {
+        flex-direction: column;
+        gap: 8px;
+    }
 }
