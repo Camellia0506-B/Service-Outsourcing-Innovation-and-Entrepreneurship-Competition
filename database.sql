@@ -1017,6 +1017,9 @@ b.考生须在面试过程中进行音乐能力展示，可演奏某种乐器或
   (149,'计算机科学与技术学院（大数据学院）','计算机科学与技术学院（大数据学院）','研究生院通过该“推免系统”和学院报送的接收名单审核推免生报名志愿，对符合申请条件者发送复试通知、待录取通知','2025-09-20 00:00:00','https://ccst.tyut.edu.cn/info/2123/13911.htm'),
   (150,'ALL','ALL','温特母校！极力推荐！！！','2025-09-19 12:00:00','https://yjsy.sdust.edu.cn/zhaosheng/info/1090/1840.htm');
 
--- --------------- 迁移：为已存在的 users 表添加 created_at（若报 Unknown column 'created_at' 可执行） ---------------
+-- --------------- 迁移：为已存在的表添加后续新增字段（若报 Unknown column 可执行对应 ALTER） ---------------
 -- ALTER TABLE users ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间';
+
+-- 为 profile_projects 添加 tech_stack（若报 Unknown column 'tech_stack' 可执行）
+-- ALTER TABLE profile_projects ADD COLUMN tech_stack VARCHAR(500) NULL COMMENT '技术栈列表，存 JSON 数组字符串';
 

@@ -403,7 +403,23 @@ class AssessmentService:
         report["ability_analysis"]["strengths"] = strengths
         report["ability_analysis"]["areas_to_improve"] = areas_to_improve
 
-        # 2) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
+        # 2) 性格特质：用后端计分（0-100）覆盖，保证进度条基准一致
+        trait_scores = scores.get("traits") or {}
+        if trait_scores:
+            trait_names = ["外向性", "开放性", "尽责性", "宜人性", "情绪稳定性"]
+            level_map = lambda s: "高" if s >= 70 else "偏高" if s >= 55 else "中等" if s >= 40 else "偏低" if s >= 25 else "低"
+            report["personality_analysis"] = report.get("personality_analysis") or {}
+            report["personality_analysis"]["traits"] = [
+                {
+                    "trait_name": name,
+                    "score": min(100, max(0, int(trait_scores.get(name, 0)))),
+                    "level": level_map(trait_scores.get(name, 0)),
+                    "description": ""
+                }
+                for name in trait_names
+            ]
+
+        # 3) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
         holland = scores.get("holland") or {}
         if holland:
             order = sorted(holland.keys(), key=lambda k: -holland[k])

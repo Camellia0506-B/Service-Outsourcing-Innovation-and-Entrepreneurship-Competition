@@ -2096,9 +2096,13 @@ class CareerPlanningApp {
         const sortedByScore = allAbilities.length ? [...allAbilities].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)) : [];
         const topAbility = sortedByScore[0] || null;
         const secondAbility = sortedByScore[1] || null;
-        // 雷达图：性格特质分数（0-100 归一化）
+        // 性格特质：后端/AI 返回 0-100，进度条与雷达图满分基准 = 100
+        const TRAIT_MAX_SCORE = 100;
+        if (traits.length) {
+            traits.forEach(t => { console.log('[性格特质]', t.trait_name, 'score=', t.score, '范围应为 0-' + TRAIT_MAX_SCORE); });
+        }
         const radarLabels = traits.map(t => t.trait_name);
-        const radarValues = traits.map(t => Math.min(100, Math.max(0, Number(t.score) || 0) * 4));
+        const radarValues = traits.map(t => safePct(Number(t.score) || 0));
 
         const reportId = this.currentReportId;
         let html = `
@@ -2157,7 +2161,8 @@ class CareerPlanningApp {
                     <div class="report-section-title"><span class="dot"></span>性格特质分析 — ${mbti}</div>
                     <div class="report-trait-list">
                         ${traits.map(t => {
-                            const pct = safePct(Math.min(100, (Number(t.score) || 0) * 4));
+                            const scoreNum = Number(t.score) || 0;
+                            const pct = safePct((scoreNum / TRAIT_MAX_SCORE) * 100);
                             const levelClass = pct >= 60 ? 'report-level-high' : pct >= 40 ? 'report-level-mid' : 'report-level-low';
                             const levelText = pct >= 60 ? '偏强' : pct >= 40 ? '中等' : '偏低';
                             return `<div class="report-trait-item">
