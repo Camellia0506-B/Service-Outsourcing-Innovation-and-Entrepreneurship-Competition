@@ -130,18 +130,39 @@ class JobDatasetService:
         }
         
         return profile
-    
+
     def _parse_salary(self, salary_str: str) -> str:
-        """解析薪资范围：9000-14000元 → 9k-14k"""
+        """解析薪资范围：兼容所有格式"""
+        if not salary_str or salary_str == "面议":
+            return "面议"
+
         try:
             import re
-            match = re.search(r'(\d+)-(\d+)', salary_str)
+            # 移除"·13薪"之类的后缀
+            salary_str = re.sub(r'[·•]\d+薪', '', salary_str)
+
+            # 格式1: X万-Y万 或 X-Y万
+            match = re.search(r'([\d.]+)\s*-\s*([\d.]+)\s*万', salary_str)
+            if match:
+                low = float(match.group(1))
+                high = float(match.group(2))
+                return f"{int(low * 10)}k-{int(high * 10)}k"
+
+            # 格式2: XXXX-YYYY元
+            match = re.search(r'(\d+)\s*-\s*(\d+)\s*元?', salary_str)
             if match:
                 low = int(match.group(1))
                 high = int(match.group(2))
-                return f"{low//1000}k-{high//1000}k"
-        except:
+                return f"{low // 1000}k-{high // 1000}k"
+
+            # 格式3: Xk-Yk
+            match = re.search(r'(\d+)\s*k\s*-\s*(\d+)\s*k', salary_str, re.IGNORECASE)
+            if match:
+                return f"{match.group(1)}k-{match.group(2)}k"
+
+        except Exception as e:
             pass
+
         return "面议"
     
     def _parse_location(self, location_str: str) -> str:
