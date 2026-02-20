@@ -1233,7 +1233,6 @@ class CareerPlanningApp {
         
         if (result.success && result.data.list) {
             const select = document.getElementById('jobSelect');
-<<<<<<< Updated upstream
             if (select) {
                 select.innerHTML = '<option value="">选择一个岗位进行分析</option>';
                 result.data.list.forEach(job => {
@@ -1243,16 +1242,6 @@ class CareerPlanningApp {
                     select.appendChild(option);
                 });
             }
-=======
-            select.innerHTML = '<option value="">选择一个岗位进行分析</option>';
-            
-            result.data.list.forEach(job => {
-                const option = document.createElement('option');
-                option.value = job.job_id || job.job_name;
-                option.textContent = job.job_name;
-                select.appendChild(option);
-            });
->>>>>>> Stashed changes
         }
     }
 
