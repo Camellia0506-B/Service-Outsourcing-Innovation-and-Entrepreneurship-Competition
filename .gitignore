@@ -75,7 +75,7 @@ __pycache__/
 # 环境变量
 .env
 
-data/assessment/.questions_loaded
+
 
 # 虚拟环境
 venv/
