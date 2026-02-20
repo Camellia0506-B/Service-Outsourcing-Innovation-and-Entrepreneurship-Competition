@@ -171,6 +171,21 @@ class CareerPlanningApp {
         document.getElementById('aiGenerateJobBtn')?.addEventListener('click', () => {
             this.generateJobProfile();
         });
+
+        // 档案详情模态框关闭
+        document.getElementById('closeProfileModal')?.addEventListener('click', () => {
+            const modal = document.getElementById('profileModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // 点击遮罩空白处也关闭模态框
+        document.getElementById('profileModal')?.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'profileModal') {
+                e.target.classList.add('hidden');
+            }
+        });
     }
 
     // 显示页面
