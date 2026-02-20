@@ -41,5 +41,9 @@ def load_report_prompts():
         logger.error(f"[load_report_prompts]解析报告生成提示词出错，{str(e)}")
         raise e
 
+def load_prompts_from_yml():
+    """加载所有prompt配置"""
+    return prompts_conf
+
 if __name__ == "__main__":
     print(load_report_prompts())
