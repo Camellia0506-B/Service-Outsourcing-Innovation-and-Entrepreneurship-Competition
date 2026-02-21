@@ -14,9 +14,11 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 import threading
 
-from job_profile.job_profile_service import get_job_profile_service, job_profile_conf
+import csv
+from job_profile.job_profile_service import get_job_profile_service, job_profile_conf, _load_profiles_store
 from job_profile.job_graph_service import get_job_graph_service
 from utils.logger_handler import logger
+from utils.path_tool import get_abs_path
 
 # 创建Blueprint
 job_bp = Blueprint("job", __name__, url_prefix="/api/v1/job")
@@ -145,12 +147,78 @@ def get_job_relation_graph():
             return error_response(400, "graph_type 参数错误，支持: vertical/transfer/all")
 
         graph_service = get_job_graph_service()
-        graph_data = graph_service.get_job_graph(job_id, graph_type)
-
-        return success_response(graph_data)
+        resp = graph_service.get_relation_graph(job_id, graph_type)
+        if resp.get("code") != 200:
+            return error_response(resp.get("code", 404), resp.get("msg", "岗位不存在"))
+        return success_response(resp.get("data"))
 
     except Exception as e:
         logger.error(f"[API] /job/relation-graph 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ============================================================
+# GET /api/v1/job/career-path - 职业发展路径（晋升 + 换岗，真实数据）
+# ============================================================
+@job_bp.route("/career-path", methods=["GET"])
+def get_career_path():
+    """
+    获取岗位职业发展路径：晋升路径来自 job_profiles，换岗岗位名来自 CSV。
+    查询参数：jobId 或 job_id
+    返回：{ path: [{ stage, jobName, years, salary, level }, ...], altPaths: [{ jobName }, ...] }
+    """
+    try:
+        job_id = request.args.get("jobId") or request.args.get("job_id")
+        if not job_id:
+            return error_response(400, "请提供 jobId 或 job_id 参数")
+
+        graph_service = get_job_graph_service()
+        resp = graph_service.get_relation_graph(job_id, "all")
+        if resp.get("code") != 200:
+            return error_response(resp.get("code", 404), resp.get("msg", "岗位不存在"))
+
+        data = resp.get("data", {})
+        vg = data.get("vertical_graph") or {}
+        nodes = vg.get("nodes") or []
+        edges = vg.get("edges") or []
+
+        stage_names = ["当前目标", "第一阶段", "第二阶段", "长期目标"]
+        path = []
+        for i, node in enumerate(nodes[:4]):
+            years = "-"
+            if i > 0 and i - 1 < len(edges):
+                years = edges[i - 1].get("years", "-")
+            salary = (node.get("salary_range") or "-") if isinstance(node.get("salary_range"), str) else "-"
+            path.append({
+                "stage": stage_names[i] if i < len(stage_names) else f"阶段{i+1}",
+                "jobName": node.get("job_name", ""),
+                "years": years,
+                "salary": salary,
+                "level": f"L{node.get('level', 0)}"
+            })
+
+        # 换岗路径：从 CSV 取真实岗位名（职位名称列）
+        alt_paths = []
+        import os
+        csv_path = get_abs_path(job_profile_conf.get("job_data_path", "data/求职岗位信息数据.csv"))
+        try:
+            if csv_path and os.path.exists(csv_path):
+                with open(csv_path, "r", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    col = "职位名称"
+                    seen = set()
+                    for row in reader:
+                        name = (row.get(col) or "").strip()
+                        if name and name not in seen and len(alt_paths) < 12:
+                            seen.add(name)
+                            alt_paths.append({"jobName": name})
+        except Exception as e:
+            logger.warning(f"[career-path] 读取 CSV 失败: {e}")
+
+        return success_response({"path": path, "altPaths": alt_paths})
+
+    except Exception as e:
+        logger.error(f"[API] /job/career-path 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
 
 

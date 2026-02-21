@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * @author zhangzherui
+ * @author guyuanyuan
  */
 @SpringBootApplication
 @MapperScan("www.gradquest.com.mapper")

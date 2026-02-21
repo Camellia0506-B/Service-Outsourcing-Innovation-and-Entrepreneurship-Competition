@@ -127,9 +127,21 @@ class CareerPlanningApp {
         document.getElementById('searchJobBtn')?.addEventListener('click', () => {
             this.searchJobs();
         });
+        document.getElementById('jobSearchInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.searchJobs();
+        });
+        ['searchFilterCity', 'searchFilterIndustry', 'searchFilterSalary', 'searchFilterCompanyType'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', () => this.searchJobs());
+        });
 
         document.getElementById('analyzeBtn')?.addEventListener('click', () => {
             this.analyzeJobMatch();
+        });
+        document.getElementById('anaBackBtn')?.addEventListener('click', () => {
+            this.switchTab('recommend');
+        });
+        document.getElementById('anaReportBtn')?.addEventListener('click', () => {
+            this.navigateTo('report');
         });
 
         // 职业规划报告相关
@@ -1569,72 +1581,184 @@ class CareerPlanningApp {
         if (!container) return;
 
         container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
-        const result = await getRecommendedJobs(userId, 10);
+        const result = await getRecommendedJobs(userId, 24);
 
         const recommendations = result.data?.recommendations ?? result.data?.jobs ?? [];
-        if (result.success && recommendations.length) {
-            this.renderRecommendedJobs(recommendations, container);
+        this.currentRecommendations = recommendations || [];
+        this.recFilter = 'all';
+
+        if (result.success && this.currentRecommendations.length) {
+            this.updateRecStats(this.currentRecommendations);
+            this.renderRecommendedJobs(this.currentRecommendations, container);
+            this.bindRecStatTiles();
+            this.bindRecCardClicks();
         } else {
             container.innerHTML = '<div class="hint-text">暂无推荐岗位，请先完善能力画像</div>';
+            this.updateRecStats([]);
         }
     }
 
-    // 渲染推荐岗位（含匹配度、匹配等级）
-    renderRecommendedJobs(recommendations, container) {
-        container.innerHTML = '';
-        recommendations.forEach(rec => {
-            const job = rec.job_name ? rec : { job_name: rec.job_name || '-', job_id: rec.job_id, ...rec };
-            const matchScore = rec.match_score ?? '--';
-            const matchLevel = rec.match_level || '';
-            const jobInfo = rec.job_info || {};
-            const tags = (rec.gaps || []).slice(0, 2).map(g => g.gap).filter(Boolean);
-            const highlights = (rec.highlights || []).slice(0, 2);
+    updateRecStats(recommendations) {
+        const total = recommendations.length;
+        const high = recommendations.filter(r => (r.match_score ?? 0) >= 85).length;
+        const mid = recommendations.filter(r => { const s = r.match_score ?? 0; return s >= 65 && s < 85; }).length;
+        const low = recommendations.filter(r => (r.match_score ?? 0) < 65).length;
+        const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+        set('recStatAll', total);
+        set('recStatHigh', high);
+        set('recStatMid', mid);
+        set('recStatLow', low);
+        const badge = document.getElementById('recBadge');
+        if (badge) { badge.textContent = total; badge.style.display = total ? 'inline' : 'none'; }
+        const title = document.getElementById('cardsTitle');
+        if (title) title.textContent = `全部推荐岗位 · ${total} 个`;
+    }
 
-            const jobCard = document.createElement('div');
-            jobCard.className = 'job-card job-card-match';
-            jobCard.innerHTML = `
-                <div class="job-card-header">
-                    <div class="job-title">${job.job_name || '-'}</div>
-                    <div class="match-badge match-${matchScore >= 90 ? 'high' : matchScore >= 75 ? 'mid' : 'low'}">${matchLevel || '匹配'}</div>
-                </div>
-                <div class="job-meta">${jobInfo.company || '多家公司'} | ${jobInfo.location || '-'} | ${jobInfo.salary || '-'}</div>
-                <div class="match-score-row">
-                    <span class="score-label">匹配度</span>
-                    <span class="score-value">${matchScore}%</span>
-                </div>
-                ${highlights.length ? `<div class="job-highlights">${highlights.map(h => `<span class="highlight-tag">✓ ${h}</span>`).join('')}</div>` : ''}
-            `;
-            jobCard.style.cursor = 'pointer';
-            jobCard.addEventListener('click', () => {
-                this.switchTab('analysis');
-                const select = document.getElementById('jobSelect');
-                if (select) { select.value = rec.job_id || rec.job_name; this.analyzeJobMatch(); }
-            });
-            container.appendChild(jobCard);
+    bindRecStatTiles() {
+        document.querySelectorAll('#matchingPage .stat-tile').forEach(tile => {
+            tile.onclick = () => {
+                const filter = tile.dataset.filter;
+                this.recFilter = filter;
+                document.querySelectorAll('#matchingPage .stat-tile').forEach(t => t.classList.remove('active'));
+                tile.classList.add('active');
+                const highN = this.currentRecommendations.filter(r => (r.match_score ?? 0) >= 85).length;
+                const midN = this.currentRecommendations.filter(r => { const s = r.match_score ?? 0; return s >= 65 && s < 85; }).length;
+                const lowN = this.currentRecommendations.filter(r => (r.match_score ?? 0) < 65).length;
+                const titles = {
+                    all: `全部推荐岗位 · ${this.currentRecommendations.length} 个`,
+                    high: `高度匹配 · ${highN} 个`,
+                    mid: `较为匹配 · ${midN} 个`,
+                    low: `一般匹配 · ${lowN} 个`
+                };
+                const titleEl = document.getElementById('cardsTitle');
+                if (titleEl) titleEl.textContent = titles[filter] || titles.all;
+                document.querySelectorAll('#matchingPage .job-card-match').forEach(card => {
+                    const level = card.dataset.level || 'mid';
+                    card.style.display = (filter === 'all' || level === filter) ? '' : 'none';
+                });
+            };
         });
     }
 
-    // 渲染岗位列表（搜索等场景，简化展示）
-    renderJobs(jobs, container) {
-        container.innerHTML = '';
-        (jobs || []).forEach(job => {
-            const jobCard = document.createElement('div');
-            jobCard.className = 'job-card';
-            const tags = (job.tags || job.required_skills || []).slice(0, 3).map(t => `<span class="job-tag">${t}</span>`).join('');
-            jobCard.innerHTML = `
-                <div class="job-card-header">
-                    <div class="job-title">${job.job_name || '-'}</div>
+    bindRecCardClicks() {
+        document.querySelectorAll('#matchingPage .job-card-match[data-rec-index]').forEach(card => {
+            card.onclick = (e) => {
+                if (e.target.closest('.analyze-btn')) return;
+                const idx = parseInt(card.dataset.recIndex, 10);
+                const rec = this.currentRecommendations[idx];
+                if (rec) {
+                    this.switchTab('analysis');
+                    const select = document.getElementById('jobSelect');
+                    if (select) { select.value = rec.job_id || rec.job_name; }
+                    this.analyzeJobMatch();
+                }
+            };
+        });
+        document.querySelectorAll('#matchingPage .analyze-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.job-card-match');
+                const idx = card ? parseInt(card.dataset.recIndex, 10) : -1;
+                const rec = idx >= 0 ? this.currentRecommendations[idx] : null;
+                if (rec) {
+                    this.switchTab('analysis');
+                    const select = document.getElementById('jobSelect');
+                    if (select) select.value = rec.job_id || rec.job_name;
+                    this.analyzeJobMatch();
+                }
+            };
+        });
+    }
+
+    // 渲染推荐岗位（新 UI：统计栏 + 卡片网格 + 分析匹配按钮）
+    renderRecommendedJobs(recommendations, container) {
+        const filter = this.recFilter || 'all';
+        const list = recommendations || [];
+        const level = (score) => (score >= 85 ? 'high' : score >= 65 ? 'mid' : 'low');
+        const badgeText = (score) => (score >= 85 ? '高度匹配' : score >= 65 ? '较为匹配' : '一般匹配');
+        const companyLogoColors = ['#1a3fa8', '#0d7a3e', '#d4380d', '#d48806', '#722ed1', '#cf1322', '#096dd9', '#389e0d', '#531dab', '#08979c'];
+        const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
+
+        container.innerHTML = list.map((rec, i) => {
+            const job = rec.job_name ? rec : { job_name: rec.job_name || '-', job_id: rec.job_id, ...rec };
+            const matchScore = rec.match_score ?? 0;
+            const lev = level(matchScore);
+            const jobInfo = rec.job_info || {};
+            const dims = (rec.dimension_scores && Object.entries(rec.dimension_scores).slice(0, 4)) || [];
+            const dimHtml = dims.map(([k, d]) => {
+                const s = d && (d.score != null) ? d.score : 0;
+                const cls = s >= 80 ? 'ok' : s >= 60 ? 'warn' : '';
+                const label = { basic_requirements: '基础✓', professional_skills: '技能', soft_skills: '素养', development_potential: '潜力' }[k] || k;
+                return `<span class="dim-pill ${cls}">${label} ${s >= 80 ? '✓' : s >= 60 ? '⚡' : ''}</span>`;
+            }).join('') || '<span class="dim-pill">匹配度 ' + matchScore + '%</span>';
+
+            return `<div class="job-card-match ${lev}" data-level="${lev}" data-rec-index="${i}" style="${filter !== 'all' && lev !== filter ? 'display:none' : ''}">
+                <div class="card-head">
+                    <div style="display:flex;align-items:flex-start;flex:1;gap:10px;">
+                        <div class="card-co-logo" style="background:${getLogoColor(i)}">${(jobInfo.company || job.job_name || '岗').slice(0, 2)}</div>
+                        <div class="card-co-info">
+                            <div class="card-job-name">${job.job_name || '-'}</div>
+                            <div class="card-co-name">${jobInfo.company || '多家公司'} · ${jobInfo.location || '-'}</div>
+                        </div>
+                    </div>
+                    <span class="match-badge badge-${lev}">${badgeText(matchScore)}</span>
                 </div>
-                <div class="job-tags">${tags}</div>
-                <div class="job-meta">${job.avg_salary || '-'}</div>
-            `;
-            jobCard.style.cursor = 'pointer';
-            jobCard.addEventListener('click', () => {
-                this.switchTab('analysis');
-                const select = document.getElementById('jobSelect');
-                if (select) { select.value = job.job_id || job.job_name; this.analyzeJobMatch(); }
+                <div class="card-match-row">
+                    <div class="match-pct-big pct-${lev}">${matchScore}%</div>
+                    <div class="match-bar-wrap"><div class="match-bar-bg"><div class="match-bar-fill fill-${lev}" style="width:${matchScore}%"></div></div></div>
+                </div>
+                <div class="match-dim-pills">${dimHtml}</div>
+                <div class="card-footer">
+                    <span class="card-salary">${jobInfo.salary || '-'}</span>
+                    <button type="button" class="analyze-btn">分析匹配 →</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        this.bindRecCardClicks();
+    }
+
+    // 渲染岗位列表（搜索等场景，按图2模板：多色 logo、技能标签、预估匹配、分析匹配）
+    renderJobs(jobs, container) {
+        if (!container) return;
+        const list = jobs || [];
+        if (list.length === 0) {
+            container.innerHTML = '<p class="hint-text">未找到相关岗位</p>';
+            return;
+        }
+        const companyLogoColors = ['#2f54eb', '#d4380d', '#d46b08', '#08979c', '#531dab', '#1d39c4', '#0d7a3e', '#722ed1', '#096dd9', '#389e0d'];
+        const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
+        const tags = (job) => (job.tags || job.required_skills || []).slice(0, 4).map(t => `<span class="src-tag">${t}</span>`).join('');
+        container.innerHTML = list.map((job, i) => {
+            const name = job.job_name || '-';
+            const abbr = (name.slice(0, 1) || '岗');
+            const loc = job.location || job.job_info?.location || '';
+            const salary = job.avg_salary || job.salary || job.job_info?.salary || '-';
+            const matchPct = job.match_score != null ? job.match_score : (85 - i * 3);
+            return `<div class="search-result-card" data-job-id="${job.job_id || ''}" data-job-name="${(job.job_name || '').replace(/"/g, '&quot;')}">
+                <div class="src-head">
+                    <div class="src-logo" style="background:${getLogoColor(i)}">${abbr}</div>
+                    <div><div class="src-name">${name}</div><div class="src-co">${job.industry || job.company || job.job_info?.company || '-'}</div></div>
+                </div>
+                <div class="src-tags">${tags(job)}${loc ? `<span class="src-tag">📍${loc}</span>` : ''}</div>
+                <div class="src-footer">
+                    <span class="src-salary">${salary}${String(salary).includes('/') ? '' : '/月'}</span>
+                    <span class="src-match">预估匹配 ${matchPct}%</span>
+                    <button type="button" class="src-btn">分析匹配</button>
+                </div>
+            </div>`;
+        }).join('');
+        container.querySelectorAll('.search-result-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.classList.contains('src-btn')) {
+                    e.stopPropagation();
+                    const id = card.dataset.jobId || card.dataset.jobName;
+                    this.switchTab('analysis');
+                    const select = document.getElementById('jobSelect');
+                    if (select) select.value = id;
+                    this.analyzeJobMatch();
+                }
             });
-            container.appendChild(jobCard);
         });
     }
 
@@ -2079,6 +2203,16 @@ class CareerPlanningApp {
             content.classList.remove('active');
         });
         document.getElementById(tabName + 'Tab').classList.add('active');
+
+        // 如果切换到搜索标签，且没有搜索关键词，自动加载默认岗位列表
+        if (tabName === 'search') {
+            const container = document.getElementById('searchResults');
+            const keyword = document.getElementById('jobSearchInput')?.value.trim();
+            // 如果搜索框为空且结果区域显示的是提示文字，则加载默认列表
+            if (!keyword && container && (container.textContent.includes('请输入岗位名称') || container.children.length === 0)) {
+                this.loadDefaultJobs();
+            }
+        }
     }
 
     // 切换岗位画像标签页
@@ -2101,24 +2235,48 @@ class CareerPlanningApp {
         }
     }
 
-    // 搜索岗位
-    async searchJobs() {
-        const keyword = document.getElementById('jobSearchInput').value.trim();
-        if (!keyword) {
-            this.showToast('请输入搜索关键词', 'error');
-            return;
-        }
+    // 获取搜索筛选条件（城市、行业、薪资、企业性质）
+    getSearchFilters() {
+        return {
+            city: (document.getElementById('searchFilterCity')?.value || '').trim(),
+            industry: (document.getElementById('searchFilterIndustry')?.value || '').trim(),
+            salary: (document.getElementById('searchFilterSalary')?.value || '').trim(),
+            company_nature: (document.getElementById('searchFilterCompanyType')?.value || '').trim()
+        };
+    }
 
+    // 加载默认岗位列表（无关键词时显示，应用筛选条件）
+    async loadDefaultJobs() {
         const container = document.getElementById('searchResults');
-        container.innerHTML = '<div class="loading-message">搜索中...</div>';
+        if (!container) return;
+        container.innerHTML = '<div class="loading-message">加载中...</div>';
 
-        const result = await searchJobs(keyword);
+        const filters = this.getSearchFilters();
+        const result = await searchJobs('', 1, 20, filters);
         const list = (result.data && (result.data.list || result.data.jobs)) || [];
 
         if (result.success && list.length > 0) {
             this.renderJobs(list, container);
         } else {
-            container.innerHTML = '<div class="hint-text">未找到相关岗位</div>';
+            container.innerHTML = '<div class="hint-text">暂无岗位信息</div>';
+        }
+    }
+
+    // 搜索岗位（支持关键词 + 城市、行业、薪资、企业性质筛选）
+    async searchJobs() {
+        const keyword = document.getElementById('jobSearchInput').value.trim();
+        const container = document.getElementById('searchResults');
+        const filters = this.getSearchFilters();
+
+        container.innerHTML = '<div class="loading-message">' + (keyword ? '搜索中...' : '加载中...') + '</div>';
+
+        const result = await searchJobs(keyword, 1, 20, filters);
+        const list = (result.data && (result.data.list || result.data.jobs)) || [];
+
+        if (result.success && list.length > 0) {
+            this.renderJobs(list, container);
+        } else {
+            container.innerHTML = '<div class="hint-text">' + (keyword ? '未找到相关岗位' : '暂无岗位信息') + '</div>';
         }
     }
 
@@ -2131,71 +2289,395 @@ class CareerPlanningApp {
         }
 
         const userId = getCurrentUserId();
+        const anaEmpty = document.getElementById('anaEmpty');
+        const anaContent = document.getElementById('anaContent');
         const container = document.getElementById('analysisResult');
+        if (anaEmpty) anaEmpty.style.display = 'none';
+        if (anaContent) anaContent.style.display = 'grid';
         if (container) container.innerHTML = '<div class="loading-message">分析中...</div>';
+        const anaBadge = document.getElementById('anaBadge');
+        if (anaBadge) { anaBadge.style.display = 'inline'; anaBadge.textContent = '1'; }
 
         const result = await analyzeJobMatch(userId, jobId);
 
         if (result.success && result.data) {
-            this.renderAnalysisResult(result.data);
+            this.renderAnalysisResult(result.data, jobId);
         } else {
             if (container) container.innerHTML = '<div class="hint-text">分析失败: ' + (result.msg || '未知错误') + '</div>';
         }
     }
 
-    // 渲染匹配分析结果（符合 API 文档 §6 多维度匹配分析）
-    renderAnalysisResult(data) {
+    // 渲染匹配分析结果（符合 API 文档 §6，并更新左侧栏与环形分）
+    renderAnalysisResult(data, jobId) {
         const container = document.getElementById('analysisResult');
         if (!container) return;
 
-        const score = data.match_score ?? '--';
+        const score = Number(data.match_score) || 0;
         const level = data.match_level || '';
         const dimScores = data.dimension_scores || {};
         const highlights = data.highlights || [];
         const gaps = data.gaps || [];
         const jobInfo = data.job_info || {};
-        const levelClass = score >= 90 ? 'match-high' : score >= 75 ? 'match-mid' : 'match-low';
+        const jobName = data.job_name || '岗位';
 
-        let dimHtml = '';
-        Object.entries(dimScores).forEach(([key, dim]) => {
-            const labels = { basic_requirements: '基础要求', professional_skills: '专业技能', soft_skills: '软技能', development_potential: '发展潜力' };
-            dimHtml += `<div class="dim-score"><span>${labels[key] || key}</span><span>${dim.score ?? '-'}分</span></div>`;
-        });
+        // 更新左侧栏
+        const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '—'; };
+        set('anaJobTitle', jobName);
+        set('anaCoName', jobInfo.company || '—');
+        const logo = document.getElementById('anaCoLogo');
+        if (logo) {
+            logo.textContent = (jobInfo.company || jobName).slice(0, 2);
+            logo.style.background = '#2C5FD4';
+        }
+        set('anaCoType', jobInfo.location ? jobInfo.location + ' · 月薪范围' : '月薪范围');
+        set('anaJobSalary', jobInfo.salary || '—');
+        const locEl = document.getElementById('anaJobLoc');
+        if (locEl) locEl.textContent = jobInfo.location ? '📍 ' + jobInfo.location : '—';
+
+        // 环形分
+        const scoreText = document.getElementById('anaScoreText');
+        if (scoreText) scoreText.textContent = score;
+        const ring = document.getElementById('anaRingFill');
+        if (ring) ring.setAttribute('stroke-dashoffset', 251.2 * (1 - score / 100));
+
+        // 维度图例
+        const dimLabels = { basic_requirements: '基础要求', professional_skills: '专业技能', soft_skills: '职业素养', development_potential: '发展潜力' };
+        const dimKeys = ['basic_requirements', 'professional_skills', 'soft_skills', 'development_potential'];
+        const legendEl = document.getElementById('anaRingLegend');
+        if (legendEl) {
+            const colors = ['#2C5FD4', '#0BA771', '#E8890B', '#748ffc'];
+            legendEl.innerHTML = dimKeys.map((key, i) => {
+                const dim = dimScores[key];
+                const s = dim && (dim.score != null) ? dim.score : 0;
+                return `<div class="leg-item"><div class="leg-dot" style="background:${colors[i]}"></div><span class="leg-name">${dimLabels[key]}</span><span class="leg-score">${s}</span></div>`;
+            }).join('');
+        }
+
+        // 雷达图数据：四维度分数（不足 4 个用 0 补）
+        const radarValues = dimKeys.map(k => (dimScores[k] && (dimScores[k].score != null)) ? dimScores[k].score : 0);
+        const reqValues = dimKeys.map(k => Math.min(100, (dimScores[k] && (dimScores[k].score != null)) ? dimScores[k].score + 5 : 80));
+        // 根据分数确定颜色：高(>=85)=绿色，中(65-84)=橙色，低(<65)=红色，基础要求固定蓝色
+        const getDimColor = (score, index) => {
+            if (index === 0) return '#2C5FD4'; // 基础要求固定蓝色
+            if (score >= 85) return '#0BA771'; // 高=绿色
+            if (score >= 65) return '#E8890B'; // 中=橙色
+            return '#D93B3B'; // 低=红色
+        };
+        const dimColors = radarValues.map((s, i) => getDimColor(s, i));
+        const cx = 130; const cy = 130; const r = 95;
+        const pt = (val, i) => {
+            const a = (Math.PI * 2 / 4) * i - Math.PI / 2;
+            const s = (val / 100) * r;
+            return [cx + s * Math.cos(a), cy + s * Math.sin(a)];
+        };
+        const radarStudentPoints = radarValues.map((v, i) => pt(v, i)).map(p => p.join(',')).join(' ');
+        const radarBasePoints = reqValues.map((v, i) => pt(v, i)).map(p => p.join(',')).join(' ');
+
+        // 四维度块（雷达右侧）- 使用对应颜色
+        const dimBlocksHtml = dimKeys.map((key, i) => {
+            const s = radarValues[i];
+            const req = reqValues[i];
+            const color = dimColors[i];
+            const cls = s >= req ? 'g' : s >= 60 ? 'o' : 'b';
+            const gapText = s >= req ? `✓ 已达标，超出 +${s - req} 分` : `⚠ 差距 ${req - s} 分，需重点提升`;
+            const gapCls = s >= req ? 'gap-ok' : 'gap-warn';
+            return `<div class="dim-block ${i === 0 ? 'active' : ''}" data-dim="${key}" data-dim-index="${i}" style="border-left: 3px solid ${color};">
+                <div class="dim-block-name">${['📐', '💡', '🌟', '🚀'][i]} ${dimLabels[key]}</div>
+                <div class="dim-block-scores"><span class="dim-score ${cls}" style="color: ${color};">${s}</span><span class="dim-vs">/ ${req} 要求</span></div>
+                <div class="dim-gap ${gapCls}">${gapText}</div>
+            </div>`;
+        }).join('');
+
+        // 逐项能力对比：按维度 tab，内容用亮点+差距简化
+        const dimTabsHtml = dimKeys.map((key, i) =>
+            `<button type="button" class="dim-tab ${i === 0 ? 'active' : ''}" data-dim-tab="${key}">${['📐', '💡', '🌟', '🚀'][i]} ${dimLabels[key]}</button>`
+        ).join('');
+        const youItems = highlights.slice(0, 4).map(h => `<div class="cmp-item"><span class="cmp-ico">✅</span><div><div class="cmp-name">${h}</div></div><span class="lvl lvl-have">✓ 符合</span></div>`).join('');
+        const gapRowsHtml = gaps.slice(0, 5).map((g, i) =>
+            `<div class="gap-row"><div class="gap-n">${i + 1}</div><div><strong>${g.gap || ''}：</strong>${g.suggestion || ''}</div></div>`
+        ).join('');
+        const dimContentHtml = dimKeys.map((key, i) => {
+            const dim = dimScores[key];
+            const s = dim && (dim.score != null) ? dim.score : 0;
+            const req = reqValues[i];
+            return `<div class="dim-content ${i === 0 ? 'show' : ''}" id="dim-content-${key}">
+                <div class="cmp-grid">
+                    <div class="cmp-col job-col"><div class="cmp-head">🏢 岗位要求</div>
+                        <div class="cmp-item"><span class="cmp-ico">📋</span><div><div class="cmp-name">${dimLabels[key]} 基线</div><div class="cmp-note">要求约 ${req} 分</div></div><span class="lvl lvl-must">必要</span></div>
+                    </div>
+                    <div class="cmp-col you-col"><div class="cmp-head">👤 你的情况</div>
+                        <div class="cmp-item"><span class="cmp-ico">${s >= req ? '✅' : '⚡'}</span><div><div class="cmp-name">当前 ${s} 分</div><div class="cmp-note">${s >= req ? '已达标' : '需提升'}</div></div><span class="lvl ${s >= req ? 'lvl-have' : 'lvl-part'}">${s >= req ? '✓ 符合' : '需提升'}</span></div>
+                    </div>
+                </div>
+                ${i === 1 && gapRowsHtml ? `<div class="gap-box"><div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}</div>` : ''}
+            </div>`;
+        }).join('');
+
+        // 行动计划：从 gaps 生成
+        const planItemsShort = gaps.slice(0, 3).map((g, i) => ({
+            period: 'short',
+            ico: ['🎯', '🔥', '📚'][i],
+            title: g.gap || '提升该项能力',
+            desc: g.suggestion || '',
+            tag: 't-urgent'
+        }));
+        const planItemsMid = gaps.slice(3, 6).map((g, i) => ({
+            period: 'mid',
+            ico: ['☁️', '📝', '📈'][i],
+            title: g.gap || '持续提升',
+            desc: g.suggestion || '',
+            tag: 't-mid'
+        }));
+        const planItems = [...planItemsShort, ...planItemsMid];
+        if (planItems.length === 0) planItems.push({ period: 'short', ico: '🎯', title: '根据分析结果制定计划', desc: '完善能力画像后可获得更具体的行动计划。', tag: 't-mid' });
+        const planItemsHtml = planItems.map(p => `<div class="plan-item" data-period="${p.period}"><span class="plan-ico">${p.ico}</span><div class="plan-body"><div class="plan-title">${p.title}</div><div class="plan-desc">${p.desc}</div></div><span class="plan-tag ${p.tag}">${p.period === 'short' ? '短期' : '中期'}</span></div>`).join('');
 
         container.innerHTML = `
-            <div class="analysis-result-card">
-                <h3>${data.job_name || '岗位'} · 人岗匹配分析</h3>
-                <div class="analysis-score-block">
-                    <div class="score-circle ${levelClass}">${score}%</div>
-                    <div class="score-label">综合匹配度 · ${level}</div>
+            <div class="sec">
+                <div class="sec-title">四维度匹配概览</div>
+                <div class="sec-sub">蓝色多边形为你的能力，灰色虚线为岗位要求基线，彩色边表示各维度匹配情况（绿色≥85分，橙色65-84分，红色&lt;65分），面积差即提升空间</div>
+                <div class="radar-row">
+                    <div id="radarWrap" class="radar-wrap">
+                        <svg width="280" height="280" viewBox="-40 -40 340 340">
+                            <defs>
+                                <linearGradient id="radarFill" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="${dimColors[0]}" stop-opacity=".25"/>
+                                    <stop offset="33%" stop-color="${dimColors[1]}" stop-opacity=".25"/>
+                                    <stop offset="66%" stop-color="${dimColors[2]}" stop-opacity=".25"/>
+                                    <stop offset="100%" stop-color="${dimColors[3]}" stop-opacity=".25"/>
+                                </linearGradient>
+                            </defs>
+                            <g id="radarGrid"></g>
+                            <g id="radarLabels"></g>
+                            <polygon id="radarBase" fill="none" stroke="#ced4da" stroke-width="1.5" stroke-dasharray="4,3" points="${radarBasePoints}"/>
+                            <polygon id="radarStudent" fill="url(#radarFill)" stroke="#2C5FD4" stroke-width="2" stroke-linejoin="round" points="${radarStudentPoints}"/>
+                            <g id="radarEdges"></g>
+                            <g id="radarDots"></g>
+                        </svg>
+                    </div>
+                    <div class="radar-dims">${dimBlocksHtml}</div>
                 </div>
-                ${jobInfo.company || jobInfo.location || jobInfo.salary ? `
-                <div class="analysis-job-info">
-                    <span>${jobInfo.company || ''}</span>
-                    <span>${jobInfo.location || ''}</span>
-                    <span>${jobInfo.salary || ''}</span>
+            </div>
+            <div class="sec">
+                <div class="sec-title">逐项能力对比</div>
+                <div class="sec-sub">岗位要求 vs 你目前能力水平，精准定位差距所在</div>
+                <div class="dim-tabs">${dimTabsHtml}</div>
+                ${dimContentHtml}
+            </div>
+            <div class="sec">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div class="sec-title" style="margin-bottom:0">个性化提升行动计划</div>
+                    <div class="plan-tabs">
+                        <button type="button" class="plan-tab active" data-plan="short">短期（3个月内）</button>
+                        <button type="button" class="plan-tab" data-plan="mid">中期（3–6个月）</button>
+                    </div>
                 </div>
-                ` : ''}
-                ${dimHtml ? `<div class="analysis-dimensions"><h4>多维度评分</h4><div class="dim-grid">${dimHtml}</div></div>` : ''}
-                ${highlights.length ? `
-                <div class="analysis-highlights">
-                    <h4>匹配亮点</h4>
-                    <ul>${highlights.map(h => `<li>✓ ${h}</li>`).join('')}</ul>
-                </div>
-                ` : ''}
-                ${gaps.length ? `
-                <div class="analysis-gaps">
-                    <h4>能力差距与建议</h4>
-                    ${gaps.map(g => `
-                        <div class="gap-item">
-                            <strong>${g.gap || ''}</strong> <span class="importance">${g.importance || ''}</span>
-                            <p class="suggestion">${g.suggestion || ''}</p>
-                        </div>
-                    `).join('')}
-                </div>
-                ` : ''}
+                <div class="plan-items" id="planList">${planItemsHtml}</div>
+            </div>
+            <div class="sec">
+                <div class="sec-title" style="margin-bottom:16px">📈 职业发展路径</div>
+                <div id="careerPathContainer"></div>
             </div>
         `;
+
+        this.drawAnalysisRadar(radarValues, reqValues);
+        this.bindAnalysisTabs();
+        if (jobId) this.renderCareerPath(jobId);
+    }
+
+    drawAnalysisRadar(studentValues, reqValues) {
+        const axes = ['基础要求', '职业技能', '职业素养', '发展潜力'];
+        const N = 4;
+        const cx = 130; const cy = 130; const r = 110;
+        const pt = (val, i) => {
+            const a = (Math.PI * 2 / N) * i - Math.PI / 2;
+            const s = (val / 100) * r;
+            return [cx + s * Math.cos(a), cy + s * Math.sin(a)];
+        };
+        const getDimColor = (score, index) => {
+            if (index === 0) return '#2C5FD4';
+            if (score >= 85) return '#0BA771';
+            if (score >= 65) return '#E8890B';
+            return '#D93B3B';
+        };
+        const dimColors = studentValues.map((s, i) => getDimColor(s, i));
+        const svg = document.querySelector('#radarWrap svg');
+        const grid = document.getElementById('radarGrid');
+        const labels = document.getElementById('radarLabels');
+        if (!svg || !grid || !labels) return;
+
+        const sectorsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        sectorsGroup.setAttribute('id', 'radarSectors');
+        for (let i = 0; i < N; i++) {
+            const [x1, y1] = pt(100, i);
+            const [x2, y2] = pt(100, (i + 1) % N);
+            const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            poly.setAttribute('points', `${cx},${cy} ${x1},${y1} ${x2},${y2}`);
+            poly.setAttribute('class', 'radar-sector radar-sector-' + i);
+            sectorsGroup.appendChild(poly);
+        }
+        svg.insertBefore(sectorsGroup, grid);
+        [25, 50, 75, 100].forEach(v => {
+            const pts = axes.map((_, i) => pt(v, i).join(',')).join(' ');
+            const p = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            p.setAttribute('points', pts);
+            p.setAttribute('fill', 'none');
+            p.setAttribute('stroke', v === 100 ? '#e4e9f5' : '#edf1fd');
+            p.setAttribute('stroke-width', '1');
+            grid.appendChild(p);
+        });
+        axes.forEach((_, i) => {
+            const [x, y] = pt(100, i);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', cx); line.setAttribute('y1', cy); line.setAttribute('x2', x); line.setAttribute('y2', y);
+            line.setAttribute('stroke', '#e4e9f5'); line.setAttribute('stroke-width', '1');
+            line.setAttribute('class', 'radar-axis radar-axis-' + i);
+            grid.appendChild(line);
+        });
+        axes.forEach((ax, i) => {
+            // 上下标签（索引0和2）保持108，左右标签（索引1和3）调远到120
+            const labelRadius = (i === 1 || i === 3) ? 120 : 108;
+            const [x, y] = pt(labelRadius, i);
+            const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', x); t.setAttribute('y', y);
+            t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'middle');
+            t.setAttribute('font-size', '11'); t.setAttribute('font-weight', '600'); t.setAttribute('fill', '#4e5e80');
+            t.setAttribute('class', 'radar-label radar-label-' + i);
+            t.textContent = ax;
+            labels.appendChild(t);
+        });
+        // 绘制彩色边：每条边使用对应维度的颜色
+        const edgesG = document.getElementById('radarEdges');
+        if (edgesG && studentValues && studentValues.length === 4) {
+            const dimColors = studentValues.map((s, i) => {
+                if (i === 0) return '#2C5FD4';
+                if (s >= 85) return '#0BA771';
+                if (s >= 65) return '#E8890B';
+                return '#D93B3B';
+            });
+            for (let i = 0; i < 4; i++) {
+                const [x1, y1] = pt(studentValues[i], i);
+                const [x2, y2] = pt(studentValues[(i + 1) % 4], (i + 1) % 4);
+                const edge = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                edge.setAttribute('x1', x1); edge.setAttribute('y1', y1); edge.setAttribute('x2', x2); edge.setAttribute('y2', y2);
+                edge.setAttribute('stroke', dimColors[i]); edge.setAttribute('stroke-width', '3');
+                edge.setAttribute('class', 'radar-edge radar-edge-' + i);
+                edge.setAttribute('stroke-linecap', 'round');
+                edgesG.appendChild(edge);
+            }
+        }
+        const dotsG = document.getElementById('radarDots');
+        if (dotsG) {
+            (studentValues || []).forEach((v, i) => {
+                const [x, y] = pt(v, i);
+                const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', '5');
+                c.setAttribute('fill', dimColors[i]); c.setAttribute('stroke', 'white'); c.setAttribute('stroke-width', '2.5');
+                c.setAttribute('class', 'radar-dot radar-dot-' + i);
+                dotsG.appendChild(c);
+            });
+        }
+    }
+
+    bindAnalysisTabs() {
+        const page = document.getElementById('matchingPage');
+        if (!page) return;
+        const radarWrap = document.getElementById('radarWrap');
+        if (!radarWrap) return;
+        
+        // 雷达图本身的悬停：扇形区域和标签
+        const radarSectors = page.querySelectorAll('#radarSectors .radar-sector');
+        radarSectors.forEach((sector, i) => {
+            sector.addEventListener('mouseenter', () => {
+                radarWrap.classList.add('radar-hover-' + i);
+                const dimBlock = page.querySelectorAll('.dim-block')[i];
+                if (dimBlock) dimBlock.classList.add('active');
+            });
+            sector.addEventListener('mouseleave', () => {
+                [0,1,2,3].forEach(j => radarWrap.classList.remove('radar-hover-' + j));
+                page.querySelectorAll('.dim-block').forEach(b => b.classList.remove('active'));
+            });
+        });
+        
+        const radarLabels = page.querySelectorAll('#radarLabels .radar-label');
+        radarLabels.forEach((label, i) => {
+            label.addEventListener('mouseenter', () => {
+                radarWrap.classList.add('radar-hover-' + i);
+                const dimBlock = page.querySelectorAll('.dim-block')[i];
+                if (dimBlock) dimBlock.classList.add('active');
+            });
+            label.addEventListener('mouseleave', () => {
+                [0,1,2,3].forEach(j => radarWrap.classList.remove('radar-hover-' + j));
+                page.querySelectorAll('.dim-block').forEach(b => b.classList.remove('active'));
+            });
+        });
+        
+        // 维度栏的悬停：也要触发雷达图高亮
+        page.querySelectorAll('.dim-block').forEach((block, i) => {
+            block.addEventListener('mouseenter', () => {
+                radarWrap.classList.add('radar-hover-' + i);
+                block.classList.add('active');
+            });
+            block.addEventListener('mouseleave', () => {
+                [0,1,2,3].forEach(j => radarWrap.classList.remove('radar-hover-' + j));
+                page.querySelectorAll('.dim-block').forEach(b => b.classList.remove('active'));
+            });
+        });
+        page.querySelectorAll('.dim-tab').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.dataset.dimTab;
+                page.querySelectorAll('.dim-tab').forEach(b => b.classList.remove('active'));
+                page.querySelectorAll('.dim-content').forEach(c => { c.classList.remove('show'); });
+                btn.classList.add('active');
+                const content = document.getElementById('dim-content-' + id);
+                if (content) content.classList.add('show');
+            };
+        });
+        page.querySelectorAll('.dim-block').forEach(block => {
+            block.onclick = () => {
+                const id = block.dataset.dim;
+                page.querySelectorAll('.dim-tab').forEach(b => b.classList.remove('active'));
+                page.querySelectorAll('.dim-tab[data-dim-tab="' + id + '"]').forEach(b => b.classList.add('active'));
+                page.querySelectorAll('.dim-content').forEach(c => c.classList.remove('show'));
+                const content = document.getElementById('dim-content-' + id);
+                if (content) content.classList.add('show');
+            };
+        });
+        page.querySelectorAll('.plan-tab').forEach(btn => {
+            btn.onclick = () => {
+                const period = btn.dataset.plan;
+                page.querySelectorAll('.plan-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                page.querySelectorAll('.plan-item').forEach(item => {
+                    item.style.display = item.dataset.period === period ? 'flex' : 'none';
+                });
+            };
+        });
+        page.querySelectorAll('.plan-item').forEach(item => {
+            item.style.display = item.dataset.period === 'short' ? 'flex' : 'none';
+        });
+    }
+
+    // 职业发展路径：请求接口并渲染 path + 换岗
+    async renderCareerPath(jobId) {
+        const box = document.getElementById('careerPathContainer');
+        if (!box) return;
+        box.innerHTML = '<div class="loading-message">加载路径中...</div>';
+        const result = await getCareerPath(jobId);
+        if (!result.success || !result.data) {
+            box.innerHTML = '<p class="hint-text">' + (result.msg || '加载失败') + '</p>';
+            return;
+        }
+        const path = result.data.path || [];
+        const altPaths = result.data.altPaths || [];
+        let trackHtml = '';
+        path.forEach((node, i) => {
+            if (i > 0) trackHtml += '<div class="path-arr">→</div>';
+            trackHtml += `<div class="path-node${i === 0 ? ' cur' : ''}"><div class="path-node-title">${node.jobName || '-'}</div><div class="path-node-meta">${node.years || ''} ${node.level || ''}</div></div>`;
+        });
+        let altHtml = '';
+        if (altPaths.length) altHtml = `<div class="path-alt">换岗方向：${altPaths.map(a => a.jobName).join('、')}</div>`;
+        box.innerHTML = `<div class="path-track">${trackHtml}</div>${altHtml}`;
     }
 
     // 显示报告生成入口区

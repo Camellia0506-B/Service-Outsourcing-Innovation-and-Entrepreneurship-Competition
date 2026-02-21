@@ -973,6 +973,336 @@ body::before {
     border-left: 4px solid #f59e0b;
 }
 
+/* 职业发展路径（岗位匹配页） */
+.path-track {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+}
+.path-node {
+    padding: 16px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.path-node.cur {
+    border-color: var(--primary-color);
+    background: rgba(74, 144, 226, 0.08);
+}
+.path-node-title { font-weight: 600; }
+.path-node-meta { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.path-arr {
+    width: auto;
+    flex-shrink: 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 18px;
+}
+.path-alt {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   岗位匹配页 · 新 UI（推荐/搜索/分析 三栏 + 统计筛选 + 分析侧栏）
+   ═══════════════════════════════════════════════════════════════ */
+#matchingPage {
+    --match-bg: #f2f4fb;
+    --match-card: #ffffff;
+    --match-border: #e4e9f5;
+    --match-primary: #2C5FD4;
+    --match-primary-soft: #edf1fd;
+    --match-primary-mid: #748ffc;
+    --match-green: #0BA771;
+    --match-green-soft: #e6f8f2;
+    --match-orange: #E8890B;
+    --match-orange-soft: #fef3e2;
+    --match-red: #D93B3B;
+    --match-muted: #8a97b5;
+    --match-text: #18243f;
+    --match-text2: #4e5e80;
+    --match-radius: 16px;
+}
+
+#matchingPage .matching-container { max-width: 1280px; margin: 0 auto; padding: 32px 28px; }
+#matchingPage .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+#matchingPage .page-header h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; color: var(--match-text); }
+#matchingPage .page-header p { font-size: 16px; color: var(--match-text2); margin-top: 8px; line-height: 1.6; }
+
+#matchingPage .matching-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--match-border); margin-bottom: 28px; }
+#matchingPage .tab-btn {
+    padding: 14px 26px; font-size: 16px; font-weight: 600; color: var(--match-muted);
+    border: none; background: none; cursor: pointer; font-family: inherit;
+    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+#matchingPage .tab-btn:hover { color: var(--match-primary); }
+#matchingPage .tab-btn.active { color: var(--match-primary); border-bottom-color: var(--match-primary); }
+#matchingPage .tab-badge { font-size: 11px; background: var(--match-primary-soft); color: var(--match-primary); padding: 1px 7px; border-radius: 999px; font-weight: 700; }
+#matchingPage .tab-btn.active .tab-badge { background: var(--match-primary); color: white; }
+
+/* 推荐岗位 */
+#matchingPage .rec-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+#matchingPage .stats-sidebar { display: flex; flex-direction: column; gap: 12px; }
+#matchingPage .stat-tile {
+    background: var(--match-card); border-radius: 14px; border: 1.5px solid var(--match-border);
+    padding: 16px 18px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+}
+#matchingPage .stat-tile::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; }
+#matchingPage .stat-tile.all::before { background: var(--match-primary-mid); }
+#matchingPage .stat-tile.high::before { background: var(--match-green); }
+#matchingPage .stat-tile.mid::before { background: var(--match-orange); }
+#matchingPage .stat-tile.low::before { background: var(--match-muted); }
+#matchingPage .stat-tile.active, #matchingPage .stat-tile:hover { box-shadow: 0 4px 20px rgba(44,95,212,.12); transform: translateX(3px); }
+#matchingPage .stat-tile.active { border-color: var(--match-primary); }
+#matchingPage .stat-tile-num { font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+#matchingPage .stat-tile.all .stat-tile-num { color: var(--match-primary); }
+#matchingPage .stat-tile.high .stat-tile-num { color: var(--match-green); }
+#matchingPage .stat-tile.mid .stat-tile-num { color: var(--match-orange); }
+#matchingPage .stat-tile.low .stat-tile-num { color: var(--match-muted); }
+#matchingPage .stat-tile-label { font-size: 12px; color: var(--match-text2); margin-top: 1px; }
+#matchingPage .stat-tile-sub { font-size: 11px; color: var(--match-muted); margin-top: 4px; }
+
+#matchingPage .cards-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+#matchingPage .cards-title { font-size: 14px; font-weight: 600; color: var(--match-text2); }
+#matchingPage .sort-row { display: flex; align-items: center; gap: 8px; }
+#matchingPage .sort-label { font-size: 12px; color: var(--match-muted); }
+#matchingPage .sort-sel { padding: 5px 10px; border: 1.5px solid var(--match-border); border-radius: 8px; font-size: 12px; font-family: inherit; color: var(--match-text2); background: white; cursor: pointer; outline: none; }
+#matchingPage .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+#matchingPage .job-card-match {
+    background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border);
+    padding: 20px; cursor: pointer; transition: all 0.22s cubic-bezier(.4,0,.2,1);
+    position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 0;
+}
+#matchingPage .job-card-match::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: var(--match-radius) var(--match-radius) 0 0; opacity: 0; transition: opacity 0.22s;
+}
+#matchingPage .job-card-match.high::before { background: linear-gradient(90deg, var(--match-green), #34d399); }
+#matchingPage .job-card-match.mid::before { background: linear-gradient(90deg, var(--match-orange), #fbbf24); }
+#matchingPage .job-card-match.low::before { background: linear-gradient(90deg, var(--match-muted), #ced4da); }
+#matchingPage .job-card-match:hover { box-shadow: 0 8px 32px rgba(44,95,212,.14); transform: translateY(-2px); border-color: transparent; }
+#matchingPage .job-card-match:hover::before { opacity: 1; }
+#matchingPage .card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+#matchingPage .card-co-logo {
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: white; margin-right: 10px;
+}
+#matchingPage .card-co-info { flex: 1; }
+#matchingPage .card-job-name { font-size: 15px; font-weight: 700; color: var(--match-text); line-height: 1.3; }
+#matchingPage .card-co-name { font-size: 11px; color: var(--match-muted); margin-top: 2px; }
+#matchingPage .match-badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+#matchingPage .badge-high { background: var(--match-green-soft); color: var(--match-green); }
+#matchingPage .badge-mid { background: var(--match-orange-soft); color: var(--match-orange); }
+#matchingPage .badge-low { background: #f1f3f5; color: var(--match-muted); }
+#matchingPage .card-match-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+#matchingPage .match-pct-big { font-size: 22px; font-weight: 900; letter-spacing: -1px; }
+#matchingPage .pct-high { color: var(--match-green); } #matchingPage .pct-mid { color: var(--match-orange); } #matchingPage .pct-low { color: var(--match-muted); }
+#matchingPage .match-bar-wrap { flex: 1; }
+#matchingPage .match-bar-bg { height: 5px; background: var(--match-bg); border-radius: 999px; overflow: hidden; }
+#matchingPage .match-bar-fill { height: 100%; border-radius: 999px; transition: width 1.1s cubic-bezier(.4,0,.2,1); }
+#matchingPage .fill-high { background: linear-gradient(90deg, var(--match-green), #34d399); }
+#matchingPage .fill-mid { background: linear-gradient(90deg, var(--match-orange), #fbbf24); }
+#matchingPage .fill-low { background: linear-gradient(90deg, var(--match-muted), #ced4da); }
+#matchingPage .match-dim-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+#matchingPage .dim-pill { font-size: 10px; padding: 3px 8px; border-radius: 5px; background: var(--match-bg); color: var(--match-text2); display: inline-flex; align-items: center; gap: 3px; }
+#matchingPage .dim-pill.ok { background: var(--match-green-soft); color: var(--match-green); }
+#matchingPage .dim-pill.warn { background: var(--match-orange-soft); color: var(--match-orange); }
+#matchingPage .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--match-border); margin-top: auto; }
+#matchingPage .card-salary { font-size: 13px; font-weight: 700; color: var(--match-primary); }
+#matchingPage .analyze-btn {
+    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: none;
+    background: var(--match-primary); color: white; cursor: pointer; font-family: inherit;
+    transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px;
+}
+#matchingPage .analyze-btn:hover { background: #1e4cb8; transform: translateY(-1px); }
+
+/* 搜索岗位 */
+#matchingPage .search-bar-wrap { background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border); padding: 24px; margin-bottom: 22px; }
+#matchingPage .search-bar-wrap h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+#matchingPage .search-input-row { display: flex; gap: 10px; margin-bottom: 14px; }
+#matchingPage .search-input {
+    flex: 1; padding: 11px 16px; border: 1.5px solid var(--match-border); border-radius: 10px;
+    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; color: var(--match-text);
+}
+#matchingPage .search-input:focus { border-color: var(--match-primary); }
+#matchingPage .search-btn {
+    padding: 11px 24px; background: var(--match-primary); color: white; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s;
+}
+#matchingPage .search-btn:hover { background: #1e4cb8; }
+#matchingPage .filters-row { display: flex; flex-wrap: wrap; gap: 8px; }
+#matchingPage .filter-group { display: flex; align-items: center; gap: 6px; }
+#matchingPage .filter-label { font-size: 12px; color: var(--match-muted); white-space: nowrap; }
+#matchingPage .filter-sel { padding: 5px 10px; border: 1.5px solid var(--match-border); border-radius: 8px; font-size: 12px; font-family: inherit; color: var(--match-text2); background: white; cursor: pointer; outline: none; }
+#matchingPage .search-results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+#matchingPage .search-result-card {
+    background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border);
+    padding: 18px; cursor: pointer; transition: all 0.2s;
+}
+#matchingPage .search-result-card:hover { box-shadow: 0 6px 24px rgba(44,95,212,.12); border-color: var(--match-primary-mid); transform: translateY(-2px); }
+#matchingPage .src-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+#matchingPage .src-logo { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: white; flex-shrink: 0; }
+#matchingPage .src-name { font-size: 14px; font-weight: 700; }
+#matchingPage .src-co { font-size: 11px; color: var(--match-muted); }
+#matchingPage .src-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+#matchingPage .src-tag { font-size: 11px; padding: 2px 7px; border-radius: 5px; background: var(--match-bg); color: var(--match-text2); }
+#matchingPage .src-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--match-border); }
+#matchingPage .src-salary { font-size: 13px; font-weight: 700; color: var(--match-primary); }
+#matchingPage .src-match { font-size: 12px; color: var(--match-text2); font-weight: 500; }
+#matchingPage .src-btn { font-size: 11px; padding: 4px 12px; border: 1.5px solid var(--match-primary); color: var(--match-primary); border-radius: 6px; cursor: pointer; background: none; font-family: inherit; transition: all 0.15s; }
+#matchingPage .src-btn:hover { background: var(--match-primary); color: white; }
+
+/* 匹配分析 */
+#matchingPage .analysis-layout { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
+#matchingPage .ana-sidebar { display: flex; flex-direction: column; gap: 24px; align-items: stretch; }
+#matchingPage .job-info-card {
+    background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border);
+    padding: 22px; position: relative; overflow: hidden;
+}
+#matchingPage .job-info-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2C5FD4, #748ffc); }
+#matchingPage .job-co-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+#matchingPage .co-logo { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: white; }
+#matchingPage .co-name { font-size: 13px; font-weight: 600; }
+#matchingPage .co-type { font-size: 11px; background: var(--match-primary-soft); color: var(--match-primary); padding: 2px 7px; border-radius: 4px; font-weight: 500; display: inline-block; margin-top: 2px; }
+#matchingPage .job-title-big { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; }
+#matchingPage .job-meta-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+#matchingPage .job-meta-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(--match-bg); color: var(--match-text2); }
+#matchingPage .salary-row { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--match-border); }
+#matchingPage .salary-num { font-size: 17px; font-weight: 800; color: var(--match-primary); }
+#matchingPage .salary-lbl { font-size: 10px; color: var(--match-muted); }
+#matchingPage .score-card { background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border); padding: 20px; }
+#matchingPage .score-card-title { font-size: 13px; font-weight: 600; color: var(--match-text2); margin-bottom: 16px; }
+#matchingPage .ring-wrap { display: flex; align-items: center; gap: 16px; }
+#matchingPage .ring-legend { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+#matchingPage .leg-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+#matchingPage .leg-dot { width: 10px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+#matchingPage .leg-name { color: var(--match-text2); flex: 1; }
+#matchingPage .leg-score { font-weight: 700; color: var(--match-text); }
+#matchingPage .leg-w { font-size: 10px; color: var(--match-muted); background: var(--match-bg); padding: 1px 5px; border-radius: 3px; }
+#matchingPage .ana-actions {
+    background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border);
+    padding: 18px; display: flex; flex-direction: column; gap: 10px;
+}
+#matchingPage .ana-actions .ana-tip {
+    font-size: 11px; color: var(--match-muted); margin-top: auto; padding-top: 12px; border-top: 1px dashed var(--match-border);
+}
+#matchingPage .btn-primary { padding: 12px; background: var(--match-primary); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; width: 100%; }
+#matchingPage .btn-primary:hover { background: #1e4cb8; transform: translateY(-1px); }
+#matchingPage .btn-ghost { padding: 9px; background: none; color: var(--match-text2); border: 1.5px solid var(--match-border); border-radius: 10px; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; width: 100%; }
+#matchingPage .btn-ghost:hover { border-color: var(--match-primary); color: var(--match-primary); }
+#matchingPage .btn-back { padding: 9px; background: var(--match-primary-soft); color: var(--match-primary); border: none; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
+#matchingPage .btn-back:hover { background: var(--match-primary); color: white; }
+#matchingPage .ana-main .sec { background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border); padding: 22px; margin-bottom: 18px; }
+#matchingPage .ana-main .sec-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+#matchingPage .ana-main .sec-sub { font-size: 12px; color: var(--match-muted); margin-bottom: 18px; }
+#matchingPage .path-node .pn-stage { font-size: 10px; font-weight: 700; color: var(--match-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+#matchingPage .path-node .pn-title { font-size: 13px; font-weight: 700; }
+#matchingPage .path-node .pn-yr { font-size: 11px; color: var(--match-muted); }
+#matchingPage .path-node .pn-sal { font-size: 12px; font-weight: 700; color: var(--match-primary); margin-top: 3px; }
+#matchingPage .path-node.cur { background: var(--match-primary); border-color: var(--match-primary); }
+#matchingPage .path-node.cur * { color: white !important; }
+#matchingPage .path-alt strong { color: var(--match-primary); margin: 0 3px; }
+
+/* 匹配分析右侧：雷达图、逐项对比、行动计划 */
+#matchingPage .radar-wrap { display: inline-block; position: relative; }
+#matchingPage .radar-wrap .radar-axis { transition: stroke 0.25s ease, stroke-width 0.25s ease; }
+#matchingPage .radar-wrap .radar-edge { transition: stroke-width 0.25s ease, opacity 0.25s ease; }
+#matchingPage .radar-wrap .radar-dot { transition: r 0.25s ease, stroke-width 0.25s ease; }
+/* 悬停高亮：线条适中粗细 */
+#matchingPage .radar-wrap.radar-hover-0 .radar-axis-0 { stroke: #9333ea !important; stroke-width: 3; filter: drop-shadow(0 0 8px rgba(147,51,234,.8)); }
+#matchingPage .radar-wrap.radar-hover-1 .radar-axis-1 { stroke: #f59e0b !important; stroke-width: 3; filter: drop-shadow(0 0 8px rgba(245,158,11,.8)); }
+#matchingPage .radar-wrap.radar-hover-2 .radar-axis-2 { stroke: #10b981 !important; stroke-width: 3; filter: drop-shadow(0 0 8px rgba(16,185,129,.8)); }
+#matchingPage .radar-wrap.radar-hover-3 .radar-axis-3 { stroke: #ef4444 !important; stroke-width: 3; filter: drop-shadow(0 0 8px rgba(239,68,68,.8)); }
+#matchingPage .radar-wrap.radar-hover-0 .radar-edge-0 { stroke-width: 3.5; opacity: 1; filter: drop-shadow(0 0 6px rgba(147,51,234,.7)); }
+#matchingPage .radar-wrap.radar-hover-1 .radar-edge-1 { stroke-width: 3.5; opacity: 1; filter: drop-shadow(0 0 6px rgba(245,158,11,.7)); }
+#matchingPage .radar-wrap.radar-hover-2 .radar-edge-2 { stroke-width: 3.5; opacity: 1; filter: drop-shadow(0 0 6px rgba(16,185,129,.7)); }
+#matchingPage .radar-wrap.radar-hover-3 .radar-edge-3 { stroke-width: 3.5; opacity: 1; filter: drop-shadow(0 0 6px rgba(239,68,68,.7)); }
+#matchingPage .radar-wrap.radar-hover-0 .radar-sector-0 { fill: rgba(147,51,234,.25); }
+#matchingPage .radar-wrap.radar-hover-1 .radar-sector-1 { fill: rgba(245,158,11,.25); }
+#matchingPage .radar-wrap.radar-hover-2 .radar-sector-2 { fill: rgba(16,185,129,.25); }
+#matchingPage .radar-wrap.radar-hover-3 .radar-sector-3 { fill: rgba(239,68,68,.25); }
+#matchingPage .radar-wrap.radar-hover-0 .radar-label-0 { fill: #9333ea !important; font-weight: 900; font-size: 14px; }
+#matchingPage .radar-wrap.radar-hover-1 .radar-label-1 { fill: #f59e0b !important; font-weight: 900; font-size: 14px; }
+#matchingPage .radar-wrap.radar-hover-2 .radar-label-2 { fill: #10b981 !important; font-weight: 900; font-size: 14px; }
+#matchingPage .radar-wrap.radar-hover-3 .radar-label-3 { fill: #ef4444 !important; font-weight: 900; font-size: 14px; }
+#matchingPage .radar-wrap.radar-hover-0 .radar-dot-0 { r: 7; stroke-width: 3; filter: drop-shadow(0 0 6px rgba(147,51,234,.8)); }
+#matchingPage .radar-wrap.radar-hover-1 .radar-dot-1 { r: 7; stroke-width: 3; filter: drop-shadow(0 0 6px rgba(245,158,11,.8)); }
+#matchingPage .radar-wrap.radar-hover-2 .radar-dot-2 { r: 7; stroke-width: 3; filter: drop-shadow(0 0 6px rgba(16,185,129,.8)); }
+#matchingPage .radar-wrap.radar-hover-3 .radar-dot-3 { r: 7; stroke-width: 3; filter: drop-shadow(0 0 6px rgba(239,68,68,.8)); }
+#matchingPage .radar-wrap .radar-sector { fill: transparent; cursor: pointer; transition: fill 0.25s ease; }
+#matchingPage .radar-wrap .radar-label { cursor: pointer; transition: fill 0.25s ease, font-weight 0.25s ease, font-size 0.25s ease; pointer-events: all; }
+#matchingPage .radar-row { display: flex; align-items: center; gap: 20px; flex-wrap: nowrap; }
+#matchingPage .radar-wrap { flex-shrink: 0; margin-right: 8px; }
+#matchingPage .radar-dims { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 130px; }
+#matchingPage .dim-block {
+    padding: 11px 14px; border-radius: 11px; border: 1.5px solid var(--match-border);
+    cursor: pointer; transition: all 0.22s ease;
+}
+#matchingPage .dim-block:hover, #matchingPage .dim-block.active {
+    border-color: var(--match-primary); background: var(--match-primary-soft);
+    box-shadow: 0 6px 20px rgba(44,95,212,.25); transform: scale(1.03);
+    border-left-width: 4px;
+}
+#matchingPage .dim-block-name { font-size: 11px; font-weight: 700; color: var(--match-text2); margin-bottom: 4px; }
+#matchingPage .dim-block-scores { display: flex; align-items: baseline; gap: 6px; }
+#matchingPage .dim-block .dim-score { font-size: 18px; font-weight: 900; }
+#matchingPage .dim-block .dim-score.g { color: var(--match-green); }
+#matchingPage .dim-block .dim-score.o { color: var(--match-orange); }
+#matchingPage .dim-block .dim-score.b { color: var(--match-primary); }
+#matchingPage .dim-vs { font-size: 11px; color: var(--match-muted); }
+#matchingPage .dim-gap { font-size: 11px; margin-top: 2px; }
+#matchingPage .gap-ok { color: var(--match-green); }
+#matchingPage .gap-warn { color: var(--match-orange); }
+#matchingPage .dim-tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 18px; }
+#matchingPage .dim-tab { padding: 6px 15px; border-radius: 999px; border: 1.5px solid var(--match-border); font-size: 12px; font-family: inherit; color: var(--match-text2); cursor: pointer; background: white; transition: all 0.15s; }
+#matchingPage .dim-tab:hover { border-color: var(--match-primary); color: var(--match-primary); }
+#matchingPage .dim-tab.active { background: var(--match-primary); border-color: var(--match-primary); color: white; font-weight: 600; }
+#matchingPage .dim-content { display: none; }
+#matchingPage .dim-content.show { display: block; }
+#matchingPage .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+#matchingPage .cmp-col { background: var(--match-bg); border-radius: 11px; padding: 14px; }
+#matchingPage .cmp-head { font-size: 12px; font-weight: 700; margin-bottom: 11px; display: flex; align-items: center; gap: 5px; }
+#matchingPage .cmp-col.job-col .cmp-head { color: var(--match-primary); }
+#matchingPage .cmp-col.you-col .cmp-head { color: var(--match-green); }
+#matchingPage .cmp-item { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 8px; padding: 7px 9px; border-radius: 7px; background: white; border: 1px solid var(--match-border); }
+#matchingPage .cmp-ico { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+#matchingPage .cmp-name { font-size: 12px; font-weight: 500; }
+#matchingPage .cmp-note { font-size: 10px; color: var(--match-muted); margin-top: 1px; }
+#matchingPage .lvl { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+#matchingPage .lvl-must { background: #fdeaea; color: var(--match-red); }
+#matchingPage .lvl-plus { background: var(--match-green-soft); color: var(--match-green); }
+#matchingPage .lvl-have { background: var(--match-green-soft); color: var(--match-green); }
+#matchingPage .lvl-part { background: var(--match-orange-soft); color: var(--match-orange); }
+#matchingPage .lvl-miss { background: #fdeaea; color: var(--match-red); }
+#matchingPage .gap-box { background: #fffbf2; border: 1.5px solid #ffe5a0; border-radius: 11px; padding: 14px; }
+#matchingPage .gap-box-title { font-size: 12px; font-weight: 700; color: var(--match-orange); margin-bottom: 9px; display: flex; align-items: center; gap: 5px; }
+#matchingPage .gap-row { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 6px; font-size: 12px; color: var(--match-text2); }
+#matchingPage .gap-n { width: 17px; height: 17px; background: var(--match-orange); color: white; border-radius: 3px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+#matchingPage .plan-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+#matchingPage .plan-tab { padding: 5px 14px; border-radius: 999px; border: 1.5px solid var(--match-border); font-size: 12px; font-family: inherit; color: var(--match-text2); cursor: pointer; background: white; transition: all 0.15s; }
+#matchingPage .plan-tab.active { background: var(--match-primary); border-color: var(--match-primary); color: white; font-weight: 600; }
+#matchingPage .plan-items { display: flex; flex-direction: column; gap: 9px; }
+#matchingPage .plan-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--match-bg); border-radius: 11px; border-left: 3px solid transparent; transition: all 0.15s; }
+#matchingPage .plan-item:hover { background: var(--match-primary-soft); border-left-color: var(--match-primary); }
+#matchingPage .plan-ico { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+#matchingPage .plan-body { flex: 1; }
+#matchingPage .plan-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+#matchingPage .plan-desc { font-size: 11px; color: var(--match-text2); line-height: 1.6; }
+#matchingPage .plan-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+#matchingPage .t-urgent { background: #fdeaea; color: var(--match-red); }
+#matchingPage .t-mid { background: var(--match-orange-soft); color: var(--match-orange); }
+
 .gap-item .importance {
     font-size: 12px;
     color: #92400e;

@@ -617,43 +617,133 @@
         <!-- 岗位匹配页面 -->
         <div id="matchingPage" class="page hidden">
             <div class="matching-container">
-                <h2>岗位匹配</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">基于能力画像的智能岗位推荐与人岗匹配分析</p>
-                
+                <div class="page-header">
+                    <div>
+                        <h2>岗位匹配</h2>
+                        <p>基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
+                    </div>
+                </div>
+
                 <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="recommend">🎯 推荐岗位</button>
+                    <button class="tab-btn active" data-tab="recommend">🎯 推荐岗位 <span class="tab-badge" id="recBadge">0</span></button>
                     <button class="tab-btn" data-tab="search">🔍 搜索岗位</button>
-                    <button class="tab-btn" data-tab="analysis">📋 匹配分析</button>
+                    <button class="tab-btn" data-tab="analysis">📊 匹配分析 <span class="tab-badge" id="anaBadge" style="display:none">1</span></button>
                 </div>
 
                 <!-- 推荐岗位 -->
                 <div class="tab-content active" id="recommendTab">
-                    <div id="recommendedJobs" class="jobs-grid">
-                        <div class="loading-message">加载推荐岗位中...</div>
+                    <div class="rec-layout">
+                        <div class="stats-sidebar">
+                            <div class="stat-tile all active" data-filter="all">
+                                <div class="stat-tile-num" id="recStatAll">0</div>
+                                <div class="stat-tile-label">全部推荐岗位</div>
+                                <div class="stat-tile-sub">点击查看全部</div>
+                            </div>
+                            <div class="stat-tile high" data-filter="high">
+                                <div class="stat-tile-num" id="recStatHigh">0</div>
+                                <div class="stat-tile-label">高度匹配</div>
+                                <div class="stat-tile-sub">匹配度 ≥ 85%</div>
+                            </div>
+                            <div class="stat-tile mid" data-filter="mid">
+                                <div class="stat-tile-num" id="recStatMid">0</div>
+                                <div class="stat-tile-label">较为匹配</div>
+                                <div class="stat-tile-sub">匹配度 65–84%</div>
+                            </div>
+                            <div class="stat-tile low" data-filter="low">
+                                <div class="stat-tile-num" id="recStatLow">0</div>
+                                <div class="stat-tile-label">一般匹配</div>
+                                <div class="stat-tile-sub">匹配度 &lt; 65%</div>
+                            </div>
+                        </div>
+                        <div class="cards-area">
+                            <div class="cards-toolbar">
+                                <span class="cards-title" id="cardsTitle">全部推荐岗位 · 0 个</span>
+                                <div class="sort-row">
+                                    <span class="sort-label">排序</span>
+                                    <select class="sort-sel"><option>匹配度从高到低</option><option>薪资从高到低</option></select>
+                                </div>
+                            </div>
+                            <div class="cards-grid" id="recommendedJobs">
+                                <div class="loading-message">加载推荐岗位中...</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 搜索岗位 -->
                 <div class="tab-content" id="searchTab">
-                    <div class="search-section">
-                        <input type="text" id="jobSearchInput" placeholder="搜索岗位名称...">
-                        <button id="searchJobBtn" class="btn-primary">搜索</button>
+                    <div class="search-bar-wrap">
+                        <h2>搜索岗位</h2>
+                        <div class="search-input-row">
+                            <input type="text" id="jobSearchInput" class="search-input" placeholder="输入岗位名称、技能、公司…">
+                            <button type="button" id="searchJobBtn" class="search-btn">🔍 搜索</button>
+                        </div>
+                        <div class="filters-row">
+                            <div class="filter-group"><span class="filter-label">城市</span><select id="searchFilterCity" class="filter-sel"><option value="">不限</option><option value="北京">北京</option><option value="上海">上海</option><option value="深圳">深圳</option><option value="杭州">杭州</option><option value="广州">广州</option></select></div>
+                            <div class="filter-group"><span class="filter-label">行业</span><select id="searchFilterIndustry" class="filter-sel"><option value="">不限</option><option value="互联网">互联网</option><option value="金融科技">金融科技</option><option value="AI/智能硬件">AI/智能硬件</option><option value="新能源">新能源</option><option value="咨询">咨询</option></select></div>
+                            <div class="filter-group"><span class="filter-label">薪资</span><select id="searchFilterSalary" class="filter-sel"><option value="">不限</option><option value="10k以下">10k以下</option><option value="10–20k">10–20k</option><option value="20k以上">20k以上</option></select></div>
+                            <div class="filter-group"><span class="filter-label">企业性质</span><select id="searchFilterCompanyType" class="filter-sel"><option value="">不限</option><option value="国企">国企</option><option value="私企">私企</option><option value="外资">外资</option></select></div>
+                        </div>
                     </div>
-                    <div id="searchResults" class="jobs-grid">
+                    <div class="search-results-grid" id="searchResults">
                         <p class="hint-text">请输入岗位名称进行搜索</p>
                     </div>
                 </div>
 
                 <!-- 匹配分析 -->
                 <div class="tab-content" id="analysisTab">
-                    <div class="analysis-section">
-                        <select id="jobSelect" class="job-select">
-                            <option value="">选择一个岗位进行分析</option>
-                        </select>
-                        <button id="analyzeBtn" class="btn-primary">开始分析</button>
+                    <div id="anaEmpty" style="text-align:center;padding:80px 20px;color:#8a97b5;">
+                        <div style="font-size:48px;margin-bottom:16px;">🎯</div>
+                        <div style="font-size:16px;font-weight:600;color:#4e5e80;margin-bottom:8px;">还没有选择要分析的岗位</div>
+                        <div style="font-size:13px;margin-bottom:20px;">前往「推荐岗位」点击任意岗位的「分析匹配」按钮，或下方选择岗位后开始分析</div>
+                        <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+                            <select id="jobSelect" class="sort-sel" style="min-width:200px;"><option value="">选择一个岗位进行分析</option></select>
+                            <button id="analyzeBtn" class="search-btn">开始分析</button>
+                        </div>
                     </div>
-                    <div id="analysisResult" class="analysis-result">
-                        <p class="hint-text">选择岗位后点击「开始分析」查看人岗匹配详情</p>
+                    <div class="analysis-layout" id="anaContent" style="display:none">
+                        <div class="ana-sidebar">
+                            <div class="job-info-card">
+                                <div class="job-co-row">
+                                    <div class="co-logo" id="anaCoLogo">—</div>
+                                    <div>
+                                        <div class="co-name" id="anaCoName">—</div>
+                                        <span class="co-type" id="anaCoType">—</span>
+                                    </div>
+                                </div>
+                                <div class="job-title-big" id="anaJobTitle">—</div>
+                                <div class="job-meta-tags">
+                                    <span class="job-meta-tag" id="anaJobLoc">—</span>
+                                    <span class="job-meta-tag">月薪范围</span>
+                                </div>
+                                <div class="salary-row">
+                                    <div><div class="salary-num" id="anaJobSalary">—</div><div class="salary-lbl">月薪范围</div></div>
+                                </div>
+                            </div>
+                            <div class="score-card">
+                                <div class="score-card-title">综合匹配得分</div>
+                                <div class="ring-wrap">
+                                    <svg width="100" height="100" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#e4e9f5" stroke-width="10"/>
+                                        <circle id="anaRingFill" cx="50" cy="50" r="40" fill="none" stroke="url(#scoreGrad)" stroke-width="10"
+                                            stroke-dasharray="251.3" stroke-dashoffset="251.3" stroke-linecap="round" transform="rotate(-90 50 50)"
+                                            style="transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"/>
+                                        <defs><linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2C5FD4"/><stop offset="100%" stop-color="#0BA771"/></linearGradient></defs>
+                                        <text x="50" y="46" text-anchor="middle" font-size="19" font-weight="900" fill="#18243f" id="anaScoreText">0</text>
+                                        <text x="50" y="59" text-anchor="middle" font-size="9" fill="#8a97b5">综合分</text>
+                                    </svg>
+                                    <div class="ring-legend" id="anaRingLegend"></div>
+                                </div>
+                            </div>
+                            <div class="ana-actions">
+                                <button type="button" class="btn-primary" id="anaReportBtn">📄 生成职业规划报告</button>
+                                <button type="button" class="btn-back" id="anaBackBtn">← 返回推荐岗位</button>
+                                <p class="ana-tip">完善能力画像可获得更精准的匹配分析</p>
+                            </div>
+                        </div>
+                        <div class="ana-main">
+                            <div id="analysisResult"></div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -199,8 +199,22 @@ class API {
                 reportData.status = 'completed';  // 轮询时前端据此判断报告已生成
                 return { success: true, data: reportData };
             case '/job/profiles':
-            case '/job/list':
-                return { success: true, data: { total: 5, page: 1, size: 20, list: this.mockJobs() } };
+            case '/job/list': {
+                let allJobs = this.mockJobs();
+                const keyword = (data.keyword || '').trim();
+                allJobs = this._filterJobsByKeyword(allJobs, keyword);
+                allJobs = this._filterJobsByFilters(allJobs, {
+                    city: data.city,
+                    industry: data.industry,
+                    salary: data.salary,
+                    company_nature: data.company_nature
+                });
+                const page = data.page || 1;
+                const size = data.size || 20;
+                const start = (page - 1) * size;
+                const paged = allJobs.slice(start, start + size);
+                return { success: true, data: { total: allJobs.length, page, size, list: paged } };
+            }
             case '/job/profile/detail':
             case '/job/detail':
                 return { success: true, data: this.mockJobDetail(options.body?.job_id || options.body?.job_name) };
@@ -233,8 +247,18 @@ class API {
                 return { success: true, data: { task_id: 'task_' + Date.now(), status: 'processing', estimated_time: 30 } };
             case '/job/ai-generate-result':
                 return { success: true, data: { status: 'completed', job_profile: this.mockJobDetail(options.body?.job_name), ai_confidence: 0.88, data_sources: { total_samples: 50, valid_samples: 47 } } };
-            case '/job/search':
-                return { success: true, data: { total: 5, list: this.mockJobs() } };
+            case '/job/search': {
+                let allJobs = this.mockJobs();
+                const keyword = (data.keyword || '').trim();
+                allJobs = this._filterJobsByKeyword(allJobs, keyword);
+                allJobs = this._filterJobsByFilters(allJobs, {
+                    city: data.city,
+                    industry: data.industry,
+                    salary: data.salary,
+                    company_nature: data.company_nature
+                });
+                return { success: true, data: { total: allJobs.length, list: allJobs } };
+            }
             case '/student/ability-profile':
                 return { success: true, data: this.mockAbilityProfile() };
             case '/student/ai-generate-profile':
@@ -267,6 +291,17 @@ class API {
             case '/career/check-completeness':
                 return { success: true, data: this.mockCareerCompleteness() };
             default:
+                if (typeof endpoint === 'string' && endpoint.startsWith('/job/career-path')) {
+                    const q = endpoint.indexOf('jobId='); const cpJobId = (q >= 0 ? (endpoint.slice(q + 6).split('&')[0] || '') : '') || 'job_001';
+                    const cpJobs = this.mockJobs();
+                    const cpJ = cpJobs.find(j => j.job_id === cpJobId || j.job_name === cpJobId) || cpJobs[0];
+                    return { success: true, data: { path: [
+                        { stage: '当前目标', jobName: cpJ.job_name || cpJ.name, years: '-', salary: '-', level: 'L2' },
+                        { stage: '第一阶段', jobName: '中级工程师', years: '2-3年', salary: '-', level: 'L3' },
+                        { stage: '第二阶段', jobName: '高级工程师', years: '3-5年', salary: '-', level: 'L4' },
+                        { stage: '长期目标', jobName: '架构师/专家', years: '5年以上', salary: '-', level: 'L5' }
+                    ], altPaths: [{ jobName: '数据科学家' }, { jobName: 'AI产品经理' }, { jobName: '项目经理' }] } };
+                }
                 return { success: false, msg: '未知的API端点' };
         }
     }
@@ -557,21 +592,75 @@ class API {
         };
     }
 
-    // 不少于10个就业岗位画像，含专业技能、证书、创新、学习、抗压、沟通、实习能力
+    // 根据关键词模糊匹配岗位（岗位名、技能、标签、行业等）
+    _filterJobsByKeyword(jobs, keyword) {
+        if (!keyword || typeof keyword !== 'string') return jobs;
+        const k = String(keyword).trim().toLowerCase();
+        if (!k) return jobs;
+        return jobs.filter(job => {
+            const fields = [
+                job.job_name || '',
+                job.job_id || '',
+                job.industry || '',
+                job.level || '',
+                ...(job.skills || []),
+                ...(job.tags || []),
+                (job.avg_salary || '').toString()
+            ].filter(Boolean);
+            return fields.some(f => String(f).toLowerCase().includes(k));
+        });
+    }
+
+    // 根据城市、行业、薪资、企业性质筛选岗位
+    _filterJobsByFilters(jobs, filters) {
+        if (!filters || typeof filters !== 'object') return jobs;
+        let list = jobs;
+        if (filters.city) {
+            const city = String(filters.city).trim();
+            list = list.filter(j => (j.location || j.work_locations?.[0] || '').includes(city));
+        }
+        if (filters.industry) {
+            const ind = String(filters.industry).trim();
+            list = list.filter(j => (j.industry || '').includes(ind));
+        }
+        if (filters.salary) {
+            const sal = String(filters.salary).trim();
+            list = list.filter(j => {
+                const s = (j.avg_salary || '').toString();
+                const match = s.match(/(\d+)[kK]?\s*[-–]\s*(\d+)[kK]?/);
+                let minK = 0, maxK = 999;
+                if (match) {
+                    minK = parseInt(match[1], 10);
+                    maxK = parseInt(match[2], 10);
+                }
+                if (sal === '10k以下') return maxK < 10;
+                if (sal === '10–20k') return minK <= 20 && maxK >= 10;
+                if (sal === '20k以上') return minK >= 20;
+                return true;
+            });
+        }
+        if (filters.company_nature) {
+            const nat = String(filters.company_nature).trim();
+            list = list.filter(j => (j.company_nature || '').includes(nat));
+        }
+        return list;
+    }
+
+    // 不少于10个就业岗位画像，含专业技能、证书、创新、学习、抗压、沟通、实习能力、城市、企业性质
     mockJobs() {
         return [
-            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '20k-35k', demand_score: 92, growth_trend: '上升', tags: ['人工智能', '机器学习'], industry: '互联网/AI', level: '中级', skills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'] },
-            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-22k', demand_score: 90, growth_trend: '稳定', tags: ['React', 'Vue', 'TypeScript'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Vue', 'React', 'HTML5/CSS3'] },
-            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '14k-25k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go', '微服务'], industry: '互联网', level: '中级', skills: ['Java/Go', 'MySQL', 'Redis', '分布式'] },
-            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 85, growth_trend: '上升', tags: ['Python', 'SQL', '数据可视化'], industry: '互联网/金融', level: '初级', skills: ['Python', 'SQL', 'Excel', 'Tableau'] },
-            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-28k', demand_score: 82, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'] },
-            { job_id: 'job_006', job_name: '新能源电池工程师', avg_salary: '18k-30k', demand_score: 88, growth_trend: '上升', tags: ['锂电池', 'BMS'], industry: '新能源', level: '中级', skills: ['电化学', '电池管理', '测试验证'] },
-            { job_id: 'job_007', job_name: 'UI/UX设计师', avg_salary: '12k-22k', demand_score: 80, growth_trend: '稳定', tags: ['Figma', '交互设计'], industry: '互联网', level: '中级', skills: ['Figma/Sketch', '交互设计', '视觉设计'] },
-            { job_id: 'job_008', job_name: '测试开发工程师', avg_salary: '12k-20k', demand_score: 78, growth_trend: '稳定', tags: ['自动化测试', '性能测试'], industry: '互联网', level: '中级', skills: ['Python', 'Selenium', 'JMeter'] },
-            { job_id: 'job_009', job_name: '运维工程师', avg_salary: '11k-20k', demand_score: 75, growth_trend: '稳定', tags: ['Linux', 'K8s', '云原生'], industry: '互联网', level: '中级', skills: ['Linux', 'Docker', 'Kubernetes'] },
-            { job_id: 'job_010', job_name: 'AI应用工程师', avg_salary: '18k-32k', demand_score: 90, growth_trend: '上升', tags: ['大模型', 'RAG', 'Agent'], industry: 'AI/互联网', level: '中级', skills: ['Python', 'LLM', 'Prompt工程'] },
-            { job_id: 'job_011', job_name: '嵌入式软件工程师', avg_salary: '14k-24k', demand_score: 80, growth_trend: '上升', tags: ['C/C++', '嵌入式'], industry: '智能硬件/汽车', level: '中级', skills: ['C/C++', 'RTOS', '驱动开发'] },
-            { job_id: 'job_012', job_name: '咨询顾问', avg_salary: '15k-30k', demand_score: 72, growth_trend: '稳定', tags: ['战略咨询', '商业分析'], industry: '咨询', level: '中级', skills: ['商业分析', 'PPT', '客户沟通'] }
+            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '20k-35k', demand_score: 92, growth_trend: '上升', tags: ['人工智能', '机器学习'], industry: '互联网/AI', level: '中级', skills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'], location: '北京', company_nature: '私企' },
+            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-22k', demand_score: 90, growth_trend: '稳定', tags: ['React', 'Vue', 'TypeScript'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Vue', 'React', 'HTML5/CSS3'], location: '上海', company_nature: '私企' },
+            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '14k-25k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go', '微服务'], industry: '互联网', level: '中级', skills: ['Java/Go', 'MySQL', 'Redis', '分布式'], location: '深圳', company_nature: '私企' },
+            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 85, growth_trend: '上升', tags: ['Python', 'SQL', '数据可视化'], industry: '互联网/金融', level: '初级', skills: ['Python', 'SQL', 'Excel', 'Tableau'], location: '北京', company_nature: '外资' },
+            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-28k', demand_score: 82, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'], location: '杭州', company_nature: '私企' },
+            { job_id: 'job_006', job_name: '新能源电池工程师', avg_salary: '18k-30k', demand_score: 88, growth_trend: '上升', tags: ['锂电池', 'BMS'], industry: '新能源', level: '中级', skills: ['电化学', '电池管理', '测试验证'], location: '深圳', company_nature: '国企' },
+            { job_id: 'job_007', job_name: 'UI/UX设计师', avg_salary: '12k-22k', demand_score: 80, growth_trend: '稳定', tags: ['Figma', '交互设计'], industry: '互联网', level: '中级', skills: ['Figma/Sketch', '交互设计', '视觉设计'], location: '杭州', company_nature: '私企' },
+            { job_id: 'job_008', job_name: '测试开发工程师', avg_salary: '12k-20k', demand_score: 78, growth_trend: '稳定', tags: ['自动化测试', '性能测试'], industry: '互联网', level: '中级', skills: ['Python', 'Selenium', 'JMeter'], location: '北京', company_nature: '外资' },
+            { job_id: 'job_009', job_name: '运维工程师', avg_salary: '11k-20k', demand_score: 75, growth_trend: '稳定', tags: ['Linux', 'K8s', '云原生'], industry: '互联网', level: '中级', skills: ['Linux', 'Docker', 'Kubernetes'], location: '广州', company_nature: '私企' },
+            { job_id: 'job_010', job_name: 'AI应用工程师', avg_salary: '18k-32k', demand_score: 90, growth_trend: '上升', tags: ['大模型', 'RAG', 'Agent'], industry: 'AI/互联网', level: '中级', skills: ['Python', 'LLM', 'Prompt工程'], location: '北京', company_nature: '私企' },
+            { job_id: 'job_011', job_name: '嵌入式软件工程师', avg_salary: '14k-24k', demand_score: 80, growth_trend: '上升', tags: ['C/C++', '嵌入式'], industry: '智能硬件/汽车', level: '中级', skills: ['C/C++', 'RTOS', '驱动开发'], location: '深圳', company_nature: '国企' },
+            { job_id: 'job_012', job_name: '咨询顾问', avg_salary: '15k-30k', demand_score: 72, growth_trend: '稳定', tags: ['战略咨询', '商业分析'], industry: '咨询', level: '中级', skills: ['商业分析', 'PPT', '客户沟通'], location: '上海', company_nature: '外资' }
         ];
     }
 
@@ -1128,17 +1217,24 @@ async function getAssessmentReport(userId, reportId) {
 // ==================== 岗位画像模块（走 AI 服务，符合文档 4） ====================
 
 // 4.1 获取岗位画像列表
-async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', level = '') {
+// filters: { city, industry, salary, company_nature }
+async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', level = '', filters = null) {
     const body = { page, size };
     if (keyword) body.keyword = keyword;
     if (industry) body.industry = industry;
     if (level) body.level = level;
+    if (filters && typeof filters === 'object') {
+        if (filters.city) body.city = filters.city;
+        if (filters.industry) body.industry = filters.industry || body.industry;
+        if (filters.salary) body.salary = filters.salary;
+        if (filters.company_nature) body.company_nature = filters.company_nature;
+    }
     return await api.postToAI('/job/profiles', body);
 }
 
 // 兼容旧调用：获取岗位列表（等同 getJobProfiles，返回 data.list）
-async function getJobList(page = 1, size = 20, keyword = '', industry = '', level = '') {
-    return await getJobProfiles(page, size, keyword, industry, level);
+async function getJobList(page = 1, size = 20, keyword = '', industry = '', level = '', filters = null) {
+    return await getJobProfiles(page, size, keyword, industry, level, filters);
 }
 
 // 4.2 获取岗位详细画像，参数为 job_id
@@ -1161,6 +1257,12 @@ async function getJobRelationGraph(jobId, graphType = 'all') {
     return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
 }
 
+// 职业发展路径（晋升 + 换岗，GET）
+async function getCareerPath(jobId) {
+    const endpoint = '/job/career-path?jobId=' + encodeURIComponent(jobId);
+    return await api.requestToAI(endpoint, { method: 'GET' });
+}
+
 // 4.4 AI 生成岗位画像
 async function jobAiGenerateProfile(jobName, jobDescriptions, sampleSize = 50) {
     return await api.postToAI('/job/ai-generate-profile', {
@@ -1180,9 +1282,17 @@ async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 50) {
     return await jobAiGenerateProfile(jobName, jobDescriptions, sampleSize);
 }
 
-// 搜索岗位（使用 4.1 带 keyword）
-async function searchJobs(keyword, page = 1, size = 20) {
-    return await getJobProfiles(page, size, keyword);
+// 搜索岗位（使用 4.1 带 keyword 和 filters）
+async function searchJobs(keyword, page = 1, size = 20, filters = null) {
+    const body = { page, size };
+    if (keyword) body.keyword = keyword;
+    if (filters && typeof filters === 'object') {
+        if (filters.city) body.city = filters.city;
+        if (filters.industry) body.industry = filters.industry;
+        if (filters.salary) body.salary = filters.salary;
+        if (filters.company_nature) body.company_nature = filters.company_nature;
+    }
+    return await api.postToAI('/job/profiles', body);
 }
 
 // ==================== 学生能力画像模块 ====================
