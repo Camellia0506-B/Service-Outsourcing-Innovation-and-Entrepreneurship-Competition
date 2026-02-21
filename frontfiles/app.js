@@ -600,10 +600,11 @@ class CareerPlanningApp {
         const completed = this.currentUser && this.currentUser.assessment_completed;
         document.getElementById('assessmentStatus').textContent = completed ? '已完成' : '未完成';
 
-        // 获取推荐岗位数量
+        // 获取推荐岗位数量（API 返回 recommendations 或 total_matched）
         const matchingResult = await getRecommendedJobs(userId, 10);
-        if (matchingResult.success) {
-            document.getElementById('matchedJobs').textContent = matchingResult.data.jobs.length;
+        if (matchingResult.success && matchingResult.data) {
+            const count = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
+            document.getElementById('matchedJobs').textContent = count;
         }
     }
 
@@ -1444,62 +1445,193 @@ class CareerPlanningApp {
 
     // 加载岗位匹配数据
     async loadMatchingData() {
+        await this.loadAbilityProfile();
         await this.loadRecommendedJobs();
         await this.loadJobList();
+    }
+
+    // 加载学生能力画像
+    async loadAbilityProfile() {
+        const userId = getCurrentUserId();
+        const container = document.getElementById('abilityProfileContent');
+        if (!container) return;
+
+        container.innerHTML = '<div class="loading-message">加载能力画像中...</div>';
+        const result = await getAbilityProfile(userId);
+
+        if (result.success && result.data) {
+            this.renderAbilityProfile(result.data, container);
+        } else {
+            container.innerHTML = '<div class="hint-text">暂无能力画像，请先完善个人档案并完成测评</div>';
+        }
+    }
+
+    // 渲染学生能力画像（符合 API 文档 §5）
+    renderAbilityProfile(data, container) {
+        const bi = data.basic_info || {};
+        const ps = data.professional_skills || {};
+        const cert = data.certificates || {};
+        const innovation = data.innovation_ability || {};
+        const learning = data.learning_ability || {};
+        const pressure = data.pressure_resistance || {};
+        const comm = data.communication_ability || {};
+        const exp = data.practical_experience || {};
+        const overall = data.overall_assessment || {};
+
+        const skillItem = (arr, key) => (arr || []).map(item => {
+            const name = item[key] || item.skill || item.domain || '-';
+            const level = item.level || '';
+            const score = item.score != null ? ` ${item.score}分` : '';
+            return `<span class="ability-tag">${name}${level ? '(' + level + ')' : ''}${score}</span>`;
+        }).join('') || '<span class="hint-text">暂无</span>';
+
+        let html = `
+            <div class="ability-profile-card">
+                <h3>📋 基础信息</h3>
+                <div class="ability-section">
+                    <p><strong>学历:</strong> ${bi.education || '-'} | <strong>专业:</strong> ${bi.major || '-'}</p>
+                    <p><strong>学校:</strong> ${bi.school || '-'} | <strong>GPA:</strong> ${bi.gpa || '-'}</p>
+                    <p><strong>预计毕业:</strong> ${bi.expected_graduation || '-'}</p>
+                </div>
+            </div>
+            <div class="ability-profile-card">
+                <h3>💻 专业技能</h3>
+                <div class="ability-section">
+                    <p><strong>编程语言:</strong> ${skillItem(ps.programming_languages, 'skill')}</p>
+                    <p><strong>框架工具:</strong> ${skillItem(ps.frameworks_tools, 'skill')}</p>
+                    <p><strong>领域知识:</strong> ${skillItem(ps.domain_knowledge, 'domain')}</p>
+                    <p><strong>综合技能得分:</strong> <span class="score-highlight">${ps.overall_score ?? '-'}分</span></p>
+                </div>
+            </div>
+            <div class="ability-profile-card">
+                <h3>🏆 证书资质</h3>
+                <div class="ability-section">
+                    ${(cert.items || []).length ? (cert.items.map(c => `<p>${c.name || '-'} ${c.level ? '(' + c.level + ')' : ''}</p>`).join('')) : '<p class="hint-text">暂无</p>'}
+                    <p><strong>竞争力:</strong> ${cert.competitiveness || '-'}</p>
+                </div>
+            </div>
+            <div class="ability-profile-card">
+                <h3>✨ 创新能力</h3>
+                <div class="ability-section">
+                    <p><strong>项目:</strong> ${(innovation.projects || []).map(p => p.name).join('、') || '-'}</p>
+                    <p><strong>竞赛:</strong> ${(innovation.competitions || []).map(c => c.name + (c.award ? '(' + c.award + ')' : '')).join('、') || '-'}</p>
+                    <p><strong>得分:</strong> ${innovation.score ?? '-'} | <strong>等级:</strong> ${innovation.level || '-'}</p>
+                </div>
+            </div>
+            <div class="ability-profile-card">
+                <h3>📚 学习能力</h3>
+                <div class="ability-section">
+                    <p><strong>得分:</strong> ${learning.score ?? '-'} | <strong>等级:</strong> ${learning.level || '-'}</p>
+                </div>
+            </div>
+            <div class="ability-profile-card">
+                <h3>💬 沟通能力</h3>
+                <div class="ability-section">
+                    <p><strong>得分:</strong> ${comm.overall_score ?? '-'} | <strong>等级:</strong> ${comm.level || '-'}</p>
+                </div>
+            </div>
+            <div class="ability-profile-card">
+                <h3>📁 实习/项目经验</h3>
+                <div class="ability-section">
+                    <p><strong>实习:</strong> ${(exp.internships || []).map(i => `${i.company} - ${i.position}`).join('；') || '-'}</p>
+                    <p><strong>项目:</strong> ${(exp.projects || []).map(p => `${p.name}(${p.role || ''})`).join('；') || '-'}</p>
+                    <p><strong>综合得分:</strong> ${exp.overall_score ?? '-'}</p>
+                </div>
+            </div>
+            <div class="ability-profile-card highlight">
+                <h3>📊 综合评估</h3>
+                <div class="ability-section">
+                    <p><strong>总分:</strong> <span class="score-highlight">${overall.total_score ?? '-'}</span> | <strong>百分位:</strong> ${overall.percentile ?? '-'} | <strong>竞争力:</strong> ${overall.competitiveness || '-'}</p>
+                    <p><strong>优势:</strong> ${(overall.strengths || []).join('；') || '-'}</p>
+                    <p><strong>待提升:</strong> ${(overall.weaknesses || []).join('；') || '-'}</p>
+                </div>
+            </div>
+        `;
+        container.innerHTML = html;
     }
 
     // 加载推荐岗位
     async loadRecommendedJobs() {
         const userId = getCurrentUserId();
         const container = document.getElementById('recommendedJobs');
-        container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
+        if (!container) return;
 
+        container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
         const result = await getRecommendedJobs(userId, 10);
 
-        if (result.success && result.data.jobs) {
-            this.renderJobs(result.data.jobs, container);
+        const recommendations = result.data?.recommendations ?? result.data?.jobs ?? [];
+        if (result.success && recommendations.length) {
+            this.renderRecommendedJobs(recommendations, container);
         } else {
-            container.innerHTML = '<div class="hint-text">暂无推荐岗位</div>';
+            container.innerHTML = '<div class="hint-text">暂无推荐岗位，请先完善能力画像</div>';
         }
     }
 
-    // 渲染岗位列表
-    renderJobs(jobs, container) {
+    // 渲染推荐岗位（含匹配度、匹配等级）
+    renderRecommendedJobs(recommendations, container) {
         container.innerHTML = '';
+        recommendations.forEach(rec => {
+            const job = rec.job_name ? rec : { job_name: rec.job_name || '-', job_id: rec.job_id, ...rec };
+            const matchScore = rec.match_score ?? '--';
+            const matchLevel = rec.match_level || '';
+            const jobInfo = rec.job_info || {};
+            const tags = (rec.gaps || []).slice(0, 2).map(g => g.gap).filter(Boolean);
+            const highlights = (rec.highlights || []).slice(0, 2);
 
-        jobs.forEach(job => {
             const jobCard = document.createElement('div');
-            jobCard.className = 'job-card';
-            
-            const tags = job.required_skills ? 
-                job.required_skills.slice(0, 3).map(skill => 
-                    `<span class="job-tag">${skill}</span>`
-                ).join('') : '';
-
+            jobCard.className = 'job-card job-card-match';
             jobCard.innerHTML = `
                 <div class="job-card-header">
-                    <div class="job-title">${job.job_name}</div>
-                    <div class="job-company">${job.company || '多家公司'}</div>
+                    <div class="job-title">${job.job_name || '-'}</div>
+                    <div class="match-badge match-${matchScore >= 90 ? 'high' : matchScore >= 75 ? 'mid' : 'low'}">${matchLevel || '匹配'}</div>
                 </div>
-                <div class="job-tags">${tags}</div>
-                <div class="match-score">
+                <div class="job-meta">${jobInfo.company || '多家公司'} | ${jobInfo.location || '-'} | ${jobInfo.salary || '-'}</div>
+                <div class="match-score-row">
                     <span class="score-label">匹配度</span>
-                    <span class="score-value">${job.match_score || '--'}%</span>
+                    <span class="score-value">${matchScore}%</span>
                 </div>
+                ${highlights.length ? `<div class="job-highlights">${highlights.map(h => `<span class="highlight-tag">✓ ${h}</span>`).join('')}</div>` : ''}
             `;
-
+            jobCard.style.cursor = 'pointer';
             jobCard.addEventListener('click', () => {
-                this.showJobDetail(job);
+                this.switchTab('analysis');
+                const select = document.getElementById('jobSelect');
+                if (select) { select.value = rec.job_id || rec.job_name; this.analyzeJobMatch(); }
             });
-
             container.appendChild(jobCard);
         });
     }
 
-    // 显示岗位详情
+    // 渲染岗位列表（搜索等场景，简化展示）
+    renderJobs(jobs, container) {
+        container.innerHTML = '';
+        (jobs || []).forEach(job => {
+            const jobCard = document.createElement('div');
+            jobCard.className = 'job-card';
+            const tags = (job.tags || job.required_skills || []).slice(0, 3).map(t => `<span class="job-tag">${t}</span>`).join('');
+            jobCard.innerHTML = `
+                <div class="job-card-header">
+                    <div class="job-title">${job.job_name || '-'}</div>
+                </div>
+                <div class="job-tags">${tags}</div>
+                <div class="job-meta">${job.avg_salary || '-'}</div>
+            `;
+            jobCard.style.cursor = 'pointer';
+            jobCard.addEventListener('click', () => {
+                this.switchTab('analysis');
+                const select = document.getElementById('jobSelect');
+                if (select) { select.value = job.job_id || job.job_name; this.analyzeJobMatch(); }
+            });
+            container.appendChild(jobCard);
+        });
+    }
+
+    // 显示岗位详情（跳转到岗位画像详情）
     showJobDetail(job) {
-        alert('岗位详情:\n' + JSON.stringify(job, null, 2));
-        // 实际项目中应该创建一个美观的详情页面
+        if (job.job_id || job.job_name) {
+            this.navigateTo('jobProfile');
+            setTimeout(() => this.showJobProfileDetail(job.job_id || job.job_name, !job.job_id), 300);
+        }
     }
 
     // 加载岗位列表（用于分析）
@@ -1887,57 +2019,78 @@ class CareerPlanningApp {
         }
     }
 
-    // 分析岗位匹配
+    // 分析岗位匹配（API 使用 job_id）
     async analyzeJobMatch() {
-        const jobName = document.getElementById('jobSelect').value;
-        if (!jobName) {
+        const jobId = document.getElementById('jobSelect')?.value?.trim();
+        if (!jobId) {
             this.showToast('请选择一个岗位', 'error');
             return;
         }
 
         const userId = getCurrentUserId();
         const container = document.getElementById('analysisResult');
-        container.innerHTML = '<div class="loading-message">分析中...</div>';
+        if (container) container.innerHTML = '<div class="loading-message">分析中...</div>';
 
-        const result = await analyzeJobMatch(userId, jobName);
+        const result = await analyzeJobMatch(userId, jobId);
 
-        if (result.success) {
+        if (result.success && result.data) {
             this.renderAnalysisResult(result.data);
         } else {
-            container.innerHTML = '<div class="hint-text">分析失败: ' + result.msg + '</div>';
+            if (container) container.innerHTML = '<div class="hint-text">分析失败: ' + (result.msg || '未知错误') + '</div>';
         }
     }
 
-    // 渲染分析结果
+    // 渲染匹配分析结果（符合 API 文档 §6 多维度匹配分析）
     renderAnalysisResult(data) {
         const container = document.getElementById('analysisResult');
-        
-        let gapsHtml = '';
-        if (data.gap_analysis && data.gap_analysis.length > 0) {
-            gapsHtml = data.gap_analysis.map(gap => `
-                <div style="margin-bottom: 12px; padding: 12px; background: #f1f5f9; border-radius: 8px;">
-                    <strong>${gap.dimension}:</strong> ${gap.description}
-                </div>
-            `).join('');
-        }
+        if (!container) return;
+
+        const score = data.match_score ?? '--';
+        const level = data.match_level || '';
+        const dimScores = data.dimension_scores || {};
+        const highlights = data.highlights || [];
+        const gaps = data.gaps || [];
+        const jobInfo = data.job_info || {};
+        const levelClass = score >= 90 ? 'match-high' : score >= 75 ? 'match-mid' : 'match-low';
+
+        let dimHtml = '';
+        Object.entries(dimScores).forEach(([key, dim]) => {
+            const labels = { basic_requirements: '基础要求', professional_skills: '专业技能', soft_skills: '软技能', development_potential: '发展潜力' };
+            dimHtml += `<div class="dim-score"><span>${labels[key] || key}</span><span>${dim.score ?? '-'}分</span></div>`;
+        });
 
         container.innerHTML = `
-            <h3 style="color: var(--primary-color); margin-bottom: 20px;">匹配分析结果</h3>
-            <div style="margin-bottom: 24px;">
-                <div style="font-size: 48px; font-weight: 700; color: var(--primary-color); text-align: center;">
-                    ${data.match_score}%
+            <div class="analysis-result-card">
+                <h3>${data.job_name || '岗位'} · 人岗匹配分析</h3>
+                <div class="analysis-score-block">
+                    <div class="score-circle ${levelClass}">${score}%</div>
+                    <div class="score-label">综合匹配度 · ${level}</div>
                 </div>
-                <div style="text-align: center; color: var(--text-secondary); margin-top: 8px;">
-                    综合匹配度
+                ${jobInfo.company || jobInfo.location || jobInfo.salary ? `
+                <div class="analysis-job-info">
+                    <span>${jobInfo.company || ''}</span>
+                    <span>${jobInfo.location || ''}</span>
+                    <span>${jobInfo.salary || ''}</span>
                 </div>
-            </div>
-            <div style="margin-bottom: 24px;">
-                <h4 style="margin-bottom: 12px;">能力差距分析</h4>
-                ${gapsHtml || '<p>暂无差距分析</p>'}
-            </div>
-            <div>
-                <h4 style="margin-bottom: 12px;">提升建议</h4>
-                <p>${data.improvement_suggestions || '继续保持当前学习状态'}</p>
+                ` : ''}
+                ${dimHtml ? `<div class="analysis-dimensions"><h4>多维度评分</h4><div class="dim-grid">${dimHtml}</div></div>` : ''}
+                ${highlights.length ? `
+                <div class="analysis-highlights">
+                    <h4>匹配亮点</h4>
+                    <ul>${highlights.map(h => `<li>✓ ${h}</li>`).join('')}</ul>
+                </div>
+                ` : ''}
+                ${gaps.length ? `
+                <div class="analysis-gaps">
+                    <h4>能力差距与建议</h4>
+                    ${gaps.map(g => `
+                        <div class="gap-item">
+                            <strong>${g.gap || ''}</strong> <span class="importance">${g.importance || ''}</span>
+                            <p class="suggestion">${g.suggestion || ''}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
             </div>
         `;
     }

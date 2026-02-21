@@ -235,10 +235,17 @@ class API {
                 return { success: true, data: { total: 5, list: this.mockJobs() } };
             case '/student/ability-profile':
                 return { success: true, data: this.mockAbilityProfile() };
+            case '/student/ai-generate-profile':
+                return { success: true, data: { task_id: 'stu_gen_' + Date.now(), status: 'processing' }, msg: 'AI画像生成中...' };
+            case '/student/update-profile':
+                return { success: true, data: { updated_at: new Date().toISOString(), new_total_score: 78, score_change: 2 }, msg: '画像更新成功' };
             case '/matching/recommend-jobs':
-                return { success: true, data: { jobs: this.mockJobs().slice(0, 5) } };
+                const jobs = this.mockJobs().slice(0, 6);
+                const recommendations = jobs.map((j, i) => this.mockRecommendation(j, 85 - i * 3 + Math.floor(Math.random() * 5)));
+                return { success: true, data: { total_matched: 45, recommendations } };
             case '/matching/analyze':
-                return { success: true, data: this.mockMatchAnalysis(data.job_name) };
+                const jobId = options.body?.job_id || options.body?.job_name;
+                return { success: true, data: this.mockMatchAnalysis(jobId) };
             case '/career/generate-report':
                 return { success: true, data: { task_id: 'task_' + Date.now() }, msg: '报告生成中' };
             case '/career/report-status':
@@ -595,23 +602,101 @@ class API {
 
     mockAbilityProfile() {
         return {
-            dimensions: [
-                { name: '技术能力', score: 85 },
-                { name: '学习能力', score: 90 },
-                { name: '沟通能力', score: 70 },
-                { name: '创新能力', score: 80 }
-            ]
+            user_id: 10001,
+            profile_id: 'profile_10001',
+            generated_at: new Date().toLocaleString('zh-CN'),
+            basic_info: {
+                education: '本科',
+                major: '计算机科学与技术',
+                school: '北京大学',
+                gpa: '3.8/4.0',
+                expected_graduation: '2026-06'
+            },
+            professional_skills: {
+                programming_languages: [
+                    { skill: 'Python', level: '熟练', evidence: ['3个Python项目经验', '开源贡献'], score: 85 },
+                    { skill: 'Java', level: '熟悉', evidence: ['课程项目', '实习应用'], score: 70 }
+                ],
+                frameworks_tools: [
+                    { skill: 'React', level: '熟练', evidence: ['2个前端项目'], score: 80 }
+                ],
+                domain_knowledge: [
+                    { domain: '机器学习', level: '熟悉', evidence: ['相关课程', 'Kaggle竞赛'], score: 75 }
+                ],
+                overall_score: 78
+            },
+            certificates: {
+                items: [{ name: '全国计算机等级考试二级', level: '二级', issue_date: '2023-03' }],
+                score: 60,
+                competitiveness: '中等'
+            },
+            innovation_ability: {
+                projects: [{ name: '校园社交平台', innovation_points: ['首创校园匿名树洞', 'LBS校友发现'], impact: '1000+用户' }],
+                competitions: [{ name: '中国大学生计算机设计大赛', award: '省级二等奖' }],
+                score: 72,
+                level: '中上'
+            },
+            learning_ability: {
+                indicators: [
+                    { indicator: 'GPA', value: 3.8, percentile: 85 },
+                    { indicator: '自学新技术', evidence: ['1个月掌握React', '自学机器学习并完成项目'] }
+                ],
+                score: 85,
+                level: '优秀'
+            },
+            pressure_resistance: {
+                evidence: ['同时处理3门课程期末+实习', '项目deadline前高质量交付'],
+                assessment_score: 75,
+                level: '良好'
+            },
+            communication_ability: {
+                teamwork: { evidence: ['担任3个项目的技术负责人'], score: 70 },
+                presentation: { evidence: ['技术分享会演讲3次'], score: 75 },
+                overall_score: 72,
+                level: '良好'
+            },
+            practical_experience: {
+                internships: [{
+                    company: '腾讯科技', position: '前端开发实习生', duration: '3个月',
+                    achievements: ['独立完成2个H5页面', '优化加载速度30%'], score: 80
+                }],
+                projects: [{ name: '校园社交平台', role: '项目负责人', complexity: '高', score: 85 }],
+                overall_score: 82
+            },
+            overall_assessment: {
+                total_score: 76,
+                percentile: 78,
+                completeness: 90,
+                competitiveness: '中上',
+                strengths: ['学习能力强，GPA优秀', '有完整项目和实习经验', '技术栈较为全面'],
+                weaknesses: ['缺少技术证书', '沟通能力有提升空间', '创新项目影响力可以更大']
+            }
         };
     }
 
-    mockMatchAnalysis(jobName) {
+    mockRecommendation(job, matchScore = 85) {
+        const level = matchScore >= 90 ? '高度匹配' : matchScore >= 75 ? '较为匹配' : '一般匹配';
         return {
-            job_name: jobName || '算法工程师',
-            match_score: 85,
-            strengths: ['技术能力匹配', '学习能力突出'],
-            gaps: ['需要加强沟通能力', '建议补充项目经验'],
-            suggestions: ['多参与团队项目', '提升技术深度']
+            job_id: job.job_id,
+            job_name: job.job_name,
+            match_score: matchScore,
+            match_level: level,
+            dimension_scores: {
+                basic_requirements: { score: matchScore + 5, weight: 0.15, details: { education: { required: '本科', student: '本科', match: true }, major: { required: ['计算机'], student: '计算机科学与技术', match: true } } },
+                professional_skills: { score: matchScore, weight: 0.40, details: { matched_skills: job.skills?.slice(0, 2).map(s => ({ skill: s, required_level: '熟练', student_level: '熟练', match: true })) || [], missing_skills: [], match_rate: 0.85 } },
+                soft_skills: { score: matchScore + 3, weight: 0.30, details: { innovation_ability: { required: '高', student: '中上', score: 88 }, learning_ability: { required: '高', student: '优秀', score: 95 }, communication_ability: { required: '中', student: '良好', score: 90 } } },
+                development_potential: { score: 93, weight: 0.15, details: { growth_mindset: '优秀', career_clarity: '清晰', motivation: '强' } }
+            },
+            highlights: ['学习能力强，符合岗位要求', '有相关实习经验', '技术栈覆盖大部分岗位需求'],
+            gaps: [{ gap: '部分技能需进阶', importance: '重要', suggestion: '通过项目实践持续提升' }],
+            job_info: { company: '多家公司', location: '北京/上海', salary: job.avg_salary || '15k-25k', experience: '应届生/1年经验' }
         };
+    }
+
+    mockMatchAnalysis(jobIdOrName) {
+        const jobs = this.mockJobs();
+        const job = jobs.find(j => j.job_id === jobIdOrName || j.job_name === jobIdOrName) || jobs[0];
+        return this.mockRecommendation(job, 78 + Math.floor(Math.random() * 20));
     }
 
     mockCareerReport() {
@@ -805,29 +890,38 @@ async function getAbilityProfile(userId) {
     return await api.post('/student/ability-profile', { user_id: userId });
 }
 
-// ==================== 人岗匹配模块 ====================
-
-// 获取推荐岗位
-async function getRecommendedJobs(userId, topN = 10) {
-    return await api.post('/matching/recommend-jobs', {
-        user_id: userId,
-        top_n: topN
-    });
+// AI 生成能力画像（data_source: 'profile' | 'resume'）
+async function aiGenerateAbilityProfile(userId, dataSource = 'profile') {
+    return await api.post('/student/ai-generate-profile', { user_id: userId, data_source: dataSource });
 }
 
-// 人岗匹配分析
-async function analyzeJobMatch(userId, jobName) {
+// 更新能力画像
+async function updateAbilityProfile(userId, updates) {
+    return await api.post('/student/update-profile', { user_id: userId, updates });
+}
+
+// ==================== 人岗匹配模块 ====================
+
+// 获取推荐岗位（支持 filters: cities, salary_min, industries）
+async function getRecommendedJobs(userId, topN = 10, filters = {}) {
+    const body = { user_id: userId, top_n: topN };
+    if (filters && Object.keys(filters).length) body.filters = filters;
+    return await api.post('/matching/recommend-jobs', body);
+}
+
+// 人岗匹配分析（API 使用 job_id）
+async function analyzeJobMatch(userId, jobId) {
     return await api.post('/matching/analyze', {
         user_id: userId,
-        job_name: jobName
+        job_id: jobId
     });
 }
 
 // 批量匹配分析
-async function batchAnalyze(userId, jobNames) {
+async function batchAnalyze(userId, jobIds) {
     return await api.post('/matching/batch-analyze', {
         user_id: userId,
-        job_names: jobNames
+        job_ids: jobIds
     });
 }
 
