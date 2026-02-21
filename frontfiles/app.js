@@ -186,6 +186,20 @@ class CareerPlanningApp {
         document.getElementById('refreshAbilityProfileBtn')?.addEventListener('click', () => {
             this.loadAbilityProfile();
         });
+
+        // 首页卡片按钮相关
+        document.querySelectorAll('.main-card .card-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // 阻止事件冒泡
+                const card = btn.closest('.main-card');
+                if (card) {
+                    const action = card.dataset.action;
+                    if (action) {
+                        this.navigateTo(action);
+                    }
+                }
+            });
+        });
     }
 
     // 显示页面
@@ -1550,64 +1564,66 @@ class CareerPlanningApp {
         }).join('') || '<span class="hint-text">暂无</span>';
 
         let html = `
-            <div class="ability-profile-card">
-                <h3>📋 基础信息</h3>
-                <div class="ability-section">
-                    <p><strong>学历:</strong> ${bi.education || '-'} | <strong>专业:</strong> ${bi.major || '-'}</p>
-                    <p><strong>学校:</strong> ${bi.school || '-'} | <strong>GPA:</strong> ${bi.gpa || '-'}</p>
-                    <p><strong>预计毕业:</strong> ${bi.expected_graduation || '-'}</p>
+            <div class="ability-profile-grid">
+                <div class="ability-profile-card">
+                    <h3>📋 基础信息</h3>
+                    <div class="ability-section">
+                        <p><strong>学历:</strong> ${bi.education || '-'} | <strong>专业:</strong> ${bi.major || '-'}</p>
+                        <p><strong>学校:</strong> ${bi.school || '-'} | <strong>GPA:</strong> ${bi.gpa || '-'}</p>
+                        <p><strong>预计毕业:</strong> ${bi.expected_graduation || '-'}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card">
-                <h3>💻 专业技能</h3>
-                <div class="ability-section">
-                    <p><strong>编程语言:</strong> ${skillItem(ps.programming_languages, 'skill')}</p>
-                    <p><strong>框架工具:</strong> ${skillItem(ps.frameworks_tools, 'skill')}</p>
-                    <p><strong>领域知识:</strong> ${skillItem(ps.domain_knowledge, 'domain')}</p>
-                    <p><strong>综合技能得分:</strong> <span class="score-highlight">${ps.overall_score ?? '-'}分</span></p>
+                <div class="ability-profile-card">
+                    <h3>💻 专业技能</h3>
+                    <div class="ability-section">
+                        <p><strong>编程语言:</strong> ${skillItem(ps.programming_languages, 'skill')}</p>
+                        <p><strong>框架工具:</strong> ${skillItem(ps.frameworks_tools, 'skill')}</p>
+                        <p><strong>领域知识:</strong> ${skillItem(ps.domain_knowledge, 'domain')}</p>
+                        <p><strong>综合技能得分:</strong> <span class="score-highlight">${ps.overall_score ?? '-'}分</span></p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card">
-                <h3>🏆 证书资质</h3>
-                <div class="ability-section">
-                    ${(cert.items || []).length ? (cert.items.map(c => `<p>${c.name || '-'} ${c.level ? '(' + c.level + ')' : ''}</p>`).join('')) : '<p class="hint-text">暂无</p>'}
-                    <p><strong>竞争力:</strong> ${cert.competitiveness || '-'}</p>
+                <div class="ability-profile-card">
+                    <h3>🏆 证书资质</h3>
+                    <div class="ability-section">
+                        ${(cert.items || []).length ? (cert.items.map(c => `<p>${c.name || '-'} ${c.level ? '(' + c.level + ')' : ''}</p>`).join('')) : '<p class="hint-text">暂无</p>'}
+                        <p><strong>竞争力:</strong> ${cert.competitiveness || '-'}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card">
-                <h3>✨ 创新能力</h3>
-                <div class="ability-section">
-                    <p><strong>项目:</strong> ${(innovation.projects || []).map(p => p.name).join('、') || '-'}</p>
-                    <p><strong>竞赛:</strong> ${(innovation.competitions || []).map(c => c.name + (c.award ? '(' + c.award + ')' : '')).join('、') || '-'}</p>
-                    <p><strong>得分:</strong> ${innovation.score ?? '-'} | <strong>等级:</strong> ${innovation.level || '-'}</p>
+                <div class="ability-profile-card">
+                    <h3>✨ 创新能力</h3>
+                    <div class="ability-section">
+                        <p><strong>项目:</strong> ${(innovation.projects || []).map(p => p.name).join('、') || '-'}</p>
+                        <p><strong>竞赛:</strong> ${(innovation.competitions || []).map(c => c.name + (c.award ? '(' + c.award + ')' : '')).join('、') || '-'}</p>
+                        <p><strong>得分:</strong> ${innovation.score ?? '-'} | <strong>等级:</strong> ${innovation.level || '-'}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card">
-                <h3>📚 学习能力</h3>
-                <div class="ability-section">
-                    <p><strong>得分:</strong> ${learning.score ?? '-'} | <strong>等级:</strong> ${learning.level || '-'}</p>
+                <div class="ability-profile-card">
+                    <h3>📚 学习能力</h3>
+                    <div class="ability-section">
+                        <p><strong>得分:</strong> ${learning.score ?? '-'} | <strong>等级:</strong> ${learning.level || '-'}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card">
-                <h3>💬 沟通能力</h3>
-                <div class="ability-section">
-                    <p><strong>得分:</strong> ${comm.overall_score ?? '-'} | <strong>等级:</strong> ${comm.level || '-'}</p>
+                <div class="ability-profile-card">
+                    <h3>💬 沟通能力</h3>
+                    <div class="ability-section">
+                        <p><strong>得分:</strong> ${comm.overall_score ?? '-'} | <strong>等级:</strong> ${comm.level || '-'}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card">
-                <h3>📁 实习/项目经验</h3>
-                <div class="ability-section">
-                    <p><strong>实习:</strong> ${(exp.internships || []).map(i => `${i.company} - ${i.position}`).join('；') || '-'}</p>
-                    <p><strong>项目:</strong> ${(exp.projects || []).map(p => `${p.name}(${p.role || ''})`).join('；') || '-'}</p>
-                    <p><strong>综合得分:</strong> ${exp.overall_score ?? '-'}</p>
+                <div class="ability-profile-card">
+                    <h3>📁 实习/项目经验</h3>
+                    <div class="ability-section">
+                        <p><strong>实习:</strong> ${(exp.internships || []).map(i => `${i.company} - ${i.position}`).join('；') || '-'}</p>
+                        <p><strong>项目:</strong> ${(exp.projects || []).map(p => `${p.name}(${p.role || ''})`).join('；') || '-'}</p>
+                        <p><strong>综合得分:</strong> ${exp.overall_score ?? '-'}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="ability-profile-card highlight">
-                <h3>📊 综合评估</h3>
-                <div class="ability-section">
-                    <p><strong>总分:</strong> <span class="score-highlight">${overall.total_score ?? '-'}</span> | <strong>百分位:</strong> ${overall.percentile ?? '-'} | <strong>竞争力:</strong> ${overall.competitiveness || '-'}</p>
-                    <p><strong>优势:</strong> ${(overall.strengths || []).join('；') || '-'}</p>
-                    <p><strong>待提升:</strong> ${(overall.weaknesses || []).join('；') || '-'}</p>
+                <div class="ability-profile-card highlight">
+                    <h3>📊 综合评估</h3>
+                    <div class="ability-section">
+                        <p><strong>总分:</strong> <span class="score-highlight">${overall.total_score ?? '-'}</span> | <strong>百分位:</strong> ${overall.percentile ?? '-'} | <strong>竞争力:</strong> ${overall.competitiveness || '-'}</p>
+                        <p><strong>优势:</strong> ${(overall.strengths || []).join('；') || '-'}</p>
+                        <p><strong>待提升:</strong> ${(overall.weaknesses || []).join('；') || '-'}</p>
+                    </div>
                 </div>
             </div>
         `;
@@ -1705,7 +1721,22 @@ class CareerPlanningApp {
         if (result.success && result.data.list) {
             const select = document.getElementById('jobSelect');
             if (select) {
-                select.innerHTML = '<option value="">选择一个岗位进行分析</option>';
+                // 保留占位符选项
+                const placeholderOption = select.querySelector('.placeholder-option');
+                select.innerHTML = '';
+                if (placeholderOption) {
+                    select.appendChild(placeholderOption);
+                } else {
+                    // 如果没有占位符选项，创建一个
+                    const newPlaceholder = document.createElement('option');
+                    newPlaceholder.value = '';
+                    newPlaceholder.disabled = true;
+                    newPlaceholder.selected = true;
+                    newPlaceholder.className = 'placeholder-option';
+                    newPlaceholder.textContent = '选择一个岗位进行分析';
+                    select.appendChild(newPlaceholder);
+                }
+                // 添加岗位选项
                 result.data.list.forEach(job => {
                     const option = document.createElement('option');
                     option.value = job.job_id || job.job_name;
