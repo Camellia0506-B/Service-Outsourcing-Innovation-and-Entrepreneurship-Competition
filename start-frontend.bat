@@ -2,5 +2,5 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 cd frontfiles
-python -m http.server 3000
+python -m http.server 5500
 pause

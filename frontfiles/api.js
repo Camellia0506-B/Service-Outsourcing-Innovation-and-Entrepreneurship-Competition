@@ -167,7 +167,7 @@ class API {
     // 模拟请求方法
     async mockRequest(endpoint, options) {
         console.log('Mock请求:', endpoint, options);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 150));
         
         const data = options.body || {};
         
@@ -205,25 +205,25 @@ class API {
             case '/job/detail':
                 return { success: true, data: this.mockJobDetail(options.body?.job_id || options.body?.job_name) };
             case '/job/relation-graph':
-                const centerJob = this.mockJobDetail(options.body?.job_id || options.body?.job_name);
+                const graphData = this._jobRelationGraphData();
+                const jobs = this.mockJobs();
+                const inputId = (options.body?.job_id || options.body?.job_name || 'job_001').toString().trim();
+                const centerJob = jobs.find(j => j.job_id === inputId || j.job_name === inputId) || jobs[0];
+                const cjId = centerJob.job_id;
+                const vert = graphData.vertical[cjId] || graphData.vertical['job_001'];
+                const trans = graphData.transfer[cjId] || graphData.transfer['job_001'] || [];
                 return {
                     success: true,
                     data: {
                         center_job: { job_id: centerJob.job_id, job_name: centerJob.job_name },
                         vertical_graph: {
-                            nodes: [
-                                { job_id: 'j1', job_name: '初级工程师', level: 1 },
-                                { job_id: 'j2', job_name: centerJob.job_name || '目标岗位', level: 2 },
-                                { job_id: 'j3', job_name: '高级/专家', level: 3 }
-                            ],
+                            nodes: vert || [{ job_id: 'j1', job_name: '初级', level: 1 }, { job_id: cjId, job_name: centerJob.job_name, level: 2 }, { job_id: 'j3', job_name: '高级/专家', level: 3 }],
                             edges: []
                         },
                         transfer_graph: {
-                            nodes: [
-                                { job_id: 't1', job_name: '技术经理' },
-                                { job_id: 't2', job_name: '架构师' }
-                            ],
-                            edges: []
+                            nodes: trans.slice(0, 5).map(t => ({ job_id: t.to, job_name: t.path.split('→')[1] || t.to })),
+                            edges: trans,
+                            paths: trans
                         }
                     }
                 };
@@ -240,8 +240,8 @@ class API {
             case '/student/update-profile':
                 return { success: true, data: { updated_at: new Date().toISOString(), new_total_score: 78, score_change: 2 }, msg: '画像更新成功' };
             case '/matching/recommend-jobs':
-                const jobs = this.mockJobs().slice(0, 6);
-                const recommendations = jobs.map((j, i) => this.mockRecommendation(j, 85 - i * 3 + Math.floor(Math.random() * 5)));
+                const recJobList = this.mockJobs().slice(0, 6);
+                const recommendations = recJobList.map((j, i) => this.mockRecommendation(j, 85 - i * 3 + Math.floor(Math.random() * 5)));
                 return { success: true, data: { total_matched: 45, recommendations } };
             case '/matching/analyze':
                 const jobId = options.body?.job_id || options.body?.job_name;
@@ -260,17 +260,15 @@ class API {
     }
 
     mockLogin(data) {
-        // 预设的用户账号
         const mockUsers = [
             { username: 'admin', password: '123456', nickname: '管理员', user_id: 10001 },
             { username: 'test', password: '123456', nickname: '测试用户', user_id: 10002 },
             { username: 'demo', password: '123456', nickname: '演示用户', user_id: 10003 },
             { username: 'student', password: '123456', nickname: '学生用户', user_id: 10004 }
         ];
-        
-        // 查找匹配的用户
-        const user = mockUsers.find(u => u.username === data.username && u.password === data.password);
-        
+        const u = String(data.username || '').trim().toLowerCase();
+        const p = String(data.password || '').trim();
+        const user = mockUsers.find(x => x.username === u && x.password === p);
         if (user) {
             return {
                 success: true,
@@ -286,7 +284,7 @@ class API {
                 msg: '登录成功'
             };
         }
-        return { success: false, msg: '用户名或密码错误' };
+        return { success: false, msg: '用户名或密码错误。请用：admin / 123456（小写）' };
     }
 
     mockRegister(data) {
@@ -547,54 +545,166 @@ class API {
         };
     }
 
+    // 不少于10个就业岗位画像，含专业技能、证书、创新、学习、抗压、沟通、实习能力
     mockJobs() {
         return [
-            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '15k-25k', demand_score: 85, growth_trend: '上升', tags: ['人工智能', '机器学习'], industry: '互联网', level: '中级', skills: ['Python', 'TensorFlow', 'PyTorch', '机器学习'] },
-            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-20k', demand_score: 90, growth_trend: '稳定', tags: ['React', 'Vue'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Vue', 'React', 'TypeScript'] },
-            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '13k-22k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go'], industry: '互联网', level: '中级', skills: ['Java', 'Go', 'MySQL', 'Redis'] },
-            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 80, growth_trend: '上升', tags: ['Python', 'SQL'], industry: '互联网', level: '初级', skills: ['Python', 'SQL', 'Excel', '数据可视化'] },
-            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-25k', demand_score: 75, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'] }
+            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '20k-35k', demand_score: 92, growth_trend: '上升', tags: ['人工智能', '机器学习'], industry: '互联网/AI', level: '中级', skills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'] },
+            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-22k', demand_score: 90, growth_trend: '稳定', tags: ['React', 'Vue', 'TypeScript'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Vue', 'React', 'HTML5/CSS3'] },
+            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '14k-25k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go', '微服务'], industry: '互联网', level: '中级', skills: ['Java/Go', 'MySQL', 'Redis', '分布式'] },
+            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 85, growth_trend: '上升', tags: ['Python', 'SQL', '数据可视化'], industry: '互联网/金融', level: '初级', skills: ['Python', 'SQL', 'Excel', 'Tableau'] },
+            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-28k', demand_score: 82, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'] },
+            { job_id: 'job_006', job_name: '新能源电池工程师', avg_salary: '18k-30k', demand_score: 88, growth_trend: '上升', tags: ['锂电池', 'BMS'], industry: '新能源', level: '中级', skills: ['电化学', '电池管理', '测试验证'] },
+            { job_id: 'job_007', job_name: 'UI/UX设计师', avg_salary: '12k-22k', demand_score: 80, growth_trend: '稳定', tags: ['Figma', '交互设计'], industry: '互联网', level: '中级', skills: ['Figma/Sketch', '交互设计', '视觉设计'] },
+            { job_id: 'job_008', job_name: '测试开发工程师', avg_salary: '12k-20k', demand_score: 78, growth_trend: '稳定', tags: ['自动化测试', '性能测试'], industry: '互联网', level: '中级', skills: ['Python', 'Selenium', 'JMeter'] },
+            { job_id: 'job_009', job_name: '运维工程师', avg_salary: '11k-20k', demand_score: 75, growth_trend: '稳定', tags: ['Linux', 'K8s', '云原生'], industry: '互联网', level: '中级', skills: ['Linux', 'Docker', 'Kubernetes'] },
+            { job_id: 'job_010', job_name: 'AI应用工程师', avg_salary: '18k-32k', demand_score: 90, growth_trend: '上升', tags: ['大模型', 'RAG', 'Agent'], industry: 'AI/互联网', level: '中级', skills: ['Python', 'LLM', 'Prompt工程'] },
+            { job_id: 'job_011', job_name: '嵌入式软件工程师', avg_salary: '14k-24k', demand_score: 80, growth_trend: '上升', tags: ['C/C++', '嵌入式'], industry: '智能硬件/汽车', level: '中级', skills: ['C/C++', 'RTOS', '驱动开发'] },
+            { job_id: 'job_012', job_name: '咨询顾问', avg_salary: '15k-30k', demand_score: 72, growth_trend: '稳定', tags: ['战略咨询', '商业分析'], industry: '咨询', level: '中级', skills: ['商业分析', 'PPT', '客户沟通'] }
         ];
+    }
+
+    // 岗位完整画像：专业技能、证书、创新、学习、抗压、沟通、实习能力
+    _jobProfileExtra(job) {
+        const profiles = {
+            'job_001': {
+                certs: ['数学/计算机竞赛获奖优先', '算法类证书加分'],
+                innovation: '高', learning: '高', pressure: '中高', communication: '中', internship: '有项目/实习优先'
+            },
+            'job_002': { certs: ['前端相关认证加分'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有作品集' },
+            'job_003': { certs: ['云厂商认证'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有实习经历' },
+            'job_004': { certs: ['数据分析师认证'], innovation: '中', learning: '高', pressure: '中', communication: '中高', internship: '有分析报告' },
+            'job_005': { certs: ['PMP加分'], innovation: '高', learning: '高', pressure: '高', communication: '高', internship: '产品实习' },
+            'job_006': { certs: ['电池/电化学相关'], innovation: '高', learning: '高', pressure: '中', communication: '中', internship: '车企/电池厂实习' },
+            'job_007': { certs: ['设计类作品集'], innovation: '高', learning: '中高', pressure: '中', communication: '高', internship: '设计实习' },
+            'job_008': { certs: ['ISTQB等'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '测试实习' },
+            'job_009': { certs: ['CKA/CKAD', '云认证'], innovation: '中', learning: '高', pressure: '中高', communication: '中', internship: '运维实习' },
+            'job_010': { certs: ['AI相关课程/项目'], innovation: '高', learning: '极高', pressure: '中高', communication: '中', internship: 'AI项目' },
+            'job_011': { certs: ['嵌入式/电子相关'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '硬件/嵌入式实习' },
+            'job_012': { certs: ['咨询实习经历'], innovation: '高', learning: '高', pressure: '高', communication: '极高', internship: '咨询实习' }
+        };
+        return profiles[job.job_id] || { certs: ['相关认证优先'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有实习优先' };
     }
 
     mockJobDetail(jobIdOrName) {
         const jobs = this.mockJobs();
         const job = jobs.find(j => j.job_id === jobIdOrName || j.job_name === jobIdOrName) || jobs[0];
+        const ex = this._jobProfileExtra(job);
+        const descMap = {
+            'job_001': '负责机器学习/深度学习算法研发与优化，参与AI产品落地方案设计',
+            'job_002': '负责Web/移动端前端开发，构建高性能、可维护的用户界面',
+            'job_003': '负责服务端系统设计与开发，保障高可用、高并发业务',
+            'job_004': '负责数据采集、清洗、建模与可视化，支撑业务决策',
+            'job_005': '负责产品规划、需求分析与迭代，协调研发与业务',
+            'job_006': '负责动力电池系统设计、BMS开发或测试验证',
+            'job_007': '负责产品交互与视觉设计，提升用户体验',
+            'job_008': '负责自动化测试、性能测试及质量保障体系建设',
+            'job_009': '负责服务器运维、CI/CD、监控告警与故障排查',
+            'job_010': '负责大模型应用、RAG、Agent等AI能力落地',
+            'job_011': '负责嵌入式软件开发、驱动与RTOS适配',
+            'job_012': '负责客户调研、战略分析与方案输出'
+        };
         return {
             job_id: job.job_id,
             job_name: job.job_name,
             basic_info: {
                 industry: job.industry || '互联网',
                 level: job.level || '中级',
-                avg_salary: job.avg_salary || '12k-20k',
-                work_locations: ['北京', '上海', '广州', '深圳'],
+                avg_salary: job.avg_salary || '12k-22k',
+                work_locations: ['北京', '上海', '广州', '深圳', '杭州'],
                 company_scales: ['50-200人', '200-500人', '500人以上'],
-                description: job.job_name === '算法工程师' ? '负责机器学习算法的研究、开发和优化，参与AI产品落地' :
-                    job.job_name === '前端开发工程师' ? '负责Web前端开发，使用Vue/React等技术栈构建用户界面' :
-                    job.job_name === '后端开发工程师' ? '负责服务端开发，设计API、数据库与系统架构' :
-                    job.job_name === '数据分析师' ? '负责数据采集、清洗、分析与可视化，支撑业务决策' :
-                    '负责产品规划、需求分析与项目管理'
+                description: descMap[job.job_id] || job.description || '负责岗位相关核心工作'
             },
             requirements: {
                 basic_requirements: {
-                    education: { level: '本科及以上', preferred_majors: ['计算机科学与技术', '软件工程', '数据科学'] }
+                    education: { level: '本科及以上', preferred_majors: ['计算机', '软件工程', '电子', '数学', '自动化'] }
                 },
                 professional_skills: {
-                    programming_languages: job.skills ? job.skills.slice(0, 3).map(s => ({ skill: s, level: '熟练' })) : [],
-                    frameworks_tools: job.tags ? job.tags.map(t => ({ skill: t, level: '了解' })) : []
+                    programming_languages: (job.skills || []).slice(0, 4).map(s => ({ skill: s, level: '熟练' })),
+                    frameworks_tools: (job.tags || []).map(t => ({ skill: t, level: '了解' }))
                 }
+            },
+            ability_requirements: {
+                certificate: ex.certs,
+                innovation_ability: ex.innovation,
+                learning_ability: ex.learning,
+                pressure_resistance: ex.pressure,
+                communication_ability: ex.communication,
+                internship_ability: ex.internship
             },
             market_analysis: {
                 demand_score: job.demand_score || 80,
-                growth_trend: '上升',
-                salary_range: { min: 10000, max: 25000 }
+                growth_trend: job.growth_trend || '上升',
+                salary_range: { min: 12000, max: 30000 }
             },
             career_path: {
                 current_level: job.level || '中级',
                 promotion_path: [
-                    { level: '初级', years_required: '0-2年', key_requirements: ['掌握基础技能', '参与项目实践'] },
-                    { level: '中级', years_required: '2-5年', key_requirements: ['独立负责模块', '带新人'] },
-                    { level: '高级', years_required: '5年+', key_requirements: ['架构设计', '技术攻坚'] }
+                    { level: '初级/应届', years_required: '0-2年', key_requirements: ['掌握基础技能', '参与项目实践', '完成导师任务'] },
+                    { level: '中级', years_required: '2-5年', key_requirements: ['独立负责模块', '带新人', '跨团队协作'] },
+                    { level: '高级/专家', years_required: '5年+', key_requirements: ['架构设计', '技术攻坚', '团队建设'] }
+                ]
+            }
+        };
+    }
+
+    // 垂直岗位图谱 + 换岗路径图谱（至少5岗位各≥2条换岗路径）
+    _jobRelationGraphData() {
+        return {
+            vertical: {
+                'job_001': [
+                    { job_id: 'j_a1', job_name: '算法实习生', level: 1, desc: '参与算法模型训练与调优' },
+                    { job_id: 'job_001', job_name: '算法工程师', level: 2, desc: '独立负责算法研发与落地' },
+                    { job_id: 'j_a3', job_name: '高级/专家算法', level: 3, desc: '技术攻坚、团队带教' },
+                    { job_id: 'j_a4', job_name: '算法架构师/技术总监', level: 4, desc: '技术战略与团队建设' }
+                ],
+                'job_002': [
+                    { job_id: 'j_b1', job_name: '前端实习生', level: 1 },
+                    { job_id: 'job_002', job_name: '前端开发工程师', level: 2 },
+                    { job_id: 'j_b3', job_name: '高级前端/技术专家', level: 3 }
+                ],
+                'job_005': [
+                    { job_id: 'j_p1', job_name: '产品助理', level: 1 },
+                    { job_id: 'job_005', job_name: '产品经理', level: 2 },
+                    { job_id: 'j_p3', job_name: '高级产品/产品总监', level: 3 }
+                ],
+                'job_004': [
+                    { job_id: 'j_d1', job_name: '数据分析助理', level: 1 },
+                    { job_id: 'job_004', job_name: '数据分析师', level: 2 },
+                    { job_id: 'j_d3', job_name: '高级分析师/数据科学家', level: 3 }
+                ],
+                'job_006': [
+                    { job_id: 'j_n1', job_name: '电池工艺/测试助理', level: 1 },
+                    { job_id: 'job_006', job_name: '新能源电池工程师', level: 2 },
+                    { job_id: 'j_n3', job_name: '高级工程师/技术专家', level: 3 }
+                ]
+            },
+            transfer: {
+                'job_001': [
+                    { from: 'job_001', to: 'job_010', path: '算法工程师→AI应用工程师', reason: '算法基础+工程能力' },
+                    { from: 'job_001', to: 'job_004', path: '算法工程师→数据分析师', reason: '数据建模与统计基础' },
+                    { from: 'job_001', to: 'job_005', path: '算法工程师→产品经理', reason: '对AI产品理解深入' }
+                ],
+                'job_002': [
+                    { from: 'job_002', to: 'job_005', path: '前端工程师→产品经理', reason: '用户视角、交互理解' },
+                    { from: 'job_002', to: 'job_007', path: '前端工程师→UI/UX设计师', reason: '视觉与交互能力' },
+                    { from: 'job_002', to: 'job_003', path: '前端工程师→全栈/后端', reason: '技术栈延伸' }
+                ],
+                'job_003': [
+                    { from: 'job_003', to: 'job_009', path: '后端工程师→运维/DevOps', reason: '系统与运维关联' },
+                    { from: 'job_003', to: 'job_005', path: '后端工程师→产品/技术PM', reason: '业务理解+技术背景' }
+                ],
+                'job_004': [
+                    { from: 'job_004', to: 'job_001', path: '数据分析师→算法工程师', reason: '数据基础+建模能力' },
+                    { from: 'job_004', to: 'job_012', path: '数据分析师→咨询顾问', reason: '商业分析与报告' },
+                    { from: 'job_004', to: 'job_005', path: '数据分析师→产品经理', reason: '数据驱动决策' }
+                ],
+                'job_005': [
+                    { from: 'job_005', to: 'job_012', path: '产品经理→咨询顾问', reason: '战略与商业分析' },
+                    { from: 'job_005', to: 'job_002', path: '产品经理→前端/设计', reason: '转技术或设计方向' }
+                ],
+                'job_006': [
+                    { from: 'job_006', to: 'job_011', path: '电池工程师→嵌入式工程师', reason: '硬件与BMS相关' },
+                    { from: 'job_006', to: 'job_003', path: '电池工程师→软件/后端', reason: '跨领域技术转岗' }
                 ]
             }
         };

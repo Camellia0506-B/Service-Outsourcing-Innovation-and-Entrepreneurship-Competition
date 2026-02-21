@@ -1268,6 +1268,71 @@ body::before {
     color: var(--text-primary);
 }
 
+.graph-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 12px;
+}
+
+.graph-node-v {
+    display: block;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #e0e7ff 0%, #f5f3ff 100%);
+    border-left: 4px solid var(--primary-color);
+}
+
+.graph-node-v .node-level {
+    font-size: 11px;
+    color: var(--primary-color);
+    margin-right: 8px;
+}
+
+.graph-node-v .node-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.graph-node-v .node-desc {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.graph-arrow {
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 16px;
+}
+
+.graph-transfer {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.transfer-path-item {
+    padding: 12px 16px;
+    background: #f0fdf4;
+    border-radius: 8px;
+    border-left: 4px solid #22c55e;
+}
+
+.transfer-path-item .path-text {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.transfer-path-item .path-reason {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
 /* 岗位画像分页 */
 .pagination {
     margin-top: 20px;

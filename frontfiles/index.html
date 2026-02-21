@@ -148,7 +148,7 @@
                                             <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M20 15C20 18.7712 16.7712 22 12 22C7.22876 22 4 18.7712 4 15" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
-                                        <input type="text" id="loginUsername" placeholder="请输入用户名或邮箱" required>
+                                        <input type="text" id="loginUsername" value="admin" placeholder="admin / test / student" required>
                                     </div>
                                     <div class="error-message" id="loginUsernameError"></div>
                                 </div>
@@ -160,7 +160,7 @@
                                             <path d="M8 11V9" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M16 11V9" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
-                                        <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                                        <input type="password" id="loginPassword" value="123456" placeholder="密码：123456" required>
                                     </div>
                                     <div class="error-message" id="loginPasswordError"></div>
                                 </div>
@@ -483,7 +483,7 @@
                 <!-- 关联图谱 Tab -->
                 <div class="tab-content" id="graphTab">
                     <div class="graph-controls">
-                        <input type="text" id="graphJobId" placeholder="请输入岗位ID (如: job_001)" style="flex: 1;">
+                        <input type="text" id="graphJobId" placeholder="岗位ID: job_001-job_012 (如: job_001 算法工程师)" style="flex: 1;">
                         <select id="graphTypeSelect">
                             <option value="all">全部</option>
                             <option value="vertical">垂直晋升</option>
@@ -688,8 +688,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="api.js?v=8&t=20240219"></script>
-    <script src="app.js?v=8&t=20240219"></script>
+    <script src="api.js?v=9&t=20260221"></script>
+    <script src="app.js?v=9&t=20260221"></script>
     <link rel="stylesheet" href="styles.css?v=8&t=20240219">
 </body>
 </html>

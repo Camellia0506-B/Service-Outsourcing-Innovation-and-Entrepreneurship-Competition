@@ -251,8 +251,8 @@ class CareerPlanningApp {
         const usernameError = document.getElementById('loginUsernameError');
         const passwordError = document.getElementById('loginPasswordError');
         
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value;
+        const username = (usernameInput?.value || '').trim();
+        const password = (passwordInput?.value || '').trim();
 
         // 清除之前的错误状态
         usernameInput.classList.remove('error');
@@ -298,17 +298,22 @@ class CareerPlanningApp {
         }
 
         this.showLoading();
-        const result = await login(username, password);
-        this.hideLoading();
-
-        if (result.success) {
-            localStorage.setItem('token', result.data.token);
-            saveUserInfo(result.data);
-            this.currentUser = result.data;
-            this.showToast('登录成功', 'success');
-            this.showMainApp();
-        } else {
-            this.showToast(result.msg || '登录失败', 'error');
+        try {
+            const result = await login(username, password);
+            if (result.success) {
+                localStorage.setItem('token', result.data.token);
+                saveUserInfo(result.data);
+                this.currentUser = result.data;
+                this.showToast('登录成功', 'success');
+                this.showMainApp();
+            } else {
+                this.showToast(result.msg || '登录失败', 'error');
+            }
+        } catch (e) {
+            console.error('登录异常:', e);
+            this.showToast('登录失败: ' + (e.message || '网络异常，请检查 mock 模式或后端服务'), 'error');
+        } finally {
+            this.hideLoading();
         }
     }
 
@@ -1809,6 +1814,24 @@ class CareerPlanningApp {
             html += `</div>`;
         }
 
+        // 能力要求维度：专业技能、证书、创新、学习、抗压、沟通、实习能力
+        if (data.ability_requirements) {
+            const ar = data.ability_requirements;
+            html += `
+                <div class="detail-section">
+                    <h4>应届生能力要求拆解</h4>
+                    <table class="detail-table">
+                        <tr><th>证书要求</th><td>${Array.isArray(ar.certificate) ? ar.certificate.join('；') : (ar.certificate || '-')}</td></tr>
+                        <tr><th>创新能力</th><td>${ar.innovation_ability || '-'}</td></tr>
+                        <tr><th>学习能力</th><td>${ar.learning_ability || '-'}</td></tr>
+                        <tr><th>抗压能力</th><td>${ar.pressure_resistance || '-'}</td></tr>
+                        <tr><th>沟通能力</th><td>${ar.communication_ability || '-'}</td></tr>
+                        <tr><th>实习/项目能力</th><td>${ar.internship_ability || '-'}</td></tr>
+                    </table>
+                </div>
+            `;
+        }
+
         // 市场分析
         if (data.market_analysis) {
             const ma = data.market_analysis;
@@ -1858,20 +1881,31 @@ class CareerPlanningApp {
         }
     }
 
-    // 渲染岗位关联图谱
+    // 渲染岗位关联图谱（垂直晋升 + 换岗路径，至少5岗位各≥2条换岗路径）
     renderJobRelationGraph(data, container) {
-        let html = `<h4>岗位关联图谱</h4>`;
+        let html = `<h4>岗位关联图谱 · ${data.center_job?.job_name || '目标岗位'}</h4>`;
 
         if (data.vertical_graph && data.vertical_graph.nodes && data.vertical_graph.nodes.length > 0) {
-            html += `<h5>垂直晋升路径</h5><div class="graph-nodes">`;
-            data.vertical_graph.nodes.forEach(node => {
-                html += `<div class="graph-node">${node.job_name} (L${node.level})</div>`;
+            html += `<h5>📈 垂直晋升路径</h5><div class="graph-vertical">`;
+            data.vertical_graph.nodes.forEach((node, i) => {
+                const desc = node.desc ? `<span class="node-desc">${node.desc}</span>` : '';
+                html += `<div class="graph-node graph-node-v"><span class="node-level">L${node.level || i + 1}</span><span class="node-name">${node.job_name}</span>${desc}</div>`;
+                if (i < data.vertical_graph.nodes.length - 1) html += `<div class="graph-arrow">↓</div>`;
             });
             html += `</div>`;
         }
 
-        if (data.transfer_graph && data.transfer_graph.nodes && data.transfer_graph.nodes.length > 0) {
-            html += `<h5>横向转岗路径</h5><div class="graph-nodes">`;
+        const paths = data.transfer_graph?.paths || data.transfer_graph?.edges || [];
+        if (paths.length > 0) {
+            html += `<h5>🔄 换岗路径图谱</h5><div class="graph-transfer">`;
+            paths.forEach(p => {
+                const pathText = p.path || (p.from && p.to ? `${p.from}→${p.to}` : '-');
+                const reason = p.reason ? `<span class="path-reason">${p.reason}</span>` : '';
+                html += `<div class="transfer-path-item"><span class="path-text">${pathText}</span>${reason}</div>`;
+            });
+            html += `</div>`;
+        } else if (data.transfer_graph?.nodes?.length) {
+            html += `<h5>🔄 可转岗岗位</h5><div class="graph-nodes">`;
             data.transfer_graph.nodes.forEach(node => {
                 html += `<div class="graph-node">${node.job_name}</div>`;
             });
