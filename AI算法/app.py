@@ -11,7 +11,7 @@ app = Flask(__name__)
 # ========== CORS：允许前端 (localhost:8080) 跨域访问 ==========
 def _cors_headers():
     return {
-        "Access-Control-Allow-Origin": request.origin if request.origin and ("localhost" in request.origin or "127.0.0.1" in request.origin) else "http://localhost:8080",
+        "Access-Control-Allow-Origin": request.origin if request.origin and ("localhost" in request.origin or "127.0.0.1" in request.origin) else "http://localhost:3000",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Max-Age": "3600",
@@ -53,6 +53,14 @@ logger.info("[App] 注册路由: 个人档案模块 /api/v1/profile/*")
 from api.career_report_router import career_bp
 app.register_blueprint(career_bp)
 logger.info("[App] 注册路由: 职业规划报告模块 /api/v1/career/*")
+
+
+from api.matching_router import matching_bp
+from api.student_ability_router import student_bp
+
+
+app.register_blueprint(matching_bp)
+app.register_blueprint(student_bp)
 
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp

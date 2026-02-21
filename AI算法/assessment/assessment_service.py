@@ -10,6 +10,7 @@
 import json
 import os
 import threading
+import random
 from datetime import datetime
 from typing import Dict, List, Optional
 from utils.logger_handler import logger
@@ -160,6 +161,7 @@ class AssessmentService:
         """
         问卷生成算法：从题库向量数据库检索题目（RAG方式）。
         每个维度固定 5 题，共 20 题。
+        为了让每次测评看到的题目组合有所不同，这里会按维度随机抽题。
         """
         # 每个维度均 5 题
         QUESTIONS_PER_DIMENSION = 5
@@ -173,12 +175,20 @@ class AssessmentService:
 
         for dim_id, dim_cfg in dim_configs.items():
             try:
-                questions = self.question_bank.retrieve_by_dimension(
+                # 一次多取一些题，再随机抽取目标数量，保证每次问卷题目组合不同
+                retrieve_count = dim_cfg["count"] * 3
+                raw_questions = self.question_bank.retrieve_by_dimension(
                     dimension_id=dim_id,
-                    count=dim_cfg["count"]
+                    count=retrieve_count
                 )
                 # 确保每题都有 options（量表题从 labels 转为 options）
-                questions = [_ensure_question_options(q) for q in questions]
+                raw_questions = [_ensure_question_options(q) for q in raw_questions]
+
+                # 随机打乱并截取前 N 题；若题库不足则全部使用
+                questions = list(raw_questions) if raw_questions else []
+                if len(questions) > dim_cfg["count"]:
+                    random.shuffle(questions)
+                    questions = questions[:dim_cfg["count"]]
                 dimensions.append({
                     "dimension_id": dim_id,
                     "dimension_name": dim_cfg["dimension_name"],
@@ -393,7 +403,23 @@ class AssessmentService:
         report["ability_analysis"]["strengths"] = strengths
         report["ability_analysis"]["areas_to_improve"] = areas_to_improve
 
-        # 2) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
+        # 2) 性格特质：用后端计分（0-100）覆盖，保证进度条基准一致
+        trait_scores = scores.get("traits") or {}
+        if trait_scores:
+            trait_names = ["外向性", "开放性", "尽责性", "宜人性", "情绪稳定性"]
+            level_map = lambda s: "高" if s >= 70 else "偏高" if s >= 55 else "中等" if s >= 40 else "偏低" if s >= 25 else "低"
+            report["personality_analysis"] = report.get("personality_analysis") or {}
+            report["personality_analysis"]["traits"] = [
+                {
+                    "trait_name": name,
+                    "score": min(100, max(0, int(trait_scores.get(name, 0)))),
+                    "level": level_map(trait_scores.get(name, 0)),
+                    "description": ""
+                }
+                for name in trait_names
+            ]
+
+        # 3) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
         holland = scores.get("holland") or {}
         if holland:
             order = sorted(holland.keys(), key=lambda k: -holland[k])

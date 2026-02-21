@@ -28,6 +28,7 @@
                     <a href="#" class="nav-link" data-page="profile">个人档案</a>
                     <a href="#" class="nav-link" data-page="assessment">职业测评</a>
                     <a href="#" class="nav-link" data-page="jobProfile">岗位画像</a>
+                    <a href="#" class="nav-link" data-page="abilityProfile">能力画像</a>
                     <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
                     <a href="#" class="nav-link" data-page="report">职业规划</a>
                 </div>
@@ -148,7 +149,7 @@
                                             <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M20 15C20 18.7712 16.7712 22 12 22C7.22876 22 4 18.7712 4 15" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
-                                        <input type="text" id="loginUsername" placeholder="请输入用户名或邮箱" required>
+                                        <input type="text" id="loginUsername" value="admin" placeholder="admin / test / student" required>
                                     </div>
                                     <div class="error-message" id="loginUsernameError"></div>
                                 </div>
@@ -160,7 +161,7 @@
                                             <path d="M8 11V9" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M16 11V9" stroke="#7e93c0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
-                                        <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                                        <input type="password" id="loginPassword" value="123456" placeholder="密码：123456" required>
                                     </div>
                                     <div class="error-message" id="loginPasswordError"></div>
                                 </div>
@@ -562,7 +563,7 @@
                 <!-- 关联图谱 Tab -->
                 <div class="tab-content" id="graphTab">
                     <div class="graph-controls">
-                        <input type="text" id="graphJobId" placeholder="请输入岗位ID (如: job_001)" style="flex: 1;">
+                        <input type="text" id="graphJobId" placeholder="岗位ID: job_001-job_012 (如: job_001 算法工程师)" style="flex: 1;">
                         <select id="graphTypeSelect">
                             <option value="all">全部</option>
                             <option value="vertical">垂直晋升</option>
@@ -602,15 +603,27 @@
             </div>
         </div>
 
+        <!-- 能力画像页面（独立模块） -->
+        <div id="abilityProfilePage" class="page hidden">
+            <div class="matching-container">
+                <h2>能力画像</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">查看你的就业能力画像与多维度评分，为岗位匹配提供依据</p>
+                <div id="abilityProfileContent" class="ability-profile-content">
+                    <div class="loading-message">加载能力画像中...</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 岗位匹配页面 -->
         <div id="matchingPage" class="page hidden">
             <div class="matching-container">
                 <h2>岗位匹配</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">基于能力画像的智能岗位推荐与人岗匹配分析</p>
                 
                 <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="recommend">推荐岗位</button>
-                    <button class="tab-btn" data-tab="search">搜索岗位</button>
-                    <button class="tab-btn" data-tab="analysis">匹配分析</button>
+                    <button class="tab-btn active" data-tab="recommend">🎯 推荐岗位</button>
+                    <button class="tab-btn" data-tab="search">🔍 搜索岗位</button>
+                    <button class="tab-btn" data-tab="analysis">📋 匹配分析</button>
                 </div>
 
                 <!-- 推荐岗位 -->
@@ -639,28 +652,100 @@
                         </select>
                         <button id="analyzeBtn" class="btn-primary">开始分析</button>
                     </div>
-                    <div id="analysisResult" class="analysis-result"></div>
+                    <div id="analysisResult" class="analysis-result">
+                        <p class="hint-text">选择岗位后点击「开始分析」查看人岗匹配详情</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 职业规划报告页面 -->
-        <div id="reportPage" class="page hidden">
+        <div id="reportPage" class="page hidden report-page">
+            <div class="report-title-bar">
+                <h2>职业规划报告</h2>
+            </div>
             <div class="report-container">
-                <h2>职业测评报告</h2>
-                
-                <div class="report-actions">
-                    <button id="generateReportBtn" class="btn-primary">生成新报告</button>
-                    <button id="viewHistoryBtn" class="btn-secondary">查看历史报告</button>
+                <div class="report-page-header">
+                    <p class="report-page-desc">AI 为您生成个性化职业生涯发展规划，含岗位匹配、目标设定、行动计划与动态调整机制</p>
                 </div>
 
-                <div id="reportContent" class="report-content">
-                    <p class="hint-text">点击"生成新报告"开始创建您的职业规划报告</p>
+                <!-- 生成报告入口区 -->
+                <div id="reportGenerateArea" class="report-generate-area">
+                    <div class="report-generate-card">
+                        <div class="report-generate-icon">📋</div>
+                        <h3>生成职业规划报告</h3>
+                        <p>基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
+                        <button id="generateReportBtn" class="btn-generate-report">生成新报告</button>
+                        <button id="viewHistoryBtn" class="btn-view-history">查看历史报告</button>
+                    </div>
+
+                    <!-- 生成偏好表单（展开显示） -->
+                    <div id="reportPreferencesForm" class="report-preferences-form hidden">
+                        <h4>生成偏好（可选）</h4>
+                        <div class="preferences-grid">
+                            <div class="form-group">
+                                <label>职业目标类型</label>
+                                <select id="prefCareerGoal">
+                                    <option value="">不限制</option>
+                                    <option value="技术专家">技术专家</option>
+                                    <option value="管理岗位">管理岗位</option>
+                                    <option value="创业">创业</option>
+                                    <option value="专业深耕">专业深耕</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>期望工作地点</label>
+                                <input type="text" id="prefWorkLocation" placeholder="如：北京、上海、杭州">
+                            </div>
+                            <div class="form-group">
+                                <label>薪资预期</label>
+                                <select id="prefSalary">
+                                    <option value="">不限制</option>
+                                    <option value="10k-15k">10k-15k</option>
+                                    <option value="15k-25k">15k-25k</option>
+                                    <option value="25k+">25k+</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>工作生活平衡</label>
+                                <select id="prefWorkLifeBalance">
+                                    <option value="">不限制</option>
+                                    <option value="高">高（重视生活）</option>
+                                    <option value="中">中（平衡）</option>
+                                    <option value="低">低（事业优先）</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="confirmGenerateBtn" class="btn-primary">确认生成</button>
+                    </div>
                 </div>
 
-                <div id="reportHistory" class="report-history hidden">
-                    <h3>历史报告</h3>
-                    <div id="historyList"></div>
+                <!-- 生成中状态 -->
+                <div id="reportGeneratingArea" class="report-generating-area hidden">
+                    <div class="report-generating-card">
+                        <div class="report-generating-spinner"></div>
+                        <p>AI 正在生成您的职业规划报告，预计需要 30 秒</p>
+                        <span class="report-generating-hint">请稍候，不要关闭页面</span>
+                    </div>
+                </div>
+
+                <!-- 报告内容展示区 -->
+                <div id="reportContentArea" class="report-content-area hidden">
+                    <div class="report-toolbar">
+                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">完整性检查</button>
+                        <button id="reportPolishBtn" class="btn-toolbar">AI 润色</button>
+                        <button id="reportBackBtn" class="btn-toolbar">返回</button>
+                    </div>
+                    <div id="reportContent" class="report-content"></div>
+                </div>
+
+                <!-- 历史报告侧边/弹层 -->
+                <div id="reportHistory" class="report-history-panel hidden">
+                    <div class="report-history-header">
+                        <h3>历史报告</h3>
+                        <button id="closeHistoryBtn" class="btn-close-history">&times;</button>
+                    </div>
+                    <div id="historyList" class="report-history-list"></div>
                 </div>
             </div>
         </div>
@@ -756,8 +841,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="api.js?v=8&t=20240219"></script>
-    <script src="app.js?v=8&t=20240219"></script>
+    <script src="api.js?v=9&t=20260221"></script>
+    <script src="app.js?v=9&t=20260221"></script>
     <link rel="stylesheet" href="styles.css?v=8&t=20240219">
     
     <!-- 粒子效果脚本 -->

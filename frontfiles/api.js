@@ -3,7 +3,7 @@ const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、个人档案等）
     assessmentBaseURL: 'http://127.0.0.1:5001/api/v1',  // AI 算法服务（职业测评 / 岗位画像），当前 Flask 日志显示运行在 5001 端口
     timeout: 30000,
-    mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    mockMode: true   // 模拟模式：true=使用模拟数据（结果会随机变化），false=连接真实 AI 服务生成个性化报告
 };
 
 // API工具类
@@ -167,7 +167,7 @@ class API {
     // 模拟请求方法
     async mockRequest(endpoint, options) {
         console.log('Mock请求:', endpoint, options);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 150));
         
         const data = options.body || {};
         
@@ -195,7 +195,9 @@ class API {
             case '/assessment/submit':
                 return { success: true, data: { report_id: 'report_' + Date.now(), status: 'processing' }, msg: '测评提交成功，正在生成报告...' };
             case '/assessment/report':
-                return { success: true, data: this.mockAssessmentReport() };
+                const reportData = this.mockAssessmentReport();
+                reportData.status = 'completed';  // 轮询时前端据此判断报告已生成
+                return { success: true, data: reportData };
             case '/job/profiles':
             case '/job/list':
                 return { success: true, data: { total: 5, page: 1, size: 20, list: this.mockJobs() } };
@@ -203,7 +205,30 @@ class API {
             case '/job/detail':
                 return { success: true, data: this.mockJobDetail(options.body?.job_id || options.body?.job_name) };
             case '/job/relation-graph':
-                return { success: true, data: { center_job: { job_id: options.body?.job_id, job_name: '算法工程师' }, vertical_graph: { nodes: [], edges: [] }, transfer_graph: { nodes: [], edges: [] } } };
+                const graphData = this._jobRelationGraphData();
+                const jobs = this.mockJobs();
+                const inputId = (options.body?.job_id || options.body?.job_name || 'job_001').toString().trim();
+                const centerJob = jobs.find(j => j.job_id === inputId || j.job_name === inputId) || jobs[0];
+                const cjId = centerJob.job_id;
+                const vert = graphData.vertical[cjId] || graphData.vertical['job_001'];
+                const trans = graphData.transfer[cjId] || graphData.transfer['job_001'] || [];
+                return {
+                    success: true,
+                    data: {
+                        center_job: { job_id: centerJob.job_id, job_name: centerJob.job_name },
+                        vertical_graph: {
+                            nodes: vert || [{ job_id: 'j1', job_name: '初级', level: 1 }, { job_id: cjId, job_name: centerJob.job_name, level: 2 }, { job_id: 'j3', job_name: '高级/专家', level: 3 }],
+                            edges: []
+                        },
+                        transfer_graph: {
+                            nodes: trans.slice(0, 5).map(t => ({ job_id: t.to, job_name: (t.path || '').split('→')[1] || t.to })),
+                            edges: trans,
+                            paths: trans
+                        },
+                        self_check: graphData.selfCheck,
+                        action_guide: graphData.actionGuide
+                    }
+                };
             case '/job/ai-generate-profile':
                 return { success: true, data: { task_id: 'task_' + Date.now(), status: 'processing', estimated_time: 30 } };
             case '/job/ai-generate-result':
@@ -212,35 +237,50 @@ class API {
                 return { success: true, data: { total: 5, list: this.mockJobs() } };
             case '/student/ability-profile':
                 return { success: true, data: this.mockAbilityProfile() };
+            case '/student/ai-generate-profile':
+                return { success: true, data: { task_id: 'stu_gen_' + Date.now(), status: 'processing' }, msg: 'AI画像生成中...' };
+            case '/student/update-profile':
+                return { success: true, data: { updated_at: new Date().toISOString(), new_total_score: 78, score_change: 2 }, msg: '画像更新成功' };
             case '/matching/recommend-jobs':
-                return { success: true, data: { jobs: this.mockJobs().slice(0, 5) } };
+                const recJobList = this.mockJobs().slice(0, 6);
+                const recommendations = recJobList.map((j, i) => this.mockRecommendation(j, 85 - i * 3 + Math.floor(Math.random() * 5)));
+                return { success: true, data: { total_matched: 45, recommendations } };
             case '/matching/analyze':
-                return { success: true, data: this.mockMatchAnalysis(data.job_name) };
+                const jobId = options.body?.job_id || options.body?.job_name;
+                return { success: true, data: this.mockMatchAnalysis(jobId) };
             case '/career/generate-report':
-                return { success: true, data: { task_id: 'task_' + Date.now() }, msg: '报告生成中' };
-            case '/career/report-status':
-                return { success: true, data: { status: 'completed' } };
+                return { success: true, data: { report_id: 'report_career_' + Date.now(), status: 'processing' }, msg: '报告生成中，预计需要30秒...' };
+            case '/career/report':
             case '/career/view-report':
-                return { success: true, data: this.mockCareerReport() };
+                return { success: true, data: this.mockCareerReportFull() };
             case '/career/report-history':
-                return { success: true, data: { total: 1, list: [this.mockCareerReport()] } };
+                return { success: true, data: { total: 2, list: [
+                    { report_id: 'report_career_001', created_at: new Date().toISOString(), status: 'completed', primary_career: '算法工程师', completeness: 95, last_viewed: new Date().toISOString() },
+                    { report_id: 'report_career_002', created_at: new Date(Date.now()-86400000).toISOString(), status: 'archived', primary_career: '后端开发工程师', completeness: 88 }
+                ]} };
+            case '/career/edit-report':
+                return { success: true, data: { updated_at: new Date().toISOString() }, msg: '报告编辑成功' };
+            case '/career/ai-polish-report':
+                return { success: true, data: { task_id: 'polish_' + Date.now(), status: 'processing' }, msg: 'AI优化中...' };
+            case '/career/export-report':
+                return { success: true, data: { download_url: '/downloads/career_report.pdf', file_size: '2.5MB', expires_at: new Date(Date.now()+7*86400000).toISOString() }, msg: '报告导出成功' };
+            case '/career/check-completeness':
+                return { success: true, data: this.mockCareerCompleteness() };
             default:
                 return { success: false, msg: '未知的API端点' };
         }
     }
 
     mockLogin(data) {
-        // 预设的用户账号
         const mockUsers = [
             { username: 'admin', password: '123456', nickname: '管理员', user_id: 10001 },
             { username: 'test', password: '123456', nickname: '测试用户', user_id: 10002 },
             { username: 'demo', password: '123456', nickname: '演示用户', user_id: 10003 },
             { username: 'student', password: '123456', nickname: '学生用户', user_id: 10004 }
         ];
-        
-        // 查找匹配的用户
-        const user = mockUsers.find(u => u.username === data.username && u.password === data.password);
-        
+        const u = String(data.username || '').trim().toLowerCase();
+        const p = String(data.password || '').trim();
+        const user = mockUsers.find(x => x.username === u && x.password === p);
         if (user) {
             return {
                 success: true,
@@ -256,7 +296,7 @@ class API {
                 msg: '登录成功'
             };
         }
-        return { success: false, msg: '用户名或密码错误' };
+        return { success: false, msg: '用户名或密码错误。请用：admin / 123456（小写）' };
     }
 
     mockRegister(data) {
@@ -474,100 +514,511 @@ class API {
     }
 
     mockAssessmentReport() {
+        // 多组预设结果，每次随机选一组，模拟不同作答得到的不同报告
+        const hollandOptions = [
+            { code: 'RIA', type: '研究型(I)', desc: '喜欢观察、学习、研究、分析、评估和解决问题', fields: ['软件开发', '数据分析', '算法工程师', '人工智能研发'] },
+            { code: 'ASE', type: '艺术型(A)', desc: '偏好创意表达，注重美感和想象力', fields: ['UI/UX设计', '产品经理', '内容创作', '品牌策划'] },
+            { code: 'SEC', type: '社会型(S)', desc: '喜欢与人交流，善于协作和帮助他人', fields: ['人力资源', '教育培训', '咨询顾问', '客户成功'] },
+            { code: 'EIC', type: '企业型(E)', desc: '富有领导力，善于说服和影响他人', fields: ['销售管理', '商务拓展', '项目经理', '创业者'] },
+            { code: 'CRI', type: '常规型(C)', desc: '注重条理和规范，擅长数据处理', fields: ['财务分析', '运营管理', '审计', '行政'] },
+            { code: 'RCE', type: '实用型(R)', desc: '喜欢动手操作，解决具体技术问题', fields: ['硬件工程师', '运维工程师', '嵌入式开发', '测试工程师'] }
+        ];
+        const mbtiOptions = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'];
+        const traits = ['外向性', '开放性', '尽责性', '宜人性', '神经质'];
+        const abilities = ['逻辑分析能力', '学习能力', '沟通表达能力', '团队协作能力', '创新能力', '抗压能力', '执行力', '时间管理能力'];
+        const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+        const randScore = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const h = pick(hollandOptions);
+        const mbti = pick(mbtiOptions);
+        const chosenAbilities = abilities.sort(() => Math.random() - 0.5).slice(0, 5);
+        const strengths = chosenAbilities.slice(0, 2).map(a => ({ ability: a, score: randScore(75, 95) }));
+        const areasToImprove = chosenAbilities.slice(2, 4).map(a => ({ ability: a, score: randScore(50, 72) }));
+        const personalityTraits = traits.map(t => {
+            const s = randScore(35, 85);
+            const level = s < 40 ? '偏低' : s < 55 ? '一般' : s < 70 ? '偏高' : '高';
+            return { trait_name: t, score: s, level };
+        });
         return {
-            report_id: 'report_001',
+            report_id: 'report_' + Date.now(),
             created_at: new Date().toISOString(),
             interest_analysis: {
-                holland_code: 'RIA',
-                primary_interest: {
-                    type: '研究型(I)',
-                    score: 85,
-                    description: '喜欢观察、学习、研究、分析、评估和解决问题'
-                },
-                suitable_fields: ['软件开发', '数据分析', '算法工程师', '人工智能研发']
+                holland_code: h.code,
+                primary_interest: { type: h.type, score: randScore(75, 92), description: h.desc },
+                suitable_fields: h.fields
             },
             personality_analysis: {
-                mbti_type: 'INTJ',
-                traits: [
-                    { trait_name: '外向性', score: 45, level: '偏内向' },
-                    { trait_name: '开放性', score: 82, level: '高' },
-                    { trait_name: '尽责性', score: 78, level: '高' }
-                ]
+                mbti_type: mbti,
+                traits: personalityTraits
             },
             ability_analysis: {
-                strengths: [
-                    { ability: '逻辑分析能力', score: 88 },
-                    { ability: '学习能力', score: 85 }
-                ],
-                areas_to_improve: [
-                    { ability: '沟通表达能力', score: 62 }
+                strengths,
+                areas_to_improve: areasToImprove
+            }
+        };
+    }
+
+    // 不少于10个就业岗位画像，含专业技能、证书、创新、学习、抗压、沟通、实习能力
+    mockJobs() {
+        return [
+            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '20k-35k', demand_score: 92, growth_trend: '上升', tags: ['人工智能', '机器学习'], industry: '互联网/AI', level: '中级', skills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'] },
+            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-22k', demand_score: 90, growth_trend: '稳定', tags: ['React', 'Vue', 'TypeScript'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Vue', 'React', 'HTML5/CSS3'] },
+            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '14k-25k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go', '微服务'], industry: '互联网', level: '中级', skills: ['Java/Go', 'MySQL', 'Redis', '分布式'] },
+            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 85, growth_trend: '上升', tags: ['Python', 'SQL', '数据可视化'], industry: '互联网/金融', level: '初级', skills: ['Python', 'SQL', 'Excel', 'Tableau'] },
+            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-28k', demand_score: 82, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'] },
+            { job_id: 'job_006', job_name: '新能源电池工程师', avg_salary: '18k-30k', demand_score: 88, growth_trend: '上升', tags: ['锂电池', 'BMS'], industry: '新能源', level: '中级', skills: ['电化学', '电池管理', '测试验证'] },
+            { job_id: 'job_007', job_name: 'UI/UX设计师', avg_salary: '12k-22k', demand_score: 80, growth_trend: '稳定', tags: ['Figma', '交互设计'], industry: '互联网', level: '中级', skills: ['Figma/Sketch', '交互设计', '视觉设计'] },
+            { job_id: 'job_008', job_name: '测试开发工程师', avg_salary: '12k-20k', demand_score: 78, growth_trend: '稳定', tags: ['自动化测试', '性能测试'], industry: '互联网', level: '中级', skills: ['Python', 'Selenium', 'JMeter'] },
+            { job_id: 'job_009', job_name: '运维工程师', avg_salary: '11k-20k', demand_score: 75, growth_trend: '稳定', tags: ['Linux', 'K8s', '云原生'], industry: '互联网', level: '中级', skills: ['Linux', 'Docker', 'Kubernetes'] },
+            { job_id: 'job_010', job_name: 'AI应用工程师', avg_salary: '18k-32k', demand_score: 90, growth_trend: '上升', tags: ['大模型', 'RAG', 'Agent'], industry: 'AI/互联网', level: '中级', skills: ['Python', 'LLM', 'Prompt工程'] },
+            { job_id: 'job_011', job_name: '嵌入式软件工程师', avg_salary: '14k-24k', demand_score: 80, growth_trend: '上升', tags: ['C/C++', '嵌入式'], industry: '智能硬件/汽车', level: '中级', skills: ['C/C++', 'RTOS', '驱动开发'] },
+            { job_id: 'job_012', job_name: '咨询顾问', avg_salary: '15k-30k', demand_score: 72, growth_trend: '稳定', tags: ['战略咨询', '商业分析'], industry: '咨询', level: '中级', skills: ['商业分析', 'PPT', '客户沟通'] }
+        ];
+    }
+
+    // 岗位完整画像：专业技能、证书、创新、学习、抗压、沟通、实习能力
+    _jobProfileExtra(job) {
+        const profiles = {
+            'job_001': {
+                certs: ['数学/计算机竞赛获奖优先', '算法类证书加分'],
+                innovation: '高', learning: '高', pressure: '中高', communication: '中', internship: '有项目/实习优先'
+            },
+            'job_002': { certs: ['前端相关认证加分'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有作品集' },
+            'job_003': { certs: ['云厂商认证'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有实习经历' },
+            'job_004': { certs: ['数据分析师认证'], innovation: '中', learning: '高', pressure: '中', communication: '中高', internship: '有分析报告' },
+            'job_005': { certs: ['PMP加分'], innovation: '高', learning: '高', pressure: '高', communication: '高', internship: '产品实习' },
+            'job_006': { certs: ['电池/电化学相关'], innovation: '高', learning: '高', pressure: '中', communication: '中', internship: '车企/电池厂实习' },
+            'job_007': { certs: ['设计类作品集'], innovation: '高', learning: '中高', pressure: '中', communication: '高', internship: '设计实习' },
+            'job_008': { certs: ['ISTQB等'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '测试实习' },
+            'job_009': { certs: ['CKA/CKAD', '云认证'], innovation: '中', learning: '高', pressure: '中高', communication: '中', internship: '运维实习' },
+            'job_010': { certs: ['AI相关课程/项目'], innovation: '高', learning: '极高', pressure: '中高', communication: '中', internship: 'AI项目' },
+            'job_011': { certs: ['嵌入式/电子相关'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '硬件/嵌入式实习' },
+            'job_012': { certs: ['咨询实习经历'], innovation: '高', learning: '高', pressure: '高', communication: '极高', internship: '咨询实习' }
+        };
+        return profiles[job.job_id] || { certs: ['相关认证优先'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有实习优先' };
+    }
+
+    mockJobDetail(jobIdOrName) {
+        const jobs = this.mockJobs();
+        const job = jobs.find(j => j.job_id === jobIdOrName || j.job_name === jobIdOrName) || jobs[0];
+        const ex = this._jobProfileExtra(job);
+        const descMap = {
+            'job_001': '负责机器学习/深度学习算法研发与优化，参与AI产品落地方案设计',
+            'job_002': '负责Web/移动端前端开发，构建高性能、可维护的用户界面',
+            'job_003': '负责服务端系统设计与开发，保障高可用、高并发业务',
+            'job_004': '负责数据采集、清洗、建模与可视化，支撑业务决策',
+            'job_005': '负责产品规划、需求分析与迭代，协调研发与业务',
+            'job_006': '负责动力电池系统设计、BMS开发或测试验证',
+            'job_007': '负责产品交互与视觉设计，提升用户体验',
+            'job_008': '负责自动化测试、性能测试及质量保障体系建设',
+            'job_009': '负责服务器运维、CI/CD、监控告警与故障排查',
+            'job_010': '负责大模型应用、RAG、Agent等AI能力落地',
+            'job_011': '负责嵌入式软件开发、驱动与RTOS适配',
+            'job_012': '负责客户调研、战略分析与方案输出'
+        };
+        return {
+            job_id: job.job_id,
+            job_name: job.job_name,
+            basic_info: {
+                industry: job.industry || '互联网',
+                level: job.level || '中级',
+                avg_salary: job.avg_salary || '12k-22k',
+                work_locations: ['北京', '上海', '广州', '深圳', '杭州'],
+                company_scales: ['50-200人', '200-500人', '500人以上'],
+                description: descMap[job.job_id] || job.description || '负责岗位相关核心工作'
+            },
+            requirements: {
+                basic_requirements: {
+                    education: { level: '本科及以上', preferred_majors: ['计算机', '软件工程', '电子', '数学', '自动化'] }
+                },
+                professional_skills: {
+                    programming_languages: (job.skills || []).slice(0, 4).map(s => ({ skill: s, level: '熟练' })),
+                    frameworks_tools: (job.tags || []).map(t => ({ skill: t, level: '了解' }))
+                }
+            },
+            ability_requirements: {
+                certificate: ex.certs,
+                innovation_ability: ex.innovation,
+                learning_ability: ex.learning,
+                pressure_resistance: ex.pressure,
+                communication_ability: ex.communication,
+                internship_ability: ex.internship
+            },
+            market_analysis: {
+                demand_score: job.demand_score || 80,
+                growth_trend: job.growth_trend || '上升',
+                salary_range: { min: 12000, max: 30000 }
+            },
+            career_path: {
+                current_level: job.level || '中级',
+                promotion_path: [
+                    { level: '初级/应届', years_required: '0-2年', key_requirements: ['掌握基础技能', '参与项目实践', '完成导师任务'] },
+                    { level: '中级', years_required: '2-5年', key_requirements: ['独立负责模块', '带新人', '跨团队协作'] },
+                    { level: '高级/专家', years_required: '5年+', key_requirements: ['架构设计', '技术攻坚', '团队建设'] }
                 ]
             }
         };
     }
 
-    mockJobs() {
-        return [
-            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '15k-25k', demand_score: 85, tags: ['人工智能', '机器学习'] },
-            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-20k', demand_score: 90, tags: ['React', 'Vue'] },
-            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '13k-22k', demand_score: 88, tags: ['Java', 'Go'] },
-            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 80, tags: ['Python', 'SQL'] },
-            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-25k', demand_score: 75, tags: ['产品设计', '需求分析'] }
-        ];
-    }
-
-    mockJobDetail(jobName) {
+    // 垂直岗位图谱 + 换岗路径图谱（至少5岗位各≥2条换岗路径）
+    _jobRelationGraphData() {
         return {
-            job_id: 'job_001',
-            job_name: jobName || '算法工程师',
-            avg_salary: '15k-25k',
-            description: '负责机器学习算法的研究、开发和优化',
-            requirements: {
-                education: { level: '本科及以上', preferred_majors: ['计算机科学与技术', '软件工程'] },
-                skills: ['Python', 'TensorFlow', '机器学习算法']
+            vertical: {
+                'job_001': [
+                    { job_id: 'j_a1', job_name: '算法实习生', level: 1, desc: '参与算法模型训练与调优' },
+                    { job_id: 'job_001', job_name: '算法工程师', level: 2, desc: '独立负责算法研发与落地' },
+                    { job_id: 'j_a3', job_name: '高级/专家算法', level: 3, desc: '技术攻坚、团队带教' },
+                    { job_id: 'j_a4', job_name: '算法架构师/技术总监', level: 4, desc: '技术战略与团队建设' }
+                ],
+                'job_002': [
+                    { job_id: 'j_b1', job_name: '前端实习生', level: 1 },
+                    { job_id: 'job_002', job_name: '前端开发工程师', level: 2 },
+                    { job_id: 'j_b3', job_name: '高级前端/技术专家', level: 3 }
+                ],
+                'job_005': [
+                    { job_id: 'j_p1', job_name: '产品助理', level: 1 },
+                    { job_id: 'job_005', job_name: '产品经理', level: 2 },
+                    { job_id: 'j_p3', job_name: '高级产品/产品总监', level: 3 }
+                ],
+                'job_004': [
+                    { job_id: 'j_d1', job_name: '数据分析助理', level: 1 },
+                    { job_id: 'job_004', job_name: '数据分析师', level: 2 },
+                    { job_id: 'j_d3', job_name: '高级分析师/数据科学家', level: 3 }
+                ],
+                'job_006': [
+                    { job_id: 'j_n1', job_name: '电池工艺/测试助理', level: 1 },
+                    { job_id: 'job_006', job_name: '新能源电池工程师', level: 2 },
+                    { job_id: 'j_n3', job_name: '高级工程师/技术专家', level: 3 }
+                ]
+            },
+            transfer: {
+                'job_001': [
+                    { from: 'job_001', to: 'job_010', path: '算法工程师→AI应用工程师', reason: '算法基础+工程能力',
+                      actions: ['补充大模型API调用与Prompt工程实战', '完成1个RAG/Agent小项目放GitHub', '关注通义/文心等国产模型文档'],
+                      validate: '暑期投AI应用岗实习，用实际项目验证兴趣与适配度',
+                      risks: 'AI岗门槛高、迭代快，需持续学习；遇挫折可先做算法/数据岗积累' },
+                    { from: 'job_001', to: 'job_004', path: '算法工程师→数据分析师', reason: '数据建模与统计基础',
+                      actions: ['强化SQL与业务指标拆解', '做2-3份业务分析报告', '学Tableau/帆软等可视化'],
+                      validate: '先做数据实习或课程项目，确认是否更喜欢业务侧',
+                      risks: '薪资与算法岗有落差，需评估职业优先级' },
+                    { from: 'job_001', to: 'job_005', path: '算法工程师→产品经理', reason: '对AI产品理解深入',
+                      actions: ['参与产品需求评审，积累PRD阅读经验', '产出1份AI产品竞品分析', '学习Axure/Figma画原型'],
+                      validate: '做产品实习或校园项目PM，验证沟通与决策偏好' }
+                ],
+                'job_002': [
+                    { from: 'job_002', to: 'job_005', path: '前端工程师→产品经理', reason: '用户视角、交互理解',
+                      actions: ['整理做过的页面，提炼用户痛点与改进点', '参与1次完整需求评审', '学习产品思维课程（如人人都是产品经理）'],
+                      validate: '担任校园/课设项目PM，验证是否享受统筹与决策',
+                      risks: 'PM竞争激烈，需突出技术+产品双重背景' },
+                    { from: 'job_002', to: 'job_007', path: '前端工程师→UI/UX设计师', reason: '视觉与交互能力',
+                      actions: ['系统学习Figma/Sketch，输出1套完整设计稿', '学习设计规范（Material/Apple HIG）', '做设计练习并收集反馈'],
+                      validate: '接1-2个小项目设计需求，验证是否更喜欢视觉创作' },
+                    { from: 'job_002', to: 'job_003', path: '前端工程师→全栈/后端', reason: '技术栈延伸',
+                      actions: ['选一门后端语言（Node/Java/Go）系统学习', '独立完成前后端联调小项目', '了解数据库与API设计'],
+                      validate: '做全栈或后端实习，确认技术深度偏好' }
+                ],
+                'job_003': [
+                    { from: 'job_003', to: 'job_009', path: '后端工程师→运维/DevOps', reason: '系统与运维关联',
+                      actions: ['学习Docker/K8s基础，本地部署应用', '参与线上问题排查1-2次', '了解CI/CD流程'],
+                      validate: '争取运维/基础架构实习，体验7×24与稳定性压力',
+                      risks: '运维需承担on-call，确认抗压与作息偏好' },
+                    { from: 'job_003', to: 'job_005', path: '后端工程师→产品/技术PM', reason: '业务理解+技术背景',
+                      actions: ['主动参与需求评审，提技术可行性建议', '写1份技术方案文档', '学习产品方法论'],
+                      validate: '做技术PM或产品实习，验证沟通与推动能力' }
+                ],
+                'job_004': [
+                    { from: 'job_004', to: 'job_001', path: '数据分析师→算法工程师', reason: '数据基础+建模能力',
+                      actions: ['系统学习机器学习（吴恩达/李宏毅）', '完成Kaggle入门赛', '补充Python算法与模型调参'],
+                      validate: '做算法实习或课题，确认是否喜欢钻研模型',
+                      risks: '算法岗门槛高于分析岗，需提前半年以上准备' },
+                    { from: 'job_004', to: 'job_012', path: '数据分析师→咨询顾问', reason: '商业分析与报告',
+                      actions: ['练习结构化表达与PPT', '参与商赛或咨询Case练习', '积累行业研究报告阅读'],
+                      validate: '做咨询PTA或商赛，验证高压与客户沟通偏好' },
+                    { from: 'job_004', to: 'job_005', path: '数据分析师→产品经理', reason: '数据驱动决策',
+                      actions: ['用数据为产品提优化建议', '学习A/B实验与埋点', '产出1份数据驱动产品分析'],
+                      validate: '做数据产品或产品实习，验证决策与推动偏好' }
+                ],
+                'job_005': [
+                    { from: 'job_005', to: 'job_012', path: '产品经理→咨询顾问', reason: '战略与商业分析',
+                      actions: ['系统学习咨询框架（MECE、金字塔）', '参与商赛或Case Interview', '补充行业研究能力'],
+                      validate: '做咨询PTA，体验高强度出差与报告压力',
+                      risks: '咨询校招名额少，需提前积累实习' },
+                    { from: 'job_005', to: 'job_002', path: '产品经理→前端/设计', reason: '转技术或设计方向',
+                      actions: ['评估技术/设计兴趣与天赋', '系统学习前端或设计工具', '用业余项目验证动手能力'],
+                      validate: '先做兼职或自由项目，确认转岗可行性' }
+                ],
+                'job_006': [
+                    { from: 'job_006', to: 'job_011', path: '电池工程师→嵌入式工程师', reason: '硬件与BMS相关',
+                      actions: ['补充C/嵌入式、RTOS', '做1个嵌入式小项目', '了解BMS软硬件接口'],
+                      validate: '投嵌入式实习，验证软硬件结合偏好',
+                      risks: '新能源热度高但波动大，关注行业周期' },
+                    { from: 'job_006', to: 'job_003', path: '电池工程师→软件/后端', reason: '跨领域技术转岗',
+                      actions: ['系统学习一门编程语言', '完成1个完整软件项目', '了解软件工程流程'],
+                      validate: '做软件实习，确认是否更适合纯软件方向' }
+                ]
+            },
+            selfCheck: [
+                '我是否清楚自己的兴趣点（技术深度 vs 与人打交道）？',
+                '我是否做过实习/项目验证过这个方向？',
+                '热门行业（AI/新能源）是真实兴趣还是跟风？',
+                '遇到求职挫折时，我是否有Plan B？'
+            ],
+            actionGuide: {
+                validate: '建议：至少1段实习或2个实战项目验证规划，避免纸上谈兵',
+                adjust: '遇挫时：不要全盘否定，可先降级目标（如大厂→中厂）、积累经验再调整',
+                reality: '新兴领域（AI/新能源）：区分「真实需求」与「噱头」，多看JD与行业报告'
             }
         };
     }
 
     mockAbilityProfile() {
         return {
-            dimensions: [
-                { name: '技术能力', score: 85 },
-                { name: '学习能力', score: 90 },
-                { name: '沟通能力', score: 70 },
-                { name: '创新能力', score: 80 }
-            ]
+            user_id: 10001,
+            profile_id: 'profile_10001',
+            generated_at: new Date().toLocaleString('zh-CN'),
+            basic_info: {
+                education: '本科',
+                major: '计算机科学与技术',
+                school: '北京大学',
+                gpa: '3.8/4.0',
+                expected_graduation: '2026-06'
+            },
+            professional_skills: {
+                programming_languages: [
+                    { skill: 'Python', level: '熟练', evidence: ['3个Python项目经验', '开源贡献'], score: 85 },
+                    { skill: 'Java', level: '熟悉', evidence: ['课程项目', '实习应用'], score: 70 }
+                ],
+                frameworks_tools: [
+                    { skill: 'React', level: '熟练', evidence: ['2个前端项目'], score: 80 }
+                ],
+                domain_knowledge: [
+                    { domain: '机器学习', level: '熟悉', evidence: ['相关课程', 'Kaggle竞赛'], score: 75 }
+                ],
+                overall_score: 78
+            },
+            certificates: {
+                items: [{ name: '全国计算机等级考试二级', level: '二级', issue_date: '2023-03' }],
+                score: 60,
+                competitiveness: '中等'
+            },
+            innovation_ability: {
+                projects: [{ name: '校园社交平台', innovation_points: ['首创校园匿名树洞', 'LBS校友发现'], impact: '1000+用户' }],
+                competitions: [{ name: '中国大学生计算机设计大赛', award: '省级二等奖' }],
+                score: 72,
+                level: '中上'
+            },
+            learning_ability: {
+                indicators: [
+                    { indicator: 'GPA', value: 3.8, percentile: 85 },
+                    { indicator: '自学新技术', evidence: ['1个月掌握React', '自学机器学习并完成项目'] }
+                ],
+                score: 85,
+                level: '优秀'
+            },
+            pressure_resistance: {
+                evidence: ['同时处理3门课程期末+实习', '项目deadline前高质量交付'],
+                assessment_score: 75,
+                level: '良好'
+            },
+            communication_ability: {
+                teamwork: { evidence: ['担任3个项目的技术负责人'], score: 70 },
+                presentation: { evidence: ['技术分享会演讲3次'], score: 75 },
+                overall_score: 72,
+                level: '良好'
+            },
+            practical_experience: {
+                internships: [{
+                    company: '腾讯科技', position: '前端开发实习生', duration: '3个月',
+                    achievements: ['独立完成2个H5页面', '优化加载速度30%'], score: 80
+                }],
+                projects: [{ name: '校园社交平台', role: '项目负责人', complexity: '高', score: 85 }],
+                overall_score: 82
+            },
+            overall_assessment: {
+                total_score: 76,
+                percentile: 78,
+                completeness: 90,
+                competitiveness: '中上',
+                strengths: ['学习能力强，GPA优秀', '有完整项目和实习经验', '技术栈较为全面'],
+                weaknesses: ['缺少技术证书', '沟通能力有提升空间', '创新项目影响力可以更大']
+            }
         };
     }
 
-    mockMatchAnalysis(jobName) {
+    mockRecommendation(job, matchScore = 85) {
+        const level = matchScore >= 90 ? '高度匹配' : matchScore >= 75 ? '较为匹配' : '一般匹配';
         return {
-            job_name: jobName || '算法工程师',
-            match_score: 85,
-            strengths: ['技术能力匹配', '学习能力突出'],
-            gaps: ['需要加强沟通能力', '建议补充项目经验'],
-            suggestions: ['多参与团队项目', '提升技术深度']
+            job_id: job.job_id,
+            job_name: job.job_name,
+            match_score: matchScore,
+            match_level: level,
+            dimension_scores: {
+                basic_requirements: { score: matchScore + 5, weight: 0.15, details: { education: { required: '本科', student: '本科', match: true }, major: { required: ['计算机'], student: '计算机科学与技术', match: true } } },
+                professional_skills: { score: matchScore, weight: 0.40, details: { matched_skills: job.skills?.slice(0, 2).map(s => ({ skill: s, required_level: '熟练', student_level: '熟练', match: true })) || [], missing_skills: [], match_rate: 0.85 } },
+                soft_skills: { score: matchScore + 3, weight: 0.30, details: { innovation_ability: { required: '高', student: '中上', score: 88 }, learning_ability: { required: '高', student: '优秀', score: 95 }, communication_ability: { required: '中', student: '良好', score: 90 } } },
+                development_potential: { score: 93, weight: 0.15, details: { growth_mindset: '优秀', career_clarity: '清晰', motivation: '强' } }
+            },
+            highlights: ['学习能力强，符合岗位要求', '有相关实习经验', '技术栈覆盖大部分岗位需求'],
+            gaps: [{ gap: '部分技能需进阶', importance: '重要', suggestion: '通过项目实践持续提升' }],
+            job_info: { company: '多家公司', location: '北京/上海', salary: job.avg_salary || '15k-25k', experience: '应届生/1年经验' }
         };
+    }
+
+    mockMatchAnalysis(jobIdOrName) {
+        const jobs = this.mockJobs();
+        const job = jobs.find(j => j.job_id === jobIdOrName || j.job_name === jobIdOrName) || jobs[0];
+        return this.mockRecommendation(job, 78 + Math.floor(Math.random() * 20));
     }
 
     mockCareerReport() {
         const now = new Date();
+        return { report_id: 'report_001', created_at: now.toISOString(), primary_career: '算法工程师', completeness: 85 };
+    }
+
+    mockCareerReportFull() {
+        const now = new Date().toISOString();
         return {
-            report_id: 'report_001',
-            created_at: now.toISOString(),
-            generated_at: now.toISOString(),
-            primary_career: '算法工程师',
-            completeness: 85,
-            summary: '根据您的测评结果和档案分析，您适合从事技术类工作',
-            recommendations: [
-                { career: '算法工程师', match_score: 92 },
-                { career: '后端开发工程师', match_score: 87 }
+            report_id: 'report_career_' + Date.now(),
+            user_id: 10001,
+            generated_at: now,
+            status: 'completed',
+            metadata: { version: 'v1.0', ai_model: 'claude-sonnet-4', confidence_score: 0.91, completeness: 95 },
+            section_1_job_matching: {
+                title: '职业探索与岗位匹配',
+                self_assessment: {
+                    strengths: ['学习能力强，快速掌握新技术', '逻辑思维能力突出', '有扎实的编程基础和项目经验'],
+                    interests: ['对人工智能和算法有浓厚兴趣', '喜欢解决复杂技术问题', '追求技术深度'],
+                    values: ['重视个人技术成长', '追求工作成就感', '希望参与有影响力的项目']
+                },
+                recommended_careers: [
+                    { career: '算法工程师', match_score: 92,
+                      match_analysis: {
+                        why_suitable: ['你的研究型兴趣与算法岗位高度契合', '强大的学习能力适合快速迭代的算法领域', '逻辑分析能力是算法工程师的核心素质'],
+                        capability_match: { professional_skills: { score: 88, description: '技术栈覆盖80%岗位需求' }, soft_skills: { score: 90, description: '学习能力、创新能力与岗位要求高度匹配' } },
+                        gaps_and_solutions: [
+                            { gap: '缺少大规模数据处理经验', solution: '学习Spark等大数据框架', priority: '高', timeline: '2-3个月' },
+                            { gap: '深度学习框架需要进阶', solution: '深入学习TensorFlow/PyTorch', priority: '高', timeline: '1-2个月' }
+                        ]
+                      },
+                      market_outlook: { demand: '高', growth_trend: '持续上升', salary_range: '15k-25k（应届）→ 25k-40k（2-3年）', key_trends: ['大模型应用爆发式增长', '多模态AI成为新热点'] }
+                    },
+                    { career: '后端开发工程师', match_score: 85,
+                      match_analysis: { why_suitable: ['编程基础扎实', '系统设计能力良好'], capability_match: {}, gaps_and_solutions: [] },
+                      market_outlook: { demand: '高', growth_trend: '稳定', salary_range: '12k-20k（应届）' }
+                    }
+                ],
+                career_choice_advice: {
+                    primary_recommendation: '算法工程师',
+                    reasons: ['与你的兴趣、能力、价值观高度契合', '市场需求旺盛，发展前景好', '能够充分发挥你的技术优势'],
+                    alternative_option: '机器学习工程师（偏工程化方向）',
+                    risk_mitigation: '建议同时关注后端开发技能，增加就业灵活性'
+                }
+            },
+            section_2_career_path: {
+                title: '职业目标设定与职业路径规划',
+                short_term_goal: {
+                    timeline: '2026.06 - 2026.06',
+                    primary_goal: '成功入职算法工程师岗位，完成职业起步',
+                    specific_targets: [
+                        { target: '获得算法工程师offer', metrics: '至少2个中大厂offer', deadline: '2026.06' },
+                        { target: '快速融入团队', metrics: '3个月内独立负责算法模块', deadline: '2026.09' }
+                    ]
+                },
+                mid_term_goal: {
+                    timeline: '2026 - 2030',
+                    primary_goal: '成长为中高级算法工程师，建立技术影响力',
+                    specific_targets: [
+                        { target: '晋升为中级算法工程师', metrics: '独立负责关键算法项目', deadline: '2027' },
+                        { target: '技术深度突破', metrics: '在某一细分领域成为团队专家', deadline: '2028' }
+                    ]
+                },
+                career_roadmap: {
+                    path_type: '技术专家路线',
+                    stages: [
+                        { stage: '初级算法工程师', period: '1-2年', key_responsibilities: ['完成分配的算法开发任务', '优化现有算法性能'], success_criteria: ['独立完成算法模块开发', '代码质量达到团队标准'] },
+                        { stage: '中级算法工程师', period: '2-3年', key_responsibilities: ['负责核心算法设计', '解决技术难题'], success_criteria: ['设计的算法性能提升显著', '攻克2-3个技术难点'] },
+                        { stage: '高级算法工程师/算法专家', period: '3-5年', key_responsibilities: ['设计算法架构', '带领算法团队'], success_criteria: ['成为某领域的技术专家', '带领团队完成重要项目'] }
+                    ],
+                    alternative_paths: [
+                        { path: '横向转岗 → 数据科学家', timing: '2-3年工作经验后', reason: '算法能力可迁移', preparation: ['加强统计学和业务理解', '学习数据可视化工具'] },
+                        { path: '向上转型 → AI产品经理', timing: '4-5年工作经验后', reason: '技术背景+产品思维', preparation: ['培养产品sense', '提升沟通和项目管理能力'] }
+                    ]
+                },
+                industry_trends: {
+                    current_status: 'AI算法岗位需求持续旺盛',
+                    key_trends: [
+                        { trend: '大模型应用普及', impact: '对算法工程师的工程能力要求提高', opportunity: '掌握大模型应用开发将成为核心竞争力' },
+                        { trend: 'AI+垂直行业融合', impact: '需要懂业务的算法工程师', opportunity: '选择一个垂直领域深耕（如医疗AI、金融AI）' }
+                    ],
+                    '5_year_outlook': '算法工程师将从纯技术岗位向技术+业务复合型人才转变'
+                }
+            },
+            section_3_action_plan: {
+                title: '行动计划与成果展示',
+                short_term_plan: {
+                    period: '2026.02 - 2026.08',
+                    goal: '补齐能力短板，冲刺校招offer',
+                    monthly_plans: [
+                        { month: '2026.02 - 2026.03', focus: '技能提升',
+                          tasks: [{ task: '深度学习进阶', '具体行动': ['完成斯坦福CS231n课程', '复现3篇经典论文'], '预期成果': '掌握深度学习核心算法', '时间投入': '每周15小时' }],
+                          milestone: '完成2个深度学习项目' },
+                        { month: '2026.04 - 2026.06', focus: '求职冲刺',
+                          tasks: [{ task: '算法刷题', '具体行动': ['LeetCode刷300题'], '预期成果': '算法面试通过率80%+', '时间投入': '每周15小时' }],
+                          milestone: '获得2-3个算法工程师offer' }
+                    ]
+                },
+                learning_path: {
+                    technical_skills: [
+                        { skill_area: '深度学习', current_level: '熟悉', target_level: '精通', learning_resources: ['课程：斯坦福CS231n、CS224n', '实践：Kaggle竞赛'], timeline: '6个月' },
+                        { skill_area: '大数据处理', current_level: '了解', target_level: '熟练', learning_resources: ['课程：Spark官方教程'], timeline: '3个月' }
+                    ],
+                    soft_skills: [{ skill: '技术沟通', improvement_plan: ['每月1次技术分享', '撰写清晰的技术文档'], timeline: '持续提升' }]
+                },
+                achievement_showcase: {
+                    portfolio_building: {
+                        github: { goal: '打造个人技术品牌', actions: ['开源2-3个高质量项目', '维护技术博客 Star 500+'] },
+                        technical_blog: { goal: '建立技术影响力', actions: ['每月1-2篇技术文章', '总阅读量10万+'] },
+                        competitions: { goal: '验证技术能力', actions: ['参加3次Kaggle竞赛 Top 10%'] }
+                    }
+                }
+            },
+            section_4_evaluation: {
+                title: '评估周期与动态调整',
+                evaluation_system: {
+                    monthly_review: { frequency: '每月1次', review_items: ['学习目标完成度', '项目进展情况', '技能提升评估'] },
+                    quarterly_review: { frequency: '每季度1次', review_items: ['能力画像更新', '人岗匹配度重新评估', '职业目标校准'] },
+                    annual_review: { frequency: '每年1次', review_items: ['年度目标达成情况', '职业路径是否需要调整'] }
+                },
+                adjustment_scenarios: [
+                    { scenario: '求职不顺利（offer<预期）', possible_reasons: ['技能储备不足', '面试表现欠佳'], adjustment_plan: { immediate_actions: ['分析面试反馈，针对性提升', '降低目标公司档次'], long_term_actions: ['系统提升薄弱技能', '积累更多项目经验'] } },
+                    { scenario: '工作后发现不适合算法岗', possible_reasons: ['兴趣不符', '能力不匹配'], adjustment_plan: { evaluation_period: '工作6个月内', fallback_options: ['转向机器学习工程师', '转向数据科学家', '转向后端开发'] } }
+                ],
+                risk_management: {
+                    identified_risks: [
+                        { risk: 'AI技术迭代导致部分岗位需求变化', probability: '中', impact: '高', mitigation: '保持学习，关注前沿技术' },
+                        { risk: '市场竞争加剧', probability: '高', impact: '中', mitigation: '提前准备，建立差异化竞争力' }
+                    ],
+                    contingency_plans: ['plan A: 坚持算法方向', 'plan B: 转向ML工程师或数据科学家', 'plan C: 转向后端开发']
+                }
+            },
+            summary: {
+                key_takeaways: ['你适合从事算法工程师职业', '短期目标是补齐技能短板，获得2-3个offer', '中期目标是3-5年内成长为中高级算法工程师', '需要重点提升深度学习和大数据处理能力'],
+                next_steps: ['立即开始：深度学习课程学习（本周内）', '2周内：启动1个深度学习项目', '1个月内：完成Spark学习和实战', '3个月内：完成2个高质量项目并开源'],
+                motivational_message: '你已经具备了成为优秀算法工程师的潜质。接下来的6个月是关键期，保持专注和持续行动，你一定能够实现职业目标。加油！'
+            }
+        };
+    }
+
+    mockCareerCompleteness() {
+        return {
+            completeness_score: 92,
+            quality_score: 88,
+            section_completeness: [
+                { section: '职业探索与岗位匹配', completeness: 95, issues: [] },
+                { section: '职业目标设定与职业路径规划', completeness: 90, issues: ['建议补充更多行业趋势分析'] },
+                { section: '行动计划与成果展示', completeness: 88, issues: ['学习路径可以更具体'] }
             ],
-            development_plan: [
-                '加强算法基础知识',
-                '参与实际项目开发',
-                '提升团队协作能力'
-            ]
+            suggestions: [{ type: '内容完善', priority: '中', suggestion: '在行动计划中添加具体的时间管理方法' }],
+            strengths: ['岗位匹配分析详细准确', '行动计划具体可执行', '职业路径规划清晰']
         };
     }
 }
@@ -700,6 +1151,11 @@ async function getJobDetail(jobIdOrName) {
     return await api.postToAI('/job/profile/detail', { job_id: jobIdOrName });
 }
 
+// app.js 调用的封装：获取岗位详细画像
+async function getJobProfileDetail(jobIdOrName, byName = false) {
+    return await api.postToAI('/job/profile/detail', { job_id: jobIdOrName });
+}
+
 // 4.3 获取岗位关联图谱
 async function getJobRelationGraph(jobId, graphType = 'all') {
     return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
@@ -719,6 +1175,11 @@ async function getJobAiGenerateResult(taskId) {
     return await api.postToAI('/job/ai-generate-result', { task_id: taskId });
 }
 
+// app.js 调用的别名
+async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 50) {
+    return await jobAiGenerateProfile(jobName, jobDescriptions, sampleSize);
+}
+
 // 搜索岗位（使用 4.1 带 keyword）
 async function searchJobs(keyword, page = 1, size = 20) {
     return await getJobProfiles(page, size, keyword);
@@ -731,63 +1192,99 @@ async function getAbilityProfile(userId) {
     return await api.post('/student/ability-profile', { user_id: userId });
 }
 
-// ==================== 人岗匹配模块 ====================
-
-// 获取推荐岗位
-async function getRecommendedJobs(userId, topN = 10) {
-    return await api.post('/matching/recommend-jobs', {
-        user_id: userId,
-        top_n: topN
-    });
+// AI 生成能力画像（data_source: 'profile' | 'resume'）
+async function aiGenerateAbilityProfile(userId, dataSource = 'profile') {
+    return await api.post('/student/ai-generate-profile', { user_id: userId, data_source: dataSource });
 }
 
-// 人岗匹配分析
-async function analyzeJobMatch(userId, jobName) {
+// 更新能力画像
+async function updateAbilityProfile(userId, updates) {
+    return await api.post('/student/update-profile', { user_id: userId, updates });
+}
+
+// ==================== 人岗匹配模块 ====================
+
+// 获取推荐岗位（支持 filters: cities, salary_min, industries）
+async function getRecommendedJobs(userId, topN = 10, filters = {}) {
+    const body = { user_id: userId, top_n: topN };
+    if (filters && Object.keys(filters).length) body.filters = filters;
+    return await api.post('/matching/recommend-jobs', body);
+}
+
+// 人岗匹配分析（API 使用 job_id）
+async function analyzeJobMatch(userId, jobId) {
     return await api.post('/matching/analyze', {
         user_id: userId,
-        job_name: jobName
+        job_id: jobId
     });
 }
 
 // 批量匹配分析
-async function batchAnalyze(userId, jobNames) {
+async function batchAnalyze(userId, jobIds) {
     return await api.post('/matching/batch-analyze', {
         user_id: userId,
-        job_names: jobNames
+        job_ids: jobIds
     });
 }
 
-// ==================== 职业规划报告模块 ====================
+// ==================== 职业规划报告模块 (API 7.x) ====================
 
-// 生成职业规划报告
-async function generateCareerReport(userId) {
-    return await api.post('/career/generate-report', { user_id: userId });
+// 7.1 生成职业规划报告
+async function generateCareerReport(userId, options = {}) {
+    return await api.post('/career/generate-report', {
+        user_id: userId,
+        target_jobs: options.target_jobs || [],
+        preferences: options.preferences || {}
+    });
 }
 
-// 获取报告生成状态
-async function getReportStatus(taskId) {
-    return await api.post('/career/report-status', { task_id: taskId });
+// 7.2 获取职业规划报告
+async function getCareerReport(userId, reportId) {
+    return await api.post('/career/report', { user_id: userId, report_id: reportId });
 }
 
-// 查看报告内容
+// 兼容旧调用：查看报告内容（优先使用 /career/report）
 async function getReportContent(reportId) {
-    return await api.post('/career/view-report', { report_id: reportId });
+    const userId = getCurrentUserId();
+    return await api.post('/career/report', { user_id: userId || 10001, report_id: reportId });
 }
 
-// 获取历史报告列表
-// 获取测评历史报告列表（GET，走测评服务 5001）
-async function getReportHistory(userId) {
-    return await api.get('/assessment/report-history', { user_id: userId });
+// 7.3 编辑职业规划报告
+async function editCareerReport(reportId, userId, edits) {
+    return await api.post('/career/edit-report', { report_id: reportId, user_id: userId, edits });
 }
 
-// 导出报告
-async function exportReport(reportId, format = 'pdf') {
+// 7.4 AI 润色报告
+async function polishCareerReport(reportId, polishOptions = {}) {
+    return await api.post('/career/ai-polish-report', {
+        report_id: reportId,
+        polish_options: { improve_readability: true, add_examples: true, enhance_actionability: true, check_completeness: true, ...polishOptions }
+    });
+}
+
+// 7.5 导出职业规划报告
+async function exportCareerReport(reportId, format = 'pdf') {
     return await api.post('/career/export-report', {
         report_id: reportId,
-        format: format,
+        format,
         include_sections: ['all'],
         template_style: 'professional'
     });
+}
+
+// 7.6 报告完整性检查
+async function checkCareerCompleteness(reportId) {
+    return await api.post('/career/check-completeness', { report_id: reportId });
+}
+
+// 7.7 获取历史职业规划报告列表
+async function getCareerReportHistory(userId, page = 1, size = 10) {
+    return await api.post('/career/report-history', { user_id: userId, page, size });
+}
+
+// 获取测评历史（用于测评报告，走 assessment 服务）
+async function getReportHistory(userId) {
+    return await api.get('/assessment/report-history', { user_id: userId });
 }
 
 // ==================== 知识库模块 ====================

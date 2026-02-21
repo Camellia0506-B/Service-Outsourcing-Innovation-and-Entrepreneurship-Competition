@@ -107,10 +107,12 @@
             var careerFields = (fields.length ? fields : careers.map(function(c) { return c.career; })).slice(0, 5);
 
             var traitsHtml = '';
+            var TRAIT_MAX_SCORE = 100;
             if (traits.length) {
                 traitsHtml = '<div class="report-section-card"><div class="report-section-title"><span class="dot"></span>性格特质分析 — ' + mbti + '</div><div class="report-trait-list">';
                 traits.forEach(function(t) {
-                    var pct = safePct(Math.min(100, (Number(t.score) || 0) * 4));
+                    var scoreNum = Number(t.score) || 0;
+                    var pct = safePct((scoreNum / TRAIT_MAX_SCORE) * 100);
                     var levelClass = pct >= 60 ? 'report-level-high' : pct >= 40 ? 'report-level-mid' : 'report-level-low';
                     var levelText = t.level || (pct >= 60 ? '偏强' : pct >= 40 ? '中等' : '偏低');
                     traitsHtml += '<div class="report-trait-item"><span class="report-trait-name">' + (t.trait_name || '') + '</span><div class="report-trait-bar-bg"><div class="report-trait-bar" style="width:' + pct + '%; background:linear-gradient(90deg,#667eea,#764ba2)"></div></div><span class="report-trait-score">' + (t.score || 0) + '分 <span class="report-level-tag ' + levelClass + '">' + levelText + '</span></span></div>';
@@ -152,7 +154,7 @@
             var abilityLabels = allAbilities.map(function(a) { return a.ability; });
             var abilityValues = allAbilities.map(function(a) { return safeAbilityScore(a.score); });
             var radarLabels = traits.map(function(t) { return t.trait_name; });
-            var radarValues = traits.map(function(t) { return Math.min(100, toNum(t.score) * 4); });
+            var radarValues = traits.map(function(t) { return safePct(toNum(t.score)); });
             var colors = ['#e94560', '#f5a623', '#667eea', '#48bb78', '#4facfe', '#a8dadc'];
 
             if (typeof Chart !== 'undefined') {
