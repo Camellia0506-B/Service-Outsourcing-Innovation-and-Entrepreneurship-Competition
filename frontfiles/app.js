@@ -1881,35 +1881,97 @@ class CareerPlanningApp {
         }
     }
 
-    // 渲染岗位关联图谱（垂直晋升 + 换岗路径，至少5岗位各≥2条换岗路径）
+    // 渲染岗位关联图谱（垂直晋升 + 换岗路径 + 可操作建议，对应高校学生痛点）
     renderJobRelationGraph(data, container) {
-        let html = `<h4>岗位关联图谱 · ${data.center_job?.job_name || '目标岗位'}</h4>`;
+        const jobName = data.center_job?.job_name || '目标岗位';
+        let html = `
+            <div class="graph-header">
+                <h3 class="graph-title">岗位关联图谱</h3>
+                <span class="graph-subtitle">${jobName}</span>
+            </div>`;
 
+        // 自我认知提示（痛点：自我认知模糊）
+        if (data.self_check && data.self_check.length) {
+            html += `
+            <section class="graph-section graph-section-self">
+                <div class="graph-section-header">
+                    <span class="graph-section-icon">🔍</span>
+                    <h4 class="graph-section-title">选择前先问自己</h4>
+                </div>
+                <ul class="graph-self-check-list">`;
+            data.self_check.forEach(q => { html += `<li>${q}</li>`; });
+            html += `</ul></section>`;
+        }
+
+        // 垂直晋升路径（独立区块）
         if (data.vertical_graph && data.vertical_graph.nodes && data.vertical_graph.nodes.length > 0) {
-            html += `<h5>📈 垂直晋升路径</h5><div class="graph-vertical">`;
+            html += `
+            <section class="graph-section graph-section-vertical">
+                <div class="graph-section-header">
+                    <span class="graph-section-icon">📈</span>
+                    <h4 class="graph-section-title">垂直晋升路径</h4>
+                    <span class="graph-section-desc">同一岗位由初级到高级的职业发展</span>
+                </div>
+                <div class="graph-vertical">`;
             data.vertical_graph.nodes.forEach((node, i) => {
                 const desc = node.desc ? `<span class="node-desc">${node.desc}</span>` : '';
                 html += `<div class="graph-node graph-node-v"><span class="node-level">L${node.level || i + 1}</span><span class="node-name">${node.job_name}</span>${desc}</div>`;
                 if (i < data.vertical_graph.nodes.length - 1) html += `<div class="graph-arrow">↓</div>`;
             });
-            html += `</div>`;
+            html += `</div></section>`;
         }
 
+        // 横向换岗路径（独立区块，与垂直分隔）
         const paths = data.transfer_graph?.paths || data.transfer_graph?.edges || [];
         if (paths.length > 0) {
-            html += `<h5>🔄 换岗路径图谱</h5><div class="graph-transfer">`;
+            html += `
+            <section class="graph-section graph-section-transfer">
+                <div class="graph-section-header">
+                    <span class="graph-section-icon">🔄</span>
+                    <h4 class="graph-section-title">横向换岗路径</h4>
+                    <span class="graph-section-desc">可转岗方向及可执行建议</span>
+                </div>
+                <div class="graph-transfer">`;
             paths.forEach(p => {
                 const pathText = p.path || (p.from && p.to ? `${p.from}→${p.to}` : '-');
                 const reason = p.reason ? `<span class="path-reason">${p.reason}</span>` : '';
-                html += `<div class="transfer-path-item"><span class="path-text">${pathText}</span>${reason}</div>`;
+                let actionsHtml = '';
+                if (p.actions && Array.isArray(p.actions)) {
+                    actionsHtml = `<div class="path-block path-actions"><span class="path-block-label">具体行动</span><ul>${p.actions.map(a => `<li>${a}</li>`).join('')}</ul></div>`;
+                }
+                const validateHtml = p.validate ? `<div class="path-block path-validate"><span class="path-block-label">验证方式</span><span>${p.validate}</span></div>` : '';
+                const risksHtml = p.risks ? `<div class="path-block path-risks"><span class="path-block-label">注意事项</span><span>${p.risks}</span></div>` : '';
+                html += `<div class="transfer-path-item"><div class="path-main"><span class="path-text">${pathText}</span>${reason}</div>${actionsHtml}${validateHtml}${risksHtml}</div>`;
             });
-            html += `</div>`;
+            html += `</div></section>`;
         } else if (data.transfer_graph?.nodes?.length) {
-            html += `<h5>🔄 可转岗岗位</h5><div class="graph-nodes">`;
+            html += `
+            <section class="graph-section graph-section-transfer">
+                <div class="graph-section-header">
+                    <span class="graph-section-icon">🔄</span>
+                    <h4 class="graph-section-title">可转岗岗位</h4>
+                </div>
+                <div class="graph-nodes">`;
             data.transfer_graph.nodes.forEach(node => {
-                html += `<div class="graph-node">${node.job_name}</div>`;
+                html += `<div class="graph-node graph-node-tag">${node.job_name}</div>`;
             });
-            html += `</div>`;
+            html += `</div></section>`;
+        }
+
+        // 规划落地指南
+        if (data.action_guide) {
+            const ag = data.action_guide;
+            html += `
+            <section class="graph-section graph-section-guide">
+                <div class="graph-section-header">
+                    <span class="graph-section-icon">📋</span>
+                    <h4 class="graph-section-title">规划落地与调整建议</h4>
+                </div>
+                <div class="graph-action-guide">`;
+            if (ag.validate) html += `<div class="guide-item"><span class="guide-label">验证规划</span><span class="guide-text">${ag.validate}</span></div>`;
+            if (ag.adjust) html += `<div class="guide-item"><span class="guide-label">遇挫调整</span><span class="guide-text">${ag.adjust}</span></div>`;
+            if (ag.reality) html += `<div class="guide-item"><span class="guide-label">分辨真实需求</span><span class="guide-text">${ag.reality}</span></div>`;
+            html += `</div></section>`;
         }
 
         container.innerHTML = html;

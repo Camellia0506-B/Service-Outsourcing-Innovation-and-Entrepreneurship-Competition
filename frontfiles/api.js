@@ -221,10 +221,12 @@ class API {
                             edges: []
                         },
                         transfer_graph: {
-                            nodes: trans.slice(0, 5).map(t => ({ job_id: t.to, job_name: t.path.split('→')[1] || t.to })),
+                            nodes: trans.slice(0, 5).map(t => ({ job_id: t.to, job_name: (t.path || '').split('→')[1] || t.to })),
                             edges: trans,
                             paths: trans
-                        }
+                        },
+                        self_check: graphData.selfCheck,
+                        action_guide: graphData.actionGuide
                     }
                 };
             case '/job/ai-generate-profile':
@@ -680,32 +682,80 @@ class API {
             },
             transfer: {
                 'job_001': [
-                    { from: 'job_001', to: 'job_010', path: '算法工程师→AI应用工程师', reason: '算法基础+工程能力' },
-                    { from: 'job_001', to: 'job_004', path: '算法工程师→数据分析师', reason: '数据建模与统计基础' },
-                    { from: 'job_001', to: 'job_005', path: '算法工程师→产品经理', reason: '对AI产品理解深入' }
+                    { from: 'job_001', to: 'job_010', path: '算法工程师→AI应用工程师', reason: '算法基础+工程能力',
+                      actions: ['补充大模型API调用与Prompt工程实战', '完成1个RAG/Agent小项目放GitHub', '关注通义/文心等国产模型文档'],
+                      validate: '暑期投AI应用岗实习，用实际项目验证兴趣与适配度',
+                      risks: 'AI岗门槛高、迭代快，需持续学习；遇挫折可先做算法/数据岗积累' },
+                    { from: 'job_001', to: 'job_004', path: '算法工程师→数据分析师', reason: '数据建模与统计基础',
+                      actions: ['强化SQL与业务指标拆解', '做2-3份业务分析报告', '学Tableau/帆软等可视化'],
+                      validate: '先做数据实习或课程项目，确认是否更喜欢业务侧',
+                      risks: '薪资与算法岗有落差，需评估职业优先级' },
+                    { from: 'job_001', to: 'job_005', path: '算法工程师→产品经理', reason: '对AI产品理解深入',
+                      actions: ['参与产品需求评审，积累PRD阅读经验', '产出1份AI产品竞品分析', '学习Axure/Figma画原型'],
+                      validate: '做产品实习或校园项目PM，验证沟通与决策偏好' }
                 ],
                 'job_002': [
-                    { from: 'job_002', to: 'job_005', path: '前端工程师→产品经理', reason: '用户视角、交互理解' },
-                    { from: 'job_002', to: 'job_007', path: '前端工程师→UI/UX设计师', reason: '视觉与交互能力' },
-                    { from: 'job_002', to: 'job_003', path: '前端工程师→全栈/后端', reason: '技术栈延伸' }
+                    { from: 'job_002', to: 'job_005', path: '前端工程师→产品经理', reason: '用户视角、交互理解',
+                      actions: ['整理做过的页面，提炼用户痛点与改进点', '参与1次完整需求评审', '学习产品思维课程（如人人都是产品经理）'],
+                      validate: '担任校园/课设项目PM，验证是否享受统筹与决策',
+                      risks: 'PM竞争激烈，需突出技术+产品双重背景' },
+                    { from: 'job_002', to: 'job_007', path: '前端工程师→UI/UX设计师', reason: '视觉与交互能力',
+                      actions: ['系统学习Figma/Sketch，输出1套完整设计稿', '学习设计规范（Material/Apple HIG）', '做设计练习并收集反馈'],
+                      validate: '接1-2个小项目设计需求，验证是否更喜欢视觉创作' },
+                    { from: 'job_002', to: 'job_003', path: '前端工程师→全栈/后端', reason: '技术栈延伸',
+                      actions: ['选一门后端语言（Node/Java/Go）系统学习', '独立完成前后端联调小项目', '了解数据库与API设计'],
+                      validate: '做全栈或后端实习，确认技术深度偏好' }
                 ],
                 'job_003': [
-                    { from: 'job_003', to: 'job_009', path: '后端工程师→运维/DevOps', reason: '系统与运维关联' },
-                    { from: 'job_003', to: 'job_005', path: '后端工程师→产品/技术PM', reason: '业务理解+技术背景' }
+                    { from: 'job_003', to: 'job_009', path: '后端工程师→运维/DevOps', reason: '系统与运维关联',
+                      actions: ['学习Docker/K8s基础，本地部署应用', '参与线上问题排查1-2次', '了解CI/CD流程'],
+                      validate: '争取运维/基础架构实习，体验7×24与稳定性压力',
+                      risks: '运维需承担on-call，确认抗压与作息偏好' },
+                    { from: 'job_003', to: 'job_005', path: '后端工程师→产品/技术PM', reason: '业务理解+技术背景',
+                      actions: ['主动参与需求评审，提技术可行性建议', '写1份技术方案文档', '学习产品方法论'],
+                      validate: '做技术PM或产品实习，验证沟通与推动能力' }
                 ],
                 'job_004': [
-                    { from: 'job_004', to: 'job_001', path: '数据分析师→算法工程师', reason: '数据基础+建模能力' },
-                    { from: 'job_004', to: 'job_012', path: '数据分析师→咨询顾问', reason: '商业分析与报告' },
-                    { from: 'job_004', to: 'job_005', path: '数据分析师→产品经理', reason: '数据驱动决策' }
+                    { from: 'job_004', to: 'job_001', path: '数据分析师→算法工程师', reason: '数据基础+建模能力',
+                      actions: ['系统学习机器学习（吴恩达/李宏毅）', '完成Kaggle入门赛', '补充Python算法与模型调参'],
+                      validate: '做算法实习或课题，确认是否喜欢钻研模型',
+                      risks: '算法岗门槛高于分析岗，需提前半年以上准备' },
+                    { from: 'job_004', to: 'job_012', path: '数据分析师→咨询顾问', reason: '商业分析与报告',
+                      actions: ['练习结构化表达与PPT', '参与商赛或咨询Case练习', '积累行业研究报告阅读'],
+                      validate: '做咨询PTA或商赛，验证高压与客户沟通偏好' },
+                    { from: 'job_004', to: 'job_005', path: '数据分析师→产品经理', reason: '数据驱动决策',
+                      actions: ['用数据为产品提优化建议', '学习A/B实验与埋点', '产出1份数据驱动产品分析'],
+                      validate: '做数据产品或产品实习，验证决策与推动偏好' }
                 ],
                 'job_005': [
-                    { from: 'job_005', to: 'job_012', path: '产品经理→咨询顾问', reason: '战略与商业分析' },
-                    { from: 'job_005', to: 'job_002', path: '产品经理→前端/设计', reason: '转技术或设计方向' }
+                    { from: 'job_005', to: 'job_012', path: '产品经理→咨询顾问', reason: '战略与商业分析',
+                      actions: ['系统学习咨询框架（MECE、金字塔）', '参与商赛或Case Interview', '补充行业研究能力'],
+                      validate: '做咨询PTA，体验高强度出差与报告压力',
+                      risks: '咨询校招名额少，需提前积累实习' },
+                    { from: 'job_005', to: 'job_002', path: '产品经理→前端/设计', reason: '转技术或设计方向',
+                      actions: ['评估技术/设计兴趣与天赋', '系统学习前端或设计工具', '用业余项目验证动手能力'],
+                      validate: '先做兼职或自由项目，确认转岗可行性' }
                 ],
                 'job_006': [
-                    { from: 'job_006', to: 'job_011', path: '电池工程师→嵌入式工程师', reason: '硬件与BMS相关' },
-                    { from: 'job_006', to: 'job_003', path: '电池工程师→软件/后端', reason: '跨领域技术转岗' }
+                    { from: 'job_006', to: 'job_011', path: '电池工程师→嵌入式工程师', reason: '硬件与BMS相关',
+                      actions: ['补充C/嵌入式、RTOS', '做1个嵌入式小项目', '了解BMS软硬件接口'],
+                      validate: '投嵌入式实习，验证软硬件结合偏好',
+                      risks: '新能源热度高但波动大，关注行业周期' },
+                    { from: 'job_006', to: 'job_003', path: '电池工程师→软件/后端', reason: '跨领域技术转岗',
+                      actions: ['系统学习一门编程语言', '完成1个完整软件项目', '了解软件工程流程'],
+                      validate: '做软件实习，确认是否更适合纯软件方向' }
                 ]
+            },
+            selfCheck: [
+                '我是否清楚自己的兴趣点（技术深度 vs 与人打交道）？',
+                '我是否做过实习/项目验证过这个方向？',
+                '热门行业（AI/新能源）是真实兴趣还是跟风？',
+                '遇到求职挫折时，我是否有Plan B？'
+            ],
+            actionGuide: {
+                validate: '建议：至少1段实习或2个实战项目验证规划，避免纸上谈兵',
+                adjust: '遇挫时：不要全盘否定，可先降级目标（如大厂→中厂）、积累经验再调整',
+                reality: '新兴领域（AI/新能源）：区分「真实需求」与「噱头」，多看JD与行业报告'
             }
         };
     }
