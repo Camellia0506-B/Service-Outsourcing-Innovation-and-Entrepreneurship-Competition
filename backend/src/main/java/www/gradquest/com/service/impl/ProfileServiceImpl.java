@@ -227,26 +227,21 @@ public class ProfileServiceImpl implements ProfileService {
                 profile = new UserProfile();
                 profile.setUserId(userId);
             }
+            // 新简历解析结果覆盖原有档案（不再仅填充空字段）
             boolean profileChanged = false;
-            if (phone != null && (profile.getPhone() == null || profile.getPhone().isBlank())) {
+            if (phone != null && !phone.isBlank()) {
                 profile.setPhone(phone);
                 profileChanged = true;
             }
-            if (email != null && (profile.getEmail() == null || profile.getEmail().isBlank())) {
+            if (email != null && !email.isBlank()) {
                 profile.setEmail(email);
                 profileChanged = true;
             }
             profile.setUpdatedAt(LocalDateTime.now());
-            if (profileChanged) {
-                if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
-                else userProfileMapper.updateById(profile);
-            } else {
-                // 仍然刷新 updated_at
-                if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
-                else userProfileMapper.updateById(profile);
-            }
+            if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
+            else userProfileMapper.updateById(profile);
 
-            if (name != null && (user.getNickname() == null || user.getNickname().isBlank() || user.getNickname().startsWith("user_"))) {
+            if (name != null && !name.isBlank()) {
                 user.setNickname(name);
                 userMapper.updateById(user);
             }
@@ -284,24 +279,37 @@ public class ProfileServiceImpl implements ProfileService {
                 profileProjectMapper.insert(pp);
             }
 
-            // 构建 parsed_data 供 resume-parse-result 返回
+            // 构建 parsed_data 供 resume-parse-result 返回（结构与前端 transformParsedResumeData 兼容）
             Map<String, Object> parsed = new LinkedHashMap<>();
             Map<String, Object> basic = new LinkedHashMap<>();
             basic.put("name", name != null ? name : "");
+            basic.put("nickname", name != null ? name : "");
             basic.put("phone", phone != null ? phone : "");
             basic.put("email", email != null ? email : "");
             parsed.put("basic_info", basic);
-            parsed.put("education", toEducationMap(profile));
+            parsed.put("education", List.of(toEducationMap(profile)));
             parsed.put("skills", parsedSkills.stream().map(s -> Map.<String, Object>of("category", s.getCategory(), "items", parseJsonList(s.getItems()))).collect(Collectors.toList()));
             parsed.put("internships", parsedInterns.stream().map(i -> Map.of("company", nullToEmpty(i.getCompany()), "position", nullToEmpty(i.getPosition()), "start_date", nullToEmpty(i.getStartDate()), "end_date", nullToEmpty(i.getEndDate()), "description", nullToEmpty(i.getDescription()))).collect(Collectors.toList()));
             parsed.put("projects", parsedProjs.stream().map(p -> Map.<String, Object>of("name", nullToEmpty(p.getName()), "role", nullToEmpty(p.getRole()), "start_date", nullToEmpty(p.getStartDate()), "end_date", nullToEmpty(p.getEndDate()), "description", nullToEmpty(p.getDescription()), "tech_stack", parseJsonList(p.getTechStack()))).collect(Collectors.toList()));
             task.setStatus("completed");
             task.setParsedData(JSON.writeValueAsString(parsed));
             task.setConfidenceScore(java.math.BigDecimal.valueOf(0.85));
-            task.setSuggestions(JSON.writeValueAsString(List.of("建议补充GPA信息", "实习经历描述可以更具体")));
+            List<String> suggestions = new ArrayList<>();
+            if (text == null || text.isBlank()) {
+                suggestions.add("未能从PDF提取文本。若为图片型/扫描版PDF，请安装Tesseract及chi_sim语言包以支持OCR，或使用Word重新导出为纯文本PDF");
+            } else {
+                suggestions.add("建议补充GPA信息");
+                suggestions.add("实习经历描述可以更具体");
+            }
+            task.setSuggestions(JSON.writeValueAsString(suggestions));
             resumeParseTaskMapper.updateById(task);
         } catch (Exception e) {
             task.setStatus("failed");
+            try {
+                task.setSuggestions(JSON.writeValueAsString(List.of("解析异常: " + (e.getMessage() != null ? e.getMessage() : "未知错误"))));
+            } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+                task.setSuggestions("[\"解析异常\"]");
+            }
             resumeParseTaskMapper.updateById(task);
         }
         return UploadResumeResponse.builder().taskId(taskId).status("processing").build();
@@ -485,12 +493,8 @@ public class ProfileServiceImpl implements ProfileService {
                 ? normalizeTextForParse(educationBlock)
                 : null;
 
-        // 若历史数据为明显错误内容（竞赛/奖项/全国/第X届等），允许覆盖为新解析结果
-        java.util.function.Predicate<String> isBadSchool = (s) -> s == null || s.isBlank() || !isValidSchool(s);
-        java.util.function.Predicate<String> isBadMajor = (s) -> s == null || s.isBlank() || !isValidMajor(s) || isAwardOrPolitical(s);
-
         // 学校：优先在教育背景区块内匹配，排除竞赛、奖项中的"大学"字样
-        if (isBadSchool.test(profile.getSchool())) {
+        if (true) {
             String school = null;
             // 策略1：先尝试在教育背景区块内查找（更准确）
             if (eduNormalized != null && !eduNormalized.isEmpty()) {
@@ -557,7 +561,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (school != null && isValidSchool(school)) profile.setSchool(school.trim());
         }
         // 专业：匹配"XX专业"、"计算机科学与技术"等
-        if (isBadMajor.test(profile.getMajor())) {
+        if (true) {
             String major = matchAfterKeyword(normalized, "(所学专业|专业|Major)\\s*[:：]\\s*([^\\s]{2,40})");
             if (major != null) major = major.replaceAll("专业$", "").trim();
             if (major == null || !isValidMajor(major)) {
@@ -574,7 +578,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (major != null && isValidMajor(major)) profile.setMajor(major.trim());
         }
         // 学历
-        if (profile.getDegree() == null || profile.getDegree().isBlank()) {
+        {
             String degree = matchAfterKeyword(normalized, "(学历|学位|Degree)\\s*[:：]\\s*([^\\s]{2,20})");
             if (degree == null || isAwardOrPolitical(degree)) {
                 if (normalized.contains("研究生") || normalized.contains("硕士")) degree = "硕士";

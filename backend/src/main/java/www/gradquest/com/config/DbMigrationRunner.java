@@ -36,14 +36,14 @@ public class DbMigrationRunner implements ApplicationRunner {
              Statement st = conn.createStatement()) {
             try (ResultSet rs = st.executeQuery(checkSql)) {
                 if (rs.next() && rs.getInt(1) > 0) {
-                    log.info("[DbMigration] profile_projects.tech_stack 已存在，跳过迁移");
+                    log.info("[DbMigration] profile_projects.tech_stack already exists, skip");
                     return;
                 }
             }
             st.executeUpdate(alterSql);
-            log.info("[DbMigration] 已为 profile_projects 添加字段 tech_stack");
+            log.info("[DbMigration] Added column profile_projects.tech_stack");
         } catch (Exception e) {
-            log.warn("[DbMigration] 迁移执行异常（若表或字段已存在可忽略）: {}", e.getMessage());
+            log.warn("[DbMigration] Migration skipped or failed: {}", e.getMessage());
         }
     }
 }

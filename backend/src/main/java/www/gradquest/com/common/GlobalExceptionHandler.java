@@ -3,6 +3,7 @@ package www.gradquest.com.common;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
@@ -13,7 +14,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ApiResponse<Void> handleValidation(MethodArgumentNotValidException e) {
-        String msg = e.getBindingResult().getFieldError() != null ? e.getBindingResult().getFieldError().getDefaultMessage() : "参数错误";
+        FieldError fieldError = e.getBindingResult().getFieldError();
+        String msg = fieldError != null && fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "参数错误";
         return ApiResponse.badRequest(msg);
     }
 

@@ -41,7 +41,8 @@ public class PDFAgentController {
             return ApiResponse.badRequest("文件不能为空");
         }
 
-        if (!file.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
             return ApiResponse.badRequest("文件类型错误，仅支持 PDF 格式");
         }
 
@@ -87,8 +88,10 @@ public class PDFAgentController {
         if (request.getSessionId() == null || request.getSessionId().trim().isEmpty()) {
             return Flux.error(new IllegalArgumentException("session_id 不能为空，请先上传 PDF 文件"));
         }
+        String sessionId = request.getSessionId();
+        String question = request.getQuestion() != null ? request.getQuestion() : "";
 
-        return pdfAgentService.streamChat(request.getSessionId(), request.getQuestion())
+        return pdfAgentService.streamChat(sessionId, question)
                 .map(token -> ServerSentEvent.builder(token).event("token").build())
                 .concatWithValues(ServerSentEvent.builder("[DONE]").event("done").build())
                 .onErrorResume(e -> Flux.just(

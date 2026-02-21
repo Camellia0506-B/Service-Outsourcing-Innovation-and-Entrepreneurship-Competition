@@ -3,7 +3,7 @@ const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、个人档案等）
     assessmentBaseURL: 'http://127.0.0.1:5001/api/v1',  // AI 算法服务（职业测评 / 岗位画像），当前 Flask 日志显示运行在 5001 端口
     timeout: 30000,
-    mockMode: true   // 模拟模式：true=使用模拟数据（结果会随机变化），false=连接真实 AI 服务生成个性化报告
+    mockMode: false  // 模拟模式：false=使用真实后端（简历解析、档案等走 Java 5000；测评/岗位画像走 5001）
 };
 
 // API工具类
@@ -158,7 +158,7 @@ class API {
         } catch (error) {
             console.error('文件上传错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch'))
-                ? '无法连接后端，请确认已启动后端服务 (http://localhost:5000)'
+                ? '无法连接后端，请确认已启动 Java 后端 (http://localhost:5000/api/v1)，并在项目 backend 目录运行'
                 : (error.message || '上传失败');
             return { success: false, msg };
         }
@@ -189,7 +189,7 @@ class API {
             case '/profile/upload-resume':
                 return { success: true, data: { task_id: 'task_' + Date.now() }, msg: '简历上传成功' };
             case '/profile/resume-parse-result':
-                return { success: true, data: { status: 'completed', parsed_data: {} } };
+                return { success: true, data: { status: 'completed', parsed_data: null } };
             case '/assessment/questionnaire':
                 return { success: true, data: this.mockQuestions() };
             case '/assessment/submit':

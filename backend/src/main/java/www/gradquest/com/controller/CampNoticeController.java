@@ -1,6 +1,5 @@
 package www.gradquest.com.controller;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +9,6 @@ import www.gradquest.com.dto.NoticeListResponse;
 import www.gradquest.com.entity.NoticePlaygroundItem;
 import www.gradquest.com.service.CampNoticeService;
 
-import java.time.LocalDate;
 import java.util.List;
 
 /**

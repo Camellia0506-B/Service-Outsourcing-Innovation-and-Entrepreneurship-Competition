@@ -1,6 +1,10 @@
 spring:
   application:
     name: gradquest-backend
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/gradquest?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8
     username: gradquest
@@ -44,4 +48,6 @@ ai:
 
 logging:
   level:
-    com.zaxxer.hikari: DEBUG
+    root: INFO
+    com.zaxxer.hikari: WARN
+    org.apache.catalina: WARN
