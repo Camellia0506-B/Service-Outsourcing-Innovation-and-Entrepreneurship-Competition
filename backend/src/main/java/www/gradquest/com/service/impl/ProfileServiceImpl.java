@@ -685,10 +685,10 @@ public class ProfileServiceImpl implements ProfileService {
             }
             if (exp != null && !isAwardOrPolitical(exp)) profile.setExpectedGraduation(exp.trim());
         }
-        // GPA：支持 4.347/5 等形式
-        if (profile.getGpa() == null || profile.getGpa().isBlank()) {
-            Matcher gpaM = Pattern.compile("(?:GPA|绩点|平均绩点)\\s*[:：]?\\s*([\\d.]+)(?:/\\d+)?", Pattern.CASE_INSENSITIVE).matcher(normalized);
-            if (gpaM.find()) profile.setGpa(gpaM.group(1).trim());
+        // GPA：支持 3.8/4.0、4.347/5 等形式；新简历解析覆盖原值，与“新简历覆盖档案”一致
+        Matcher gpaM = Pattern.compile("(?:GPA|绩点|平均绩点)\\s*[:：]?\\s*([\\d.]+)(?:/\\d+)?", Pattern.CASE_INSENSITIVE).matcher(normalized);
+        if (gpaM.find()) {
+            profile.setGpa(gpaM.group(1).trim());
         }
     }
 

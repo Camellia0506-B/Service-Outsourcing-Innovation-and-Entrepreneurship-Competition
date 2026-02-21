@@ -1162,7 +1162,13 @@ class CareerPlanningApp {
                             const profileData = this.transformParsedResumeData(parsedData);
                             this.fillProfileFormFromResume(profileData);
                             await this.saveProfile();
-                            this.showToast('简历解析完成，档案信息已覆盖并保存', 'success');
+                            this.showToast('简历解析完成，档案已保存，正在重新生成能力画像…', 'success');
+                            // 用新档案重新生成能力画像，这样「能力画像」和「岗位匹配」会随新简历更新
+                            aiGenerateAbilityProfile(userId, 'profile').then((res) => {
+                                if (res.success) {
+                                    this.showToast('能力画像已更新，岗位匹配将基于新简历', 'success');
+                                }
+                            }).catch(() => {});
                         } catch (e) {
                             console.error('应用简历解析结果到表单时出错:', e);
                             this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');

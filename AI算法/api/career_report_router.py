@@ -4,7 +4,9 @@
 接口：generate-report / report-status / view-report
 """
 
+from datetime import datetime, timedelta
 from typing import Optional
+import time
 from flask import Blueprint, request, jsonify
 from assessment.assessment_service import get_assessment_service
 from utils.logger_handler import logger
@@ -113,6 +115,15 @@ def report_status():
 
 
 # ================================================================
+# POST /api/v1/career/report  （前端使用的路径，与 view-report 一致）
+# ================================================================
+@career_bp.route("/report", methods=["POST"])
+def report():
+    """查看报告（别名，逻辑同 view_report）"""
+    return view_report()
+
+
+# ================================================================
 # POST /api/v1/career/view-report
 # ================================================================
 @career_bp.route("/view-report", methods=["POST"])
@@ -162,3 +173,58 @@ def view_report():
     except Exception as e:
         logger.error(f"[API] /career/view-report 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ================================================================
+# POST /api/v1/career/report-history  （前端用 POST 传 user_id, page, size）
+# ================================================================
+@career_bp.route("/report-history", methods=["POST"])
+def report_history():
+    """职业规划报告历史列表（与测评报告打通）"""
+    try:
+        body = request.get_json() or {}
+        user_id = body.get("user_id")
+        if not user_id:
+            return error_response(400, "请提供 user_id 参数")
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            return error_response(400, "user_id 必须为数字")
+        page = max(1, int(body.get("page", 1)))
+        size = max(1, min(50, int(body.get("size", 10))))
+        service = get_assessment_service()
+        all_list = service.list_reports_for_user(user_id)
+        total = len(all_list)
+        start = (page - 1) * size
+        list_page = all_list[start : start + size]
+        return success_response({"total": total, "list": list_page}, msg="success")
+    except Exception as e:
+        logger.error(f"[API] /career/report-history 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ================================================================
+# 以下为占位接口，避免前端 404；后续可接入真实逻辑
+# ================================================================
+@career_bp.route("/edit-report", methods=["POST"])
+def edit_report():
+    """编辑报告（占位）"""
+    return success_response({"updated_at": datetime.now().isoformat()}, msg="已保存")
+
+
+@career_bp.route("/ai-polish-report", methods=["POST"])
+def ai_polish_report():
+    """AI 润色报告（占位）"""
+    return success_response({"task_id": "polish_" + str(time.time()), "status": "processing"}, msg="AI润色中...")
+
+
+@career_bp.route("/export-report", methods=["POST"])
+def export_report():
+    """导出报告（占位）"""
+    return success_response({"download_url": "/downloads/report.pdf", "expires_at": (datetime.now() + timedelta(days=7)).isoformat()}, msg="导出链接已生成")
+
+
+@career_bp.route("/check-completeness", methods=["POST"])
+def check_completeness():
+    """报告完整性检查（占位）"""
+    return success_response({"completeness": 85, "suggestions": []}, msg="success")

@@ -772,33 +772,44 @@ class JobMatchingService:
         self.job_profile_service = get_job_profile_service()
         self.student_ability_service = get_student_ability_service()
     
-    def recommend_jobs(self, user_id: int, top_n: int = 10, filters: dict = None) -> dict:
+    def recommend_jobs(self, user_id: int, top_n: int = 10, filters: dict = None, ability_profile: Optional[dict] = None) -> dict:
         """
         6.1 获取推荐岗位
         
         算法流程：
-        1. 获取学生能力画像
+        1. 获取学生能力画像（优先使用传入的 ability_profile）
         2. 获取所有岗位画像
         3. 逐一计算匹配度
         4. 排序返回TopN
         """
         # 获取学生能力画像
-        student_profile = self.student_ability_service.get_ability_profile(user_id)
+        student_profile = ability_profile or self.student_ability_service.get_ability_profile(user_id)
         if not student_profile:
             raise ValueError(f"用户{user_id}的能力画像不存在，请先生成")
         
-        # 获取所有岗位（从已生成的画像中）
-        all_jobs = self.job_profile_service._load_profiles_store()
+        # 获取所有岗位（从已生成的画像中，JobProfileService 实例的 profiles_store）
+        all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
         
         # 应用筛选条件
         if filters:
             all_jobs = self._apply_filters(all_jobs, filters)
         
         # 批量计算匹配度
+        def _job_loc(job: dict) -> str:
+            loc = (job.get("basic_info") or {}).get("work_locations")
+            if isinstance(loc, list) and len(loc) > 0:
+                return loc[0] if isinstance(loc[0], str) else str(loc[0])
+            return str(loc) if loc else ""
+
         recommendations = []
         for job_id, job_profile in all_jobs.items():
-            match_result = self.matching_engine.calculate_match(student_profile, job_profile)
-            
+            if not isinstance(job_profile, dict):
+                continue
+            try:
+                match_result = self.matching_engine.calculate_match(student_profile, job_profile)
+            except Exception as ex:
+                logger.warning("[Matching] 岗位 %s 匹配计算跳过: %s", job_id, ex)
+                continue
             recommendations.append({
                 "job_id": job_id,
                 "job_name": job_profile.get("job_name", ""),
@@ -808,10 +819,10 @@ class JobMatchingService:
                 "highlights": match_result["highlights"],
                 "gaps": match_result["gaps"],
                 "job_info": {
-                    "company": job_profile.get("basic_info", {}).get("company", ""),
-                    "location": job_profile.get("basic_info", {}).get("work_locations", [""])[0],
-                    "salary": job_profile.get("basic_info", {}).get("avg_salary", ""),
-                    "experience": job_profile.get("basic_info", {}).get("level", "")
+                    "company": (job_profile.get("basic_info") or {}).get("company", ""),
+                    "location": _job_loc(job_profile),
+                    "salary": (job_profile.get("basic_info") or {}).get("avg_salary", ""),
+                    "experience": (job_profile.get("basic_info") or {}).get("level", "")
                 }
             })
         
@@ -823,21 +834,25 @@ class JobMatchingService:
             "recommendations": recommendations[:top_n]
         }
     
-    def analyze_single_job(self, user_id: int, job_id: str) -> dict:
+    def analyze_single_job(self, user_id: int, job_id: str, ability_profile: Optional[dict] = None) -> dict:
         """
         6.2 获取单个岗位匹配分析
+        ability_profile: 可选，由调用方传入的能力画像，有则优先使用
         """
-        student_profile = self.student_ability_service.get_ability_profile(user_id)
+        student_profile = ability_profile or self.student_ability_service.get_ability_profile(user_id)
         if not student_profile:
-            raise ValueError(f"用户{user_id}的能力画像不存在")
+            raise ValueError(f"用户{user_id}的能力画像不存在，请先生成能力画像")
         
-        job_profiles = self.job_profile_service._load_profiles_store()
+        job_profiles = getattr(self.job_profile_service, "profiles_store", None) or {}
         if job_id not in job_profiles:
             raise ValueError(f"岗位{job_id}的画像不存在")
         
         job_profile = job_profiles[job_id]
         match_result = self.matching_engine.calculate_match(student_profile, job_profile)
-        
+        loc = (job_profile.get("basic_info") or {}).get("work_locations")
+        location_str = (loc[0] if isinstance(loc, list) and len(loc) > 0 else loc) or ""
+        if not isinstance(location_str, str):
+            location_str = str(location_str)
         return {
             "job_id": job_id,
             "job_name": job_profile.get("job_name", ""),
@@ -847,14 +862,14 @@ class JobMatchingService:
             "highlights": match_result["highlights"],
             "gaps": match_result["gaps"],
             "job_info": {
-                "company": job_profile.get("basic_info", {}).get("company", ""),
-                "location": job_profile.get("basic_info", {}).get("work_locations", [""])[0],
-                "salary": job_profile.get("basic_info", {}).get("avg_salary", ""),
-                "experience": job_profile.get("basic_info", {}).get("level", "")
+                "company": (job_profile.get("basic_info") or {}).get("company", ""),
+                "location": location_str,
+                "salary": (job_profile.get("basic_info") or {}).get("avg_salary", ""),
+                "experience": (job_profile.get("basic_info") or {}).get("level", "")
             }
         }
     
-    def batch_analyze(self, user_id: int, job_ids: List[str]) -> dict:
+    def batch_analyze(self, user_id: int, job_ids: List[str], ability_profile: Optional[dict] = None) -> dict:
         """
         6.3 批量匹配分析
         """
@@ -864,7 +879,7 @@ class JobMatchingService:
         
         for job_id in job_ids:
             try:
-                analysis = self.analyze_single_job(user_id, job_id)
+                analysis = self.analyze_single_job(user_id, job_id, ability_profile=ability_profile)
                 analyses.append(analysis)
                 
                 if analysis["match_score"] > best_score:

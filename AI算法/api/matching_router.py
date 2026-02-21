@@ -36,13 +36,15 @@ def error_response(code, msg, data=None):
 def recommend_jobs():
     """
     基于学生能力画像，推荐匹配的岗位
-    请求体：{ user_id, top_n, filters }
+    请求体：{ user_id, top_n, filters [, ability_profile] }
+    ability_profile: 可选，由 Java 传入的能力画像，有则优先使用
     """
     try:
         body = request.get_json(silent=True) or {}
         user_id = body.get("user_id")
         top_n = body.get("top_n", 10)
         filters = body.get("filters", {})
+        ability_profile = body.get("ability_profile")
 
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
@@ -51,7 +53,7 @@ def recommend_jobs():
             return error_response(400, "top_n 参数应在1-50之间")
 
         service = get_job_matching_service()
-        result = service.recommend_jobs(user_id, top_n, filters)
+        result = service.recommend_jobs(user_id, top_n, filters, ability_profile=ability_profile)
 
         logger.info(f"[API] 为用户{user_id}推荐{len(result['recommendations'])}个岗位")
         
@@ -72,12 +74,14 @@ def recommend_jobs():
 def analyze_job():
     """
     分析学生与指定岗位的匹配情况
-    请求体：{ user_id, job_id }
+    请求体：{ user_id, job_id [, ability_profile] }
+    ability_profile: 可选，由 Java 传入的能力画像数据，有则优先使用（避免本地存储不同步）
     """
     try:
         body = request.get_json(silent=True) or {}
         user_id = body.get("user_id")
         job_id = body.get("job_id")
+        ability_profile = body.get("ability_profile")
 
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
@@ -86,7 +90,7 @@ def analyze_job():
             return error_response(400, "请提供 job_id 参数")
 
         service = get_job_matching_service()
-        result = service.analyze_single_job(user_id, job_id)
+        result = service.analyze_single_job(user_id, job_id, ability_profile=ability_profile)
 
         logger.info(f"[API] 用户{user_id}与岗位{job_id}匹配度: {result['match_score']}分")
         
@@ -113,6 +117,7 @@ def batch_analyze():
         body = request.get_json(silent=True) or {}
         user_id = body.get("user_id")
         job_ids = body.get("job_ids", [])
+        ability_profile = body.get("ability_profile")
 
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
@@ -124,7 +129,7 @@ def batch_analyze():
             return error_response(400, "job_ids 数量不能超过20个")
 
         service = get_job_matching_service()
-        result = service.batch_analyze(user_id, job_ids)
+        result = service.batch_analyze(user_id, job_ids, ability_profile=ability_profile)
 
         logger.info(f"[API] 批量分析用户{user_id}与{len(job_ids)}个岗位的匹配")
         
