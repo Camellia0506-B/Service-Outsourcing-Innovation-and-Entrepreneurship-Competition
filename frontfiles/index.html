@@ -262,48 +262,127 @@
             </div>
         </div>
 
+        <!-- 背景层 -->
+        <div class="bg-layer">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+            <canvas id="particles"></canvas>
+        </div>
+
         <!-- 主页面 -->
         <div id="dashboardPage" class="page hidden">
-            <div class="dashboard-container">
-                <div class="welcome-section">
-                    <h2>欢迎, <span id="welcomeName"></span></h2>
-                    <p>让职业规划智能体帮助您规划职业发展路径</p>
+            <!-- Hero 区域 -->
+            <div class="hero-section">
+                <div class="hero-content">
+                    <div class="hero-left">
+                        <div class="hero-badge">职业规划智能体</div>
+                        <h1 class="hero-title">
+                            <span id="welcomeName"></span>，你的职业规划助手已就绪
+                        </h1>
+                        <p class="hero-subtitle">
+                            基于 Holland RIASEC × MBTI 双维度分析，为你量身定制职业发展路径。洞察行业趋势，做出更明智的每一个选择。
+                        </p>
+                        <div class="hero-chips">
+                            <div class="hero-chip">● 精准职业测评</div>
+                            <div class="hero-chip">● 智能岗位匹配</div>
+                            <div class="hero-chip">● 个性化规划报告</div>
+                        </div>
+                    </div>
+                    <div class="hero-right">
+                        <div class="stat-card">
+                            <div class="stat-number">10000+</div>
+                            <div class="stat-label">条岗位数据</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">100+</div>
+                            <div class="stat-label">覆盖岗位类型</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">90%+</div>
+                            <div class="stat-label">人岗匹配准确率</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分割标签 -->
+            <div class="section-divider">— 我的进度</div>
+
+            <!-- 主卡片区域 -->
+            <div class="main-cards">
+                <!-- 个人档案卡片 -->
+                <div class="main-card" data-action="profile">
+                    <div class="card-gradient card-gradient-1"></div>
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 14C9.33333 14 4 15.3333 4 18V20H20V18C20 15.3333 14.6667 14 12 14Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">完善个人档案</h3>
+                        <p class="card-description">填写您的教育背景、专业技能和项目经历，AI将为你构建完整的职业能力画像</p>
+                        <div class="card-status">
+                            <div class="status-left">
+                                <div class="status-value" id="profileCompleteness">0%</div>
+                            </div>
+                            <div class="status-right">
+                                <span class="status-badge">待完善</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="card-btn card-btn-primary">前往填写 →</button>
                 </div>
 
-                <div class="quick-stats">
-                    <div class="stat-card">
-                        <div class="stat-icon">📋</div>
-                        <h3>档案完整度</h3>
-                        <div class="stat-value" id="profileCompleteness">0%</div>
+                <!-- 职业测评卡片 -->
+                <div class="main-card" data-action="assessment">
+                    <div class="card-gradient card-gradient-2"></div>
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 15C15.866 15 19 11.866 19 8C19 4.13401 15.866 1 12 1C8.13401 1 5 4.13401 5 8C5 11.866 8.13401 15 12 15Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 15C12 15 15 21 15 21H9C9 21 12 15 12 15Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 9V11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 5V5.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">职业测评</h3>
+                        <p class="card-description">完成 Holland RIASEC × MBTI 双维度综合测评，深入了解您的职业兴趣与性格特质</p>
+                        <div class="card-status">
+                            <div class="status-left">
+                                <div class="status-value" id="assessmentStatus">未完成</div>
+                            </div>
+                            <div class="status-right">
+                                <span class="status-badge">待测评</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">✅</div>
-                        <h3>测评状态</h3>
-                        <div class="stat-value" id="assessmentStatus">未完成</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🎯</div>
-                        <h3>匹配岗位</h3>
-                        <div class="stat-value" id="matchedJobs">0</div>
-                    </div>
+                    <button class="card-btn card-btn-primary">开始测评 →</button>
                 </div>
 
-                <div class="action-cards">
-                    <div class="action-card" data-action="profile">
-                        <h3>📝 完善个人档案</h3>
-                        <p>填写您的教育背景、技能和经历</p>
-                        <button class="btn-secondary">前往填写</button>
+                <!-- 岗位匹配卡片 -->
+                <div class="main-card" data-action="matching">
+                    <div class="card-gradient card-gradient-3"></div>
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 4.10535 5.32387 6 4C7.89465 2.67613 10.1847 2 12 2C13.8153 2 16.1054 2.67613 18 4C19.8946 5.32387 21 7.61305 21 10Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">岗位匹配</h3>
+                        <p class="card-description">查看与您匹配度最高的相关岗位，获取人岗匹配度分析和个性化规划报告</p>
+                        <div class="card-status">
+                            <div class="status-left">
+                                <div class="status-value" id="matchedJobs">0</div>
+                            </div>
+                            <div class="status-right">
+                                <span class="status-badge">完成测评后解锁</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="action-card" data-action="assessment">
-                        <h3>🧭 职业测评</h3>
-                        <p>完成测评,了解您的职业倾向</p>
-                        <button class="btn-secondary">开始测评</button>
-                    </div>
-                    <div class="action-card" data-action="matching">
-                        <h3>🔍 岗位匹配</h3>
-                        <p>查看推荐岗位和匹配度分析</p>
-                        <button class="btn-secondary">查看匹配</button>
-                    </div>
+                    <button class="card-btn card-btn-primary">查看匹配 →</button>
                 </div>
             </div>
         </div>
@@ -680,5 +759,93 @@
     <script src="api.js?v=8&t=20240219"></script>
     <script src="app.js?v=8&t=20240219"></script>
     <link rel="stylesheet" href="styles.css?v=8&t=20240219">
+    
+    <!-- 粒子效果脚本 -->
+    <script>
+        // 粒子效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('particles');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // 粒子数组
+            const particles = [];
+            const particleCount = 40;
+            
+            // 创建粒子
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: -Math.random() * 0.5 - 0.2,
+                    size: Math.random() * 2 + 1,
+                    alpha: Math.random() * 0.5 + 0.3,
+                    pulse: Math.random() * Math.PI * 2
+                });
+            }
+            
+            // 动画循环
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 更新和绘制粒子
+                particles.forEach((p, i) => {
+                    // 更新位置
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    // 边界检测
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0) {
+                        p.y = canvas.height;
+                    }
+                    
+                    // 脉冲效果
+                    p.pulse += 0.03;
+                    p.alpha = 0.3 + Math.sin(p.pulse) * 0.2;
+                    
+                    // 绘制粒子
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(37, 99, 235, ${p.alpha})`;
+                    ctx.fill();
+                    
+                    // 绘制粒子间连线
+                    particles.forEach((otherP, j) => {
+                        if (i !== j) {
+                            const dx = p.x - otherP.x;
+                            const dy = p.y - otherP.y;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < 120) {
+                                const lineAlpha = (1 - distance / 120) * 0.2;
+                                ctx.beginPath();
+                                ctx.moveTo(p.x, p.y);
+                                ctx.lineTo(otherP.x, otherP.y);
+                                ctx.strokeStyle = `rgba(37, 99, 235, ${lineAlpha})`;
+                                ctx.lineWidth = 0.5;
+                                ctx.stroke();
+                            }
+                        }
+                    });
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 启动动画
+            animate();
+            
+            // 窗口大小调整
+            window.addEventListener('resize', function() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        });
+    </script>
 </body>
 </html>
