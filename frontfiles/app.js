@@ -134,12 +134,17 @@ class CareerPlanningApp {
 
         // 职业规划报告相关
         document.getElementById('generateReportBtn')?.addEventListener('click', () => {
-            this.generateReport();
+            const form = document.getElementById('reportPreferencesForm');
+            if (form) form.classList.toggle('hidden');
         });
-
-        document.getElementById('viewHistoryBtn')?.addEventListener('click', () => {
-            this.viewReportHistory();
+        document.getElementById('confirmGenerateBtn')?.addEventListener('click', () => this.startGenerateCareerReport());
+        document.getElementById('viewHistoryBtn')?.addEventListener('click', () => this.viewCareerReportHistory());
+        document.getElementById('closeHistoryBtn')?.addEventListener('click', () => {
+            document.getElementById('reportHistory')?.classList.add('hidden');
         });
+        document.getElementById('reportBackBtn')?.addEventListener('click', () => this.showReportGenerateArea());
+        document.getElementById('reportCheckCompletenessBtn')?.addEventListener('click', () => this.checkReportCompleteness());
+        document.getElementById('reportPolishBtn')?.addEventListener('click', () => this.polishCareerReport());
 
         // 岗位画像相关
         document.getElementById('jobProfileSearchBtn')?.addEventListener('click', () => {
@@ -242,7 +247,7 @@ class CareerPlanningApp {
                 await this.loadJobProfileData();
                 break;
             case 'report':
-                await this.loadReportData();
+                this.showReportGenerateArea();
                 break;
         }
     }
@@ -2193,67 +2198,69 @@ class CareerPlanningApp {
         `;
     }
 
-    // 加载职业规划报告数据（进入本页时尝试恢复上次的测评报告）
-    async loadReportData() {
-        const userId = getCurrentUserId();
-        if (!userId) return;
-        const reportId = this.getLastAssessmentReportId();
-        if (!reportId) return;
-        const contentDiv = document.getElementById('reportContent');
-        const result = await getAssessmentReport(userId, reportId);
-        if (result.success && result.data && result.data.status === 'completed') {
-            this.currentReportId = reportId;
-            this.renderReportContent(result.data);
-        }
+    // 显示报告生成入口区
+    showReportGenerateArea() {
+        document.getElementById('reportGenerateArea')?.classList.remove('hidden');
+        document.getElementById('reportGeneratingArea')?.classList.add('hidden');
+        document.getElementById('reportContentArea')?.classList.add('hidden');
     }
 
-    // 生成职业规划报告
-    async generateReport() {
+    // 显示报告生成中
+    showReportGeneratingArea() {
+        document.getElementById('reportGenerateArea')?.classList.add('hidden');
+        document.getElementById('reportGeneratingArea')?.classList.remove('hidden');
+        document.getElementById('reportContentArea')?.classList.add('hidden');
+    }
+
+    // 显示报告内容区
+    showReportContentArea() {
+        document.getElementById('reportGenerateArea')?.classList.add('hidden');
+        document.getElementById('reportGeneratingArea')?.classList.add('hidden');
+        document.getElementById('reportContentArea')?.classList.remove('hidden');
+    }
+
+    // 开始生成职业规划报告（API 7.1）
+    async startGenerateCareerReport() {
         const userId = getCurrentUserId();
-        
-        if (!confirm('生成职业规划报告需要几分钟时间，确定要开始吗？')) {
+        if (!userId) {
+            this.showToast('请先登录', 'error');
             return;
         }
-
-        const contentDiv = document.getElementById('reportContent');
-        contentDiv.innerHTML = '<div class="loading-message">正在生成报告，请稍候...</div>';
-
-        const result = await generateCareerReport(userId);
-
-        if (result.success) {
-            this.showToast('报告生成中...', 'success');
-            
-            // 轮询获取报告状态
-            this.pollReportStatus(result.data.task_id);
+        const prefs = {
+            career_goal: document.getElementById('prefCareerGoal')?.value || '',
+            work_location: document.getElementById('prefWorkLocation')?.value?.trim() || '',
+            salary_expectation: document.getElementById('prefSalary')?.value || '',
+            work_life_balance: document.getElementById('prefWorkLifeBalance')?.value || ''
+        };
+        const preferences = Object.fromEntries(Object.entries(prefs).filter(([, v]) => v));
+        this.showReportGeneratingArea();
+        const result = await generateCareerReport(userId, { preferences });
+        if (result.success && result.data?.report_id) {
+            this.pollCareerReportReady(userId, result.data.report_id);
         } else {
-            contentDiv.innerHTML = '<div class="hint-text">生成失败: ' + result.msg + '</div>';
+            this.showReportGenerateArea();
+            this.showToast(result.msg || '生成失败', 'error');
         }
     }
 
-    // 轮询报告生成状态
-    async pollReportStatus(taskId, maxAttempts = 20) {
+    // 轮询职业规划报告就绪（API 7.2 轮询直到 status=completed）
+    async pollCareerReportReady(userId, reportId, maxAttempts = 20) {
         let attempts = 0;
-        const contentDiv = document.getElementById('reportContent');
-
         const poll = async () => {
             if (attempts >= maxAttempts) {
-                contentDiv.innerHTML = '<div class="hint-text">生成超时，请稍后查看历史报告</div>';
+                this.showReportGenerateArea();
+                this.showToast('生成超时，请稍后查看历史报告', 'error');
                 return;
             }
-
-            const result = await getReportStatus(taskId);
-
-            if (result.success) {
+            const result = await getCareerReport(userId, reportId);
+            if (result.success && result.data) {
                 if (result.data.status === 'completed') {
+                    this.currentReportId = reportId;
+                    this.showReportContentArea();
+                    this.renderCareerReportContent(result.data);
                     this.showToast('报告生成完成！', 'success');
-                    
-                    // 加载报告内容
-                    this.loadReportContent(result.data.report_id);
-                } else if (result.data.status === 'failed') {
-                    contentDiv.innerHTML = '<div class="hint-text">生成失败，请重试</div>';
                 } else {
                     attempts++;
-                    contentDiv.innerHTML = `<div class="loading-message">正在生成报告... (${result.data.progress || 0}%)</div>`;
                     setTimeout(poll, 3000);
                 }
             } else {
@@ -2261,21 +2268,209 @@ class CareerPlanningApp {
                 setTimeout(poll, 3000);
             }
         };
-
         poll();
     }
 
-    // 加载职业规划报告内容（POST /career/view-report）
+    // 加载职业规划报告内容
     async loadReportContent(reportId) {
         const contentDiv = document.getElementById('reportContent');
+        const userId = getCurrentUserId();
         contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
-
-        const result = await getReportContent(reportId);
-
-        if (result.success) {
-            this.renderReportContent(result.data);
+        const result = await getCareerReport(userId || 10001, reportId);
+        if (result.success && result.data) {
+            this.currentReportId = reportId;
+            if (result.data.section_1_job_matching) {
+                this.showReportContentArea();
+                this.renderCareerReportContent(result.data);
+            } else {
+                this.showReportContentArea();
+                this.renderReportContent(result.data);
+            }
         } else {
-            contentDiv.innerHTML = '<div class="hint-text">加载失败</div>';
+            contentDiv.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '') + '</div>';
+        }
+    }
+
+    // 渲染职业规划报告内容（API 7.2 四部分结构）
+    renderCareerReportContent(data) {
+        const contentDiv = document.getElementById('reportContent');
+        const genTime = this.formatDateTime(data.generated_at || data.created_at);
+        const meta = data.metadata || {};
+        const s1 = data.section_1_job_matching || {};
+        const s2 = data.section_2_career_path || {};
+        const s3 = data.section_3_action_plan || {};
+        const s4 = data.section_4_evaluation || {};
+        const summary = data.summary || {};
+
+        let html = `<div class="career-report-wrap">`;
+
+        // 报告头部
+        html += `<div class="career-report-header">
+            <div class="career-report-tag">CAREER PLANNING REPORT</div>
+            <h3>职业规划报告</h3>
+            <p class="career-report-sub">基于能力画像与人岗匹配的个性化发展规划</p>
+            <div class="career-report-meta">
+                <span>生成时间 ${genTime}</span>
+                <span>完整度 ${meta.completeness ?? '—'}%</span>
+                <span>置信度 ${meta.confidence_score ? (meta.confidence_score * 100).toFixed(0) + '%' : '—'}</span>
+            </div>
+        </div>`;
+
+        // Section 1: 职业探索与岗位匹配
+        if (s1.title) {
+            const selfA = s1.self_assessment || {};
+            const recs = s1.recommended_careers || [];
+            const advice = s1.career_choice_advice || {};
+            html += `<section class="career-section career-section-1">
+                <h4 class="career-section-title"><span class="sec-icon">🎯</span>${s1.title}</h4>
+                <div class="career-self-assessment">
+                    <h5>自我认知总结</h5>
+                    <div class="self-grid">
+                        <div class="self-card"><h6>优势</h6><ul>${(selfA.strengths || []).map(s => `<li>${s}</li>`).join('')}</ul></div>
+                        <div class="self-card"><h6>兴趣</h6><ul>${(selfA.interests || []).map(i => `<li>${i}</li>`).join('')}</ul></div>
+                        <div class="self-card"><h6>价值观</h6><ul>${(selfA.values || []).map(v => `<li>${v}</li>`).join('')}</ul></div>
+                    </div>
+                </div>
+                <div class="career-recommended">
+                    <h5>推荐职业方向</h5>
+                    ${recs.map(rc => {
+                        const ma = rc.match_analysis || {};
+                        const mo = rc.market_outlook || {};
+                        const gaps = ma.gaps_and_solutions || [];
+                        const scoreHtml = (rc.match_score != null && rc.match_score !== '') ? `<span class="rec-score">${rc.match_score}分</span>` : '';
+                        return `<div class="rec-career-card">
+                            ${scoreHtml}
+                            <div class="rec-career-header"><span class="rec-name">${rc.career}</span></div>
+                            ${(ma.why_suitable || []).length ? `<div class="rec-why"><strong>适合原因：</strong>${ma.why_suitable.join('；')}</div>` : ''}
+                            ${mo.salary_range ? `<div class="rec-market">薪资区间：${mo.salary_range}</div>` : ''}
+                            ${gaps.length ? `<div class="rec-gaps"><strong>能力差距与提升：</strong><ul>${gaps.map(g => `<li>${g.gap} → ${g.solution}（${g.timeline}）</li>`).join('')}</ul></div>` : ''}
+                        </div>`;
+                    }).join('')}
+                </div>
+                ${advice.primary_recommendation ? `<div class="career-advice">
+                    <h5>职业选择建议</h5>
+                    <p><strong>首选：</strong>${advice.primary_recommendation}</p>
+                    <ul>${(advice.reasons || []).map(r => `<li>${r}</li>`).join('')}</ul>
+                    ${advice.alternative_option ? `<p><strong>备选：</strong>${advice.alternative_option}</p>` : ''}
+                    ${advice.risk_mitigation ? `<p class="risk-tip">${advice.risk_mitigation}</p>` : ''}
+                </div>` : ''}
+            </section>`;
+        }
+
+        // Section 2: 职业目标与路径
+        if (s2.title) {
+            const st = s2.short_term_goal || {};
+            const mt = s2.mid_term_goal || {};
+            const rm = s2.career_roadmap || {};
+            const trends = s2.industry_trends || {};
+            html += `<section class="career-section career-section-2">
+                <h4 class="career-section-title"><span class="sec-icon">📈</span>${s2.title}</h4>
+                <div class="career-goals">
+                    <div class="goal-card short"><h5>短期目标（1年内）</h5><p class="goal-timeline">${st.timeline || ''}</p><p class="goal-primary">${st.primary_goal || ''}</p>
+                        <ul>${(st.specific_targets || []).map(t => `<li>${t.target}（${t.deadline}）— ${t.metrics}</li>`).join('')}</ul>
+                    </div>
+                    <div class="goal-card mid"><h5>中期目标（3-5年）</h5><p class="goal-timeline">${mt.timeline || ''}</p><p class="goal-primary">${mt.primary_goal || ''}</p>
+                        <ul>${(mt.specific_targets || []).map(t => `<li>${t.target}（${t.deadline}）</li>`).join('')}</ul>
+                    </div>
+                </div>
+                ${rm.stages?.length ? `<div class="career-roadmap"><h5>职业发展路径：${rm.path_type || ''}</h5>
+                    <div class="roadmap-stages">${(rm.stages || []).map((s, i) => `
+                        <div class="roadmap-stage"><span class="stage-num">${i + 1}</span><div><strong>${s.stage}</strong>（${s.period}）<ul>${(s.key_responsibilities || []).map(r => `<li>${r}</li>`).join('')}</ul></div></div>
+                    `).join('')}</div>
+                    ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>转岗备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing}）— ${ap.reason}</li>`).join('')}</ul></div>` : ''}
+                </div>` : ''}
+                ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${trends.current_status || ''}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${t.trend}</strong>：${t.impact}；机会：${t.opportunity}</li>`).join('')}</ul><p class="outlook">${trends['5_year_outlook'] || ''}</p></div>` : ''}
+            </section>`;
+        }
+
+        // Section 3: 行动计划
+        if (s3.title) {
+            const stp = s3.short_term_plan || {};
+            const mp = stp.monthly_plans || [];
+            const lp = s3.learning_path || {};
+            const ash = s3.achievement_showcase || {};
+            html += `<section class="career-section career-section-3">
+                <h4 class="career-section-title"><span class="sec-icon">📋</span>${s3.title}</h4>
+                <div class="career-action-plan">
+                    <h5>短期行动计划：${stp.period || ''}</h5>
+                    <p class="plan-goal">${stp.goal || ''}</p>
+                    ${mp.map(m => `
+                        <div class="monthly-plan">
+                            <div class="plan-header"><span class="plan-month">${m.month}</span><span class="plan-focus">${m.focus || ''}</span></div>
+                            <ul>${(m.tasks || []).map(t => `<li><strong>${t.task}</strong>：${Array.isArray(t['具体行动']) ? t['具体行动'].join('；') : ''} — ${t['预期成果'] || ''}</li>`).join('')}</ul>
+                            <p class="plan-milestone">✓ ${m.milestone || ''}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                ${(lp.technical_skills || []).length ? `<div class="learning-path"><h5>学习路径</h5><ul>${(lp.technical_skills || []).map(sk => `<li><strong>${sk.skill_area}</strong>（${sk.current_level}→${sk.target_level}）${(sk.learning_resources || []).join('；')} — ${sk.timeline}</li>`).join('')}</ul></div>` : ''}
+                ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${v.goal || ''}</p><ul>${(v.actions || []).map(a => `<li>${a}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
+            </section>`;
+        }
+
+        // Section 4: 评估与调整
+        if (s4.title) {
+            const ev = s4.evaluation_system || {};
+            const adj = s4.adjustment_scenarios || [];
+            const rm = s4.risk_management || {};
+            html += `<section class="career-section career-section-4">
+                <h4 class="career-section-title"><span class="sec-icon">🔄</span>${s4.title}</h4>
+                <div class="evaluation-system">
+                    ${ev.monthly_review ? `<div class="eval-item"><span>${ev.monthly_review.frequency}</span> ${(ev.monthly_review.review_items || []).join('；')}</div>` : ''}
+                    ${ev.quarterly_review ? `<div class="eval-item"><span>${ev.quarterly_review.frequency}</span> ${(ev.quarterly_review.review_items || []).join('；')}</div>` : ''}
+                    ${ev.annual_review ? `<div class="eval-item"><span>${ev.annual_review.frequency}</span> ${(ev.annual_review.review_items || []).join('；')}</div>` : ''}
+                </div>
+                ${adj.length ? `<div class="adjustment-scenarios"><h5>调整场景</h5>${adj.map(a => `<div class="adj-card"><h6>${a.scenario}</h6><p>可能原因：${(a.possible_reasons || []).join('、')}</p><p>应对：${(a.adjustment_plan?.immediate_actions || []).join('；')}</p></div>`).join('')}</div>` : ''}
+                ${rm.identified_risks?.length ? `<div class="risk-management"><h5>风险管理</h5><ul>${(rm.identified_risks || []).map(r => `<li>${r.risk}（${r.probability}/${r.impact}）→ ${r.mitigation}</li>`).join('')}</ul><p>备选方案：${(rm.contingency_plans || []).join('；')}</p></div>` : ''}
+            </section>`;
+        }
+
+        // 总结
+        if (summary.key_takeaways?.length || summary.next_steps?.length || summary.motivational_message) {
+            html += `<section class="career-section career-summary">
+                <h4 class="career-section-title"><span class="sec-icon">✨</span>报告总结</h4>
+                ${summary.key_takeaways?.length ? `<div class="key-takeaways"><h5>核心要点</h5><ul>${summary.key_takeaways.map(k => `<li>${k}</li>`).join('')}</ul></div>` : ''}
+                ${summary.next_steps?.length ? `<div class="next-steps"><h5>下一步行动</h5><ul>${summary.next_steps.map(n => `<li>${n}</li>`).join('')}</ul></div>` : ''}
+                ${summary.motivational_message ? `<div class="motivational-msg">${summary.motivational_message}</div>` : ''}
+            </section>`;
+        }
+
+        html += `<div class="career-report-footer">本报告由 AI 职业规划智能体生成 · 仅供参考，具体决策请结合个人实际情况</div></div>`;
+
+        contentDiv.innerHTML = html;
+    }
+
+    // 完整性检查
+    async checkReportCompleteness() {
+        const id = this.currentReportId;
+        if (!id) return this.showToast('暂无报告', 'error');
+        const result = await checkCareerCompleteness(id);
+        if (result.success && result.data) {
+            const d = result.data;
+            let msg = `完整度 ${d.completeness_score}%，质量 ${d.quality_score}%。`;
+            if (d.suggestions?.length) msg += ' 建议：' + d.suggestions.map(s => s.suggestion).join('；');
+            this.showToast(msg, 'info');
+        }
+    }
+
+    // AI 润色
+    async polishCareerReport() {
+        const id = this.currentReportId;
+        if (!id) return this.showToast('暂无报告', 'error');
+        this.showToast('AI 润色中...', 'info');
+        const result = await polishCareerReport(id);
+        if (result.success) this.showToast('润色任务已提交', 'success');
+    }
+
+    // 导出职业规划报告 PDF
+    async exportCareerReportPdf() {
+        const id = this.currentReportId;
+        if (!id) return this.showToast('暂无报告', 'error');
+        const result = await exportCareerReport(id);
+        if (result.success && result.data?.download_url) {
+            window.open(result.data.download_url, '_blank');
+            this.showToast('导出成功', 'success');
+        } else {
+            this.showToast(result.msg || '导出失败', 'error');
         }
     }
 
@@ -2574,79 +2769,50 @@ class CareerPlanningApp {
         }
     }
 
-    // 查看历史报告
-    async viewReportHistory() {
-        console.log('查看历史报告被点击');
+    // 查看职业规划历史报告（API 7.7）
+    async viewCareerReportHistory() {
         const userId = getCurrentUserId();
         const historyDiv = document.getElementById('reportHistory');
         const listDiv = document.getElementById('historyList');
-        if (!historyDiv || !listDiv) {
-            console.warn('viewReportHistory: reportHistory 或 historyList 元素不存在');
-            return;
-        }
+        if (!historyDiv || !listDiv) return;
         if (!userId) {
             this.showToast('请先登录', 'error');
             return;
         }
-
         historyDiv.classList.remove('hidden');
         listDiv.innerHTML = '<div class="loading-message">加载历史报告中...</div>';
-
         try {
-            const result = await getReportHistory(userId);
-            console.log('历史报告接口原始 result:', result);
-            console.log('历史报告数据:', result.data);
-
-            const list = result.success && result.data
-                ? (Array.isArray(result.data) ? result.data : (result.data.list || result.data.reports || []))
-                : [];
-            console.log('解析后 list 条数:', list.length, 'list:', list);
-
+            const result = await getCareerReportHistory(userId);
+            const list = result.success && result.data ? (result.data.list || []) : [];
             if (list.length > 0) {
-                this.renderReportHistory(list);
-                historyDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                this.renderCareerReportHistory(list);
                 this.showToast('已加载 ' + list.length + ' 条历史报告', 'success');
             } else {
                 listDiv.innerHTML = '<div class="hint-text">暂无历史报告</div>';
             }
         } catch (e) {
-            console.error('查看历史报告失败', e);
             listDiv.innerHTML = '<div class="hint-text">加载失败，请稍后重试</div>';
         }
     }
 
-    // 渲染历史报告列表
-    renderReportHistory(reports) {
+    // 渲染职业规划历史报告列表
+    renderCareerReportHistory(reports) {
         const listDiv = document.getElementById('historyList');
         listDiv.innerHTML = '';
-
         reports.forEach(report => {
             const item = document.createElement('div');
-            item.className = 'history-item';
+            item.className = 'career-history-item';
             item.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; margin-bottom: 4px;">
-                            ${(report.holland_code || '') + (report.mbti ? ' · ' + report.mbti : '') || '职业测评报告'}
-                        </div>
-                        <div style="color: var(--text-secondary); font-size: 14px;">
-                            生成于 ${report.created_at || this.formatDateTime(report.created_at)}
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="color: var(--primary-color); font-weight: 600;">
-                            匹配度 ${report.match_score != null ? report.match_score : (report.completeness != null ? report.completeness : '—')}%
-                        </div>
-                    </div>
+                <div class="history-item-main">
+                    <div class="history-item-title">${report.primary_career || '职业规划报告'}</div>
+                    <div class="history-item-meta">${this.formatDateTime(report.created_at)}</div>
                 </div>
+                <div class="history-item-score">完整度 ${report.completeness ?? '—'}%</div>
             `;
-            
             item.addEventListener('click', () => {
-                this.loadAssessmentReportContent(report.report_id);
-                var historyEl = document.getElementById('reportHistory');
-                if (historyEl) historyEl.classList.add('hidden');
+                this.loadReportContent(report.report_id);
+                document.getElementById('reportHistory')?.classList.add('hidden');
             });
-
             listDiv.appendChild(item);
         });
     }

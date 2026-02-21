@@ -581,22 +581,92 @@
         </div>
 
         <!-- 职业规划报告页面 -->
-        <div id="reportPage" class="page hidden">
+        <div id="reportPage" class="page hidden report-page">
+            <div class="report-title-bar">
+                <h2>职业规划报告</h2>
+            </div>
             <div class="report-container">
-                <h2>职业测评报告</h2>
-                
-                <div class="report-actions">
-                    <button id="generateReportBtn" class="btn-primary">生成新报告</button>
-                    <button id="viewHistoryBtn" class="btn-secondary">查看历史报告</button>
+                <div class="report-page-header">
+                    <p class="report-page-desc">AI 为您生成个性化职业生涯发展规划，含岗位匹配、目标设定、行动计划与动态调整机制</p>
                 </div>
 
-                <div id="reportContent" class="report-content">
-                    <p class="hint-text">点击"生成新报告"开始创建您的职业规划报告</p>
+                <!-- 生成报告入口区 -->
+                <div id="reportGenerateArea" class="report-generate-area">
+                    <div class="report-generate-card">
+                        <div class="report-generate-icon">📋</div>
+                        <h3>生成职业规划报告</h3>
+                        <p>基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
+                        <button id="generateReportBtn" class="btn-generate-report">生成新报告</button>
+                        <button id="viewHistoryBtn" class="btn-view-history">查看历史报告</button>
+                    </div>
+
+                    <!-- 生成偏好表单（展开显示） -->
+                    <div id="reportPreferencesForm" class="report-preferences-form hidden">
+                        <h4>生成偏好（可选）</h4>
+                        <div class="preferences-grid">
+                            <div class="form-group">
+                                <label>职业目标类型</label>
+                                <select id="prefCareerGoal">
+                                    <option value="">不限制</option>
+                                    <option value="技术专家">技术专家</option>
+                                    <option value="管理岗位">管理岗位</option>
+                                    <option value="创业">创业</option>
+                                    <option value="专业深耕">专业深耕</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>期望工作地点</label>
+                                <input type="text" id="prefWorkLocation" placeholder="如：北京、上海、杭州">
+                            </div>
+                            <div class="form-group">
+                                <label>薪资预期</label>
+                                <select id="prefSalary">
+                                    <option value="">不限制</option>
+                                    <option value="10k-15k">10k-15k</option>
+                                    <option value="15k-25k">15k-25k</option>
+                                    <option value="25k+">25k+</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>工作生活平衡</label>
+                                <select id="prefWorkLifeBalance">
+                                    <option value="">不限制</option>
+                                    <option value="高">高（重视生活）</option>
+                                    <option value="中">中（平衡）</option>
+                                    <option value="低">低（事业优先）</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="confirmGenerateBtn" class="btn-primary">确认生成</button>
+                    </div>
                 </div>
 
-                <div id="reportHistory" class="report-history hidden">
-                    <h3>历史报告</h3>
-                    <div id="historyList"></div>
+                <!-- 生成中状态 -->
+                <div id="reportGeneratingArea" class="report-generating-area hidden">
+                    <div class="report-generating-card">
+                        <div class="report-generating-spinner"></div>
+                        <p>AI 正在生成您的职业规划报告，预计需要 30 秒</p>
+                        <span class="report-generating-hint">请稍候，不要关闭页面</span>
+                    </div>
+                </div>
+
+                <!-- 报告内容展示区 -->
+                <div id="reportContentArea" class="report-content-area hidden">
+                    <div class="report-toolbar">
+                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">完整性检查</button>
+                        <button id="reportPolishBtn" class="btn-toolbar">AI 润色</button>
+                        <button id="reportBackBtn" class="btn-toolbar">返回</button>
+                    </div>
+                    <div id="reportContent" class="report-content"></div>
+                </div>
+
+                <!-- 历史报告侧边/弹层 -->
+                <div id="reportHistory" class="report-history-panel hidden">
+                    <div class="report-history-header">
+                        <h3>历史报告</h3>
+                        <button id="closeHistoryBtn" class="btn-close-history">&times;</button>
+                    </div>
+                    <div id="historyList" class="report-history-list"></div>
                 </div>
             </div>
         </div>
