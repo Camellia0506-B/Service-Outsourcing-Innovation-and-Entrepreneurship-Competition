@@ -1,0 +1,87 @@
+### 学生能力画像模块测试 (HTTP文件)
+### 可在 VS Code REST Client 插件中使用
+
+@baseUrl = http://localhost:5000/api/v1
+@aiBaseUrl = http://127.0.0.1:5001/api/v1
+@userId = 10001
+
+### ========================================
+### 1. 检查服务健康状态
+### ========================================
+
+### 检查 AI 算法服务
+GET {{aiBaseUrl}}/health
+
+### ========================================
+### 2. 测试 5.2: AI生成学生能力画像
+### ========================================
+
+POST {{baseUrl}}/student/ai-generate-profile
+Content-Type: application/json
+
+{
+  "user_id": {{userId}},
+  "data_source": "profile"
+}
+
+### ========================================
+### 3. 测试 5.1: 获取学生能力画像
+### ========================================
+
+POST {{baseUrl}}/student/ability-profile
+Content-Type: application/json
+
+{
+  "user_id": {{userId}}
+}
+
+### ========================================
+### 4. 测试 5.3: 更新能力画像
+### ========================================
+
+POST {{baseUrl}}/student/update-profile
+Content-Type: application/json
+
+{
+  "user_id": {{userId}},
+  "updates": {
+    "professional_skills": {
+      "programming_languages": [
+        {
+          "skill": "Go",
+          "level": "熟悉",
+          "evidence": ["完成2个Go项目"]
+        }
+      ]
+    },
+    "certificates": {
+      "items": [
+        {
+          "name": "AWS云从业者认证",
+          "issue_date": "2025-01-15"
+        }
+      ]
+    }
+  }
+}
+
+### ========================================
+### 5. 直接调用 AI 算法服务（对比测试）
+### ========================================
+
+### 直接调用 AI 服务 - 生成画像
+POST {{aiBaseUrl}}/student/ai-generate-profile
+Content-Type: application/json
+
+{
+  "user_id": {{userId}},
+  "data_source": "profile"
+}
+
+### 直接调用 AI 服务 - 获取画像
+POST {{aiBaseUrl}}/student/ability-profile
+Content-Type: application/json
+
+{
+  "user_id": {{userId}}
+}

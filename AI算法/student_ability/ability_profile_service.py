@@ -20,8 +20,9 @@
 
 import json
 import os
+import threading
 from datetime import datetime
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
@@ -52,6 +53,32 @@ def _load_profiles_store() -> dict:
 def _save_profiles_store(data: dict):
     """保存能力画像存储"""
     path = _get_profiles_store_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+# ============================================================
+# 能力画像生成任务存储（异步任务）
+# ============================================================
+
+def _get_ability_task_store_path() -> str:
+    return get_abs_path("data/student_profiles/ability_tasks.json")
+
+
+def _load_ability_task_store() -> dict:
+    path = _get_ability_task_store_path()
+    if os.path.exists(path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def _save_ability_task_store(data: dict):
+    path = _get_ability_task_store_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -289,10 +316,10 @@ class AIAbilityProfileGenerator:
         """
         从个人档案生成能力画像
         
-        输入：Profile模块的用户档案
+        输入：Profile模块的用户档案（已适配格式）
         输出：7维度能力画像
         """
-        logger.info(f"[AbilityProfile] 开始生成用户{user_id}的能力画像")
+        logger.info(f"[AbilityProfile] 开始生成用户{user_id}的能力画像（数据源：档案）")
         
         # 构造Prompt
         prompt = self._build_generation_prompt(profile_data)
@@ -320,6 +347,80 @@ class AIAbilityProfileGenerator:
         except Exception as e:
             logger.error(f"[AbilityProfile] 生成失败: {e}")
             raise
+    
+    def generate_from_resume_text(self, user_id: int, resume_text: str) -> dict:
+        """
+        从简历文本生成能力画像
+        
+        输入：简历原始文本
+        输出：7维度能力画像
+        """
+        logger.info(f"[AbilityProfile] 开始生成用户{user_id}的能力画像（数据源：简历）")
+        
+        prompt = self._build_resume_generation_prompt(resume_text)
+        
+        try:
+            response = self.model.invoke(prompt)
+            result_text = response.content if hasattr(response, 'content') else str(response)
+            ability_profile = self._parse_llm_response(result_text)
+            ability_profile = self._score_profile(ability_profile)
+            ability_profile["user_id"] = user_id
+            ability_profile["profile_id"] = f"profile_{user_id}"
+            ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            logger.info(f"[AbilityProfile] 用户{user_id}画像生成成功（简历）")
+            return ability_profile
+        except Exception as e:
+            logger.error(f"[AbilityProfile] 从简历生成失败: {e}")
+            raise
+    
+    def _build_resume_generation_prompt(self, resume_text: str) -> str:
+        """构造从简历文本生成能力画像的 Prompt"""
+        return f"""你是一位资深的HR和职业规划顾问。请根据以下学生简历，生成**学生就业能力画像**。
+
+【简历内容】
+{resume_text[:8000]}
+
+请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
+
+{{
+  "basic_info": {{
+    "education": "本科/硕士/博士",
+    "major": "专业名称",
+    "school": "学校名称",
+    "gpa": "X.X/4.0",
+    "expected_graduation": "YYYY-MM"
+  }},
+  "professional_skills": {{
+    "programming_languages": [
+      {{ "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }}
+    ],
+    "frameworks_tools": [...],
+    "domain_knowledge": [...]
+  }},
+  "certificates": {{ "items": [{{ "name": "证书名称", "level": "级别", "issue_date": "YYYY-MM" }}] }},
+  "innovation_ability": {{
+    "projects": [{{ "name": "项目名称", "innovation_points": ["创新点"], "impact": "影响" }}],
+    "competitions": [{{ "name": "竞赛名称", "award": "获奖等级" }}]
+  }},
+  "learning_ability": {{
+    "indicators": [
+      {{ "indicator": "GPA", "value": 3.8, "percentile": 85 }},
+      {{ "indicator": "自学新技术", "evidence": ["证据"] }}
+    ]
+  }},
+  "pressure_resistance": {{ "evidence": ["抗压证据"] }},
+  "communication_ability": {{
+    "teamwork": {{ "evidence": ["团队协作证据"] }},
+    "presentation": {{ "evidence": ["演讲展示证据"] }}
+  }},
+  "practical_experience": {{
+    "internships": [{{ "company": "公司", "position": "职位", "duration": "X个月", "achievements": ["成就"] }}],
+    "projects": [{{ "name": "项目", "role": "角色", "complexity": "高/中/低" }}]
+  }}
+}}
+
+注意事项：只根据简历真实信息填写，没有的字段用"待补充"；证据必须来自简历。
+"""
     
     def _build_generation_prompt(self, profile_data: dict) -> str:
         """构造生成Prompt"""
@@ -588,6 +689,7 @@ class StudentAbilityProfileService:
     def __init__(self):
         self.generator = AIAbilityProfileGenerator()
         self.profiles_store = _load_profiles_store()
+        self.task_store = _load_ability_task_store()
     
     def get_ability_profile(self, user_id: int) -> Optional[dict]:
         """
@@ -602,49 +704,66 @@ class StudentAbilityProfileService:
         logger.warning(f"[AbilityProfile] 用户{user_id}的能力画像不存在")
         return None
     
-    def generate_ability_profile(self, user_id: int, data_source: str = "profile") -> dict:
+    def start_ability_profile_generation(self, user_id: int, data_source: str = "profile") -> dict:
         """
-        5.2 AI生成学生能力画像
+        5.2 AI生成学生能力画像（异步）
         
-        返回：task_id（异步生成）
+        立即返回 task_id 和 status: processing，后台线程执行生成。
+        生成完成后画像保存，可通过 get_ability_profile 获取。
         """
-        task_id = f"stu_gen_{datetime.now().strftime('%Y%m%d%H%M%S')}_{user_id}"
+        task_id = f"stu_gen_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{user_id}"
         
-        logger.info(f"[AbilityProfile] 创建生成任务: {task_id}, 数据源: {data_source}")
-        
-        # 实际项目中应该用异步任务队列，这里简化为同步生成
-        try:
-            # 从Profile模块获取用户档案
+        # 预检查：resume 需有简历文件，profile 需有档案
+        if data_source == "profile":
             profile_data = self._get_user_profile_data(user_id)
-            
             if not profile_data:
                 raise ValueError(f"用户{user_id}的档案数据不存在，请先完善个人档案")
-            
-            # 生成能力画像
-            ability_profile = self.generator.generate_from_profile(user_id, profile_data)
-            
-            # 保存
-            profile_id = f"profile_{user_id}"
-            self.profiles_store[profile_id] = ability_profile
-            _save_profiles_store(self.profiles_store)
-            
-            return {
-                "task_id": task_id,
-                "status": "completed",
-                "profile": ability_profile
-            }
+        else:  # resume
+            resume_text = self._get_user_resume_text(user_id)
+            if not resume_text or len(resume_text.strip()) < 50:
+                raise ValueError(f"用户{user_id}的简历不存在或内容过少，请先上传简历")
         
-        except Exception as e:
-            logger.error(f"[AbilityProfile] 生成失败: {e}")
-            return {
-                "task_id": task_id,
-                "status": "failed",
-                "error": str(e)
-            }
+        # 初始化任务状态
+        self.task_store[task_id] = {
+            "status": "processing",
+            "user_id": user_id,
+            "data_source": data_source,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "error": None
+        }
+        _save_ability_task_store(self.task_store)
+        
+        def _run():
+            try:
+                if data_source == "profile":
+                    profile_data = self._get_user_profile_data(user_id)
+                    ability_profile = self.generator.generate_from_profile(user_id, profile_data)
+                else:
+                    resume_text = self._get_user_resume_text(user_id)
+                    ability_profile = self.generator.generate_from_resume_text(user_id, resume_text)
+                
+                profile_id = f"profile_{user_id}"
+                self.profiles_store[profile_id] = ability_profile
+                _save_profiles_store(self.profiles_store)
+                
+                self.task_store[task_id]["status"] = "completed"
+                logger.info(f"[AbilityProfile] 任务完成: {task_id}")
+            except Exception as e:
+                logger.error(f"[AbilityProfile] 生成失败 task_id={task_id}: {e}", exc_info=True)
+                self.task_store[task_id]["status"] = "failed"
+                self.task_store[task_id]["error"] = str(e)
+            finally:
+                _save_ability_task_store(self.task_store)
+        
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
+        
+        return {"task_id": task_id}
     
     def update_ability_profile(self, user_id: int, updates: dict) -> dict:
         """
         5.3 更新能力画像
+        支持深度合并：数组类字段（如 programming_languages、items）为追加，对象为递归合并。
         """
         profile_id = f"profile_{user_id}"
         
@@ -654,13 +773,8 @@ class StudentAbilityProfileService:
         profile = self.profiles_store[profile_id]
         old_score = profile["overall_assessment"]["total_score"]
         
-        # 更新字段
-        for key, value in updates.items():
-            if key in profile:
-                if isinstance(profile[key], dict) and isinstance(value, dict):
-                    profile[key].update(value)
-                else:
-                    profile[key] = value
+        # 深度合并 updates
+        self._deep_merge(profile, updates)
         
         # 重新评分
         profile = self.generator._score_profile(profile)
@@ -681,30 +795,112 @@ class StudentAbilityProfileService:
             "score_change": score_change
         }
     
+    def _deep_merge(self, base: dict, updates: dict):
+        """
+        深度合并：对象递归合并，数组（list）追加新元素。
+        """
+        for key, value in updates.items():
+            if key not in base:
+                base[key] = value
+                continue
+            base_val = base[key]
+            if isinstance(value, list) and isinstance(base_val, list):
+                base[key] = base_val + value
+            elif isinstance(value, dict) and isinstance(base_val, dict):
+                self._deep_merge(base_val, value)
+            else:
+                base[key] = value
+    
     def _get_user_profile_data(self, user_id: int) -> Optional[dict]:
-        """从Profile模块获取用户档案"""
+        """从Profile模块获取用户档案，并适配为能力画像生成器所需格式"""
         try:
             from profile.profile_service import ProfileService
+            import yaml
             profile_service = ProfileService()
-            return profile_service.get_profile(user_id)
-        except:
-            # 如果Profile模块不存在，返回模拟数据（测试用）
-            logger.warning(f"[AbilityProfile] Profile模块不可用，使用模拟数据")
+            raw = profile_service.get_profile(user_id)
+            if not raw:
+                return None
+            return self._adapt_profile_for_generator(raw)
+        except Exception as e:
+            logger.warning(f"[AbilityProfile] Profile模块不可用: {e}，使用模拟数据")
             return {
                 "basic_info": {
                     "education": "本科",
                     "major": "计算机科学与技术",
                     "school": "某大学",
-                    "gpa": "3.5/4.0"
+                    "gpa": "3.5/4.0",
+                    "expected_graduation": ""
                 },
-                "skills": [
-                    {"category": "编程语言", "items": ["Python", "Java"]},
-                    {"category": "框架", "items": ["Spring Boot", "React"]}
-                ],
+                "skills": [],
                 "certificates": [],
                 "projects": [],
                 "internships": []
             }
+    
+    def _adapt_profile_for_generator(self, profile: dict) -> dict:
+        """将 Profile 模块的档案格式适配为能力画像生成器所需格式"""
+        bi = profile.get("basic_info") or {}
+        ei = profile.get("education_info") or {}
+        # 合并 basic_info：education_info 覆盖 basic_info 中教育相关字段
+        basic_info = {
+            "education": ei.get("degree") or bi.get("education") or "待补充",
+            "major": ei.get("major") or bi.get("major") or "待补充",
+            "school": ei.get("school") or bi.get("school") or "待补充",
+            "gpa": ei.get("gpa") or bi.get("gpa") or "待补充",
+            "expected_graduation": ei.get("expected_graduation") or bi.get("expected_graduation") or "待补充"
+        }
+        skills = profile.get("skills") or []
+        # 确保 skills 为列表，支持 {category, items} 或 简单列表
+        if skills and isinstance(skills[0], dict):
+            pass  # 已是 {category, items} 格式
+        elif skills and isinstance(skills[0], str):
+            skills = [{"category": "技能", "items": skills}]
+        return {
+            "basic_info": basic_info,
+            "skills": skills,
+            "certificates": profile.get("certificates") or [],
+            "projects": profile.get("projects") or [],
+            "internships": profile.get("internships") or []
+        }
+    
+    def _get_user_resume_text(self, user_id: int) -> Optional[str]:
+        """获取用户最新上传的简历文本"""
+        try:
+            import glob
+            import yaml
+            config_path = get_abs_path("config/profile.yml")
+            with open(config_path, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f)
+            upload_dir = get_abs_path(cfg.get("resume_upload_dir", "data/profiles/resumes/"))
+            if not os.path.isdir(upload_dir):
+                return None
+            pattern = os.path.join(upload_dir, f"{user_id}_*")
+            files = glob.glob(pattern)
+            if not files:
+                return None
+            latest = max(files, key=os.path.getmtime)
+            ext = os.path.splitext(latest)[1].lower()
+            if ext == ".pdf":
+                try:
+                    import fitz
+                    doc = fitz.open(latest)
+                    text = "\n".join(page.get_text("text") for page in doc)
+                    doc.close()
+                    return text
+                except ImportError:
+                    try:
+                        import pdfplumber
+                        with pdfplumber.open(latest) as pdf:
+                            return "\n".join((p.extract_text() or "") for p in pdf.pages)
+                    except Exception:
+                        pass
+            elif ext in (".txt",):
+                with open(latest, "r", encoding="utf-8", errors="ignore") as f:
+                    return f.read()
+            return None
+        except Exception as e:
+            logger.warning(f"[AbilityProfile] 读取简历失败: {e}")
+            return None
 
 
 # ============================================================

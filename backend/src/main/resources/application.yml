@@ -1,4 +1,4 @@
-﻿spring:
+spring:
   application:
     name: gradquest-backend
   datasource:
@@ -36,6 +36,11 @@ doubao:
   model: doubao-seed-1-6-251015
   base:
     url: https://ark.cn-beijing.volces.com/api/v3
+
+# AI 算法服务配置（Flask，端口 5001）
+ai:
+  algorithm:
+    base-url: http://127.0.0.1:5001/api/v1
 
 logging:
   level:
