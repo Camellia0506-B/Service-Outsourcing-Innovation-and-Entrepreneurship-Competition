@@ -178,6 +178,14 @@ class CareerPlanningApp {
                 e.target.classList.add('hidden');
             }
         });
+
+        // 能力画像相关
+        document.getElementById('generateAbilityProfileBtn')?.addEventListener('click', () => {
+            this.aiGenerateAbilityProfile();
+        });
+        document.getElementById('refreshAbilityProfileBtn')?.addEventListener('click', () => {
+            this.loadAbilityProfile();
+        });
     }
 
     // 显示页面
@@ -1475,6 +1483,50 @@ class CareerPlanningApp {
             this.renderAbilityProfile(result.data, container);
         } else {
             container.innerHTML = '<div class="hint-text">暂无能力画像，请先完善个人档案并完成测评</div>';
+        }
+    }
+
+    // AI生成学生能力画像
+    async aiGenerateAbilityProfile() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        this.showLoading();
+        const result = await aiGenerateAbilityProfile(userId, 'profile');
+        this.hideLoading();
+
+        if (result.success) {
+            this.showToast('AI画像生成中，请稍后刷新页面查看', 'success');
+            // 3秒后自动刷新能力画像
+            setTimeout(() => {
+                this.loadAbilityProfile();
+            }, 3000);
+        } else {
+            this.showToast(result.msg || '生成失败', 'error');
+        }
+    }
+
+    // 更新学生能力画像
+    async updateAbilityProfile(updates) {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        this.showLoading();
+        const result = await updateAbilityProfile(userId, updates);
+        this.hideLoading();
+
+        if (result.success) {
+            this.showToast('画像更新成功', 'success');
+            // 刷新能力画像
+            this.loadAbilityProfile();
+        } else {
+            this.showToast(result.msg || '更新失败', 'error');
         }
     }
 
