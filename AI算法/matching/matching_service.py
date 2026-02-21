@@ -850,7 +850,7 @@ class JobMatchingService:
                 "company": job_profile.get("basic_info", {}).get("company", ""),
                 "location": job_profile.get("basic_info", {}).get("work_locations", [""])[0],
                 "salary": job_profile.get("basic_info", {}).get("avg_salary", ""),
-                "level": job_profile.get("basic_info", {}).get("level", "")
+                "experience": job_profile.get("basic_info", {}).get("level", "")
             }
         }
     
