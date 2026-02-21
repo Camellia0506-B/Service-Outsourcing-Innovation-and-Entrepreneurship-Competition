@@ -232,6 +232,9 @@ class CareerPlanningApp {
             case 'assessment':
                 await this.loadAssessmentData();
                 break;
+            case 'abilityProfile':
+                await this.loadAbilityProfile();
+                break;
             case 'matching':
                 await this.loadMatchingData();
                 break;
@@ -1448,9 +1451,8 @@ class CareerPlanningApp {
         }
     }
 
-    // 加载岗位匹配数据
+    // 加载岗位匹配数据（能力画像已独立到「能力画像」页）
     async loadMatchingData() {
-        await this.loadAbilityProfile();
         await this.loadRecommendedJobs();
         await this.loadJobList();
     }

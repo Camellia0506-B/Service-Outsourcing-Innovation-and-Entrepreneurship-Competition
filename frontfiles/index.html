@@ -28,6 +28,7 @@
                     <a href="#" class="nav-link" data-page="profile">个人档案</a>
                     <a href="#" class="nav-link" data-page="assessment">职业测评</a>
                     <a href="#" class="nav-link" data-page="jobProfile">岗位画像</a>
+                    <a href="#" class="nav-link" data-page="abilityProfile">能力画像</a>
                     <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
                     <a href="#" class="nav-link" data-page="report">职业规划</a>
                 </div>
@@ -523,6 +524,17 @@
             </div>
         </div>
 
+        <!-- 能力画像页面（独立模块） -->
+        <div id="abilityProfilePage" class="page hidden">
+            <div class="matching-container">
+                <h2>能力画像</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">查看你的就业能力画像与多维度评分，为岗位匹配提供依据</p>
+                <div id="abilityProfileContent" class="ability-profile-content">
+                    <div class="loading-message">加载能力画像中...</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 岗位匹配页面 -->
         <div id="matchingPage" class="page hidden">
             <div class="matching-container">
@@ -530,21 +542,13 @@
                 <p style="color: var(--text-secondary); margin-bottom: 24px;">基于能力画像的智能岗位推荐与人岗匹配分析</p>
                 
                 <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="ability">📊 能力画像</button>
-                    <button class="tab-btn" data-tab="recommend">🎯 推荐岗位</button>
+                    <button class="tab-btn active" data-tab="recommend">🎯 推荐岗位</button>
                     <button class="tab-btn" data-tab="search">🔍 搜索岗位</button>
                     <button class="tab-btn" data-tab="analysis">📋 匹配分析</button>
                 </div>
 
-                <!-- 学生能力画像 -->
-                <div class="tab-content active" id="abilityTab">
-                    <div id="abilityProfileContent" class="ability-profile-content">
-                        <div class="loading-message">加载能力画像中...</div>
-                    </div>
-                </div>
-
                 <!-- 推荐岗位 -->
-                <div class="tab-content" id="recommendTab">
+                <div class="tab-content active" id="recommendTab">
                     <div id="recommendedJobs" class="jobs-grid">
                         <div class="loading-message">加载推荐岗位中...</div>
                     </div>
