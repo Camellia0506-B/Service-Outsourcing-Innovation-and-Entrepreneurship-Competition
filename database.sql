@@ -1022,4 +1022,3 @@ b.考生须在面试过程中进行音乐能力展示，可演奏某种乐器或
 
 -- 为 profile_projects 添加 tech_stack（若报 Unknown column 'tech_stack' 可执行）
 -- ALTER TABLE profile_projects ADD COLUMN tech_stack VARCHAR(500) NULL COMMENT '技术栈列表，存 JSON 数组字符串';
-

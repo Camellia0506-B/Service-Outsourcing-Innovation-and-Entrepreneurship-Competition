@@ -54,6 +54,14 @@ from api.career_report_router import career_bp
 app.register_blueprint(career_bp)
 logger.info("[App] 注册路由: 职业规划报告模块 /api/v1/career/*")
 
+
+from api.matching_router import matching_bp
+from api.student_ability_router import student_bp
+
+
+app.register_blueprint(matching_bp)
+app.register_blueprint(student_bp)
+
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp
 # app.register_blueprint(auth_bp)
