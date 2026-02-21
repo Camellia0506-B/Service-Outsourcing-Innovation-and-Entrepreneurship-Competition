@@ -704,24 +704,34 @@ class StudentAbilityProfileService:
         logger.warning(f"[AbilityProfile] 用户{user_id}的能力画像不存在")
         return None
     
-    def start_ability_profile_generation(self, user_id: int, data_source: str = "profile") -> dict:
+    def start_ability_profile_generation(
+        self, user_id: int, data_source: str = "profile",
+        profile_data: Optional[dict] = None, resume_text: Optional[str] = None
+    ) -> dict:
         """
         5.2 AI生成学生能力画像（异步）
         
         立即返回 task_id 和 status: processing，后台线程执行生成。
         生成完成后画像保存，可通过 get_ability_profile 获取。
+        
+        profile_data: 可选，由 Java 后端传入的档案数据，有则优先使用
+        resume_text: 可选，由 Java 后端传入的简历文本，有则优先使用
         """
         task_id = f"stu_gen_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{user_id}"
         
-        # 预检查：resume 需有简历文件，profile 需有档案
+        # 预检查并解析数据：resume 需有简历，profile 需有档案
         if data_source == "profile":
-            profile_data = self._get_user_profile_data(user_id)
+            if not profile_data:
+                profile_data = self._get_user_profile_data(user_id)
             if not profile_data:
                 raise ValueError(f"用户{user_id}的档案数据不存在，请先完善个人档案")
+            resolved_profile = self._adapt_profile_for_generator(profile_data)
         else:  # resume
-            resume_text = self._get_user_resume_text(user_id)
-            if not resume_text or len(resume_text.strip()) < 50:
+            if not resume_text:
+                resume_text = self._get_user_resume_text(user_id)
+            if not resume_text or len(str(resume_text).strip()) < 50:
                 raise ValueError(f"用户{user_id}的简历不存在或内容过少，请先上传简历")
+            resolved_profile = None
         
         # 初始化任务状态
         self.task_store[task_id] = {
@@ -736,10 +746,8 @@ class StudentAbilityProfileService:
         def _run():
             try:
                 if data_source == "profile":
-                    profile_data = self._get_user_profile_data(user_id)
-                    ability_profile = self.generator.generate_from_profile(user_id, profile_data)
+                    ability_profile = self.generator.generate_from_profile(user_id, resolved_profile)
                 else:
-                    resume_text = self._get_user_resume_text(user_id)
                     ability_profile = self.generator.generate_from_resume_text(user_id, resume_text)
                 
                 profile_id = f"profile_{user_id}"

@@ -68,13 +68,17 @@ def ai_generate_profile():
     使用AI分析学生档案和简历，生成能力画像。
     立即返回 task_id 和 status: processing，后台异步生成。
     生成完成后可通过 5.1 获取画像。
-    请求体：{ user_id, data_source }
+    请求体：{ user_id, data_source [, profile_data] [, resume_text] }
     data_source: "profile" 使用档案数据, "resume" 使用简历文件
+    profile_data: 可选，由 Java 后端传入的档案数据（含 basic_info, education_info, skills 等）
+    resume_text: 可选，由 Java 后端传入的简历文本（data_source=resume 时）
     """
     try:
         body = request.get_json(silent=True) or {}
         user_id = body.get("user_id")
         data_source = body.get("data_source", "profile")
+        profile_data = body.get("profile_data")
+        resume_text = body.get("resume_text")
 
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
@@ -83,7 +87,11 @@ def ai_generate_profile():
             return error_response(400, "data_source 必须是 profile 或 resume")
 
         service = get_student_ability_service()
-        result = service.start_ability_profile_generation(user_id, data_source)
+        result = service.start_ability_profile_generation(
+            user_id, data_source,
+            profile_data=profile_data,
+            resume_text=resume_text
+        )
 
         return success_response(
             {"task_id": result["task_id"], "status": "processing"},

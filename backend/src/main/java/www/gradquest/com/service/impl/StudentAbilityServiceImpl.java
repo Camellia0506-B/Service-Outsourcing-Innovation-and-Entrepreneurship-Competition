@@ -1,5 +1,6 @@
 package www.gradquest.com.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,9 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import www.gradquest.com.dto.profile.ProfileInfoResponse;
 import www.gradquest.com.dto.student.AbilityProfileRequest;
 import www.gradquest.com.dto.student.AiGenerateProfileRequest;
 import www.gradquest.com.dto.student.UpdateProfileRequest;
+import www.gradquest.com.service.ProfileService;
 import www.gradquest.com.service.StudentAbilityService;
 
 import java.time.Duration;
@@ -25,8 +28,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StudentAbilityServiceImpl implements StudentAbilityService {
 
+    private static final ObjectMapper JSON = new ObjectMapper();
+
     @Value("${ai.algorithm.base-url:http://127.0.0.1:5001/api/v1}")
     private String aiAlgorithmBaseUrl;
+
+    private final ProfileService profileService;
 
     private WebClient getWebClient() {
         return WebClient.builder()
@@ -80,7 +87,18 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
         try {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("user_id", request.getUserId());
-            requestBody.put("data_source", request.getDataSource() != null ? request.getDataSource() : "profile");
+            String dataSource = request.getDataSource() != null ? request.getDataSource() : "profile";
+            requestBody.put("data_source", dataSource);
+
+            if ("profile".equals(dataSource)) {
+                ProfileInfoResponse profile = profileService.getProfileInfo(request.getUserId());
+                if (profile == null) {
+                    throw new RuntimeException("用户档案不存在，请先完善个人档案");
+                }
+                @SuppressWarnings("unchecked")
+                Map<String, Object> profileData = JSON.convertValue(profile, Map.class);
+                requestBody.put("profile_data", profileData);
+            }
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = getWebClient()
