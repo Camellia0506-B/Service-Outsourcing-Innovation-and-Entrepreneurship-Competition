@@ -1375,6 +1375,72 @@ body::before {
     font-size: 14px;
 }
 
+.placeholder-option {
+    color: #999;
+}
+
+.ability-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40%, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.ability-profile-header {
+    max-width: 1000px;
+    margin: 0 auto 30px;
+    padding-left: 45px;
+}
+
+.ability-profile-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px 24px 24px 45px;
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.1);
+    border: 1px solid var(--primary-color);
+}
+
+.ability-profile-card.highlight {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.1);
+}
+
+.ability-profile-card h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ability-section {
+    color: var(--text-secondary);
+    font-size: 17px;
+    padding-left: 35px;
+}
+
+.ability-section p {
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.ability-tag {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    margin-right: 8px;
+    margin-bottom: 2px;
+}
+
+.score-highlight {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
 .analysis-result {
     background: var(--card-bg);
     border-radius: 16px;
