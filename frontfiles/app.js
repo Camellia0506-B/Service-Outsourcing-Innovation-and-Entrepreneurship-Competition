@@ -1,3 +1,19 @@
+// 精选岗位列表（前端写死，搜索框为空时始终展示，不走接口）
+const featuredJobs = [
+    { jobId: 'job_001', jobName: '算法工程师', industry: '互联网/AI', level: '中级', salaryRange: '20k-35k', skills: ['人工智能', '机器学习'], techSkills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'], demandScore: 92, trend: '上升' },
+    { jobId: 'job_002', jobName: '前端开发工程师', industry: '互联网', level: '中级', salaryRange: '12k-22k', skills: ['React', 'Vue', 'TypeScript'], techSkills: ['JavaScript', 'Vue', 'React', 'HTML5/CSS3'], demandScore: 90, trend: '稳定' },
+    { jobId: 'job_003', jobName: '后端开发工程师', industry: '互联网', level: '中级', salaryRange: '14k-25k', skills: ['Java', 'Go', '微服务'], techSkills: ['Java/Go', 'MySQL', 'Redis', '分布式'], demandScore: 88, trend: '上升' },
+    { jobId: 'job_004', jobName: '数据分析师', industry: '互联网/金融', level: '初级', salaryRange: '10k-18k', skills: ['Python', 'SQL', '数据可视化'], techSkills: ['Python', 'SQL', 'Excel', 'Tableau'], demandScore: 85, trend: '上升' },
+    { jobId: 'job_005', jobName: '产品经理', industry: '互联网', level: '中级', salaryRange: '15k-28k', skills: ['产品设计', '需求分析'], techSkills: ['需求分析', '原型设计', '用户研究'], demandScore: 82, trend: '稳定' },
+    { jobId: 'job_006', jobName: '新能源电池工程师', industry: '新能源', level: '中级', salaryRange: '18k-30k', skills: ['锂电池', 'BMS'], techSkills: ['电化学', '电池管理', '测试验证'], demandScore: 88, trend: '上升' },
+    { jobId: 'job_007', jobName: 'UI/UX设计师', industry: '互联网', level: '中级', salaryRange: '12k-22k', skills: ['Figma', '交互设计'], techSkills: ['Figma/Sketch', '交互设计', '视觉设计'], demandScore: 80, trend: '稳定' },
+    { jobId: 'job_008', jobName: '测试开发工程师', industry: '互联网', level: '中级', salaryRange: '12k-20k', skills: ['自动化测试', '性能测试'], techSkills: ['Python', 'Selenium', 'JMeter'], demandScore: 78, trend: '稳定' },
+    { jobId: 'job_009', jobName: '运维工程师', industry: '互联网', level: '中级', salaryRange: '11k-20k', skills: ['Linux', 'K8s', '云原生'], techSkills: ['Linux', 'Docker', 'Kubernetes'], demandScore: 75, trend: '稳定' },
+    { jobId: 'job_010', jobName: 'AI应用工程师', industry: 'AI/互联网', level: '中级', salaryRange: '18k-32k', skills: ['大模型', 'RAG', 'Agent'], techSkills: ['Python', 'LLM', 'PromptEngineering'], demandScore: 90, trend: '上升' },
+    { jobId: 'job_011', jobName: '嵌入式软件工程师', industry: '智能硬件/汽车', level: '中级', salaryRange: '14k-24k', skills: ['C/C++', '嵌入式'], techSkills: ['C/C++', 'RTOS', '驱动开发'], demandScore: 80, trend: '上升' },
+    { jobId: 'job_012', jobName: '咨询顾问', industry: '咨询', level: '中级', salaryRange: '15k-30k', skills: ['战略咨询', '商业分析'], techSkills: ['商业分析', 'PPT', '客户沟通'], demandScore: 72, trend: '稳定' },
+];
+
 // 应用主类
 class CareerPlanningApp {
     constructor() {
@@ -117,10 +133,11 @@ class CareerPlanningApp {
             });
         });
 
-        // 岗位画像相关 Tab 切换
+        // 岗位画像相关 Tab 切换（仅显示/隐藏内容，不重新请求列表数据）
         document.querySelectorAll('#jobProfilePage .tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.switchJobProfileTab(e.target.dataset.tab);
+                const tab = (e.currentTarget && e.currentTarget.dataset.tab) || e.target.dataset.tab;
+                if (tab) this.switchJobProfileTab(tab);
             });
         });
 
@@ -158,23 +175,90 @@ class CareerPlanningApp {
         document.getElementById('reportCheckCompletenessBtn')?.addEventListener('click', () => this.checkReportCompleteness());
         document.getElementById('reportPolishBtn')?.addEventListener('click', () => this.polishCareerReport());
 
-        // 岗位画像相关
+        // 岗位画像相关：搜索防抖 300ms，清空按钮，返回精选
+        let jobProfileSearchDebounce = null;
+        document.getElementById('jobProfileKeyword')?.addEventListener('input', () => {
+            this.updateJobProfileClearButton();
+            clearTimeout(jobProfileSearchDebounce);
+            jobProfileSearchDebounce = setTimeout(() => {
+                const kw = (document.getElementById('jobProfileKeyword')?.value || '').trim();
+                if (!kw) this._jobListShowAll = false;
+                this.loadJobProfileList(1);
+            }, 300);
+        });
+        document.getElementById('jobProfileKeywordClear')?.addEventListener('click', () => this.clearJobProfileSearch());
         document.getElementById('jobProfileSearchBtn')?.addEventListener('click', () => {
+            const keyword = (document.getElementById('jobProfileKeyword')?.value || '').trim();
+            console.log('搜索按钮点击，关键词：', keyword || '(空)');
             this.loadJobProfileList(1);
         });
+        document.getElementById('jobProfileIndustry')?.addEventListener('change', () => this.loadJobProfileList(1));
+        document.getElementById('jobProfileLevel')?.addEventListener('change', () => this.loadJobProfileList(1));
 
         document.getElementById('jobProfileGraphBtn')?.addEventListener('click', () => {
-            const jobId = document.getElementById('graphJobId')?.value.trim();
-            if (jobId) {
-                this.loadJobRelationGraph(jobId);
-            } else {
-                this.showToast('请输入岗位ID', 'error');
-            }
+            this.loadJobRelationGraphBySearch();
+        });
+
+        // 关联图谱：按岗位名称搜索，输入时下拉提示
+        const graphJobNameInput = document.getElementById('graphJobName');
+        const graphSuggestionsEl = document.getElementById('graphJobSuggestions');
+        if (graphJobNameInput && graphSuggestionsEl) {
+            let graphSuggestDebounce = null;
+            graphJobNameInput.addEventListener('input', () => {
+                this.selectedGraphJobId = null;
+                const keyword = graphJobNameInput.value.trim();
+                clearTimeout(graphSuggestDebounce);
+                if (!keyword) {
+                    graphSuggestionsEl.classList.add('hidden');
+                    graphSuggestionsEl.innerHTML = '';
+                    return;
+                }
+                graphSuggestDebounce = setTimeout(async () => {
+                    const result = await getJobProfiles(1, 15, keyword, '', '');
+                    if (result.success && result.data.list && result.data.list.length > 0) {
+                        this._graphJobSuggestions = result.data.list;
+                        graphSuggestionsEl.innerHTML = result.data.list.map(job =>
+                            `<div class="graph-suggestion-item" data-job-id="${(job.job_id || '')}">${(job.job_name || '-').replace(/</g, '&lt;')}</div>`
+                        ).join('');
+                        graphSuggestionsEl.classList.remove('hidden');
+                        graphSuggestionsEl.querySelectorAll('.graph-suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                graphJobNameInput.value = el.textContent || '';
+                                this.selectedGraphJobId = el.dataset.jobId || null;
+                                graphSuggestionsEl.classList.add('hidden');
+                            });
+                        });
+                    } else {
+                        this._graphJobSuggestions = [];
+                        graphSuggestionsEl.innerHTML = '<div class="graph-suggestion-empty">暂无匹配岗位</div>';
+                        graphSuggestionsEl.classList.remove('hidden');
+                    }
+                }, 300);
+            });
+            graphJobNameInput.addEventListener('blur', () => {
+                setTimeout(() => graphSuggestionsEl.classList.add('hidden'), 200);
+            });
+            graphJobNameInput.addEventListener('focus', () => {
+                if (this._graphJobSuggestions && this._graphJobSuggestions.length > 0) {
+                    graphSuggestionsEl.classList.remove('hidden');
+                }
+            });
+        }
+
+        document.getElementById('jobDetailModalClose')?.addEventListener('click', () => this.closeJobDetailModal());
+        document.getElementById('jobDetailModal')?.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'jobDetailModal') this.closeJobDetailModal();
+        });
+
+        document.getElementById('realDataModalClose')?.addEventListener('click', () => this.closeRealDataModal());
+        document.getElementById('realDataModal')?.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'realDataModal') this.closeRealDataModal();
         });
 
         document.getElementById('aiGenerateJobBtn')?.addEventListener('click', () => {
             this.generateJobProfile();
         });
+        this._initAIGenTab();
 
         // 档案详情模态框关闭
         document.getElementById('closeProfileModal')?.addEventListener('click', () => {
@@ -1832,6 +1916,7 @@ class CareerPlanningApp {
                     </div>
                     <span class="match-badge badge-${lev}">${badgeText(matchScore)}</span>
                 </div>
+<<<<<<< Updated upstream
                 <div class="card-match-row">
                     <div class="match-pct-big pct-${lev}">${matchScore}%</div>
                     <div class="match-bar-wrap"><div class="match-bar-bg"><div class="match-bar-fill fill-${lev}" style="width:${matchScore}%"></div></div></div>
@@ -1887,6 +1972,16 @@ class CareerPlanningApp {
                     if (select) select.value = id;
                     this.analyzeJobMatch();
                 }
+=======
+                <div class="job-tags">${tags}</div>
+                <div class="job-meta">年薪：${job.avg_salary || '-'}</div>
+            `;
+            jobCard.style.cursor = 'pointer';
+            jobCard.addEventListener('click', () => {
+                this.switchTab('analysis');
+                const select = document.getElementById('jobSelect');
+                if (select) { select.value = job.job_id || job.job_name; this.analyzeJobMatch(); }
+>>>>>>> Stashed changes
             });
         });
     }
@@ -1934,329 +2029,954 @@ class CareerPlanningApp {
 
     // ==================== 岗位画像模块（对应 API 文档 §4） ====================
 
-    // 加载岗位画像页面数据
-    async loadJobProfileData() {
-        await this.loadJobProfileList();
+    // 精选列表：返回 featuredJobs 转为列表项格式（job_id, job_name, avg_salary, tags, skills 等）
+    getFeaturedJobs() {
+        return featuredJobs.map(j => ({
+            job_id: j.jobId,
+            job_name: j.jobName,
+            industry: j.industry,
+            level: j.level,
+            avg_salary: j.salaryRange,
+            tags: j.skills || [],
+            skills: j.techSkills || j.skills || [],
+            demand_score: j.demandScore,
+            growth_trend: j.trend,
+        }));
     }
 
-    // 4.1 加载岗位画像列表
+    // 加载岗位画像页面数据（行业下拉 + 从后端加载第一页岗位列表）
+    async loadJobProfileData() {
+        await this.loadJobIndustries();
+        this.updateJobProfileClearButton();
+        await this.loadJobProfileList(1);
+    }
+
+    // 清空搜索并重新加载第一页（后端会返回全部/精选列表）
+    clearJobProfileSearch() {
+        const input = document.getElementById('jobProfileKeyword');
+        if (input) input.value = '';
+        this.updateJobProfileClearButton();
+        this.loadJobProfileList(1);
+    }
+
+    // 根据搜索框是否有内容显示/隐藏 × 清空按钮
+    updateJobProfileClearButton() {
+        const input = document.getElementById('jobProfileKeyword');
+        const btn = document.getElementById('jobProfileKeywordClear');
+        if (!input || !btn) return;
+        if ((input.value || '').trim()) btn.classList.remove('hidden');
+        else btn.classList.add('hidden');
+    }
+
+    // 动态加载行业下拉选项
+    async loadJobIndustries() {
+        const select = document.getElementById('jobProfileIndustry');
+        if (!select) return;
+        const res = await getJobIndustries();
+        const industries = (res.success && res.data && res.data.industries) ? res.data.industries : [];
+        select.innerHTML = '<option value="">全部行业</option>';
+        industries.forEach(ind => {
+            const opt = document.createElement('option');
+            opt.value = ind;
+            opt.textContent = ind;
+            select.appendChild(opt);
+        });
+    }
+
+    // 4.1 加载岗位画像列表：搜索框为空时只展示精选 12 条（不走接口），有关键词时请求 /api/v1/job/profiles
     async loadJobProfileList(page = 1) {
         const container = document.getElementById('jobProfileList');
+        const tipEl = document.getElementById('jobProfileListTip');
+        const footerEl = document.getElementById('jobProfileListFooter');
         if (!container) return;
-        
-        container.innerHTML = '<div class="loading-message">加载岗位列表中...</div>';
 
-        const keyword = document.getElementById('jobProfileKeyword')?.value.trim() || '';
+        const keyword = (document.getElementById('jobProfileKeyword')?.value || '').trim();
         const industry = document.getElementById('jobProfileIndustry')?.value || '';
         const level = document.getElementById('jobProfileLevel')?.value || '';
+        const size = 12;
 
-        const result = await getJobProfiles(page, 20, keyword, industry, level);
+        container.innerHTML = '<div class="loading-message">加载岗位列表中...</div>';
+        if (tipEl) tipEl.textContent = '';
+        if (footerEl) footerEl.innerHTML = '';
 
-        if (result.success && result.data.list) {
-            this.renderJobProfileList(result.data, container);
-        } else {
-            container.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
-        }
-    }
-
-    // 渲染岗位画像列表
-    renderJobProfileList(data, container) {
-        container.innerHTML = '';
-
-        if (!data.list || data.list.length === 0) {
-            container.innerHTML = '<div class="hint-text">暂无岗位数据</div>';
+        // 搜索框为空时始终展示精选 12 条，不请求接口
+        if (!keyword) {
+            const list = this.getFeaturedJobs();
+            if (tipEl) tipEl.textContent = `精选 ${list.length} 个热门岗位 · 共收录 100+ 岗位`;
+            this.renderJobProfileList({ list, total: list.length, page: 1, size }, container);
+            if (footerEl) footerEl.innerHTML = '';
             return;
         }
 
-        data.list.forEach(job => {
+        const result = await getJobProfilesFromBackend(page, size, keyword, industry, level);
+
+        if (!result.success || !result.data) {
+            const list = this.getFeaturedJobs();
+            if (tipEl) tipEl.textContent = `精选 ${list.length} 个热门岗位 · 共收录 100+ 岗位`;
+            this.renderJobProfileList({ list, total: list.length, page: 1, size }, container);
+            if (footerEl) footerEl.innerHTML = '';
+            return;
+        }
+
+        const data = result.data;
+        const total = data.total || 0;
+        const list = data.list || [];
+        const totalPages = data.pages ?? Math.max(1, Math.ceil(total / size));
+
+        if (tipEl) tipEl.innerHTML = `找到 ${total} 个相关岗位 <a href="#" class="job-profile-back-featured" onclick="app.clearJobProfileSearch(); return false;">返回精选列表</a>`;
+
+        if (list.length === 0) {
+            container.innerHTML = '<div class="hint-text">暂无相关岗位，试试其他关键词</div>';
+            if (footerEl) footerEl.innerHTML = '';
+            return;
+        }
+
+        this.renderJobProfileList(data, container);
+        if (footerEl) this.renderJobProfilePagination(total, data.page || page, size, footerEl, totalPages);
+    }
+
+    // 渲染岗位画像列表（新卡片：顶部渐变色条 + 内容区 + 底部两按钮）
+    renderJobProfileList(data, container) {
+        container.innerHTML = '';
+        const list = data.list || [];
+        const stripeGradients = [
+            'linear-gradient(90deg, #2563eb, #0ea5e9)',
+            'linear-gradient(90deg, #0ea5e9, #4f46e5)',
+            'linear-gradient(90deg, #4f46e5, #2563eb)',
+        ];
+        list.forEach((job, idx) => {
             const jobCard = document.createElement('div');
             jobCard.className = 'job-card';
-            jobCard.style.cursor = 'pointer';
-            
-            const tags = job.tags ? job.tags.slice(0, 3).map(tag => 
-                `<span class="job-tag">${tag}</span>`
-            ).join('') : '';
-
-            const skills = job.skills ? job.skills.slice(0, 4).map(skill => 
-                `<span class="skill-badge">${skill}</span>`
-            ).join('') : '';
-
+            const softTags = (job.tags || []).slice(0, 4).map(t => `<span class="tag-soft">${(t + '').replace(/</g, '&lt;')}</span>`).join('');
+            const techTags = (job.skills || []).slice(0, 4).map(s => `<span class="tag-tech">${(s + '').replace(/</g, '&lt;')}</span>`).join('');
+            const stripeStyle = stripeGradients[idx % 3];
+            const jobName = (job.job_name || '-').replace(/</g, '&lt;');
+            const industry = (job.industry || '-').replace(/</g, '&lt;');
+            const level = (job.level || '-').replace(/</g, '&lt;');
+            const salary = (job.avg_salary || '-').replace(/</g, '&lt;');
+            const trend = (job.growth_trend || '--').replace(/</g, '&lt;');
             jobCard.innerHTML = `
-                <div class="job-card-header">
-                    <div class="job-title">${job.job_name || '-'}</div>
-                    <div class="job-meta">
-                        <span>${job.industry || '-'}</span> | 
-                        <span>${job.level || '-'}</span>
+                <div class="card-stripe" style="background:${stripeStyle}"></div>
+                <div class="job-card-inner">
+                    <div class="job-card-title">${jobName}</div>
+                    <div class="job-card-meta">${industry} | ${level}</div>
+                    <div class="card-salary">${salary}</div>
+                    <div class="job-card-tags">${softTags}</div>
+                    <div class="job-card-tech">${techTags}</div>
+                    <div class="job-card-footer">
+                        <span class="job-demand-num">${job.demand_score ?? '--'}</span>
+                        <span class="job-trend-label">${trend}</span>
+                    </div>
+                    <div class="card-btns">
+                        <button type="button" class="btn-profile" data-job-id="${(job.job_id || '').replace(/"/g, '&quot;')}" data-job-name="${jobName.replace(/"/g, '&quot;')}">📊 岗位画像</button>
+                        <button type="button" class="btn-realdata" data-job-name="${jobName.replace(/"/g, '&quot;')}">🗂 真实数据</button>
                     </div>
                 </div>
-                <div class="job-salary">${job.avg_salary || '-'}</div>
-                <div class="job-tags">${tags}</div>
-                <div class="job-skills">${skills}</div>
-                <div class="job-footer">
-                    <span class="demand-score">需求热度: ${job.demand_score || '--'}</span>
-                    <span class="growth-trend">${job.growth_trend || '--'}</span>
-                </div>
             `;
-
-            jobCard.addEventListener('click', () => {
+            jobCard.querySelector('.btn-profile')?.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.showJobProfileDetail(job.job_id || job.job_name, !job.job_id);
             });
-
+            jobCard.querySelector('.btn-realdata')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showRealDataModal(job.job_name || jobName);
+            });
             container.appendChild(jobCard);
         });
+    }
 
-        // 分页
-        if (data.total > 20) {
-            const pagination = document.createElement('div');
-            pagination.className = 'pagination';
-            pagination.innerHTML = `
-                <button onclick="app.loadJobProfileList(${data.page - 1})" ${data.page <= 1 ? 'disabled' : ''}>上一页</button>
-                <span>第 ${data.page} 页 / 共 ${Math.ceil(data.total / 20)} 页</span>
-                <button onclick="app.loadJobProfileList(${data.page + 1})" ${data.page >= Math.ceil(data.total / 20) ? 'disabled' : ''}>下一页</button>
-            `;
-            container.appendChild(pagination);
+    // 真实数据弹窗：请求 GET /api/v1/job/real-data?jobName=xxx&size=N，展示多条招聘数据
+    async showRealDataModal(jobName, size = 5) {
+        const modal = document.getElementById('realDataModal');
+        const bodyEl = document.getElementById('realDataModalBody');
+        const closeBtn = document.getElementById('realDataModalClose');
+        if (!modal || !bodyEl) return;
+        bodyEl.innerHTML = '<div class="loading-message">加载真实招聘数据中...</div>';
+        modal.classList.remove('hidden');
+        const res = await getJobRealData(jobName, size);
+        if (!res.success || !res.data || res.data.length === 0) {
+            bodyEl.innerHTML = '<div class="hint-text">暂无该岗位的真实招聘数据</div>';
+        } else {
+            let html = '';
+            res.data.forEach((item, i) => {
+                const desc = (item.description || '').replace(/</g, '&lt;');
+                const shortDesc = desc.length > 120 ? desc.slice(0, 120) + '…' : desc;
+                const id = 'real-desc-' + i;
+                html += `
+                    <div class="real-data-item">
+                        <div class="real-data-item-header">
+                            <span class="real-data-company">${(item.company || '').replace(/</g, '&lt;')}</span>
+                            <span class="real-data-title">${(item.jobTitle || '').replace(/</g, '&lt;')}</span>
+                            <span class="real-data-salary">${(item.salary || '').replace(/</g, '&lt;')}</span>
+                        </div>
+                        <div class="real-data-grid">
+                            <span class="real-data-cell">${(item.address || '-').replace(/</g, '&lt;')}</span>
+                            <span class="real-data-cell">${(item.industry || '-').replace(/</g, '&lt;')}</span>
+                            <span class="real-data-cell">${(item.scale || '-').replace(/</g, '&lt;')}</span>
+                            <span class="real-data-cell">${(item.companyType || '-').replace(/</g, '&lt;')}</span>
+                        </div>
+                        <div class="real-data-desc-wrap">
+                            <p class="real-data-desc short" id="${id}">${shortDesc}</p>
+                            ${desc.length > 120 ? `<button type="button" class="real-data-expand" data-target="${id}" data-full="${(desc || '').replace(/"/g, '&quot;')}">展开</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            bodyEl.innerHTML = html;
+            bodyEl.querySelectorAll('.real-data-expand').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const target = document.getElementById(this.dataset.target);
+                    if (!target) return;
+                    if (target.classList.contains('short')) {
+                        target.textContent = this.dataset.full || target.textContent;
+                        target.classList.remove('short');
+                        this.textContent = '收起';
+                    } else {
+                        target.textContent = (this.dataset.full || '').slice(0, 120) + '…';
+                        target.classList.add('short');
+                        this.textContent = '展开';
+                    }
+                });
+            });
         }
     }
 
-    // 4.2 显示岗位详细画像
-    async showJobProfileDetail(jobIdOrName, byName = false) {
-        const detailContainer = document.getElementById('jobProfileDetail');
-        if (!detailContainer) return;
+    closeRealDataModal() {
+        document.getElementById('realDataModal')?.classList.add('hidden');
+    }
 
-        detailContainer.innerHTML = '<div class="loading-message">加载岗位详情中...</div>';
-        detailContainer.classList.remove('hidden');
+    // 分页组件：每页 12 条，圆角按钮，当前页高亮；totalPages 可由后端返回的 pages 传入
+    renderJobProfilePagination(total, page, size, footerEl, totalPagesFromApi) {
+        const totalPages = totalPagesFromApi != null ? Math.max(1, totalPagesFromApi) : Math.max(1, Math.ceil(total / size));
+        page = Math.max(1, Math.min(page, totalPages));
+        let html = '<div class="job-profile-pagination">';
+        html += `<button type="button" class="pagination-btn pagination-prev" ${page <= 1 ? 'disabled' : ''} data-page="${page - 1}">上一页</button>`;
+        html += '<span class="pagination-pages">';
+        const maxShow = 5;
+        let start = Math.max(1, page - Math.floor(maxShow / 2));
+        let end = Math.min(totalPages, start + maxShow - 1);
+        if (end - start + 1 < maxShow) start = Math.max(1, end - maxShow + 1);
+        for (let i = start; i <= end; i++) {
+            const active = i === page ? ' active' : '';
+            html += `<button type="button" class="pagination-btn pagination-num${active}" data-page="${i}">${i}</button>`;
+        }
+        html += '</span>';
+        html += `<button type="button" class="pagination-btn pagination-next" ${page >= totalPages ? 'disabled' : ''} data-page="${page + 1}">下一页</button>`;
+        html += `<span class="pagination-info">第 ${page}/${totalPages} 页</span>`;
+        html += '</div>';
+        footerEl.innerHTML = html;
+        footerEl.querySelectorAll('.pagination-btn:not([disabled])').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const p = parseInt(btn.dataset.page, 10);
+                if (p >= 1) {
+                    this.loadJobProfileList(p);
+                    document.getElementById('jobProfileList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+
+    // 4.2 显示岗位详细画像（弹窗 Modal）
+    async showJobProfileDetail(jobIdOrName, byName = false) {
+        const modal = document.getElementById('jobDetailModal');
+        const contentEl = document.getElementById('jobDetailModalContent');
+        if (!modal || !contentEl) return;
+
+        contentEl.innerHTML = '<div class="loading-message">加载岗位详情中...</div>';
+        modal.classList.remove('hidden');
 
         const result = await getJobProfileDetail(jobIdOrName, !byName);
 
         if (result.success) {
-            this.renderJobProfileDetail(result.data, detailContainer);
+            this._currentJobDetail = { job_id: result.data.job_id, job_name: result.data.job_name };
+            this.renderJobProfileDetail(result.data, contentEl);
         } else {
-            detailContainer.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
+            contentEl.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
         }
     }
 
-    // 渲染岗位详细画像
+    closeJobDetailModal() {
+        const modal = document.getElementById('jobDetailModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // 渲染岗位详细画像（新设计：头部 + 主体两列/技能/描述/路径 + 底部按钮）
     renderJobProfileDetail(data, container) {
+        const bi = data.basic_info || {};
+        const ma = data.market_analysis || {};
+        const salary = bi.avg_salary || data.avg_salary || '-';
+        const industry = bi.industry || '-';
+        const level = bi.level || '-';
+        const locations = bi.work_locations ? bi.work_locations.join('、') : '-';
+        const scales = bi.company_scales ? bi.company_scales.join('、') : '-';
+        const demandScore = ma.demand_score != null ? Number(ma.demand_score) : null;
+        const trend = (ma.growth_trend || data.growth_trend || '稳定').trim();
+        const trendClass = trend === '上升' ? 'up' : (trend === '下降' ? 'down' : 'stable');
+        const trendText = trend === '上升' ? '上升' : (trend === '下降' ? '下降' : '稳定');
+
         let html = `
-            <div class="job-detail-header">
-                <h3>${data.job_name || '-'}</h3>
-                <button onclick="document.getElementById('jobProfileDetail').classList.add('hidden')" class="btn-secondary">关闭</button>
+            <div class="job-detail-modal-header">
+                <div class="job-detail-modal-header-left">
+                    <h2 class="job-detail-modal-header-title">${(data.job_name || '-').replace(/</g, '&lt;')}</h2>
+                    <p class="job-detail-modal-header-subtitle">${(industry + ' | ' + level).replace(/</g, '&lt;')}</p>
+                </div>
+                <div class="job-detail-modal-header-salary">${(salary + '').replace(/</g, '&lt;')}</div>
             </div>
+            <div class="job-detail-modal-body-inner">
+                <div class="job-detail-modal-grid">
+                    <div class="job-detail-modal-grid-item"><span class="label">📍 工作地点</span>${(locations + '').replace(/</g, '&lt;')}</div>
+                    <div class="job-detail-modal-grid-item"><span class="label">🏢 公司规模</span>${(scales + '').replace(/</g, '&lt;')}</div>
+                    <div class="job-detail-modal-grid-item">
+                        <span class="label">📈 需求热度</span>${demandScore != null ? demandScore : '-'}
+                        ${demandScore != null ? `<div class="job-detail-modal-demand-bar"><div class="job-detail-modal-demand-fill" style="width: ${Math.min(100, demandScore)}%"></div></div>` : ''}
+                    </div>
+                    <div class="job-detail-modal-grid-item">
+                        <span class="label">📊 市场趋势</span><span class="job-detail-modal-trend ${trendClass}">${trendText}</span>
+                    </div>
+                </div>
         `;
 
-        // 基本信息
-        if (data.basic_info) {
-            const bi = data.basic_info;
+        // 核心技能要求
+        const skills = [];
+        if (data.requirements && data.requirements.professional_skills) {
+            const ps = data.requirements.professional_skills;
+            if (ps.programming_languages) ps.programming_languages.forEach(s => { if (s && s.skill) skills.push(s.skill); });
+            if (ps.frameworks_tools) ps.frameworks_tools.forEach(s => { if (s && s.skill) skills.push(s.skill); });
+        }
+        if (data.skills && Array.isArray(data.skills)) data.skills.forEach(s => skills.push(typeof s === 'string' ? s : (s.skill || s.name)));
+        if (skills.length > 0) {
             html += `
-                <div class="detail-section">
-                    <h4>基本信息</h4>
-                    <table class="detail-table">
-                        <tr><th>行业</th><td>${bi.industry || '-'}</td></tr>
-                        <tr><th>级别</th><td>${bi.level || '-'}</td></tr>
-                        <tr><th>平均薪资</th><td>${bi.avg_salary || '-'}</td></tr>
-                        <tr><th>工作地点</th><td>${bi.work_locations ? bi.work_locations.join(', ') : '-'}</td></tr>
-                        <tr><th>公司规模</th><td>${bi.company_scales ? bi.company_scales.join(', ') : '-'}</td></tr>
-                        <tr><th>描述</th><td>${bi.description || '-'}</td></tr>
-                    </table>
-                </div>
-            `;
+                <div class="job-detail-block">
+                    <h4 class="job-detail-block-title">核心技能要求</h4>
+                    <div class="job-detail-skills">${skills.slice(0, 12).map(s => `<span class="job-detail-skill-tag">${(s + '').replace(/</g, '&lt;')}</span>`).join('')}</div>
+                </div>`;
         }
 
-        // 能力要求
-        if (data.requirements) {
-            html += `<div class="detail-section"><h4>能力要求</h4>`;
-            
-            if (data.requirements.basic_requirements) {
-                html += `<h5>基础要求</h5>`;
-                const br = data.requirements.basic_requirements;
-                if (br.education) {
-                    html += `<p>学历: ${br.education.level || '-'}</p>`;
-                    html += `<p>专业: ${br.education.preferred_majors ? br.education.preferred_majors.join(', ') : '-'}</p>`;
-                }
-            }
+        // 岗位描述
+        const desc = bi.description || data.description || '';
+        html += `
+                <div class="job-detail-block">
+                    <h4 class="job-detail-block-title">岗位描述</h4>
+                    <p class="job-detail-desc">${desc ? (desc + '').replace(/</g, '&lt;').replace(/\n/g, '<br>') : '暂无描述'}</p>
+                </div>`;
 
-            if (data.requirements.professional_skills) {
-                html += `<h5>专业技能</h5>`;
-                const ps = data.requirements.professional_skills;
-                if (ps.programming_languages) {
-                    html += `<p><strong>编程语言:</strong> ${ps.programming_languages.map(s => `${s.skill}(${s.level})`).join(', ')}</p>`;
-                }
-                if (ps.frameworks_tools) {
-                    html += `<p><strong>框架工具:</strong> ${ps.frameworks_tools.map(s => `${s.skill}(${s.level})`).join(', ')}</p>`;
-                }
-            }
-
-            html += `</div>`;
-        }
-
-        // 能力要求维度：专业技能、证书、创新、学习、抗压、沟通、实习能力
-        if (data.ability_requirements) {
-            const ar = data.ability_requirements;
+        // 职业发展路径（箭头连接）
+        if (data.career_path && data.career_path.promotion_path && data.career_path.promotion_path.length > 0) {
+            const nodes = data.career_path.promotion_path.map(p => (p.level || '').replace(/</g, '&lt;'));
             html += `
-                <div class="detail-section">
-                    <h4>应届生能力要求拆解</h4>
-                    <table class="detail-table">
-                        <tr><th>证书要求</th><td>${Array.isArray(ar.certificate) ? ar.certificate.join('；') : (ar.certificate || '-')}</td></tr>
-                        <tr><th>创新能力</th><td>${ar.innovation_ability || '-'}</td></tr>
-                        <tr><th>学习能力</th><td>${ar.learning_ability || '-'}</td></tr>
-                        <tr><th>抗压能力</th><td>${ar.pressure_resistance || '-'}</td></tr>
-                        <tr><th>沟通能力</th><td>${ar.communication_ability || '-'}</td></tr>
-                        <tr><th>实习/项目能力</th><td>${ar.internship_ability || '-'}</td></tr>
-                    </table>
-                </div>
-            `;
+                <div class="job-detail-block">
+                    <h4 class="job-detail-block-title">职业发展路径</h4>
+                    <div class="job-detail-path">${nodes.map((n, i) => (i > 0 ? '<span class="job-detail-path-arrow">→</span>' : '') + `<span class="job-detail-path-node">${n || '-'}</span>`).join('')}</div>
+                </div>`;
         }
 
-        // 市场分析
-        if (data.market_analysis) {
-            const ma = data.market_analysis;
-            html += `
-                <div class="detail-section">
-                    <h4>市场分析</h4>
-                    <p>需求热度: ${ma.demand_score || '-'}</p>
-                    <p>发展趋势: ${ma.growth_trend || '-'}</p>
-                    <p>薪资范围: ${ma.salary_range ? JSON.stringify(ma.salary_range) : '-'}</p>
-                </div>
-            `;
-        }
-
-        // 发展路径
-        if (data.career_path) {
-            html += `
-                <div class="detail-section">
-                    <h4>职业发展路径</h4>
-                    <p>当前级别: ${data.career_path.current_level || '-'}</p>
-                    ${data.career_path.promotion_path ? data.career_path.promotion_path.map(path => 
-                        `<div style="margin: 10px 0; padding: 10px; background: #f1f5f9; border-radius: 4px;">
-                            <strong>${path.level}</strong> (${path.years_required})
-                            <ul>${path.key_requirements.map(r => `<li>${r}</li>`).join('')}</ul>
-                        </div>`
-                    ).join('') : ''}
-                </div>
-            `;
-        }
+        html += `
+            </div>
+            <div class="job-detail-modal-footer">
+                <button type="button" class="btn-outline" id="jobDetailBtnGraph">查看关联图谱</button>
+                <button type="button" class="btn-primary-solid" id="jobDetailBtnTarget">加入目标岗位</button>
+            </div>`;
 
         container.innerHTML = html;
+
+        document.getElementById('jobDetailBtnGraph')?.addEventListener('click', () => {
+            this.closeJobDetailModal();
+            this.switchJobProfileTab('graph');
+            const input = document.getElementById('graphJobName');
+            if (input && this._currentJobDetail) {
+                input.value = this._currentJobDetail.job_name || '';
+                this.selectedGraphJobId = this._currentJobDetail.job_id || null;
+                if (this._currentJobDetail.job_id) this.loadJobRelationGraph(this._currentJobDetail.job_id);
+                else this.loadJobRelationGraphBySearch();
+            }
+        });
+        document.getElementById('jobDetailBtnTarget')?.addEventListener('click', () => {
+            this.closeJobDetailModal();
+            this.navigateTo('matching');
+            this.showToast('已加入目标岗位，可在「岗位匹配」中查看', 'success');
+        });
     }
 
-    // 4.3 加载岗位关联图谱
+    // 4.3 加载岗位关联图谱：调用 POST /api/v1/job/relation-graph，用返回的 transfer_graph 渲染转岗节点（无硬编码补全）
     async loadJobRelationGraph(jobId) {
         const graphContainer = document.getElementById('jobProfileGraph');
         if (!graphContainer) return;
 
-        graphContainer.innerHTML = '<div class="loading-message">加载图谱中...</div>';
+        graphContainer.innerHTML = '<div class="graph-loading"><div class="graph-loading-spinner"></div><p>加载图谱中...</p></div>';
 
         const graphType = document.getElementById('graphTypeSelect')?.value || 'all';
-        const result = await getJobRelationGraph(jobId, graphType);
-
-        if (result.success) {
-            this.renderJobRelationGraph(result.data, graphContainer);
-        } else {
-            graphContainer.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
+        try {
+            const result = await getJobRelationGraph(jobId, graphType);
+            if (result.success && result.data) {
+                this.renderJobRelationGraph(result.data, graphContainer);
+            } else {
+                graphContainer.innerHTML = '<div class="hint-text">图谱数据加载失败，请确认AI服务已启动</div>';
+            }
+        } catch (e) {
+            console.error('loadJobRelationGraph:', e);
+            graphContainer.innerHTML = '<div class="hint-text">图谱数据加载失败，请确认AI服务已启动</div>';
         }
     }
 
-    // 渲染岗位关联图谱（垂直晋升 + 换岗路径 + 可操作建议，对应高校学生痛点）
+    // 4.3.1 加载晋升路径：请求 GET /api/v1/job/career-path?jobName=xxx 后渲染到 #careerPathContainer
+    async loadCareerPath(jobName) {
+        const container = document.getElementById('careerPathContainer');
+        if (!container) return;
+        if (!(jobName && String(jobName).trim())) {
+            container.innerHTML = '<div class="hint-text">请先选择岗位</div>';
+            return;
+        }
+        try {
+            const res = await getCareerPath(jobName);
+            const path = (res.data && res.data.path) ? res.data.path : [];
+            this.renderCareerPath(path, container);
+        } catch (e) {
+            console.error('loadCareerPath:', e);
+            container.innerHTML = '<div class="hint-text">晋升路径加载失败</div>';
+        }
+    }
+
+    // 渲染晋升路径卡片（仅使用接口数据，无硬编码）
+    renderCareerPath(path, container) {
+        console.log('renderCareerPath 收到数据:', path);
+        if (!container) return;
+        if (!Array.isArray(path) || path.length === 0) {
+            container.innerHTML = '<div class="hint-text">暂无晋升路径数据</div>';
+            return;
+        }
+        const escape = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        const parts = path.map((stage, i) => {
+            const isCurrent = i === 0;
+            const side = i % 2 === 0 ? 'right' : 'left';
+            const stageName = escape(stage.stage);
+            const salary = escape(stage.salary);
+            const years = escape(stage.years);
+            const desc = escape(stage.desc);
+            const skills = Array.isArray(stage.skills) ? stage.skills : [];
+            const skillsHtml = skills.map(s => `<span class="skill-tag level-skill-tag">${escape(s)}</span>`).join('');
+            return `
+              <div class="career-level ${side} ${isCurrent ? 'current' : ''}">
+                <div class="connection-dot"></div>
+                <div class="level-card ${isCurrent ? 'current' : ''}">
+                  <div class="level-header">
+                    <span class="level-icon">${escape(stage.icon) || '🌱'}</span>
+                    <span class="level-name">${stageName}</span>
+                  </div>
+                  ${salary ? `<div class="level-salary level-info">${salary}</div>` : ''}
+                  ${skillsHtml ? `<div class="level-skills">${skillsHtml}</div>` : ''}
+                  ${desc ? `<div class="level-desc">${desc}</div>` : ''}
+                  ${years ? `<div class="level-years level-info">${years}</div>` : ''}
+                </div>
+              </div>`;
+        });
+        container.innerHTML = parts.join('');
+    }
+
+    // 从岗位名称得到 baseName（去掉初级/中级/高级前缀）
+    _getGraphBaseName(jobName) {
+        const n = (jobName || '').replace(/^初级|^中级|^高级/, '').trim();
+        return n || jobName || '岗位';
+    }
+
+    // 转岗节点匹配度样式（边框、badge、图标统一由同一 score 计算）
+    _getTransferMatchStyle(score) {
+        const s = Number(score);
+        if (s >= 80) return { border: '#10b981', badgeBg: '#d1fae5', badgeColor: '#065f46', label: '高', iconBg: 'linear-gradient(135deg,#10b981,#059669)' };
+        if (s >= 60) return { border: '#f59e0b', badgeBg: '#fef3c7', badgeColor: '#92400e', label: '中', iconBg: 'linear-gradient(135deg,#f59e0b,#d97706)' };
+        return { border: '#ef4444', badgeBg: '#fee2e2', badgeColor: '#991b1b', label: '低', iconBg: 'linear-gradient(135deg,#ef4444,#dc2626)' };
+    }
+
+    // 转岗节点：仅使用接口 POST /api/v1/job/relation-graph 返回的 transfer_graph，不补硬编码
+    _getTransferNodes(data) {
+        const edges = data.transfer_graph?.edges || [];
+        const nodesMap = {};
+        (data.transfer_graph?.nodes || []).forEach(n => { nodesMap[n.job_id] = n; });
+        const list = edges.slice(0, 6).map(e => {
+            const to = nodesMap[e.to] || { job_name: e.to, job_id: e.to };
+            const score = e.relevance_score ?? e.match_score ?? e.matchScore ?? to.match_score ?? to.matchScore ?? 75;
+            const numScore = Number(score);
+            return {
+                job_name: to.job_name,
+                match: Number.isFinite(numScore) ? Math.max(0, Math.min(100, Math.round(numScore))) : 75,
+                difficulty: e.difficulty || '中',
+                time: e.time || '6-12个月',
+            };
+        });
+        return list;
+    }
+
+    // 渲染岗位关联图谱：当前岗位信息条 + 晋升/转岗两个子 Tab；晋升路径由 loadCareerPath 请求接口后渲染
     renderJobRelationGraph(data, container) {
-        const jobName = data.center_job?.job_name || '目标岗位';
+        const center = data.center_job || {};
+        const jobName = (center.job_name || '目标岗位').replace(/</g, '&lt;');
+        const salaryRange = center.salary_range ?? center.avg_salary ?? center.salaryRange;
+        let salary = (salaryRange != null && salaryRange !== '') ? String(salaryRange) : '';
+        let score = center.demand_score ?? center.demandScore;
+        if (score == null || score === '') {
+            const featured = featuredJobs.find(j => j.jobId === center.job_id || (j.jobName || '').trim() === (center.job_name || '').trim());
+            if (featured) {
+                if (!salary) salary = featured.salaryRange || '';
+                if (score == null) score = featured.demandScore;
+            }
+        }
+        if (!salary) salary = '面议';
+        if (score == null || score === '') score = 75;
+        score = Number(score);
+        const heatText = score >= 85 ? '高' : score >= 70 ? '中' : '低';
+        const salaryEsc = salary.replace(/</g, '&lt;');
+        const transferNodes = this._getTransferNodes(data);
+
         let html = `
-            <div class="graph-header">
-                <h3 class="graph-title">岗位关联图谱</h3>
-                <span class="graph-subtitle">${jobName}</span>
+            <div class="graph-job-bar">
+                <div class="graph-job-bar-left">
+                    <div class="graph-job-bar-icon"></div>
+                    <div class="graph-job-bar-info">
+                        <h3 class="graph-job-bar-title">${jobName}</h3>
+                        <p class="graph-job-bar-meta">${salaryEsc} · 需求热度 ${heatText}</p>
+                    </div>
+                </div>
+                <div class="graph-job-bar-right">
+                    <span class="graph-job-bar-match">${score}</span>
+                    <span class="graph-job-bar-match-label">匹配度</span>
+                </div>
+            </div>
+            <div class="graph-sub-tabs">
+                <button type="button" class="graph-sub-tab active" data-graph-panel="vertical"><span class="graph-sub-tab-icon">📈</span><span>晋升路径</span></button>
+                <button type="button" class="graph-sub-tab" data-graph-panel="transfer"><span class="graph-sub-tab-icon">🔄</span><span>转岗路径</span></button>
+            </div>
+            <div class="graph-panel graph-panel-vertical active" data-panel="vertical">
+                <div class="vertical-graph">
+                    <div class="career-path">
+                        <div class="path-line"></div>
+                        <div id="careerPathContainer" class="career-path-inner"><div class="graph-loading"><div class="graph-loading-spinner"></div><p>加载晋升路径中...</p></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="graph-panel graph-panel-transfer" data-panel="transfer">
+                <div class="graph-legend graph-legend-dots">
+                    <strong>匹配度：</strong>
+                    <span class="graph-legend-item"><span class="graph-legend-dot high"></span>高（≥80%）绿</span>
+                    <span class="graph-legend-item"><span class="graph-legend-dot medium"></span>中（60-79%）黄</span>
+                    <span class="graph-legend-item"><span class="graph-legend-dot low"></span>低（＜60%）红</span>
+                </div>
+                <div class="transfer-graph" data-count="${transferNodes.length}">
+                <div class="tg-center">
+                    <div class="tg-center-card">
+                        <div class="tg-center-icon">💼</div>
+                        <div class="tg-center-name">${jobName}</div>
+                        <span class="tg-center-badge">当前岗位</span>
+                    </div>
+                </div>`;
+
+        if (transferNodes.length === 0) {
+            html += `
+                <div class="graph-transfer-empty">暂无该岗位的转岗推荐，请确认已加载关联图谱接口数据。</div>`;
+        } else {
+            transferNodes.forEach((node, i) => {
+                const score = node.match != null ? node.match : 75;
+                const style = this._getTransferMatchStyle(score);
+                const name = (node.job_name || '').replace(/</g, '&lt;');
+                const jobNameAttr = (node.job_name || '').replace(/"/g, '&quot;');
+                const delay = (i + 1) * 0.05;
+                html += `
+                <div class="tg-node tg-surround" data-index="${i}">
+                    <div class="tg-node-inner" style="animation-delay: ${delay}s">
+                    <div class="tg-node-card" style="border-color: ${style.border}">
+                        <div class="tg-node-header">
+                            <div class="tg-node-icon" style="background: ${style.iconBg}">📌</div>
+                            <span class="tg-node-name">${name}</span>
+                        </div>
+                        <div class="tg-node-meta">难度 ${(node.difficulty || '中').replace(/</g, '&lt;')} · 周期 ${(node.time || '').replace(/</g, '&lt;')}</div>
+                        <span class="tg-match-badge" style="background: ${style.badgeBg}; color: ${style.badgeColor}">${style.label} ${score}%</span>
+                        <button type="button" class="tg-btn-recommend" data-job-name="${jobNameAttr}">🗂 推荐岗位</button>
+                    </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        html += `
+                </div>
             </div>`;
 
-        // 自我认知提示（痛点：自我认知模糊）
-        if (data.self_check && data.self_check.length) {
-            html += `
-            <section class="graph-section graph-section-self">
-                <div class="graph-section-header">
-                    <span class="graph-section-icon">🔍</span>
-                    <h4 class="graph-section-title">选择前先问自己</h4>
-                </div>
-                <ul class="graph-self-check-list">`;
-            data.self_check.forEach(q => { html += `<li>${q}</li>`; });
-            html += `</ul></section>`;
-        }
-
-        // 垂直晋升路径（独立区块）
-        if (data.vertical_graph && data.vertical_graph.nodes && data.vertical_graph.nodes.length > 0) {
-            html += `
-            <section class="graph-section graph-section-vertical">
-                <div class="graph-section-header">
-                    <span class="graph-section-icon">📈</span>
-                    <h4 class="graph-section-title">垂直晋升路径</h4>
-                    <span class="graph-section-desc">同一岗位由初级到高级的职业发展</span>
-                </div>
-                <div class="graph-vertical">`;
-            data.vertical_graph.nodes.forEach((node, i) => {
-                const desc = node.desc ? `<span class="node-desc">${node.desc}</span>` : '';
-                html += `<div class="graph-node graph-node-v"><span class="node-level">L${node.level || i + 1}</span><span class="node-name">${node.job_name}</span>${desc}</div>`;
-                if (i < data.vertical_graph.nodes.length - 1) html += `<div class="graph-arrow">↓</div>`;
-            });
-            html += `</div></section>`;
-        }
-
-        // 横向换岗路径（独立区块，与垂直分隔）
-        const paths = data.transfer_graph?.paths || data.transfer_graph?.edges || [];
-        if (paths.length > 0) {
-            html += `
-            <section class="graph-section graph-section-transfer">
-                <div class="graph-section-header">
-                    <span class="graph-section-icon">🔄</span>
-                    <h4 class="graph-section-title">横向换岗路径</h4>
-                    <span class="graph-section-desc">可转岗方向及可执行建议</span>
-                </div>
-                <div class="graph-transfer">`;
-            paths.forEach(p => {
-                const pathText = p.path || (p.from && p.to ? `${p.from}→${p.to}` : '-');
-                const reason = p.reason ? `<span class="path-reason">${p.reason}</span>` : '';
-                let actionsHtml = '';
-                if (p.actions && Array.isArray(p.actions)) {
-                    actionsHtml = `<div class="path-block path-actions"><span class="path-block-label">具体行动</span><ul>${p.actions.map(a => `<li>${a}</li>`).join('')}</ul></div>`;
-                }
-                const validateHtml = p.validate ? `<div class="path-block path-validate"><span class="path-block-label">验证方式</span><span>${p.validate}</span></div>` : '';
-                const risksHtml = p.risks ? `<div class="path-block path-risks"><span class="path-block-label">注意事项</span><span>${p.risks}</span></div>` : '';
-                html += `<div class="transfer-path-item"><div class="path-main"><span class="path-text">${pathText}</span>${reason}</div>${actionsHtml}${validateHtml}${risksHtml}</div>`;
-            });
-            html += `</div></section>`;
-        } else if (data.transfer_graph?.nodes?.length) {
-            html += `
-            <section class="graph-section graph-section-transfer">
-                <div class="graph-section-header">
-                    <span class="graph-section-icon">🔄</span>
-                    <h4 class="graph-section-title">可转岗岗位</h4>
-                </div>
-                <div class="graph-nodes">`;
-            data.transfer_graph.nodes.forEach(node => {
-                html += `<div class="graph-node graph-node-tag">${node.job_name}</div>`;
-            });
-            html += `</div></section>`;
-        }
-
-        // 规划落地指南
-        if (data.action_guide) {
-            const ag = data.action_guide;
-            html += `
-            <section class="graph-section graph-section-guide">
-                <div class="graph-section-header">
-                    <span class="graph-section-icon">📋</span>
-                    <h4 class="graph-section-title">规划落地与调整建议</h4>
-                </div>
-                <div class="graph-action-guide">`;
-            if (ag.validate) html += `<div class="guide-item"><span class="guide-label">验证规划</span><span class="guide-text">${ag.validate}</span></div>`;
-            if (ag.adjust) html += `<div class="guide-item"><span class="guide-label">遇挫调整</span><span class="guide-text">${ag.adjust}</span></div>`;
-            if (ag.reality) html += `<div class="guide-item"><span class="guide-label">分辨真实需求</span><span class="guide-text">${ag.reality}</span></div>`;
-            html += `</div></section>`;
-        }
-
         container.innerHTML = html;
+        container._transferNodes = transferNodes;
+
+        const currentJobName = (data.center_job && data.center_job.job_name) ? data.center_job.job_name : '';
+        this.loadCareerPath(currentJobName);
+
+        // 转岗图谱：绑定「推荐岗位」按钮；圆形布局在容器渲染后计算
+        const panel = container.querySelector('.graph-panel-transfer');
+        if (panel) {
+            panel.querySelectorAll('.tg-btn-recommend').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const jobName = btn.getAttribute('data-job-name');
+                    if (jobName) this.showRealDataModal(jobName, 3);
+                });
+            });
+        }
+        requestAnimationFrame(() => {
+            this._layoutTransferGraphCircle(container);
+        });
+
+        // 子 Tab 切换：切换到转岗时重新计算圆形布局（此时面板可见，getBoundingClientRect 有效）
+        container.querySelectorAll('.graph-sub-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const panelId = btn.dataset.graphPanel;
+                container.querySelectorAll('.graph-sub-tab').forEach(b => b.classList.remove('active'));
+                container.querySelectorAll('.graph-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                const panelEl = container.querySelector(`.graph-panel-${panelId}`);
+                if (panelEl) panelEl.classList.add('active');
+                if (panelId === 'transfer') {
+                    requestAnimationFrame(() => this._layoutTransferGraphCircle(container));
+                }
+            });
+        });
     }
 
-    // 4.4 + 4.5 AI 生成岗位画像
+    // 转岗路径：圆形放射布局，周围节点按角度均分（从顶部 -90° 顺时针）；3 节点时 120° 均分
+    _layoutTransferGraphCircle(container) {
+        const graph = container.querySelector('.transfer-graph');
+        if (!graph) return;
+        const rect = graph.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        if (w <= 0 || h <= 0) return;
+        const centerX = w / 2;
+        const centerY = h / 2;
+        const R = 260;
+        const nodes = graph.querySelectorAll('.tg-node.tg-surround');
+        const count = nodes.length;
+        if (count === 0) return;
+        nodes.forEach((node, i) => {
+            const angle = count === 3
+                ? -Math.PI / 2 + i * (2 * Math.PI / 3)
+                : (i / count) * 2 * Math.PI - Math.PI / 2;
+            const x = centerX + R * Math.cos(angle);
+            const y = centerY + R * Math.sin(angle);
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            node.style.transform = 'translate(-50%, -50%)';
+        });
+    }
+
+    // AI 生成 Tab：联想列表、热门岗位、胶囊选项、进度与结果
+    static AI_JOB_SUGGESTIONS = ['算法工程师', '前端开发工程师', '后端开发工程师', '数据分析师', '产品经理', 'UI/UX设计师', '测试开发工程师', '运维工程师', 'AI应用工程师', '嵌入式软件工程师', '新能源电池工程师', '咨询顾问'];
+    static AI_HOT_JOBS = [
+        { name: '算法工程师', heat: 92 },
+        { name: 'AI应用工程师', heat: 95 },
+        { name: '后端开发工程师', heat: 88 },
+        { name: '数据分析师', heat: 85 },
+        { name: '产品经理', heat: 82 },
+    ];
+
+    _initAIGenTab() {
+        const hotList = document.getElementById('aiHotJobList');
+        if (hotList) {
+            hotList.innerHTML = this.constructor.AI_HOT_JOBS.map(j => `
+                <div class="ai-gen-hot-item" data-job-name="${(j.name || '').replace(/"/g, '&quot;')}">
+                    <span class="ai-gen-hot-name">${(j.name || '').replace(/</g, '&lt;')}</span>
+                    <span class="ai-gen-hot-badge">热度 ${j.heat}</span>
+                </div>
+            `).join('');
+            hotList.addEventListener('click', (e) => {
+                const item = e.target.closest('.ai-gen-hot-item');
+                if (!item) return;
+                const name = item.dataset.jobName || item.querySelector('.ai-gen-hot-name')?.textContent || '';
+                const input = document.getElementById('aiJobName');
+                if (input) {
+                    input.value = name;
+                    input.focus();
+                }
+                document.getElementById('aiJobSuggestList')?.classList.add('hidden');
+            });
+        }
+
+        const input = document.getElementById('aiJobName');
+        const suggestList = document.getElementById('aiJobSuggestList');
+        if (input && suggestList) {
+            input.addEventListener('input', () => {
+                const val = input.value.trim();
+                if (!val) {
+                    suggestList.classList.add('hidden');
+                    suggestList.innerHTML = '';
+                    return;
+                }
+                const matches = this.constructor.AI_JOB_SUGGESTIONS.filter(j => j.includes(val));
+                if (matches.length === 0) {
+                    suggestList.classList.add('hidden');
+                    suggestList.innerHTML = '';
+                    return;
+                }
+                suggestList.innerHTML = matches.map(m => `<div class="ai-gen-suggest-item" data-value="${(m || '').replace(/"/g, '&quot;')}">${(m || '').replace(/</g, '&lt;')}</div>`).join('');
+                suggestList.classList.remove('hidden');
+                suggestList.querySelectorAll('.ai-gen-suggest-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        input.value = el.dataset.value || el.textContent || '';
+                        suggestList.classList.add('hidden');
+                    });
+                });
+            });
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.ai-gen-input-wrap')) document.getElementById('aiJobSuggestList')?.classList.add('hidden');
+        });
+
+        ['aiIndustryGroup', 'aiExperienceGroup'].forEach(id => {
+            const group = document.getElementById(id);
+            if (!group) return;
+            group.addEventListener('click', (e) => {
+                const pill = e.target.closest('.ai-gen-pill');
+                if (!pill) return;
+                group.querySelectorAll('.ai-gen-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
+    }
+
+    _getAIGenIndustry() {
+        const el = document.querySelector('#aiIndustryGroup .ai-gen-pill.active');
+        return el ? (el.dataset.value || el.textContent || '').trim() : '';
+    }
+
+    _getAIGenExperience() {
+        const el = document.querySelector('#aiExperienceGroup .ai-gen-pill.active');
+        return el ? (el.dataset.value || el.textContent || '').trim() : '';
+    }
+
+    _setAIGenSteps(stepIndex) {
+        const wrap = document.getElementById('aiProgressWrap');
+        const s1 = document.getElementById('aiStep1');
+        const s2 = document.getElementById('aiStep2');
+        const s3 = document.getElementById('aiStep3');
+        if (!wrap || !s1 || !s2 || !s3) return;
+        [s1, s2, s3].forEach((s, i) => {
+            s.classList.remove('done', 'active', 'wait');
+            if (i < stepIndex) s.classList.add('done');
+            else if (i === stepIndex) s.classList.add('active');
+            else s.classList.add('wait');
+        });
+        wrap.classList.remove('hidden');
+    }
+
+    _hideAIGenProgress() {
+        document.getElementById('aiProgressWrap')?.classList.add('hidden');
+    }
+
+    _showAIGenError() {
+        const bar = document.getElementById('aiErrorBar');
+        if (!bar) return;
+        bar.classList.remove('hidden');
+        setTimeout(() => bar.classList.add('hidden'), 3000);
+    }
+
+    _renderAiGenResultCard(data) {
+        const container = document.getElementById('aiGenerateResult');
+        if (!container) return;
+        const rawLayer = data && (data.data !== undefined ? data.data : data);
+        const raw = rawLayer?.job_profile != null ? rawLayer.job_profile : (rawLayer && (rawLayer.job_name != null || rawLayer.jobName != null) ? rawLayer : {});
+        console.log('AI生成返回数据:', JSON.stringify(rawLayer, null, 2));
+
+        // 按控制台实际返回结构映射为渲染所需格式（兼容 basic_info / requirements.core_skills / promotion_path 等）
+        const softArr = raw.requirements?.core_skills?.soft_skills || [];
+        const findSoft = (keywords) => {
+            const s = softArr.find(s => keywords.some(k => String(s).includes(k)));
+            return (s != null && String(s).trim()) ? s : '暂无描述';
+        };
+        const promotion0 = raw.promotion_path?.[0];
+        const profile = {
+            job_name: raw.job_name || raw.jobName || raw.name || '岗位',
+            job_id: raw.job_id || raw.jobId || '',
+            industry: raw.basic_info?.industry || raw.industry || this._getAIGenIndustry() || '互联网/AI',
+            salary_range: raw.basic_info?.avg_salary || raw.salary_range || raw.salaryRange || raw.avg_salary || '面议',
+            demand_score: raw.demand_score != null ? raw.demand_score : (raw.demandScore != null ? raw.demandScore : 85),
+            trend: raw.market_info?.trend || raw.trend || '上升',
+            trend_desc: raw.market_info?.trend_analysis || raw.trend_desc || raw.trendDesc || '',
+            core_skills: {
+                professional: (raw.requirements?.core_skills?.technical_skills || raw.core_skills?.professional || []).map(s => typeof s === 'string' ? s : (s && s.skill) || String(s)),
+                tools: (raw.requirements?.core_skills?.tools || raw.core_skills?.tools || []).map(s => typeof s === 'string' ? s : (s && s.skill) || String(s)),
+                certificates: (raw.requirements?.basic_requirements?.certifications || raw.core_skills?.certificates || []).map(c => typeof c === 'string' ? c : String(c)),
+                soft_skills: {
+                    innovation: findSoft(['创新', '创造', '设计']),
+                    learning: findSoft(['学习', '成长', '自驱']),
+                    pressure: findSoft(['抗压', '压力', '高强度']),
+                    communication: findSoft(['沟通', '协作', '表达']),
+                    internship: raw.requirements?.basic_requirements?.experience || findSoft(['实习', '实践', '经验']),
+                },
+            },
+            reality_check: {
+                pros: raw.career_development?.advantages || raw.market_info?.growth_areas || raw.reality_check?.pros || [],
+                cons: raw.career_development?.challenges || raw.market_info?.challenges || raw.reality_check?.cons || [],
+                suitable_for: raw.suitable_for || raw.career_development?.suitable_personality || raw.reality_check?.suitable_for || '-',
+                not_suitable_for: raw.not_suitable_for || raw.reality_check?.not_suitable_for || '-',
+                misconceptions: raw.misconceptions || raw.career_development?.common_misconceptions || raw.reality_check?.misconceptions || '暂无',
+            },
+            entry_path: {
+                fresh_grad: raw.career_development?.entry_path || (promotion0 ? `初级阶段（${promotion0.years_required || ''}）需要：${(promotion0.key_requirements || []).join('、')}` : (raw.entry_path?.fresh_grad || '')),
+                key_projects: raw.career_development?.recommended_projects || promotion0?.key_requirements || raw.entry_path?.key_projects || [],
+                timeline: raw.career_development?.timeline || promotion0?.years_required || raw.entry_path?.timeline || '',
+            },
+            ai_summary: (raw.description || raw.ai_analysis || raw.ai_summary || raw.summary || '').trim() || 'AI已根据岗位数据生成画像摘要。',
+        };
+
+        const escape = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        const jobName = profile.job_name;
+        const jobId = profile.job_id;
+
+        const core = profile.core_skills || {};
+        const professional = Array.isArray(core.professional) ? core.professional : [];
+        const tools = Array.isArray(core.tools) ? core.tools : [];
+        const certificates = Array.isArray(core.certificates) ? core.certificates : [];
+        const softSkills = core.soft_skills || {};
+        const realityCheck = profile.reality_check || {};
+        const pros = Array.isArray(realityCheck.pros) ? realityCheck.pros : [];
+        const cons = Array.isArray(realityCheck.cons) ? realityCheck.cons : [];
+        const entryPath = profile.entry_path || {};
+        const keyProjects = Array.isArray(entryPath.key_projects) ? entryPath.key_projects : [];
+
+        const d = {
+            job_name: jobName,
+            industry: profile.industry,
+            demand_score: profile.demand_score,
+            trend: profile.trend,
+            trend_desc: profile.trend_desc,
+            salary_range: profile.salary_range,
+            core_skills: { professional, tools, certificates, soft_skills: softSkills },
+            reality_check: {
+                pros,
+                cons,
+                suitable_for: realityCheck.suitable_for || '-',
+                not_suitable_for: realityCheck.not_suitable_for || '-',
+                misconceptions: realityCheck.misconceptions || '',
+            },
+            entry_path: {
+                fresh_grad: entryPath.fresh_grad || '',
+                key_projects: keyProjects,
+                timeline: entryPath.timeline || '',
+            },
+            ai_summary: profile.ai_summary,
+        };
+
+        const abilityCards = [
+            { icon: '🔬', label: '创新能力', key: 'innovation' },
+            { icon: '📚', label: '学习能力', key: 'learning' },
+            { icon: '💪', label: '抗压能力', key: 'pressure' },
+            { icon: '🤝', label: '沟通能力', key: 'communication' },
+            { icon: '🎯', label: '实践经验', key: 'internship' },
+        ];
+
+        container.innerHTML = `
+        <div class="ai-gen-result-card result-card-new">
+          <div class="result-header">
+            <div>
+              <div class="result-job-name">${escape(d.job_name)}</div>
+              <div class="result-tags">
+                <span class="result-tag">${escape(d.industry)}</span>
+                <span class="result-tag">需求热度 ${d.demand_score}</span>
+                <span class="result-tag trend-${d.trend === '上升' ? 'up' : 'stable'}">
+                  ${d.trend === '上升' ? '↑' : '→'} ${escape(d.trend)}
+                </span>
+              </div>
+              <div class="result-trend-desc">${escape(d.trend_desc)}</div>
+            </div>
+            <div class="result-salary">${escape(d.salary_range)}</div>
+          </div>
+
+          <div class="result-body">
+            <div class="result-section-title">💻 核心技能要求</div>
+            <div class="result-skills-grid">
+              <div>
+                <div class="result-skills-label">专业技能</div>
+                <div class="skills-wrap">${(professional || []).map(s => `<span class="skill-chip chip-soft">${escape(s)}</span>`).join('')}</div>
+              </div>
+              <div>
+                <div class="result-skills-label">工具框架</div>
+                <div class="skills-wrap">${(tools || []).map(s => `<span class="skill-chip chip-tech">${escape(s)}</span>`).join('')}</div>
+              </div>
+              <div>
+                <div class="result-skills-label">证书要求</div>
+                <div class="skills-wrap">${(certificates || []).length ? (certificates || []).map(s => `<span class="skill-chip chip-gray">${escape(s)}</span>`).join('') : '<span class="result-no-cert">无特定要求</span>'}</div>
+              </div>
+            </div>
+
+            <div class="result-section-title">⚡ 综合能力要求</div>
+            <div class="result-ability-grid">
+              ${abilityCards.map(c => {
+                const desc = softSkills[c.key];
+                const text = (desc != null && String(desc).trim() !== '') ? desc : '暂无描述';
+                return `
+                <div class="result-ability-card">
+                  <div class="result-ability-icon">${c.icon}</div>
+                  <div class="result-ability-label">${c.label}</div>
+                  <div class="result-ability-desc">${escape(text)}</div>
+                </div>
+              `;
+              }).join('')}
+            </div>
+
+            <div class="result-section-title">🔍 真实职场洞察</div>
+            <div class="result-reality-grid">
+              <div class="result-reality-pros">
+                <div class="result-reality-title">✅ 真实优势</div>
+                ${(pros || []).map(p => `<div class="result-reality-item">· ${escape(p)}</div>`).join('')}
+              </div>
+              <div class="result-reality-cons">
+                <div class="result-reality-title">⚠️ 真实挑战</div>
+                ${(cons || []).map(c => `<div class="result-reality-item">· ${escape(c)}</div>`).join('')}
+              </div>
+            </div>
+            <div class="result-fit-grid">
+              <div class="result-fit suitable"><span class="result-fit-label">✓ 适合：</span>${escape(d.reality_check.suitable_for || '暂无')}</div>
+              <div class="result-fit not-suitable"><span class="result-fit-label">✗ 不适合：</span>${escape(d.reality_check.not_suitable_for || '暂无')}</div>
+            </div>
+            <div class="result-misconceptions">💡 常见误解：${escape(d.reality_check.misconceptions || '暂无')}</div>
+
+            <div class="result-section-title">🚀 入行路径建议</div>
+            <div class="result-entry-block">
+              <div class="result-entry-fresh">${escape(d.entry_path.fresh_grad || '')}</div>
+              <div class="result-entry-projects">
+                ${(keyProjects || []).map(p => `<span class="result-project-chip">📁 ${escape(p)}</span>`).join('')}
+              </div>
+              <div class="result-entry-timeline">⏱ 预计时间：${escape(d.entry_path.timeline || '')}</div>
+            </div>
+
+            <div class="result-section-title">🤖 AI综合分析</div>
+            <div class="result-summary-block">${escape(d.ai_summary || '')}</div>
+
+            <div class="result-foot">
+              <button type="button" class="btn-foot-outline" data-action="graph">查看关联图谱</button>
+              <button type="button" class="btn-foot-primary" data-action="save">保存画像</button>
+            </div>
+          </div>
+        </div>`;
+
+        this._bindAiGenResultActions(container, jobId, jobName);
+        container.querySelector('[data-action="save"]')?.addEventListener('click', () => this.showToast('画像已保存', 'success'));
+    }
+
+    _bindAiGenResultActions(container, jobId, jobName) {
+        container.querySelector('[data-action="graph"]')?.addEventListener('click', () => {
+            const graphInput = document.getElementById('graphJobName');
+            if (jobId) this.loadJobRelationGraph(jobId);
+            else {
+                if (graphInput) graphInput.value = jobName;
+                this.loadJobRelationGraphBySearch();
+            }
+            this.switchJobProfileTab('graph');
+        });
+        container.querySelector('[data-action="target"]')?.addEventListener('click', () => this.showToast('已加入目标岗位', 'success'));
+    }
+
+    // 4.4 + 4.5 AI 生成岗位画像（带三步进度与错误提示）
     async generateJobProfile() {
         const jobNameInput = document.getElementById('aiJobName');
         const jobDescriptionsInput = document.getElementById('aiJobDescriptions');
-        
+        const btn = document.getElementById('aiGenerateJobBtn');
+        const resultContainer = document.getElementById('aiGenerateResult');
+        const errorBar = document.getElementById('aiErrorBar');
+
         if (!jobNameInput || !jobNameInput.value.trim()) {
             this.showToast('请输入岗位名称', 'error');
             return;
@@ -2264,72 +2984,101 @@ class CareerPlanningApp {
 
         const jobName = jobNameInput.value.trim();
         const jobDescriptions = jobDescriptionsInput ? jobDescriptionsInput.value.split('\n').filter(d => d.trim()) : [];
-        const sampleSize = parseInt(document.getElementById('aiSampleSize')?.value || '30');
+        const industry = this._getAIGenIndustry();
+        const experience = this._getAIGenExperience();
 
-        const statusDiv = document.getElementById('aiGenerateStatus');
-        if (statusDiv) {
-            statusDiv.textContent = 'AI生成中...';
-            statusDiv.style.background = '#e0f2fe';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ AI分析中...';
         }
+        if (resultContainer) resultContainer.innerHTML = '';
+        if (errorBar) errorBar.classList.add('hidden');
 
-        const result = await aiGenerateJobProfile(jobName, jobDescriptions, sampleSize);
+        this._setAIGenSteps(0);
+        setTimeout(() => this._setAIGenSteps(1), 1500);
+        setTimeout(() => this._setAIGenSteps(2), 3000);
+        setTimeout(() => this._setAIGenSteps(3), 4500);
 
-        if (result.success) {
-            const taskId = result.data.task_id;
-            this.pollJobAiGenerateResult(taskId);
-        } else {
-            if (statusDiv) {
-                statusDiv.textContent = '生成失败: ' + result.msg;
-                statusDiv.style.background = '#fee2e2';
+        try {
+            console.log('[AI生成] 请求触发生成，岗位:', jobName, '| 将请求 http://localhost:5001/api/v1/job/ai-generate-profile');
+            const result = await aiGenerateJobProfile(jobName, jobDescriptions, 30, industry, experience);
+            if (!result.success) {
+                this._hideAIGenProgress();
+                this._showAIGenError();
+                if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
+                return;
             }
+            const taskId = result.data?.task_id;
+            if (!taskId) {
+                console.error('[AI生成] 接口未返回 task_id，完整响应:', result);
+                this._hideAIGenProgress();
+                this._showAIGenError();
+                if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
+                return;
+            }
+            console.log('[AI生成] 轮询结果，task_id:', taskId);
+            setTimeout(async () => {
+                this._hideAIGenProgress();
+                try {
+                    const pollResult = await getJobAiGenerateResult(taskId);
+                    if (pollResult.success && pollResult.data.status === 'completed') {
+                        this._renderAiGenResultCard(pollResult.data);
+                        if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
+                    } else if (pollResult.success && pollResult.data.status === 'failed') {
+                        this._showAIGenError();
+                        if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
+                    } else {
+                        this.pollJobAiGenerateResult(taskId, btn);
+                    }
+                } catch (e) {
+                    this._showAIGenError();
+                    if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
+                }
+            }, 4500);
+        } catch (e) {
+            this._hideAIGenProgress();
+            this._showAIGenError();
+            if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
         }
     }
 
-    // 轮询 AI 生成结果
-    async pollJobAiGenerateResult(taskId, maxAttempts = 20) {
+    pollJobAiGenerateResult(taskId, btn, maxAttempts = 20) {
         let attempts = 0;
-        const statusDiv = document.getElementById('aiGenerateStatus');
         const resultContainer = document.getElementById('aiGenerateResult');
+        const errorBar = document.getElementById('aiErrorBar');
+        const reEnableBtn = () => {
+            if (btn) { btn.disabled = false; btn.innerHTML = '✨ 重新生成'; }
+        };
 
         const poll = async () => {
             if (attempts >= maxAttempts) {
-                if (statusDiv) statusDiv.textContent = '生成超时，请稍后查看';
+                this._showAIGenError();
+                reEnableBtn();
                 return;
             }
-
-            const result = await getJobAiGenerateResult(taskId);
-
-            if (result.success) {
-                if (result.data.status === 'completed') {
-                    if (statusDiv) {
-                        statusDiv.textContent = '生成完成！';
-                        statusDiv.style.background = '#dcfce7';
+            try {
+                const result = await getJobAiGenerateResult(taskId);
+                if (result.success) {
+                    if (result.data.status === 'completed') {
+                        this._renderAiGenResultCard(result.data);
+                        reEnableBtn();
+                        return;
                     }
-                    if (resultContainer) {
-                        resultContainer.innerHTML = `
-                            <h4>AI生成结果</h4>
-                            <p>置信度: ${(result.data.ai_confidence * 100).toFixed(1)}%</p>
-                            <p>数据源: ${result.data.data_sources.total_samples} 个样本</p>
-                            <button onclick="app.showJobProfileDetail('${result.data.job_profile.job_id || result.data.job_profile.job_name}', ${!result.data.job_profile.job_id})" class="btn-primary">查看画像</button>
-                        `;
+                    if (result.data.status === 'failed') {
+                        this._showAIGenError();
+                        reEnableBtn();
+                        return;
                     }
-                } else if (result.data.status === 'failed') {
-                    if (statusDiv) {
-                        statusDiv.textContent = '生成失败';
-                        statusDiv.style.background = '#fee2e2';
-                    }
-                } else {
-                    attempts++;
-                    if (statusDiv) statusDiv.textContent = `生成中... (${attempts * 3}秒)`;
-                    setTimeout(poll, 3000);
                 }
-            } else {
-                attempts++;
-                setTimeout(poll, 3000);
+            } catch (e) {
+                this._showAIGenError();
+                reEnableBtn();
+                return;
             }
+            attempts++;
+            setTimeout(poll, 3000);
         };
-
-        poll();
+        setTimeout(poll, 3000);
     }
 
     // 切换标签页（岗位匹配页面）
@@ -2359,8 +3108,10 @@ class CareerPlanningApp {
         }
     }
 
-    // 切换岗位画像标签页
+    // 切换岗位画像标签页（切换时关闭详情面板/弹窗）
     switchJobProfileTab(tabName) {
+        this.closeJobDetailModal();
+
         // 更新按钮状态
         document.querySelectorAll('#jobProfilePage .tab-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -2379,6 +3130,7 @@ class CareerPlanningApp {
         }
     }
 
+<<<<<<< Updated upstream
     // 获取搜索筛选条件（城市、行业、薪资、企业性质）
     getSearchFilters() {
         return {
@@ -2388,6 +3140,41 @@ class CareerPlanningApp {
             company_nature: (document.getElementById('searchFilterCompanyType')?.value || '').trim()
         };
     }
+=======
+    // 关联图谱：按岗位名称解析 job_id 后加载图谱
+    async loadJobRelationGraphBySearch() {
+        const input = document.getElementById('graphJobName');
+        const keyword = input?.value.trim();
+        if (!keyword) {
+            this.showToast('请输入岗位名称', 'error');
+            return;
+        }
+        let jobId = this.selectedGraphJobId;
+        if (!jobId) {
+            const result = await getJobProfiles(1, 20, keyword, '', '');
+            if (!result.success || !result.data.list || result.data.list.length === 0) {
+                this.showToast('未找到匹配的岗位，请检查名称或从下拉中选择', 'error');
+                return;
+            }
+            const first = result.data.list[0];
+            const exact = result.data.list.find(j => (j.job_name || '').trim() === keyword);
+            jobId = (exact || first).job_id;
+        }
+        if (jobId) {
+            this.loadJobRelationGraph(jobId);
+        } else {
+            this.showToast('未找到对应岗位ID', 'error');
+        }
+    }
+
+    // 搜索岗位
+    async searchJobs() {
+        const keyword = document.getElementById('jobSearchInput').value.trim();
+        if (!keyword) {
+            this.showToast('请输入搜索关键词', 'error');
+            return;
+        }
+>>>>>>> Stashed changes
 
     // 加载默认岗位列表（无关键词时显示，应用筛选条件）
     async loadDefaultJobs() {

@@ -62,17 +62,43 @@ def _ensure_store_dir() -> str:
 
 
 def _load_profiles_store() -> dict:
-    store_path = _ensure_store_dir()
-    if not os.path.exists(store_path):
-        return {}
+    """直接从 CSV 加载岗位数据，不再读取 profiles.json。"""
     try:
-        with open(store_path, "r", encoding="utf-8") as f:
-            text = f.read().strip()
-            if not text:          # 文件存在但内容为空
-                return {}
-            return json.loads(text)
-    except (json.JSONDecodeError, ValueError) as e:
-        logger.warning(f"[ProfileStore] profiles.json 解析失败（{e}），已重置为空字典")
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, "..", "data", "求职岗位信息数据.csv")
+        csv_path = os.path.normpath(csv_path)
+        print(f"CSV路径: {csv_path}, 存在: {os.path.exists(csv_path)}")
+        if not os.path.exists(csv_path):
+            logger.warning(f"[ProfileStore] CSV 不存在: {csv_path}，返回空字典")
+            return {}
+        profiles = {}
+        with open(csv_path, encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for i, row in enumerate(reader):
+                job_id = row.get("职位编号") or f"job_{i+1:04d}"
+                job_name = row.get("职位名称", "").strip() or f"岗位_{i+1}"
+                profiles[job_id] = {
+                    "job_id": job_id,
+                    "job_name": job_name,
+                    "basic_info": {
+                        "industry": row.get("所属行业", ""),
+                        "level_range": ["初级"],
+                        "salary_range": row.get("薪资范围", ""),
+                        "location": row.get("工作地址", ""),
+                        "company": row.get("公司全称", ""),
+                        "company_scale": row.get("人员规模", ""),
+                        "company_type": row.get("企业性质", ""),
+                    },
+                    "description": row.get("职位描述", ""),
+                    "company_intro": row.get("公司简介", ""),
+                    "market_analysis": {"demand_score": 75, "growth_trend": "稳定"},
+                }
+        print(f"CSV加载成功: {len(profiles)} 条")
+        logger.info(f"[ProfileStore] 已从 CSV 加载 {len(profiles)} 条岗位数据: {csv_path}")
+        return profiles
+    except Exception as e:
+        print(f"CSV加载失败: {e}")
+        logger.warning(f"[ProfileStore] CSV 加载失败: {e}", exc_info=True)
         return {}
 
 
@@ -101,9 +127,10 @@ def _normalize_profile(p: dict) -> dict:
         lr = bi.get("level_range", [])
         bi["level"] = lr[0] if lr else "初级"
 
-    # basic_info.avg_salary：文档要求单字符串，兜底取 salary_range.junior
+    # basic_info.avg_salary：文档要求单字符串；CSV 为字符串，旧画像为 dict
     if "avg_salary" not in bi:
-        bi["avg_salary"] = bi.get("salary_range", {}).get("junior", "")
+        sr = bi.get("salary_range")
+        bi["avg_salary"] = sr.get("junior", "") if isinstance(sr, dict) else (sr or "")
 
     # basic_info.company_scales：文档要求存在此字段
     if "company_scales" not in bi:
@@ -154,6 +181,150 @@ def _extract_json(text: str) -> dict:
             except Exception:
                 pass
         raise ValueError(f"模型输出无法解析为JSON，片段: {text[:300]}")
+
+
+def _normalize_job_profile(profile: dict) -> dict:
+    """确保画像包含前端展示所需的所有字段结构，缺失时用空值兜底，避免页面全空"""
+    if not isinstance(profile, dict):
+        return {}
+    # core_skills
+    core = profile.get("core_skills")
+    if not isinstance(core, dict):
+        core = {}
+    for list_key in ("professional", "tools", "certificates"):
+        if not isinstance(core.get(list_key), list):
+            core[list_key] = []
+    soft = core.get("soft_skills")
+    if not isinstance(soft, dict):
+        soft = {}
+    for key in ("innovation", "learning", "pressure", "communication", "internship"):
+        if key not in soft or not (soft[key] and str(soft[key]).strip()):
+            soft[key] = soft.get(key) or "暂无描述"
+    core["soft_skills"] = soft
+    profile["core_skills"] = core
+    # reality_check
+    rc = profile.get("reality_check")
+    if not isinstance(rc, dict):
+        rc = {}
+    if not isinstance(rc.get("pros"), list):
+        rc["pros"] = []
+    if not isinstance(rc.get("cons"), list):
+        rc["cons"] = []
+    for key in ("misconceptions", "suitable_for", "not_suitable_for"):
+        if key not in rc or not (rc[key] and str(rc[key]).strip()):
+            rc[key] = rc.get(key) or "暂无"
+    profile["reality_check"] = rc
+    # entry_path
+    ep = profile.get("entry_path")
+    if not isinstance(ep, dict):
+        ep = {}
+    if not isinstance(ep.get("key_projects"), list):
+        ep["key_projects"] = []
+    ep.setdefault("fresh_grad", ep.get("fresh_grad") or "")
+    ep.setdefault("timeline", ep.get("timeline") or "")
+    profile["entry_path"] = ep
+    # ai_summary
+    if not (profile.get("ai_summary") and str(profile.get("ai_summary")).strip()):
+        profile["ai_summary"] = profile.get("ai_summary") or profile.get("summary") or ""
+    return profile
+
+
+def _old_profile_to_new(profile: dict) -> dict:
+    """
+    若模型返回旧版 job_profile（含 basic_info/requirements 等），
+    转换为前端与 4.5 接口约定的新结构：core_skills、reality_check、entry_path、ai_summary。
+    """
+    if not isinstance(profile, dict):
+        return profile
+    # 已有新结构（含 core_skills 的 professional/tools 或 reality_check）则不再转换
+    core = profile.get("core_skills")
+    if isinstance(core, dict) and ("professional" in core or "tools" in core):
+        return profile
+    if isinstance(profile.get("reality_check"), dict) and isinstance(profile.get("entry_path"), dict):
+        return profile
+    basic = profile.get("basic_info") or {}
+    reqs = profile.get("requirements") or {}
+    basic_req = reqs.get("basic_requirements") or {}
+    career = profile.get("career_development") or {}
+    prof_skills = reqs.get("professional_skills") or {}
+    core_skills_old = reqs.get("core_skills") or {}
+
+    # 专业技能：旧版 programming_languages + domain_knowledge 的 skill，或 core_skills.technical_skills
+    professional = list(core_skills_old.get("technical_skills") or [])
+    if not professional:
+        for lang in prof_skills.get("programming_languages") or []:
+            s = lang.get("skill") if isinstance(lang, dict) else lang
+            if s:
+                professional.append(s if isinstance(s, str) else str(s))
+        for dom in prof_skills.get("domain_knowledge") or []:
+            s = dom.get("skill") if isinstance(dom, dict) else dom
+            if s:
+                professional.append(s if isinstance(s, str) else str(s))
+
+    # 工具
+    tools = list(core_skills_old.get("tools") or [])
+    if not tools:
+        for t in prof_skills.get("frameworks_tools") or []:
+            s = t.get("skill") if isinstance(t, dict) else t
+            if s:
+                tools.append(s if isinstance(s, str) else str(s))
+
+    # 证书
+    certs = list(basic_req.get("certifications") or [])
+    if not certs and basic_req.get("education"):
+        edu = basic_req["education"]
+        if isinstance(edu, dict) and edu.get("level"):
+            certs = [edu.get("level", "")]
+        elif isinstance(edu, str):
+            certs = [edu]
+
+    # 软技能：旧版可能是列表或字典
+    soft_list = core_skills_old.get("soft_skills")
+    if isinstance(soft_list, list):
+        soft_list = [str(s) for s in soft_list]
+    elif not isinstance(soft_list, list):
+        soft_list = []
+    def _find_soft(keywords):
+        for s in soft_list:
+            if any(kw in str(s) for kw in keywords):
+                return s
+        return "暂无描述"
+    soft_skills = {
+        "innovation": _find_soft(["创新"]),
+        "learning": _find_soft(["学习"]),
+        "pressure": _find_soft(["压", "抗压"]),
+        "communication": _find_soft(["沟通", "协作"]),
+        "internship": (basic_req.get("experience") or career.get("experience") or "暂无描述"),
+    }
+    if isinstance(soft_skills["internship"], dict):
+        soft_skills["internship"] = str(soft_skills["internship"]) or "暂无描述"
+
+    profile["industry"] = basic.get("industry") or profile.get("industry") or ""
+    profile["salary_range"] = basic.get("avg_salary") or profile.get("salary_range") or ""
+    profile["demand_score"] = profile.get("demand_score") or (profile.get("market_analysis") or {}).get("demand_score") or 85
+    profile["trend"] = (profile.get("market_info") or {}).get("trend") or (profile.get("market_analysis") or {}).get("trend") or "上升"
+    profile["trend_desc"] = (profile.get("market_info") or {}).get("trend_desc") or ""
+
+    profile["core_skills"] = {
+        "professional": professional,
+        "tools": tools,
+        "certificates": certs,
+        "soft_skills": soft_skills,
+    }
+    profile["reality_check"] = {
+        "pros": list(career.get("advantages") or []),
+        "cons": list(career.get("challenges") or []),
+        "suitable_for": profile.get("suitable_for") or career.get("suitable_for") or "暂无",
+        "not_suitable_for": profile.get("not_suitable_for") or career.get("not_suitable_for") or "暂无",
+        "misconceptions": profile.get("misconceptions") or "暂无",
+    }
+    profile["entry_path"] = {
+        "fresh_grad": career.get("entry_advice") or profile.get("entry_advice") or "",
+        "key_projects": list(career.get("key_projects") or []),
+        "timeline": career.get("timeline") or "",
+    }
+    profile["ai_summary"] = (profile.get("description") or profile.get("ai_summary") or profile.get("summary") or "").strip() or "AI已根据岗位数据生成画像摘要。"
+    return profile
 
 
 # ========== 数据集提取器（数据优先策略的核心）==========
@@ -360,9 +531,41 @@ class JobProfileService:
             "data_section": data_section,
             "dim_weights":  json.dumps(weights, ensure_ascii=False),
         })
+        # 调试：打印 qwen 完整返回内容（StrOutputParser 下 raw_output 即为模型输出字符串）
+        content = raw_output if isinstance(raw_output, str) else getattr(raw_output, "content", str(raw_output))
+        print("=== qwen完整返回 ===")
+        print(content)
+        print("=== 返回长度:", len(content), "===")
 
         # Step 4: 解析JSON
-        profile = _extract_json(raw_output)
+        try:
+            profile = _extract_json(raw_output)
+        except Exception as e:
+            logger.error(f"  [画像] JSON解析失败，输出长度: {len(raw_output)}，前500字: {raw_output[:500]}")
+            raise
+        if not isinstance(profile, dict):
+            profile = {}
+        # 调试：打印解析后的 job_profile 关键字段（解析后、转换前的原始结构）
+        req = profile.get("requirements") or {}
+        core_skills = req.get("core_skills") or {}
+        career = profile.get("career_development") or {}
+        print("=== 解析后 profile 关键字段 ===")
+        print("technical_skills:", core_skills.get("technical_skills"))
+        print("soft_skills:", core_skills.get("soft_skills"))
+        print("advantages:", career.get("advantages"))
+        print("core_skills(新格式):", profile.get("core_skills"))
+        print("reality_check(新格式):", profile.get("reality_check"))
+        print("ai_summary/description:", profile.get("ai_summary") or profile.get("description"))
+        print("================================")
+        # 若模型返回旧版结构（basic_info/requirements），转为新结构（core_skills/reality_check/entry_path/ai_summary）
+        profile = _old_profile_to_new(profile)
+        # 规范化结构，确保前端所需字段存在（避免全空展示）
+        profile = _normalize_job_profile(profile)
+        has_core = bool(profile.get("core_skills", {}).get("professional") or profile.get("core_skills", {}).get("tools"))
+        has_reality = bool(profile.get("reality_check", {}).get("pros") or profile.get("reality_check", {}).get("cons"))
+        has_summary = bool(profile.get("ai_summary") and str(profile.get("ai_summary")).strip())
+        if not (has_core or has_reality or has_summary):
+            logger.warning(f"  [画像] 模型返回内容较少，核心技能/职场洞察/摘要多为空，请检查模型输出长度或 prompt。输出长度: {len(raw_output)}")
 
         # Step 5: 注入/校验关键元数据
         profile.setdefault("job_id",   job_id)
@@ -436,40 +639,112 @@ class JobProfileService:
     # ===================================================
     def get_profile_list(self, page=1, size=20, keyword=None,
                          industry=None, level=None, category=None) -> dict:
+        # 从全量数据开始，仅在有有效筛选条件时才过滤（空 keyword/全部行业/全部级别 不过滤）
         profiles = list(self.profiles_store.values())
-        if keyword:
-            profiles = [p for p in profiles if keyword in p.get("job_name", "")
-                        or keyword in p.get("category", "")]
-        if industry:
+        total_count_before_filter = len(profiles)  # 调试用：过滤前总数据量
+
+        # 【问题1】仅当 keyword 非空时才按职位名称过滤，避免空字符串当条件导致结果为空或异常
+        kw = (keyword or "").strip()
+        if kw:
             profiles = [p for p in profiles
-                        if industry in p.get("basic_info", {}).get("industry", "")]
-        if level:
+                        if kw.lower() in ((p.get("job_name") or "").lower())]
+            def _relevance(p):
+                name = (p.get("job_name") or "").lower()
+                k = kw.lower()
+                if name == k:
+                    return 0
+                if name.startswith(k):
+                    return 1
+                return 2
+            profiles.sort(key=_relevance)
+
+        # 行业：仅当传入有效值且非「全部」时才过滤
+        if industry and industry not in ("", "全部行业", "全部"):
             profiles = [p for p in profiles
-                        if level in p.get("basic_info", {}).get("level_range", [])]
+                        if industry in (p.get("basic_info") or {}).get("industry", "")]
+        # 级别：仅当传入有效值且非「全部」时才过滤
+        if level and level not in ("", "全部级别", "全部"):
+            def _level_match(p):
+                lr = (p.get("basic_info") or {}).get("level_range") or []
+                if not isinstance(lr, list):
+                    lr = [lr] if lr else []
+                return level in lr
+            profiles = [p for p in profiles if _level_match(p)]
         if category:
             profiles = [p for p in profiles if p.get("category") == category]
 
+        # 按岗位名称相似度去重，保留每类岗位最具代表性的一条（去重后再分页）
+        seen_names = set()
+        deduped = []
+        for p in profiles:
+            core_name = re.sub(r"[（(].*?[)）]", "", p.get("job_name", "") or "").strip()
+            core_name = re.sub(r"[·•\-·].*", "", core_name).strip()
+            if core_name not in seen_names:
+                seen_names.add(core_name)
+                deduped.append(p)
+        profiles = deduped
+
         total = len(profiles)
-        page_data = profiles[(page - 1) * size: page * size]
-        return {
-            "total": total, "page": page, "size": size,
-            "list": [{
+        # 调试日志：总数据量 / 过滤后条数 / keyword
+        print(f"总数据量: {total_count_before_filter}, 过滤后: {len(profiles)}, keyword='{keyword or ''}'")
+        # 【问题2】分页：start = (page-1)*size, end = start+size，取 records[start:end]
+        start = (page - 1) * size
+        end = start + size
+        page_data = profiles[start:end]
+
+        def _item(p):
+            bi = p.get("basic_info", {})
+            ma = p.get("market_analysis", {})
+            skills = []
+            req = p.get("requirements", {}) or {}
+            ps = req.get("professional_skills") or {}
+            if ps.get("programming_languages"):
+                skills.extend([x.get("skill") for x in ps["programming_languages"] if x.get("skill")])
+            if ps.get("frameworks_tools"):
+                skills.extend([x.get("skill") for x in ps["frameworks_tools"] if x.get("skill")])
+            if not skills and ma.get("tags"):
+                skills = ma.get("tags", [])[:6]
+            # salary_range：CSV 为字符串，旧画像为 dict，兼容两种
+            sr = bi.get("salary_range")
+            avg_salary = sr.get("junior", "") if isinstance(sr, dict) else (sr or "")
+            # level_range：可能是 list 或单值
+            lr = bi.get("level_range") or []
+            if not isinstance(lr, list):
+                lr = [lr] if lr else [""]
+            level_str = lr[0] if lr else ""
+            # industry / location / company_scale：CSV 为字符串，兼容旧数据
+            ind = bi.get("industry")
+            industry_str = ind if isinstance(ind, str) else (ind.get("name", "") if isinstance(ind, dict) else "")
+            return {
                 "job_id":       p.get("job_id"),
                 "job_name":     p.get("job_name"),
                 "job_code":     p.get("job_code"),
                 "category":     p.get("category"),
-                "industry":     p.get("basic_info", {}).get("industry"),
-                "level_range":  p.get("basic_info", {}).get("level_range", []),
-                "level":        (p.get("basic_info", {}).get("level_range") or [""])[0],  # 对应API文档4.1 level字段
-                "avg_salary":   p.get("basic_info", {}).get("salary_range", {}).get("junior", ""),
-                "description":  p.get("basic_info", {}).get("description"),
-                "demand_score": p.get("market_analysis", {}).get("demand_score", 0),
-                "growth_trend": p.get("market_analysis", {}).get("growth_trend"),
-                "tags":         p.get("market_analysis", {}).get("tags", []),
+                "industry":     industry_str,
+                "level_range":  lr,
+                "level":        level_str,
+                "avg_salary":   avg_salary,
+                "description":  bi.get("description"),
+                "demand_score": ma.get("demand_score", 0),
+                "growth_trend": ma.get("growth_trend"),
+                "tags":         ma.get("tags", []),
+                "skills":       skills,
                 "data_source":  p.get("data_source"),
                 "created_at":   p.get("created_at"),
-            } for p in page_data],
+            }
+        return {
+            "total": total, "page": page, "size": size,
+            "list": [_item(p) for p in page_data],
         }
+
+    def get_industries(self) -> list:
+        """返回所有岗位中的去重行业列表，用于前端筛选下拉"""
+        industries = set()
+        for p in self.profiles_store.values():
+            ind = (p.get("basic_info") or {}).get("industry")
+            if ind:
+                industries.add(ind.strip())
+        return sorted(industries)
 
     def get_profile_detail(self, job_id: str) -> Optional[dict]:
         p = self.profiles_store.get(job_id)

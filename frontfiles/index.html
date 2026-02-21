@@ -526,26 +526,46 @@
         <!-- 岗位画像页面 -->
         <div id="jobProfilePage" class="page hidden">
             <div class="job-profile-container">
-                <h2>📊 岗位画像</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">AI驱动的智能岗位分析系统 | GradQuest职业规划平台</p>
-                
+                <header class="job-profile-header">
+                    <div class="job-profile-header-left">
+                        <span class="job-profile-tag">AI · 职业规划平台</span>
+                        <div class="job-profile-title-row">
+                            <div class="job-profile-title-bar"></div>
+                            <span class="job-profile-title">岗位画像</span>
+                        </div>
+                        <p class="job-profile-subtitle">智能岗位分析 · 职业发展导航</p>
+                    </div>
+                    <div class="job-profile-stats-cards">
+                        <div class="job-profile-stat-card">
+                            <div class="job-profile-stat-value job-profile-stat-value-1">10,000+</div>
+                            <div class="job-profile-stat-label">真实岗位</div>
+                        </div>
+                        <div class="job-profile-stat-card">
+                            <div class="job-profile-stat-value job-profile-stat-value-2">100+</div>
+                            <div class="job-profile-stat-label">覆盖行业</div>
+                        </div>
+                        <div class="job-profile-stat-card">
+                            <div class="job-profile-stat-value job-profile-stat-value-3">90%+</div>
+                            <div class="job-profile-stat-label">匹配准确率</div>
+                        </div>
+                    </div>
+                </header>
+
                 <div class="job-profile-tabs">
-                    <button class="tab-btn active" data-tab="list">📋 岗位列表</button>
-                    <button class="tab-btn" data-tab="graph">🔗 关联图谱</button>
-                    <button class="tab-btn" data-tab="ai">✨ AI生成</button>
+                    <button class="tab-btn active" data-tab="list"><span class="tab-btn-icon">📋</span><span>岗位列表</span></button>
+                    <button class="tab-btn" data-tab="graph"><span class="tab-btn-icon">🔗</span><span>关联图谱</span></button>
+                    <button class="tab-btn" data-tab="ai"><span class="tab-btn-icon">✨</span><span>AI生成</span></button>
                 </div>
 
                 <!-- 岗位列表 Tab -->
                 <div class="tab-content active" id="listTab">
                     <div class="job-profile-filters">
-                        <input type="text" id="jobProfileKeyword" placeholder="搜索岗位名称...">
+                        <div class="job-profile-search-wrap">
+                            <input type="text" id="jobProfileKeyword" placeholder="搜索岗位名称、行业或技能标签..." autocomplete="off">
+                            <span id="jobProfileKeywordClear" class="job-profile-clear-btn hidden" aria-label="清空搜索">&times;</span>
+                        </div>
                         <select id="jobProfileIndustry">
                             <option value="">全部行业</option>
-                            <option value="互联网">互联网</option>
-                            <option value="金融">金融</option>
-                            <option value="制造业">制造业</option>
-                            <option value="教育">教育</option>
-                            <option value="医疗">医疗</option>
                         </select>
                         <select id="jobProfileLevel">
                             <option value="">全部级别</option>
@@ -555,15 +575,20 @@
                         </select>
                         <button id="jobProfileSearchBtn" class="btn-primary">搜索</button>
                     </div>
+                    <p id="jobProfileListTip" class="job-profile-list-tip">精选 12 个热门岗位 · 共收录 100+ 岗位</p>
                     <div id="jobProfileList" class="jobs-grid">
                         <div class="loading-message">加载岗位列表中...</div>
                     </div>
+                    <div id="jobProfileListFooter" class="job-profile-list-footer"></div>
                 </div>
 
                 <!-- 关联图谱 Tab -->
                 <div class="tab-content" id="graphTab">
                     <div class="graph-controls">
-                        <input type="text" id="graphJobId" placeholder="岗位ID: job_001-job_012 (如: job_001 算法工程师)" style="flex: 1;">
+                        <div class="graph-search-wrap" style="flex: 1;">
+                            <input type="text" id="graphJobName" placeholder="输入岗位名称，如：算法工程师" autocomplete="off">
+                            <div id="graphJobSuggestions" class="graph-job-suggestions hidden"></div>
+                        </div>
                         <select id="graphTypeSelect">
                             <option value="all">全部</option>
                             <option value="vertical">垂直晋升</option>
@@ -571,35 +596,102 @@
                         </select>
                         <button id="jobProfileGraphBtn" class="btn-primary">加载图谱</button>
                     </div>
-                    <div id="jobProfileGraph" class="graph-container">
-                        <p class="hint-text">请输入岗位ID并选择图谱类型</p>
+                    <div id="jobProfileGraph">
+                        <div class="graph-empty-state">
+                            <span class="graph-empty-icon">🔗</span>
+                            <p class="graph-empty-title">输入岗位名称查看关联图谱</p>
+                            <p class="graph-empty-desc">了解岗位间的晋升路径与横向转岗关系</p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- AI生成 Tab -->
                 <div class="tab-content" id="aiTab">
-                    <div class="ai-generate-form" style="background: var(--card-bg); padding: 32px; border-radius: 16px; box-shadow: var(--shadow);">
-                        <h3 style="margin-bottom: 24px; font-size: 20px; color: var(--text-primary);">AI生成岗位画像</h3>
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">岗位名称 *</label>
-                            <input type="text" id="aiJobName" placeholder="如: AI产品经理" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <div class="ai-gen-wrap">
+                        <div class="ai-gen-main">
+                            <div class="ai-gen-form-card">
+                                <div class="ai-gen-form-head">
+                                    <div class="ai-gen-form-title">✨ AI生成岗位画像</div>
+                                    <div class="ai-gen-form-sub">输入岗位名称，AI 自动分析技能要求、薪资区间与市场需求</div>
+                                </div>
+                                <div class="ai-gen-field">
+                                    <label class="ai-gen-label">岗位名称 <span class="required">*</span></label>
+                                    <div class="ai-gen-input-wrap">
+                                        <input type="text" id="aiJobName" class="ai-gen-input" placeholder="如：算法工程师" autocomplete="off">
+                                        <div id="aiJobSuggestList" class="ai-gen-suggest-list hidden"></div>
+                                    </div>
+                                </div>
+                                <div class="ai-gen-field">
+                                    <label class="ai-gen-label">岗位描述 <span class="ai-gen-label-opt">（可选，每行一个JD）</span></label>
+                                    <textarea id="aiJobDescriptions" class="ai-gen-textarea" rows="4" placeholder="可从招聘网站复制多个岗位描述，每行一个，AI 将综合分析..."></textarea>
+                                </div>
+                                <div class="ai-gen-field">
+                                    <label class="ai-gen-label">行业方向</label>
+                                    <div class="ai-gen-pill-group" id="aiIndustryGroup">
+                                        <button type="button" class="ai-gen-pill active" data-value="互联网/AI">互联网/AI</button>
+                                        <button type="button" class="ai-gen-pill" data-value="新能源">新能源</button>
+                                        <button type="button" class="ai-gen-pill" data-value="金融">金融</button>
+                                        <button type="button" class="ai-gen-pill" data-value="医疗">医疗</button>
+                                        <button type="button" class="ai-gen-pill" data-value="制造业">制造业</button>
+                                        <button type="button" class="ai-gen-pill" data-value="咨询">咨询</button>
+                                    </div>
+                                </div>
+                                <div class="ai-gen-field">
+                                    <label class="ai-gen-label">经验阶段</label>
+                                    <div class="ai-gen-pill-group" id="aiExperienceGroup">
+                                        <button type="button" class="ai-gen-pill active" data-value="应届生">应届生</button>
+                                        <button type="button" class="ai-gen-pill" data-value="1-3年">1-3年</button>
+                                        <button type="button" class="ai-gen-pill" data-value="3-5年">3-5年</button>
+                                        <button type="button" class="ai-gen-pill" data-value="5年以上">5年以上</button>
+                                    </div>
+                                </div>
+                                <div class="ai-gen-actions">
+                                    <button type="button" id="aiGenerateJobBtn" class="ai-gen-btn">✨ 开始生成</button>
+                                </div>
+                                <div id="aiProgressWrap" class="ai-gen-progress-wrap hidden">
+                                    <div class="ai-gen-progress-step" id="aiStep1"><span class="ai-gen-step-dot"></span><span class="ai-gen-step-text">🔍 正在分析岗位需求...</span></div>
+                                    <div class="ai-gen-progress-step" id="aiStep2"><span class="ai-gen-step-dot"></span><span class="ai-gen-step-text">🧠 正在匹配技能要求...</span></div>
+                                    <div class="ai-gen-progress-step" id="aiStep3"><span class="ai-gen-step-dot"></span><span class="ai-gen-step-text">📊 正在生成画像报告...</span></div>
+                                </div>
+                                <div id="aiErrorBar" class="ai-gen-error-bar hidden">⚠️ 生成失败，请确认AI服务已启动或稍后重试</div>
+                                <div id="aiGenerateResult" class="ai-gen-result-section"></div>
+                            </div>
                         </div>
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">岗位描述（可选，每行一个JD）</label>
-                            <textarea id="aiJobDescriptions" rows="5" placeholder="可以从招聘网站复制多个岗位描述，每行一个..." style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit;"></textarea>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">样本数量</label>
-                            <input type="number" id="aiSampleSize" value="30" min="10" max="100" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
-                        </div>
-                        <button id="aiGenerateJobBtn" class="btn-primary" style="width: 100%;">开始生成</button>
-                        <div id="aiGenerateStatus" class="generate-status" style="margin-top: 16px;"></div>
-                        <div id="aiGenerateResult" class="generate-result" style="margin-top: 16px;"></div>
+                        <aside class="ai-gen-sidebar">
+                            <div class="ai-gen-guide-card">
+                                <div class="ai-gen-guide-title">💡 使用说明</div>
+                                <div class="ai-gen-guide-step"><span class="ai-gen-guide-num">1</span><span class="ai-gen-guide-text">输入你感兴趣的岗位名称，支持联想选择</span></div>
+                                <div class="ai-gen-guide-step"><span class="ai-gen-guide-num">2</span><span class="ai-gen-guide-text">可粘贴多条招聘JD，AI 综合分析更准确</span></div>
+                                <div class="ai-gen-guide-step"><span class="ai-gen-guide-num">3</span><span class="ai-gen-guide-text">选择行业方向和经验阶段，获取针对性分析</span></div>
+                                <div class="ai-gen-guide-step" style="margin-bottom:0"><span class="ai-gen-guide-num">4</span><span class="ai-gen-guide-text">查看技能要求、薪资区间和市场需求数据</span></div>
+                            </div>
+                            <div class="ai-gen-hot-card">
+                                <div class="ai-gen-hot-title">🔥 热门岗位</div>
+                                <div class="ai-gen-hot-list" id="aiHotJobList"></div>
+                            </div>
+                        </aside>
                     </div>
                 </div>
 
-                <!-- 岗位详情（隐藏，点击列表项时显示） -->
-                <div id="jobProfileDetail" class="job-profile-detail hidden"></div>
+            </div>
+        </div>
+
+        <!-- 岗位详情弹窗 Modal -->
+        <div id="jobDetailModal" class="job-detail-modal-overlay hidden">
+            <div class="job-detail-modal-box" onclick="event.stopPropagation()">
+                <button type="button" class="job-detail-modal-close" id="jobDetailModalClose" aria-label="关闭">&times;</button>
+                <div id="jobDetailModalContent" class="job-detail-modal-content"></div>
+            </div>
+        </div>
+
+        <!-- 真实招聘数据弹窗（深绿头部，来自 CSV） -->
+        <div id="realDataModal" class="real-data-modal-overlay hidden">
+            <div class="real-data-modal-box" onclick="event.stopPropagation()">
+                <div class="real-data-modal-header">
+                    <span class="real-data-modal-label">📂 来自真实招聘数据库</span>
+                    <button type="button" class="real-data-modal-close" id="realDataModalClose" aria-label="关闭">&times;</button>
+                </div>
+                <div id="realDataModalBody" class="real-data-modal-body"></div>
             </div>
         </div>
 

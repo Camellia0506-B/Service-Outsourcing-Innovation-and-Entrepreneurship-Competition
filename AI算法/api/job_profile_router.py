@@ -10,6 +10,9 @@
   POST /api/v1/job/ai-generate-result   - 4.5 获取AI生成结果
 """
 
+import csv
+import json
+import os
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 import threading
@@ -17,6 +20,7 @@ import threading
 import csv
 from job_profile.job_profile_service import get_job_profile_service, job_profile_conf, _load_profiles_store
 from job_profile.job_graph_service import get_job_graph_service
+from job_profile.career_path_generator import generate_career_path
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
 
@@ -59,22 +63,36 @@ def _run_task_async(task_id: str, func, *args, **kwargs):
 
 # ============================================================
 # 4.1 获取岗位画像列表
-# POST /api/v1/job/profiles
+# POST /api/v1/job/profiles  或  GET /api/v1/job/profiles?page=1&size=12&keyword=xxx&industry=xxx&level=xxx
 # ============================================================
-@job_bp.route("/profiles", methods=["POST"])
+def _get_profiles_params():
+    """从 GET 查询串或 POST body 读取 page, size, keyword, industry, level"""
+    if request.method == "GET":
+        page = request.args.get("page", "1")
+        size = request.args.get("size", "20")
+        keyword = request.args.get("keyword", "").strip() or None
+        industry = request.args.get("industry", "").strip() or None
+        level = request.args.get("level", "").strip() or None
+    else:
+        body = request.get_json(silent=True) or {}
+        page = body.get("page", 1)
+        size = body.get("size", 20)
+        keyword = body.get("keyword") or None
+        industry = body.get("industry") or None
+        level = body.get("level") or None
+    page = int(page) if page else 1
+    size = int(size) if size else 20
+    return page, size, keyword, industry, level
+
+
+@job_bp.route("/profiles", methods=["GET", "POST"])
 def get_job_profiles():
     """
-    获取系统中的岗位画像库（至少10个岗位）
-    请求体：{ page, size, keyword, industry, level }
+    获取岗位画像列表。GET 用查询参数，POST 用请求体。
+    参数：page, size, keyword, industry, level
     """
     try:
-        body = request.get_json(silent=True) or {}
-        page = int(body.get("page", 1))
-        size = int(body.get("size", 20))
-        keyword = body.get("keyword")
-        industry = body.get("industry")
-        level = body.get("level")
-
+        page, size, keyword, industry, level = _get_profiles_params()
         if page < 1 or size < 1 or size > 100:
             return error_response(400, "分页参数错误：page>=1, 1<=size<=100")
 
@@ -85,6 +103,108 @@ def get_job_profiles():
 
     except Exception as e:
         logger.error(f"[API] /job/profiles 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ============================================================
+# 真实招聘数据：先查 CSV（前4字模糊匹配），无结果则 AI 生成，返回不加 isAIGenerated
+# GET /api/v1/job/real-data?jobName=算法工程师&size=5
+# ============================================================
+
+def _search_csv(job_name, size):
+    """从 CSV 按岗位名前 4 字模糊匹配，最多返回 size 条。"""
+    csv_path = get_abs_path("data/求职岗位信息数据.csv")
+    if not job_name or not os.path.exists(csv_path):
+        return []
+    keyword = (job_name[:4] if len(job_name) >= 4 else job_name).strip()
+    if not keyword:
+        return []
+    results = []
+    try:
+        with open(csv_path, encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                title = (row.get("职位名称") or "").strip()
+                if keyword in title:
+                    desc = (row.get("职位描述") or "").strip()
+                    intro = (row.get("公司简介") or "").strip()
+                    results.append({
+                        "jobTitle": title,
+                        "company": row.get("公司全称", ""),
+                        "salary": row.get("薪资范围", ""),
+                        "address": row.get("工作地址", ""),
+                        "industry": row.get("所属行业", ""),
+                        "scale": row.get("人员规模", ""),
+                        "companyType": row.get("企业性质", ""),
+                        "description": (desc[:200] + "…") if len(desc) > 200 else desc,
+                        "companyIntro": (intro[:150] + "…") if len(intro) > 150 else intro,
+                    })
+                    if len(results) >= size:
+                        break
+    except Exception as e:
+        logger.warning(f"[API] real-data 读取 CSV 失败: {e}", exc_info=True)
+    return results
+
+
+@job_bp.route("/real-data", methods=["GET"])
+def get_real_data():
+    job_name = (request.args.get("jobName") or "").strip()
+    try:
+        size = int(request.args.get("size", 3))
+        size = max(1, min(size, 20))
+    except (TypeError, ValueError):
+        size = 3
+
+    results = _search_csv(job_name, size)
+
+    if not results:
+        try:
+            from dashscope import Generation
+            prompt = f"""为岗位【{job_name}】生成{size}条招聘信息，风格真实自然。
+只返回JSON，不要其他文字：
+{{"jobs":[
+  {{
+    "jobTitle":"{job_name}",
+    "company":"公司名",
+    "salary":"薪资范围",
+    "address":"城市·区·街道",
+    "industry":"行业",
+    "scale":"人员规模",
+    "companyType":"企业性质",
+    "description":"职位描述120字",
+    "companyIntro":"公司简介60字"
+  }}
+]}}
+请按上述格式生成{size}条，每条字段完整。"""
+            response = Generation.call(
+                model="qwen3-max",
+                messages=[{"role": "user", "content": prompt}],
+                result_format="message",
+            )
+            content = (response.output.choices[0].message.content or "").strip()
+            content = content.replace("```json", "").replace("```", "").strip()
+            data = json.loads(content)
+            results = data.get("jobs", [])[:size]
+        except Exception as e:
+            logger.error(f"[API] real-data AI 生成失败: {e}", exc_info=True)
+            results = []
+
+    return success_response(results)
+
+
+# ============================================================
+# 获取行业列表（供前端筛选下拉动态加载）
+# GET /api/v1/job/industries
+# ============================================================
+@job_bp.route("/industries", methods=["GET"])
+def get_job_industries():
+    """返回所有岗位中的去重行业列表"""
+    try:
+        service = get_job_profile_service()
+        industries = service.get_industries()
+        return success_response({"industries": industries})
+    except Exception as e:
+        logger.error(f"[API] /job/industries 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
 
 
@@ -147,10 +267,20 @@ def get_job_relation_graph():
             return error_response(400, "graph_type 参数错误，支持: vertical/transfer/all")
 
         graph_service = get_job_graph_service()
+<<<<<<< Updated upstream
         resp = graph_service.get_relation_graph(job_id, graph_type)
         if resp.get("code") != 200:
             return error_response(resp.get("code", 404), resp.get("msg", "岗位不存在"))
         return success_response(resp.get("data"))
+=======
+        graph_data = graph_service.get_job_graph(job_id, graph_type)
+        # 调试：打印 relation-graph 返回数据（前 800 字符）
+        try:
+            print("relation-graph 返回:", json.dumps(graph_data, ensure_ascii=False, default=str)[:800])
+        except Exception:
+            pass
+        return success_response(graph_data)
+>>>>>>> Stashed changes
 
     except Exception as e:
         logger.error(f"[API] /job/relation-graph 异常: {e}", exc_info=True)
@@ -158,6 +288,7 @@ def get_job_relation_graph():
 
 
 # ============================================================
+<<<<<<< Updated upstream
 # GET /api/v1/job/career-path - 职业发展路径（晋升 + 换岗，真实数据）
 # ============================================================
 @job_bp.route("/career-path", methods=["GET"])
@@ -217,6 +348,33 @@ def get_career_path():
 
         return success_response({"path": path, "altPaths": alt_paths})
 
+=======
+# 4.3.1 获取岗位晋升路径（LLM 动态生成 4 阶段）
+# GET /api/v1/job/career-path?jobName=xxx
+# ============================================================
+@job_bp.route("/career-path", methods=["GET"])
+def get_job_career_path():
+    """
+    根据岗位名称返回 4 个晋升阶段，供前端晋升路径卡片使用。
+    返回 data.path: [ { stage, icon, salary, skills, desc, years }, ... ]
+    """
+    try:
+        job_name = (request.args.get("jobName") or "").strip()
+        if not job_name:
+            return error_response(400, "请提供 jobName 参数")
+        raw = generate_career_path(job_name)
+        path = []
+        for i, s in enumerate(raw[:4]):
+            path.append({
+                "stage": s.get("name", ""),
+                "icon": s.get("icon", "🌱"),
+                "salary": s.get("salary_increase", ""),
+                "skills": s.get("key_skills") or [],
+                "desc": s.get("desc", ""),
+                "years": s.get("time_range", ""),
+            })
+        return success_response({"path": path})
+>>>>>>> Stashed changes
     except Exception as e:
         logger.error(f"[API] /job/career-path 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
@@ -226,6 +384,80 @@ def get_career_path():
 # 4.4 AI生成岗位画像（异步触发）
 # POST /api/v1/job/ai-generate-profile
 # ============================================================
+
+def _resolve_job_config(job_name: str, target_jobs: list) -> dict:
+    """
+    将用户输入的岗位名称解析为可用的岗位配置，支持任意岗位名：
+    1. 精确匹配配置中的 name
+    2. 模糊匹配：配置 name 或 csv_keywords 包含用户输入、或用户输入包含配置关键词
+    3. 兜底：按常见关键词选最相近模板（如「算法」→ 机器学习/算法工程师）
+    """
+    if not job_name or not target_jobs:
+        return None
+    job_name = (job_name or "").strip()
+    # 1) 精确匹配
+    exact = next((j for j in target_jobs if j.get("name") == job_name), None)
+    if exact:
+        return dict(exact)
+
+    # 2) 模糊匹配：用户输入包含配置名中的某段，或配置名包含用户输入
+    for j in target_jobs:
+        name = (j.get("name") or "")
+        if job_name in name or name in job_name:
+            cfg = dict(j)
+            cfg["name"] = job_name
+            return cfg
+    # 配置的 csv_keywords 中任意关键词出现在用户输入里
+    for j in target_jobs:
+        keywords = j.get("csv_keywords") or []
+        if any(kw and str(kw).lower() in job_name.lower() for kw in keywords):
+            cfg = dict(j)
+            cfg["name"] = job_name
+            return cfg
+    # 配置 name 的某部分（如 "机器学习/算法工程师" 的 "算法工程师"）在用户输入里
+    for j in target_jobs:
+        name = (j.get("name") or "")
+        for part in name.replace("、", "/").split("/"):
+            part = part.strip()
+            if part and part in job_name:
+                cfg = dict(j)
+                cfg["name"] = job_name
+                return cfg
+
+    # 3) 兜底：按关键词选最相近模板
+    fallback_map = [
+        ("算法", "机器学习/算法工程师"),
+        ("机器学习", "机器学习/算法工程师"),
+        ("大模型", "大模型/AIGC应用工程师"),
+        ("算法工程师", "机器学习/算法工程师"),
+        ("开发", "Java后端开发工程师"),
+        ("前端", "前端开发工程师"),
+        ("测试", "软件测试工程师"),
+        ("产品", "产品经理"),
+        ("数据", "数据分析师"),
+        ("运维", "Linux运维工程师"),
+    ]
+    for keyword, template_name in fallback_map:
+        if keyword in job_name:
+            matched = next((j for j in target_jobs if j.get("name") == template_name), None)
+            if matched:
+                cfg = dict(matched)
+                cfg["name"] = job_name
+                return cfg
+    # 最终兜底：使用第一个配置作为通用模板
+    first = target_jobs[0]
+    cfg = dict(first)
+    cfg["name"] = job_name
+    return cfg
+
+
+def _synthetic_job_id(job_name: str, task_id: str) -> str:
+    """任意岗位名使用独立 job_id，避免覆盖模板配置的存储。"""
+    import re
+    slug = re.sub(r"[^\w\u4e00-\u9fff]", "_", (job_name or "")[:24]).strip("_") or "unknown"
+    return f"gen_{slug}_{task_id[-6:]}" if task_id else f"gen_{slug}"
+
+
 @job_bp.route("/ai-generate-profile", methods=["POST"])
 def ai_generate_profile():
     """
@@ -234,6 +466,7 @@ def ai_generate_profile():
       { job_name, job_descriptions: [...], sample_size }
     job_descriptions 为前端传入的JD文本数组（可选）；
     若不传，则自动从内部CSV数据集中检索对应JD。
+    支持任意岗位名称：未精确匹配时按模糊匹配或通用模板生成。
     """
     try:
         body = request.get_json(silent=True) or {}
@@ -250,19 +483,19 @@ def ai_generate_profile():
         ts = datetime.now().strftime("%Y%m%d%H%M%S")
 
         if job_name:
-            # ── 单个岗位生成 ──
-            task_id = f"job_gen_{ts}_{job_name[:8]}"
-            job_config = next((j for j in target_jobs if j["name"] == job_name), None)
-
+            # ── 单个岗位生成（支持任意岗位名：模糊匹配或兜底模板）──
+            task_id = f"job_gen_{ts}_{(job_name or '')[:8]}"
+            job_config = _resolve_job_config(job_name, target_jobs)
             if not job_config:
-                return error_response(
-                    404,
-                    f"未找到岗位配置：{job_name}，支持的岗位：{[j['name'] for j in target_jobs]}"
-                )
+                return error_response(404, f"未找到可用的岗位配置（target_jobs 为空）")
+
+            # 精确匹配（配置中已有该岗位名）保留原 job_id；模糊/兜底匹配用独立 job_id 存结果，避免覆盖模板
+            is_exact = any(j.get("name") == job_name for j in target_jobs)
+            if not is_exact:
+                job_config["job_id"] = _synthetic_job_id(job_name, task_id)
+            job_config["name"] = job_name
 
             def _generate_single():
-                # 将前端传入的 job_descriptions 注入 job_config；
-                # service 层优先使用它，若为空则自动从CSV检索
                 cfg = dict(job_config)
                 if job_descriptions:
                     cfg["external_jd_list"] = job_descriptions[:sample_size]
@@ -270,7 +503,6 @@ def ai_generate_profile():
                 service.profiles_store[cfg["job_id"]] = profile
                 from job_profile.job_profile_service import _save_profiles_store
                 _save_profiles_store(service.profiles_store)
-                # 对应API文档4.5：任务结果存完整画像，供 job_profile 字段返回
                 return profile
 
             _run_task_async(task_id, _generate_single)
@@ -283,17 +515,20 @@ def ai_generate_profile():
             }, msg="AI画像生成中...")
 
         else:
-            # ── 批量生成 ──
+            # ── 批量生成（同样支持模糊匹配）──
             task_id = f"batch_gen_{ts}"
 
             def _generate_batch():
                 results = {}
                 errors = {}
                 for name in job_names:
-                    cfg = next((j for j in target_jobs if j["name"] == name), None)
+                    cfg = _resolve_job_config(name, target_jobs)
                     if not cfg:
                         errors[name] = "未找到配置"
                         continue
+                    cfg["name"] = name
+                    tid = f"batch_{ts}_{name[:8]}"
+                    cfg["job_id"] = _synthetic_job_id(name, tid)
                     try:
                         profile = service.generate_profile(dict(cfg))
                         service.profiles_store[cfg["job_id"]] = profile

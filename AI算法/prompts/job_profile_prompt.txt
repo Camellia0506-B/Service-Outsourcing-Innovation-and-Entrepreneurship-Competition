@@ -1,202 +1,49 @@
-你是一名计算机行业的资深HR专家和职业规划顾问，熟悉中国IT招聘市场。
+你是一位深耕职业规划领域的资深顾问，专门帮助大学生做精准的职业定位。
+请为【{job_name}】岗位生成一份全面的职业画像报告，要真实、具体、有参考价值。
+（岗位ID：{job_id}，类别：{category}）
+能力维度权重（可选参考）：{dim_weights}
 
-你的任务是：为【{job_name}】生成一份标准化的岗位要求画像。
-
-====================
-岗位基本信息
-====================
-岗位名称：{job_name}
-岗位ID：{job_id}
-所属类别：{category}
-能力维度权重：{dim_weights}
-
-====================
-数据来源与生成指令
-====================
 {data_section}
 
-====================
-生成规则
-====================
-【若数据来源为"数据集JD分析"】：
-- 严格基于上方提供的真实JD内容提炼技能要求
-- 专业技能、工具框架必须来自JD原文，不得自行添加JD未提及的技能
-- 薪资范围直接使用JD中出现的数字，可做合理平均/区间处理
-- 软技能和晋升路径可适当结合行业认知补充，但要与JD整体调性一致
-
-【若数据来源为"模型知识"】：
-- 完全依据中国IT行业2024-2025年市场标准生成
-- 薪资参照一线城市（北京/上海/深圳/杭州）行情
-- 技能要求参照该岗位的主流招聘标准
-
-直接输出合法JSON，不要有任何markdown代码块或额外说明。
-
-====================
-输出JSON格式（所有字段必须填写）
-====================
+【重要】必须且仅能使用下列 JSON 结构输出，禁止使用 basic_info、requirements 等旧版字段结构。必须包含顶层字段：job_name、industry、salary_range、demand_score、trend、trend_desc、core_skills、reality_check、entry_path、ai_summary。
+只返回JSON，不要有任何markdown代码块或额外说明。格式如下：
 
 {{
-  "job_id": "{job_id}",
   "job_name": "{job_name}",
-  "job_code": "岗位编码如DEV-JAVA-001",
-  "category": "{category}",
+  "industry": "所属行业",
+  "salary_range": "薪资范围",
+  "demand_score": 85,
+  "trend": "上升/稳定/下降",
+  "trend_desc": "12个月内岗位增长情况一句话",
 
-  "basic_info": {{
-    "industry": "所属行业（从JD中提取，或按行业认知填写）",
-    "level": "初级",
-    "level_range": ["初级", "中级", "高级"],
-    "avg_salary": "15k-25k",
-    "salary_range": {{
-      "junior":       "月薪范围（如8k-15k）",
-      "intermediate": "月薪范围（如15k-25k）",
-      "senior":       "月薪范围（如25k-40k）",
-      "expert":       "月薪范围（如40k-70k）"
-    }},
-    "work_locations": ["从JD提取的城市，或一线城市"],
-    "company_scales": ["100-500人", "500-2000人", "2000人以上"],
-    "description": "基于JD的岗位核心职责，50字内",
-    "demand_score": 75,
-    "growth_trend": "上升或平稳或下降"
-  }},
-
-  "requirements": {{
-    "basic_requirements": {{
-      "education": {{
-        "level": "从JD提取或按岗位常规要求",
-        "preferred_majors": ["专业1", "专业2"],
-        "weight": 0.10
-      }},
-      "gpa": {{
-        "min_requirement": "3.0/4.0",
-        "preferred": "3.5/4.0以上",
-        "weight": 0.05
-      }},
-      "experience_years": {{
-        "junior":       "0-2年",
-        "intermediate": "2-4年",
-        "senior":       "4-7年",
-        "expert":       "7年以上"
-      }}
-    }},
-
-    "professional_skills": {{
-      "programming_languages": [
-        {{"skill": "技能名", "level": "熟练", "importance": "必需", "weight": 0.10}}
-      ],
-      "frameworks_tools": [
-        {{"skill": "框架/工具", "level": "熟悉", "importance": "重要", "weight": 0.08}}
-      ],
-      "domain_knowledge": [
-        {{"skill": "领域知识", "level": "熟练", "importance": "必需", "weight": 0.08}}
-      ],
-      "total_weight": 0.40
-    }},
-
-    "certificates": {{
-      "required": [],
-      "preferred": ["相关证书"],
-      "weight": 0.05
-    }},
-
+  "core_skills": {{
+    "professional": ["专业技能1","专业技能2","专业技能3","专业技能4"],
+    "tools": ["工具/框架1","工具/框架2","工具/框架3","工具/框架4"],
+    "certificates": ["相关证书或学历要求，无则写空数组"],
     "soft_skills": {{
-      "innovation_ability": {{
-        "description": "基于JD或岗位特征的创新能力要求",
-        "level": "高或中或低",
-        "weight": 0.06
-      }},
-      "learning_ability": {{
-        "description": "学习能力要求描述",
-        "level": "高或中或低",
-        "weight": 0.08
-      }},
-      "pressure_resistance": {{
-        "description": "抗压能力要求描述",
-        "level": "高或中或低",
-        "weight": 0.05
-      }},
-      "communication_ability": {{
-        "description": "沟通能力要求描述",
-        "level": "高或中或低",
-        "weight": 0.06
-      }},
-      "teamwork_ability": {{
-        "description": "团队协作要求描述",
-        "level": "高或中或低",
-        "weight": 0.05
-      }},
-      "total_weight": 0.30
-    }},
-
-    "experience": {{
-      "internship_required": false,
-      "preferred_experience": ["从JD提取的经验要求"],
-      "project_requirements": ["项目经验要求"],
-      "weight": 0.10
+      "innovation": "创新能力要求描述（1-2句，如：需要独立设计算法方案，对新技术保持敏感）",
+      "learning": "学习能力要求描述（1-2句，如：AI领域迭代快，需持续跟踪论文与新框架）",
+      "pressure": "抗压能力要求描述（1-2句，如：项目周期紧，需在高强度下保证代码质量）",
+      "communication": "沟通能力要求描述（1-2句，如：需与产品、数据团队高效协作对齐需求）",
+      "internship": "实习/实践经验说明（1-2句，如：竞赛项目或实验室经历可弥补工作经验不足）"
     }}
   }},
 
-  "market_analysis": {{
-    "demand_score": 75,
-    "growth_trend": "上升",
-    "salary_range": {{
-      "junior": "8k-15k",
-      "intermediate": "15k-25k",
-      "senior": "25k-40k",
-      "expert": "40k-70k"
-    }},
-    "hottest_cities": [
-      {{"city": "城市名", "job_count": 1000}}
-    ],
-    "top_companies": ["代表企业"],
-    "industry_trends": ["行业趋势1", "趋势2"],
-    "tags": ["标签1", "标签2"]
+  "reality_check": {{
+    "pros": ["真实优势1","真实优势2","真实优势3"],
+    "cons": ["真实挑战1","真实挑战2","真实挑战3"],
+    "misconceptions": "澄清1-2个常见误解（如'不是只写代码'或'并非人人适合'）",
+    "suitable_for": "适合什么特质的人（具体描述，如：适合逻辑强、耐心钻研、对数学感兴趣的人）",
+    "not_suitable_for": "不适合什么特质的人（如：不适合追求快速出成果、不喜欢看论文的人）"
   }},
 
-  "career_path": {{
-    "current_level": "初级{job_name}",
-    "promotion_path": [
-      {{
-        "level": "中级{job_name}",
-        "years_required": "2-3年",
-        "key_requirements": ["条件1", "条件2", "条件3"]
-      }},
-      {{
-        "level": "高级{job_name}/技术专家",
-        "years_required": "3-5年",
-        "key_requirements": ["条件1", "条件2", "条件3"]
-      }},
-      {{
-        "level": "资深专家/技术总监",
-        "years_required": "5-8年",
-        "key_requirements": ["条件1", "条件2"]
-      }}
-    ]
+  "entry_path": {{
+    "fresh_grad": "应届生如何入行（具体建议，如：参加算法竞赛、发表论文、大厂实习三选一）",
+    "key_projects": ["入门必做项目类型1","入门必做项目类型2","入门必做项目类型3"],
+    "timeline": "从零到拿到第一份offer大概需要多久"
   }},
 
-  "transfer_paths": [
-    {{
-      "target_job":            "可转岗岗位1",
-      "relevance_score":       85,
-      "required_skills":       ["需补充技能1", "技能2"],
-      "transition_difficulty": "低",
-      "estimated_time":        "3-6个月",
-      "reason":                "技能关联性说明"
-    }},
-    {{
-      "target_job":            "可转岗岗位2",
-      "relevance_score":       70,
-      "required_skills":       ["需补充技能1"],
-      "transition_difficulty": "中",
-      "estimated_time":        "6-12个月",
-      "reason":                "转岗原因"
-    }},
-    {{
-      "target_job":            "可转岗岗位3",
-      "relevance_score":       60,
-      "required_skills":       ["技能1", "技能2", "技能3"],
-      "transition_difficulty": "高",
-      "estimated_time":        "12-18个月",
-      "reason":                "转岗原因"
-    }}
-  ]
+  "ai_summary": "200字左右的综合分析，面向大学生，真实呈现该岗位的机遇与挑战，帮助他们客观判断自己是否适合，避免盲目跟风或误判前景"
 }}
+
+请务必按上述格式输出完整JSON，填写所有字段，不要省略或留空。core_skills、reality_check、entry_path、ai_summary 都必须有具体内容。

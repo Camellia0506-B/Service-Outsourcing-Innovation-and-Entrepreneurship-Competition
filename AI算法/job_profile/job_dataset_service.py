@@ -288,27 +288,46 @@ def calculate_weighted_skill_match(user_skills: List[str], job_profile: Dict) ->
     # 提取岗位技能及权重
     job_skills_weighted = []
     
-    for lang in prof_skills.get("programming_languages", []):
-        weight = lang.get("weight", 0.08)
-        importance = lang.get("importance", "重要")
-        if importance == "必需":
-            weight *= 2  # 必需技能权重加倍
-        job_skills_weighted.append({
-            "skill": lang["skill"].lower(),
-            "weight": weight,
-            "importance": importance
-        })
+    # 新版画像：core_skills.professional + tools，统一权重
+    core = job_profile.get("core_skills", {})
+    for key in ("professional", "tools"):
+        for item in (core.get(key) or []):
+            s = item.get("skill", item) if isinstance(item, dict) else item
+            if s and isinstance(s, str):
+                job_skills_weighted.append({"skill": s.lower(), "weight": 0.1, "importance": "重要"})
     
-    for tool in prof_skills.get("frameworks_tools", []):
-        weight = tool.get("weight", 0.05)
-        importance = tool.get("importance", "加分")
-        if importance == "必需":
-            weight *= 2
-        job_skills_weighted.append({
-            "skill": tool["skill"].lower(),
-            "weight": weight,
-            "importance": importance
-        })
+    # 旧版画像：requirements.professional_skills
+    if not job_skills_weighted:
+        for lang in prof_skills.get("programming_languages", []):
+            weight = lang.get("weight", 0.08)
+            importance = lang.get("importance", "重要")
+            if importance == "必需":
+                weight *= 2
+            job_skills_weighted.append({
+                "skill": lang["skill"].lower(),
+                "weight": weight,
+                "importance": importance
+            })
+        for tool in prof_skills.get("frameworks_tools", []):
+            weight = tool.get("weight", 0.05)
+            importance = tool.get("importance", "加分")
+            if importance == "必需":
+                weight *= 2
+            job_skills_weighted.append({
+                "skill": tool["skill"].lower(),
+                "weight": weight,
+                "importance": importance
+            })
+        for domain in prof_skills.get("domain_knowledge", []):
+            weight = domain.get("weight", 0.05)
+            importance = domain.get("importance", "加分")
+            if importance == "必需":
+                weight *= 2
+            job_skills_weighted.append({
+                "skill": domain["skill"].lower(),
+                "weight": weight,
+                "importance": importance
+            })
     
     if not job_skills_weighted:
         return 50.0  # 无技能要求，返回中等分数

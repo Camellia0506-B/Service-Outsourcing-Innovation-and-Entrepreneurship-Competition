@@ -69,6 +69,13 @@ app.register_blueprint(student_bp)
 # app.register_blueprint(student_bp)
 
 
+# ========== 调试：列出所有已注册路由（排查 404 时用）==========
+@app.route("/api/v1/routes", methods=["GET"])
+def list_routes():
+    routes = [{"rule": r.rule, "methods": list(r.methods - {"HEAD", "OPTIONS"})} for r in app.url_map.iter_rules()]
+    return jsonify({"code": 200, "msg": "ok", "data": routes})
+
+
 # ========== 健康检查接口 ==========
 @app.route("/api/v1/health", methods=["GET"])
 def health_check():
