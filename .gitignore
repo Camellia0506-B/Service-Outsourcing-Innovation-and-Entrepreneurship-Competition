@@ -84,4 +84,6 @@ backend/venv/
 
 # 测评模块缓存文件
 AI算法/data/assessment/*.json
+AI算法/data/student_profiles/*.json
+
  
