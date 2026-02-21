@@ -3,7 +3,7 @@ const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、个人档案等）
     assessmentBaseURL: 'http://127.0.0.1:5001/api/v1',  // AI 算法服务（职业测评 / 岗位画像），当前 Flask 日志显示运行在 5001 端口
     timeout: 30000,
-    mockMode: false  // 模拟模式：false=使用真实后端（简历解析、档案等走 Java 5000；测评/岗位画像走 5001）
+    mockMode: true   // 模拟模式：true=使用本地模拟数据（无需启动 Java 后端）；false=连接真实后端
 };
 
 // API工具类
