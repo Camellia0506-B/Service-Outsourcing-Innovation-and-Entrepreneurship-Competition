@@ -1665,6 +1665,12 @@ class CareerPlanningApp {
                     </div>
                 </div>
                 <div class="ability-profile-card">
+                    <h3>💪 压力承受能力</h3>
+                    <div class="ability-section">
+                        <p><strong>得分:</strong> ${pressure.score ?? '-'} | <strong>等级:</strong> ${pressure.level || '-'}</p>
+                    </div>
+                </div>
+                <div class="ability-profile-card">
                     <h3>💬 沟通能力</h3>
                     <div class="ability-section">
                         <p><strong>得分:</strong> ${comm.overall_score ?? '-'} | <strong>等级:</strong> ${comm.level || '-'}</p>

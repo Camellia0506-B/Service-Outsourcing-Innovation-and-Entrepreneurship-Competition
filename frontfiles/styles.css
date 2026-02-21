@@ -165,7 +165,7 @@ body::before {
 }
 
 .nav-brand h1 {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--primary-color);
     letter-spacing: -0.5px;
@@ -1390,7 +1390,13 @@ body::before {
 .ability-profile-header {
     max-width: 1000px;
     margin: 0 auto 30px;
-    padding-left: 45px;
+    padding-left: 0;
+}
+
+.ability-profile-header h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 24px;
 }
 
 .ability-profile-card {
@@ -1458,7 +1464,7 @@ body::before {
 .job-profile-container > h2 {
     font-size: 32px;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 24px;
 }
 
 .job-profile-tabs {
