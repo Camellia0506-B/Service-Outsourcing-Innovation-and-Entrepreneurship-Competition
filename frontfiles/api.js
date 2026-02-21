@@ -3,7 +3,7 @@ const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、个人档案等）
     assessmentBaseURL: 'http://127.0.0.1:5001/api/v1',  // AI 算法服务（职业测评 / 岗位画像），当前 Flask 日志显示运行在 5001 端口
     timeout: 30000,
-    mockMode: false  // 模拟模式：true=使用模拟数据，false=连接真实后端API
+    mockMode: true   // 模拟模式：true=使用模拟数据（结果会随机变化），false=连接真实 AI 服务生成个性化报告
 };
 
 // API工具类
@@ -195,7 +195,9 @@ class API {
             case '/assessment/submit':
                 return { success: true, data: { report_id: 'report_' + Date.now(), status: 'processing' }, msg: '测评提交成功，正在生成报告...' };
             case '/assessment/report':
-                return { success: true, data: this.mockAssessmentReport() };
+                const reportData = this.mockAssessmentReport();
+                reportData.status = 'completed';  // 轮询时前端据此判断报告已生成
+                return { success: true, data: reportData };
             case '/job/profiles':
             case '/job/list':
                 return { success: true, data: { total: 5, page: 1, size: 20, list: this.mockJobs() } };
@@ -203,7 +205,28 @@ class API {
             case '/job/detail':
                 return { success: true, data: this.mockJobDetail(options.body?.job_id || options.body?.job_name) };
             case '/job/relation-graph':
-                return { success: true, data: { center_job: { job_id: options.body?.job_id, job_name: '算法工程师' }, vertical_graph: { nodes: [], edges: [] }, transfer_graph: { nodes: [], edges: [] } } };
+                const centerJob = this.mockJobDetail(options.body?.job_id || options.body?.job_name);
+                return {
+                    success: true,
+                    data: {
+                        center_job: { job_id: centerJob.job_id, job_name: centerJob.job_name },
+                        vertical_graph: {
+                            nodes: [
+                                { job_id: 'j1', job_name: '初级工程师', level: 1 },
+                                { job_id: 'j2', job_name: centerJob.job_name || '目标岗位', level: 2 },
+                                { job_id: 'j3', job_name: '高级/专家', level: 3 }
+                            ],
+                            edges: []
+                        },
+                        transfer_graph: {
+                            nodes: [
+                                { job_id: 't1', job_name: '技术经理' },
+                                { job_id: 't2', job_name: '架构师' }
+                            ],
+                            edges: []
+                        }
+                    }
+                };
             case '/job/ai-generate-profile':
                 return { success: true, data: { task_id: 'task_' + Date.now(), status: 'processing', estimated_time: 30 } };
             case '/job/ai-generate-result':
@@ -219,7 +242,7 @@ class API {
             case '/career/generate-report':
                 return { success: true, data: { task_id: 'task_' + Date.now() }, msg: '报告生成中' };
             case '/career/report-status':
-                return { success: true, data: { status: 'completed' } };
+                return { success: true, data: { status: 'completed', report_id: 'report_001' } };
             case '/career/view-report':
                 return { success: true, data: this.mockCareerReport() };
             case '/career/report-history':
@@ -474,57 +497,98 @@ class API {
     }
 
     mockAssessmentReport() {
+        // 多组预设结果，每次随机选一组，模拟不同作答得到的不同报告
+        const hollandOptions = [
+            { code: 'RIA', type: '研究型(I)', desc: '喜欢观察、学习、研究、分析、评估和解决问题', fields: ['软件开发', '数据分析', '算法工程师', '人工智能研发'] },
+            { code: 'ASE', type: '艺术型(A)', desc: '偏好创意表达，注重美感和想象力', fields: ['UI/UX设计', '产品经理', '内容创作', '品牌策划'] },
+            { code: 'SEC', type: '社会型(S)', desc: '喜欢与人交流，善于协作和帮助他人', fields: ['人力资源', '教育培训', '咨询顾问', '客户成功'] },
+            { code: 'EIC', type: '企业型(E)', desc: '富有领导力，善于说服和影响他人', fields: ['销售管理', '商务拓展', '项目经理', '创业者'] },
+            { code: 'CRI', type: '常规型(C)', desc: '注重条理和规范，擅长数据处理', fields: ['财务分析', '运营管理', '审计', '行政'] },
+            { code: 'RCE', type: '实用型(R)', desc: '喜欢动手操作，解决具体技术问题', fields: ['硬件工程师', '运维工程师', '嵌入式开发', '测试工程师'] }
+        ];
+        const mbtiOptions = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'];
+        const traits = ['外向性', '开放性', '尽责性', '宜人性', '神经质'];
+        const abilities = ['逻辑分析能力', '学习能力', '沟通表达能力', '团队协作能力', '创新能力', '抗压能力', '执行力', '时间管理能力'];
+        const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+        const randScore = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const h = pick(hollandOptions);
+        const mbti = pick(mbtiOptions);
+        const chosenAbilities = abilities.sort(() => Math.random() - 0.5).slice(0, 5);
+        const strengths = chosenAbilities.slice(0, 2).map(a => ({ ability: a, score: randScore(75, 95) }));
+        const areasToImprove = chosenAbilities.slice(2, 4).map(a => ({ ability: a, score: randScore(50, 72) }));
+        const personalityTraits = traits.map(t => {
+            const s = randScore(35, 85);
+            const level = s < 40 ? '偏低' : s < 55 ? '一般' : s < 70 ? '偏高' : '高';
+            return { trait_name: t, score: s, level };
+        });
         return {
-            report_id: 'report_001',
+            report_id: 'report_' + Date.now(),
             created_at: new Date().toISOString(),
             interest_analysis: {
-                holland_code: 'RIA',
-                primary_interest: {
-                    type: '研究型(I)',
-                    score: 85,
-                    description: '喜欢观察、学习、研究、分析、评估和解决问题'
-                },
-                suitable_fields: ['软件开发', '数据分析', '算法工程师', '人工智能研发']
+                holland_code: h.code,
+                primary_interest: { type: h.type, score: randScore(75, 92), description: h.desc },
+                suitable_fields: h.fields
             },
             personality_analysis: {
-                mbti_type: 'INTJ',
-                traits: [
-                    { trait_name: '外向性', score: 45, level: '偏内向' },
-                    { trait_name: '开放性', score: 82, level: '高' },
-                    { trait_name: '尽责性', score: 78, level: '高' }
-                ]
+                mbti_type: mbti,
+                traits: personalityTraits
             },
             ability_analysis: {
-                strengths: [
-                    { ability: '逻辑分析能力', score: 88 },
-                    { ability: '学习能力', score: 85 }
-                ],
-                areas_to_improve: [
-                    { ability: '沟通表达能力', score: 62 }
-                ]
+                strengths,
+                areas_to_improve: areasToImprove
             }
         };
     }
 
     mockJobs() {
         return [
-            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '15k-25k', demand_score: 85, tags: ['人工智能', '机器学习'] },
-            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-20k', demand_score: 90, tags: ['React', 'Vue'] },
-            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '13k-22k', demand_score: 88, tags: ['Java', 'Go'] },
-            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 80, tags: ['Python', 'SQL'] },
-            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-25k', demand_score: 75, tags: ['产品设计', '需求分析'] }
+            { job_id: 'job_001', job_name: '算法工程师', avg_salary: '15k-25k', demand_score: 85, growth_trend: '上升', tags: ['人工智能', '机器学习'], industry: '互联网', level: '中级', skills: ['Python', 'TensorFlow', 'PyTorch', '机器学习'] },
+            { job_id: 'job_002', job_name: '前端开发工程师', avg_salary: '12k-20k', demand_score: 90, growth_trend: '稳定', tags: ['React', 'Vue'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Vue', 'React', 'TypeScript'] },
+            { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '13k-22k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go'], industry: '互联网', level: '中级', skills: ['Java', 'Go', 'MySQL', 'Redis'] },
+            { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 80, growth_trend: '上升', tags: ['Python', 'SQL'], industry: '互联网', level: '初级', skills: ['Python', 'SQL', 'Excel', '数据可视化'] },
+            { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-25k', demand_score: 75, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'] }
         ];
     }
 
-    mockJobDetail(jobName) {
+    mockJobDetail(jobIdOrName) {
+        const jobs = this.mockJobs();
+        const job = jobs.find(j => j.job_id === jobIdOrName || j.job_name === jobIdOrName) || jobs[0];
         return {
-            job_id: 'job_001',
-            job_name: jobName || '算法工程师',
-            avg_salary: '15k-25k',
-            description: '负责机器学习算法的研究、开发和优化',
+            job_id: job.job_id,
+            job_name: job.job_name,
+            basic_info: {
+                industry: job.industry || '互联网',
+                level: job.level || '中级',
+                avg_salary: job.avg_salary || '12k-20k',
+                work_locations: ['北京', '上海', '广州', '深圳'],
+                company_scales: ['50-200人', '200-500人', '500人以上'],
+                description: job.job_name === '算法工程师' ? '负责机器学习算法的研究、开发和优化，参与AI产品落地' :
+                    job.job_name === '前端开发工程师' ? '负责Web前端开发，使用Vue/React等技术栈构建用户界面' :
+                    job.job_name === '后端开发工程师' ? '负责服务端开发，设计API、数据库与系统架构' :
+                    job.job_name === '数据分析师' ? '负责数据采集、清洗、分析与可视化，支撑业务决策' :
+                    '负责产品规划、需求分析与项目管理'
+            },
             requirements: {
-                education: { level: '本科及以上', preferred_majors: ['计算机科学与技术', '软件工程'] },
-                skills: ['Python', 'TensorFlow', '机器学习算法']
+                basic_requirements: {
+                    education: { level: '本科及以上', preferred_majors: ['计算机科学与技术', '软件工程', '数据科学'] }
+                },
+                professional_skills: {
+                    programming_languages: job.skills ? job.skills.slice(0, 3).map(s => ({ skill: s, level: '熟练' })) : [],
+                    frameworks_tools: job.tags ? job.tags.map(t => ({ skill: t, level: '了解' })) : []
+                }
+            },
+            market_analysis: {
+                demand_score: job.demand_score || 80,
+                growth_trend: '上升',
+                salary_range: { min: 10000, max: 25000 }
+            },
+            career_path: {
+                current_level: job.level || '中级',
+                promotion_path: [
+                    { level: '初级', years_required: '0-2年', key_requirements: ['掌握基础技能', '参与项目实践'] },
+                    { level: '中级', years_required: '2-5年', key_requirements: ['独立负责模块', '带新人'] },
+                    { level: '高级', years_required: '5年+', key_requirements: ['架构设计', '技术攻坚'] }
+                ]
             }
         };
     }
@@ -700,6 +764,11 @@ async function getJobDetail(jobIdOrName) {
     return await api.postToAI('/job/profile/detail', { job_id: jobIdOrName });
 }
 
+// app.js 调用的封装：获取岗位详细画像
+async function getJobProfileDetail(jobIdOrName, byName = false) {
+    return await api.postToAI('/job/profile/detail', { job_id: jobIdOrName });
+}
+
 // 4.3 获取岗位关联图谱
 async function getJobRelationGraph(jobId, graphType = 'all') {
     return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
@@ -717,6 +786,11 @@ async function jobAiGenerateProfile(jobName, jobDescriptions, sampleSize = 50) {
 // 4.5 获取 AI 生成结果
 async function getJobAiGenerateResult(taskId) {
     return await api.postToAI('/job/ai-generate-result', { task_id: taskId });
+}
+
+// app.js 调用的别名
+async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 50) {
+    return await jobAiGenerateProfile(jobName, jobDescriptions, sampleSize);
 }
 
 // 搜索岗位（使用 4.1 带 keyword）
