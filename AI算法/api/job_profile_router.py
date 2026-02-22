@@ -534,14 +534,25 @@ def get_job_relation_graph():
 @job_bp.route("/career-path", methods=["GET"])
 def get_job_career_path():
     """
-    根据岗位名称返回 4 个晋升阶段，供前端晋升路径卡片使用。
+    根据岗位名称或 jobId 返回 4 个晋升阶段，供前端晋升路径卡片使用。
+    支持 jobName 或 jobId：jobId 时从 profiles_store 解析岗位名称。
     优先从 job_promotion_path 表读取，确保有阶段名、年限、薪资；无则回退 LLM。
     返回 data.path: [ { stage, icon, salary, skills, desc, years }, ... ]
     """
     try:
         job_name = (request.args.get("jobName") or "").strip()
+        job_id = (request.args.get("jobId") or "").strip()
+        if not job_name and job_id:
+            profiles = _load_profiles_store()
+            profile = profiles.get(job_id) if isinstance(profiles, dict) else None
+            if profile and isinstance(profile, dict):
+                job_name = (profile.get("job_name") or profile.get("name") or "").strip()
+            if not job_name:
+                resolved_id, display_name = _resolve_job_id_for_graph(job_id)
+                if display_name:
+                    job_name = display_name
         if not job_name:
-            return error_response(400, "请提供 jobName 参数")
+            return error_response(400, "请提供 jobName 或 jobId 参数")
 
         path = []
         job_id = _resolve_job_id_from_name(job_name)

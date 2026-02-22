@@ -382,7 +382,10 @@ class JobMatchingEngine:
         
         # 生成能力差距
         gaps = self._generate_gaps(skills_result, student_profile)
-        
+        job_br = job_profile.get("requirements", {}).get("basic_requirements", {})
+        edu_level = (job_br.get("education") or {}).get("level", "本科")
+        basic_required = {"本科": 85, "硕士": 90, "博士": 95, "专科": 78}.get(edu_level, 85)
+        potential_required = potential_result["required_baseline"] if isinstance(potential_result.get("required_baseline"), int) else 80
         return {
             "match_score": total_score,
             "match_level": match_level,
@@ -390,22 +393,26 @@ class JobMatchingEngine:
                 "basic_requirements": {
                     "score": basic_result["score"],
                     "weight": weights["basic_requirements"],
-                    "details": basic_result["details"]
+                    "details": basic_result["details"],
+                    "required_score": basic_required
                 },
                 "professional_skills": {
                     "score": skills_result["score"],
                     "weight": weights["professional_skills"],
-                    "details": skills_result["details"]
+                    "details": skills_result["details"],
+                    "required_score": 85
                 },
                 "soft_skills": {
                     "score": soft_skills_result["score"],
                     "weight": weights["soft_skills"],
-                    "details": soft_skills_result["details"]
+                    "details": soft_skills_result["details"],
+                    "required_score": 75
                 },
                 "development_potential": {
                     "score": potential_result["score"],
                     "weight": weights["development_potential"],
-                    "details": potential_result["details"]
+                    "details": potential_result["details"],
+                    "required_score": potential_required
                 }
             },
             "highlights": highlights,
@@ -575,100 +582,75 @@ class JobMatchingEngine:
     # ----------------------------------------------------------
     def _match_soft_skills(self, student: dict, job: dict) -> dict:
         """
-        职业素养匹配
-        
-        维度：创新能力、学习能力、沟通能力、抗压能力
+        职业素养匹配：根据岗位对软技能的要求等级（高/中/低）与学生能力对比，使不同岗位得分差异化。
         """
         details = {}
         scores = []
-        
+        job_soft = job.get("requirements", {}).get("soft_skills", {})
+        req_level_to_threshold = {"高": 78, "中": 65, "低": 55}
+
         # 1. 创新能力
-        innovation_req = job.get("requirements", {}).get("soft_skills", {}).get("innovation", "中")
+        innovation_req = job_soft.get("innovation", "中")
         student_innovation = student.get("innovation_ability", {})
-        innovation_score = student_innovation.get("score", 70)
-        
-        details["innovation_ability"] = {
-            "required": innovation_req,
-            "student": student_innovation.get("level", "中等"),
-            "score": innovation_score
-        }
+        raw = student_innovation.get("score", 70)
+        th = req_level_to_threshold.get(innovation_req, 65)
+        innovation_score = min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9))
+        details["innovation_ability"] = {"required": innovation_req, "student": student_innovation.get("level", "中等"), "score": innovation_score}
         scores.append(innovation_score)
-        
+
         # 2. 学习能力
+        learning_req = job_soft.get("learning", "高")
         student_learning = student.get("learning_ability", {})
-        learning_score = student_learning.get("score", 75)
-        
-        details["learning_ability"] = {
-            "required": "高",  # 大部分岗位都要求
-            "student": student_learning.get("level", "良好"),
-            "score": learning_score
-        }
+        raw = student_learning.get("score", 75)
+        th = req_level_to_threshold.get(learning_req, 65)
+        learning_score = min(100, 55 + raw) if raw >= th else max(50, int(raw * 0.85))
+        details["learning_ability"] = {"required": learning_req, "student": student_learning.get("level", "良好"), "score": learning_score}
         scores.append(learning_score)
-        
+
         # 3. 沟通能力
+        comm_req = job_soft.get("communication", "中")
         student_comm = student.get("communication_ability", {})
-        comm_score = student_comm.get("overall_score", 70)
-        
-        details["communication_ability"] = {
-            "required": "中",
-            "student": student_comm.get("level", "良好"),
-            "score": comm_score
-        }
+        raw = student_comm.get("overall_score", 70)
+        th = req_level_to_threshold.get(comm_req, 65)
+        comm_score = min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9))
+        details["communication_ability"] = {"required": comm_req, "student": student_comm.get("level", "良好"), "score": comm_score}
         scores.append(comm_score)
-        
+
         # 4. 抗压能力
+        pressure_req = job_soft.get("pressure", "中")
         student_pressure = student.get("pressure_resistance", {})
-        pressure_score = student_pressure.get("assessment_score", 75)
-        
-        details["pressure_resistance"] = {
-            "required": "中",
-            "student": student_pressure.get("level", "良好"),
-            "score": pressure_score
-        }
+        raw = student_pressure.get("assessment_score", 75)
+        th = req_level_to_threshold.get(pressure_req, 65)
+        pressure_score = min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9))
+        details["pressure_resistance"] = {"required": pressure_req, "student": student_pressure.get("level", "良好"), "score": pressure_score}
         scores.append(pressure_score)
-        
+
         avg_score = int(sum(scores) / len(scores))
-        
-        return {
-            "score": avg_score,
-            "details": details
-        }
+        return {"score": avg_score, "details": details}
     
     # ----------------------------------------------------------
     # 维度4：发展潜力匹配
     # ----------------------------------------------------------
     def _match_development_potential(self, student: dict, job: dict) -> dict:
         """
-        发展潜力匹配
-        
-        维度：成长意愿、职业清晰度、动机强度
+        发展潜力匹配：学生潜力与岗位层级挂钩，高级/中级岗位要求更高基线，使不同岗位得分差异化。
         """
-        # 基于学生的学习能力、GPA、项目经验综合评估
         learning_score = student.get("learning_ability", {}).get("score", 75)
         gpa_str = student.get("basic_info", {}).get("gpa", "3.0/4.0")
         gpa = float(gpa_str.split("/")[0]) if "/" in gpa_str else 3.0
         gpa_score = min(int((gpa / 4.0) * 100), 100)
-        
         projects_count = len(student.get("practical_experience", {}).get("projects", []))
         project_score = min(50 + projects_count * 15, 100)
-        
-        # 综合评分
-        potential_score = int(
-            learning_score * 0.4 + 
-            gpa_score * 0.3 + 
-            project_score * 0.3
-        )
-        
+        student_raw = int(learning_score * 0.4 + gpa_score * 0.3 + project_score * 0.3)
+        job_level = (job.get("basic_info") or {}).get("level", "初级") or "初级"
+        required_baseline = {"初级": 65, "中级": 72, "高级": 80}.get(job_level, 65)
+        potential_score = min(100, int(student_raw * 100 / required_baseline))
         details = {
             "growth_mindset": "优秀" if learning_score >= 85 else "良好",
             "career_clarity": "清晰" if projects_count >= 2 else "较清晰",
             "motivation": "强" if gpa >= 3.5 else "中等"
         }
-        
-        return {
-            "score": potential_score,
-            "details": details
-        }
+        return {"score": potential_score, "details": details, "required_baseline": required_baseline}
     
     # ----------------------------------------------------------
     # 辅助：生成匹配亮点
