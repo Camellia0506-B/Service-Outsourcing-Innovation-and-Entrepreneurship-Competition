@@ -20,7 +20,8 @@ class CareerPlanningApp {
         this.currentPage = 'login';
         this.currentUser = null;
         this.currentAssessmentId = null;  // 3.1 返回，提交测评时使用
-        this.currentReportId = null;       // 3.2 返回，获取报告时使用
+        this.currentReportId = null;       // 职业规划报告 ID
+        this.currentReportData = null;     // 职业规划报告完整数据（用于编辑）
         this.init();
     }
 
@@ -173,7 +174,12 @@ class CareerPlanningApp {
         });
         document.getElementById('reportBackBtn')?.addEventListener('click', () => this.showReportGenerateArea());
         document.getElementById('reportCheckCompletenessBtn')?.addEventListener('click', () => this.checkReportCompleteness());
+        document.getElementById('reportEditBtn')?.addEventListener('click', () => this.openReportEditModal());
         document.getElementById('reportPolishBtn')?.addEventListener('click', () => this.polishCareerReport());
+        document.getElementById('reportExportBtn')?.addEventListener('click', () => this.exportCareerReport());
+        document.getElementById('closeCompletenessModal')?.addEventListener('click', () => document.getElementById('reportCompletenessModal')?.classList.add('hidden'));
+        document.getElementById('closeEditModal')?.addEventListener('click', () => document.getElementById('reportEditModal')?.classList.add('hidden'));
+        document.getElementById('saveReportEditsBtn')?.addEventListener('click', () => this.saveReportEdits());
 
         // 岗位画像相关：搜索防抖 300ms，清空按钮，返回精选
         let jobProfileSearchDebounce = null;
@@ -1916,7 +1922,6 @@ class CareerPlanningApp {
                     </div>
                     <span class="match-badge badge-${lev}">${badgeText(matchScore)}</span>
                 </div>
-<<<<<<< Updated upstream
                 <div class="card-match-row">
                     <div class="match-pct-big pct-${lev}">${matchScore}%</div>
                     <div class="match-bar-wrap"><div class="match-bar-bg"><div class="match-bar-fill fill-${lev}" style="width:${matchScore}%"></div></div></div>
@@ -3130,7 +3135,6 @@ class CareerPlanningApp {
         }
     }
 
-<<<<<<< Updated upstream
     // 获取搜索筛选条件（城市、行业、薪资、企业性质）
     getSearchFilters() {
         return {
@@ -3140,7 +3144,7 @@ class CareerPlanningApp {
             company_nature: (document.getElementById('searchFilterCompanyType')?.value || '').trim()
         };
     }
-=======
+
     // 关联图谱：按岗位名称解析 job_id 后加载图谱
     async loadJobRelationGraphBySearch() {
         const input = document.getElementById('graphJobName');
@@ -3166,15 +3170,6 @@ class CareerPlanningApp {
             this.showToast('未找到对应岗位ID', 'error');
         }
     }
-
-    // 搜索岗位
-    async searchJobs() {
-        const keyword = document.getElementById('jobSearchInput').value.trim();
-        if (!keyword) {
-            this.showToast('请输入搜索关键词', 'error');
-            return;
-        }
->>>>>>> Stashed changes
 
     // 加载默认岗位列表（无关键词时显示，应用筛选条件）
     async loadDefaultJobs() {
@@ -3646,8 +3641,10 @@ class CareerPlanningApp {
             work_life_balance: document.getElementById('prefWorkLifeBalance')?.value || ''
         };
         const preferences = Object.fromEntries(Object.entries(prefs).filter(([, v]) => v));
+        const targetSelect = document.getElementById('prefTargetJobs');
+        const targetJobs = targetSelect ? Array.from(targetSelect.selectedOptions).map(o => o.value).filter(Boolean) : [];
         this.showReportGeneratingArea();
-        const result = await generateCareerReport(userId, { preferences });
+        const result = await generateCareerReport(userId, { preferences, target_jobs: targetJobs });
         if (result.success && result.data?.report_id) {
             this.pollCareerReportReady(userId, result.data.report_id);
         } else {
@@ -3669,6 +3666,7 @@ class CareerPlanningApp {
             if (result.success && result.data) {
                 if (result.data.status === 'completed') {
                     this.currentReportId = reportId;
+                    this.currentReportData = result.data;
                     this.showReportContentArea();
                     this.renderCareerReportContent(result.data);
                     this.showToast('报告生成完成！', 'success');
@@ -3692,6 +3690,7 @@ class CareerPlanningApp {
         const result = await getCareerReport(userId || 10001, reportId);
         if (result.success && result.data) {
             this.currentReportId = reportId;
+            this.currentReportData = result.data;
             if (result.data.section_1_job_matching) {
                 this.showReportContentArea();
                 this.renderCareerReportContent(result.data);
@@ -3704,9 +3703,49 @@ class CareerPlanningApp {
         }
     }
 
-    // 渲染职业规划报告内容（API 7.2 四部分结构）
+    // 移除内容中 7.1、7.3、7.5 等纯数字（保留年份、月份、2-3个月 等时间类数字）
+    sanitizeCareerText(text) {
+        if (!text || typeof text !== 'string') return text;
+        return text
+            .replace(/\b[1-9]\.[1-9]\d?\b/g, (m) => {
+                const [a] = m.split('.').map(Number);
+                if (a >= 1980 && a <= 2100) return m; // 年份.月 保留
+                return '';
+            })
+            .replace(/\s*[、，]\s*[、，]/g, '、')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+    }
+
+    // 评分转文字描述（仅保留文字，删除具体数字）
+    scoreToLabel(score) {
+        if (score == null || score === '') return '';
+        const n = Number(score);
+        if (!Number.isFinite(n)) return '';
+        if (n >= 90) return '高分';
+        if (n >= 80) return '良好';
+        if (n >= 70) return '中等';
+        return '有提升空间';
+    }
+
+    // 薪资区间转文字描述
+    salaryToLabel(s) {
+        if (!s || typeof s !== 'string') return '合理区间';
+        const m = s.match(/(\d+)\s*k/gi);
+        if (!m) return '合理区间';
+        const nums = m.map(x => parseInt(x.replace(/\D/g, ''), 10)).filter(Boolean);
+        const max = Math.max(...nums);
+        if (max >= 30) return '高端区间';
+        if (max >= 20) return '中高区间';
+        if (max >= 10) return '合理区间';
+        return '起步区间';
+    }
+
+    // 渲染职业规划报告内容（5 大模块、可折叠、左侧目录、无 7.x 数字）
     renderCareerReportContent(data) {
         const contentDiv = document.getElementById('reportContent');
+        const tocDiv = document.getElementById('reportToc');
+        const san = (t) => this.sanitizeCareerText(t || '');
         const genTime = this.formatDateTime(data.generated_at || data.created_at);
         const meta = data.metadata || {};
         const s1 = data.section_1_job_matching || {};
@@ -3714,6 +3753,21 @@ class CareerPlanningApp {
         const s3 = data.section_3_action_plan || {};
         const s4 = data.section_4_evaluation || {};
         const summary = data.summary || {};
+
+        const modules = [
+            { id: 'module-summary', title: '核心摘要', icon: '✨', defaultOpen: true },
+            { id: 'module-explore', title: '职业探索', icon: '🎯', defaultOpen: false },
+            { id: 'module-goal', title: '目标规划', icon: '📈', defaultOpen: false },
+            { id: 'module-action', title: '行动计划', icon: '📋', defaultOpen: false },
+            { id: 'module-eval', title: '评估调整', icon: '🔄', defaultOpen: false }
+        ];
+
+        // 左侧目录
+        let tocHtml = '<div class="report-toc-title">目录</div>';
+        modules.forEach(m => {
+            tocHtml += `<a href="#${m.id}" class="report-toc-item"><span class="toc-icon">${m.icon}</span>${m.title}</a>`;
+        });
+        if (tocDiv) tocDiv.innerHTML = tocHtml;
 
         let html = `<div class="career-report-wrap">`;
 
@@ -3729,158 +3783,341 @@ class CareerPlanningApp {
             </div>
         </div>`;
 
-        // Section 1: 职业探索与岗位匹配
+        // === 模块 1：核心摘要（含下一步行动置顶）===
+        const nextSteps = summary.next_steps || [];
+        const keyTakeaways = summary.key_takeaways || [];
+        const motivationalMsg = summary.motivational_message || '';
+        const hasSummary = nextSteps.length || keyTakeaways.length || motivationalMsg;
+        if (hasSummary) {
+            const openClass = 'career-module-open';
+            html += `<section id="module-summary" class="career-module career-module-summary ${openClass}" data-module="summary">
+                <div class="career-module-header" data-toggle="module-summary">
+                    <span class="module-icon">✨</span>
+                    <span class="module-title">核心摘要</span>
+                    <span class="module-arrow">▼</span>
+                </div>
+                <div class="career-module-body">
+                    ${nextSteps.length ? `
+                    <div class="next-steps-block next-steps-highlight">
+                        <h5><span class="step-icon">⚡</span>下一步行动</h5>
+                        <ul class="next-steps-list">
+                            ${nextSteps.map(n => {
+                                const t = san(n);
+                                const isThisWeek = /本周|本周内|本周必须|本周完成/i.test(t);
+                                return `<li class="next-step-item ${isThisWeek ? 'step-this-week' : ''}">
+                                    ${isThisWeek ? '<span class="badge-this-week">本周必须完成</span>' : ''}
+                                    ${t}
+                                </li>`;
+                            }).join('')}
+                        </ul>
+                    </div>` : ''}
+                    ${keyTakeaways.length ? `<div class="key-takeaways"><h5>核心要点</h5><ul>${keyTakeaways.map(k => `<li>${san(k)}</li>`).join('')}</ul></div>` : ''}
+                    ${motivationalMsg ? `<div class="motivational-msg">${san(motivationalMsg)}</div>` : ''}
+                </div>
+            </section>`;
+        }
+
+        // === 模块 2：职业探索 ===
         if (s1.title) {
             const selfA = s1.self_assessment || {};
             const recs = s1.recommended_careers || [];
             const advice = s1.career_choice_advice || {};
-            html += `<section class="career-section career-section-1">
-                <h4 class="career-section-title"><span class="sec-icon">🎯</span>${s1.title}</h4>
-                <div class="career-self-assessment">
-                    <h5>自我认知总结</h5>
-                    <div class="self-grid">
-                        <div class="self-card"><h6>优势</h6><ul>${(selfA.strengths || []).map(s => `<li>${s}</li>`).join('')}</ul></div>
-                        <div class="self-card"><h6>兴趣</h6><ul>${(selfA.interests || []).map(i => `<li>${i}</li>`).join('')}</ul></div>
-                        <div class="self-card"><h6>价值观</h6><ul>${(selfA.values || []).map(v => `<li>${v}</li>`).join('')}</ul></div>
+            html += `<section id="module-explore" class="career-module career-module-explore" data-module="explore">
+                <div class="career-module-header" data-toggle="module-explore">
+                    <span class="module-icon">🎯</span>
+                    <span class="module-title">职业探索</span>
+                    <span class="module-arrow">▶</span>
+                </div>
+                <div class="career-module-body career-module-collapsed">
+                    <div class="career-self-assessment">
+                        <h5>自我认知总结</h5>
+                        <div class="self-grid">
+                            <div class="self-card"><h6>优势</h6><ul>${(selfA.strengths || []).map(s => `<li>${san(s)}</li>`).join('')}</ul></div>
+                            <div class="self-card"><h6>兴趣</h6><ul>${(selfA.interests || []).map(i => `<li>${san(i)}</li>`).join('')}</ul></div>
+                            <div class="self-card"><h6>价值观</h6><ul>${(selfA.values || []).map(v => `<li>${san(v)}</li>`).join('')}</ul></div>
+                        </div>
                     </div>
+                    <div class="career-recommended">
+                        <h5>推荐职业方向</h5>
+                        ${recs.map(rc => {
+                            const ma = rc.match_analysis || {};
+                            const mo = rc.market_outlook || {};
+                            const gaps = ma.gaps_and_solutions || [];
+                            const scoreLabel = this.scoreToLabel(rc.match_score);
+                            const salaryLabel = this.salaryToLabel(mo.salary_range);
+                            const scoreHtml = scoreLabel ? `<span class="rec-score-badge rec-score-${scoreLabel === '高分' ? 'high' : scoreLabel === '良好' ? 'good' : 'mid'}">${scoreLabel}</span>` : '';
+                            return `<div class="rec-career-card-v2">
+                                ${scoreHtml}
+                                <div class="rec-career-header"><span class="rec-name">${rc.career}</span></div>
+                                ${(ma.why_suitable || []).length ? `<div class="rec-why"><strong>适合原因：</strong>${san(ma.why_suitable.join('；'))}</div>` : ''}
+                                ${mo.salary_range ? `<div class="rec-market"><span class="rec-salary-badge">${salaryLabel}</span> 薪资${salaryLabel}</div>` : ''}
+                                ${gaps.length ? `<div class="rec-gaps"><strong>能力差距与提升：</strong><ul>${gaps.map(g => `<li>${san(g.gap)} → ${san(g.solution)}（${g.timeline || ''}）</li>`).join('')}</ul></div>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    ${advice.primary_recommendation ? `<div class="career-advice">
+                        <h5>职业选择建议</h5>
+                        <p><strong>首选：</strong>${san(advice.primary_recommendation)}</p>
+                        <ul>${(advice.reasons || []).map(r => `<li>${san(r)}</li>`).join('')}</ul>
+                        ${advice.alternative_option ? `<p><strong>备选：</strong>${san(advice.alternative_option)}</p>` : ''}
+                        ${advice.risk_mitigation ? `<p class="risk-tip">${san(advice.risk_mitigation)}</p>` : ''}
+                    </div>` : ''}
                 </div>
-                <div class="career-recommended">
-                    <h5>推荐职业方向</h5>
-                    ${recs.map(rc => {
-                        const ma = rc.match_analysis || {};
-                        const mo = rc.market_outlook || {};
-                        const gaps = ma.gaps_and_solutions || [];
-                        const scoreHtml = (rc.match_score != null && rc.match_score !== '') ? `<span class="rec-score">${rc.match_score}分</span>` : '';
-                        return `<div class="rec-career-card">
-                            ${scoreHtml}
-                            <div class="rec-career-header"><span class="rec-name">${rc.career}</span></div>
-                            ${(ma.why_suitable || []).length ? `<div class="rec-why"><strong>适合原因：</strong>${ma.why_suitable.join('；')}</div>` : ''}
-                            ${mo.salary_range ? `<div class="rec-market">薪资区间：${mo.salary_range}</div>` : ''}
-                            ${gaps.length ? `<div class="rec-gaps"><strong>能力差距与提升：</strong><ul>${gaps.map(g => `<li>${g.gap} → ${g.solution}（${g.timeline}）</li>`).join('')}</ul></div>` : ''}
-                        </div>`;
-                    }).join('')}
-                </div>
-                ${advice.primary_recommendation ? `<div class="career-advice">
-                    <h5>职业选择建议</h5>
-                    <p><strong>首选：</strong>${advice.primary_recommendation}</p>
-                    <ul>${(advice.reasons || []).map(r => `<li>${r}</li>`).join('')}</ul>
-                    ${advice.alternative_option ? `<p><strong>备选：</strong>${advice.alternative_option}</p>` : ''}
-                    ${advice.risk_mitigation ? `<p class="risk-tip">${advice.risk_mitigation}</p>` : ''}
-                </div>` : ''}
             </section>`;
         }
 
-        // Section 2: 职业目标与路径
+        // === 模块 3：目标规划 ===
         if (s2.title) {
             const st = s2.short_term_goal || {};
             const mt = s2.mid_term_goal || {};
             const rm = s2.career_roadmap || {};
             const trends = s2.industry_trends || {};
-            html += `<section class="career-section career-section-2">
-                <h4 class="career-section-title"><span class="sec-icon">📈</span>${s2.title}</h4>
-                <div class="career-goals">
-                    <div class="goal-card short"><h5>短期目标（1年内）</h5><p class="goal-timeline">${st.timeline || ''}</p><p class="goal-primary">${st.primary_goal || ''}</p>
-                        <ul>${(st.specific_targets || []).map(t => `<li>${t.target}（${t.deadline}）— ${t.metrics}</li>`).join('')}</ul>
-                    </div>
-                    <div class="goal-card mid"><h5>中期目标（3-5年）</h5><p class="goal-timeline">${mt.timeline || ''}</p><p class="goal-primary">${mt.primary_goal || ''}</p>
-                        <ul>${(mt.specific_targets || []).map(t => `<li>${t.target}（${t.deadline}）</li>`).join('')}</ul>
-                    </div>
+            html += `<section id="module-goal" class="career-module career-module-goal" data-module="goal">
+                <div class="career-module-header" data-toggle="module-goal">
+                    <span class="module-icon">📈</span>
+                    <span class="module-title">目标规划</span>
+                    <span class="module-arrow">▶</span>
                 </div>
-                ${rm.stages?.length ? `<div class="career-roadmap"><h5>职业发展路径：${rm.path_type || ''}</h5>
-                    <div class="roadmap-stages">${(rm.stages || []).map((s, i) => `
-                        <div class="roadmap-stage"><span class="stage-num">${i + 1}</span><div><strong>${s.stage}</strong>（${s.period}）<ul>${(s.key_responsibilities || []).map(r => `<li>${r}</li>`).join('')}</ul></div></div>
-                    `).join('')}</div>
-                    ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>转岗备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing}）— ${ap.reason}</li>`).join('')}</ul></div>` : ''}
-                </div>` : ''}
-                ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${trends.current_status || ''}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${t.trend}</strong>：${t.impact}；机会：${t.opportunity}</li>`).join('')}</ul><p class="outlook">${trends['5_year_outlook'] || ''}</p></div>` : ''}
+                <div class="career-module-body career-module-collapsed">
+                    <div class="career-goals">
+                        <div class="goal-card short"><h5>短期目标（1年内）</h5><p class="goal-timeline">${st.timeline || ''}</p><p class="goal-primary">${san(st.primary_goal || '')}</p>
+                            <ul>${(st.specific_targets || []).map(t => `<li><span class="goal-deadline">${t.deadline || ''}</span> ${san(t.target)} — ${san(t.metrics)}</li>`).join('')}</ul>
+                        </div>
+                        <div class="goal-card mid"><h5>中期目标（3-5年）</h5><p class="goal-timeline">${mt.timeline || ''}</p><p class="goal-primary">${san(mt.primary_goal || '')}</p>
+                            <ul>${(mt.specific_targets || []).map(t => `<li><span class="goal-deadline">${t.deadline || ''}</span> ${san(t.target)}</li>`).join('')}</ul>
+                        </div>
+                    </div>
+                    ${rm.stages?.length ? `<div class="career-roadmap"><h5>职业发展路径：${san(rm.path_type || '')}</h5>
+                        <div class="roadmap-stages">${(rm.stages || []).map((s, i) => `
+                            <div class="roadmap-stage"><span class="stage-num">${i + 1}</span><div><strong>${s.stage}</strong>（${s.period || ''}）<ul>${(s.key_responsibilities || []).map(r => `<li>${san(r)}</li>`).join('')}</ul></div></div>
+                        `).join('')}</div>
+                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>转岗备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
+                    </div>` : ''}
+                    ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${san(trends.current_status || '')}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${san(t.trend)}</strong>：${san(t.impact)}；机会：${san(t.opportunity)}</li>`).join('')}</ul><p class="outlook">${san(trends['5_year_outlook'] || '')}</p></div>` : ''}
+                </div>
             </section>`;
         }
 
-        // Section 3: 行动计划
+        // === 模块 4：行动计划 ===
         if (s3.title) {
             const stp = s3.short_term_plan || {};
             const mp = stp.monthly_plans || [];
             const lp = s3.learning_path || {};
             const ash = s3.achievement_showcase || {};
-            html += `<section class="career-section career-section-3">
-                <h4 class="career-section-title"><span class="sec-icon">📋</span>${s3.title}</h4>
-                <div class="career-action-plan">
-                    <h5>短期行动计划：${stp.period || ''}</h5>
-                    <p class="plan-goal">${stp.goal || ''}</p>
-                    ${mp.map(m => `
-                        <div class="monthly-plan">
-                            <div class="plan-header"><span class="plan-month">${m.month}</span><span class="plan-focus">${m.focus || ''}</span></div>
-                            <ul>${(m.tasks || []).map(t => `<li><strong>${t.task}</strong>：${Array.isArray(t['具体行动']) ? t['具体行动'].join('；') : ''} — ${t['预期成果'] || ''}</li>`).join('')}</ul>
-                            <p class="plan-milestone">✓ ${m.milestone || ''}</p>
-                        </div>
-                    `).join('')}
+            const skills = lp.technical_skills || [];
+            html += `<section id="module-action" class="career-module career-module-action" data-module="action">
+                <div class="career-module-header" data-toggle="module-action">
+                    <span class="module-icon">📋</span>
+                    <span class="module-title">行动计划</span>
+                    <span class="module-arrow">▶</span>
                 </div>
-                ${(lp.technical_skills || []).length ? `<div class="learning-path"><h5>学习路径</h5><ul>${(lp.technical_skills || []).map(sk => `<li><strong>${sk.skill_area}</strong>（${sk.current_level}→${sk.target_level}）${(sk.learning_resources || []).join('；')} — ${sk.timeline}</li>`).join('')}</ul></div>` : ''}
-                ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${v.goal || ''}</p><ul>${(v.actions || []).map(a => `<li>${a}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
+                <div class="career-module-body career-module-collapsed">
+                    <div class="career-action-plan">
+                        <h5>短期行动计划：${stp.period || ''}</h5>
+                        <p class="plan-goal">${san(stp.goal || '')}</p>
+                        ${mp.map(m => `
+                            <div class="monthly-plan">
+                                <div class="plan-header"><span class="plan-month">${m.month || ''}</span><span class="plan-focus">${m.focus || ''}</span></div>
+                                <ul>${(m.tasks || []).map(t => `<li><strong>${san(t.task)}</strong>：${Array.isArray(t['具体行动']) ? san(t['具体行动'].join('；')) : ''} — ${san(t['预期成果'] || '')}</li>`).join('')}</ul>
+                                <p class="plan-milestone">✓ ${san(m.milestone || '')}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${skills.length ? `
+                    <div class="learning-path">
+                        <h5>学习路径</h5>
+                        <div class="skill-progress-list">
+                            ${skills.map(sk => {
+                                const tl = sk.timeline || '';
+                                const pct = /(\d+)[-－](\d+)\s*个?月/.test(tl) ? 60 : /个?月/.test(tl) ? 50 : 40;
+                                return `<div class="skill-progress-item">
+                                    <div class="skill-name">${sk.skill_area} <span class="skill-level">${sk.current_level || ''} → ${sk.target_level || ''}</span></div>
+                                    <div class="skill-progress-bar"><div class="skill-progress-fill" style="width:${pct}%"></div><span class="skill-timeline">${tl}</span></div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>` : ''}
+                    ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${san(v.goal || '')}</p><ul>${(v.actions || []).map(a => `<li>${san(a)}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
+                </div>
             </section>`;
         }
 
-        // Section 4: 评估与调整
+        // === 模块 5：评估调整（含风险决策树）===
         if (s4.title) {
             const ev = s4.evaluation_system || {};
             const adj = s4.adjustment_scenarios || [];
             const rm = s4.risk_management || {};
-            html += `<section class="career-section career-section-4">
-                <h4 class="career-section-title"><span class="sec-icon">🔄</span>${s4.title}</h4>
-                <div class="evaluation-system">
-                    ${ev.monthly_review ? `<div class="eval-item"><span>${ev.monthly_review.frequency}</span> ${(ev.monthly_review.review_items || []).join('；')}</div>` : ''}
-                    ${ev.quarterly_review ? `<div class="eval-item"><span>${ev.quarterly_review.frequency}</span> ${(ev.quarterly_review.review_items || []).join('；')}</div>` : ''}
-                    ${ev.annual_review ? `<div class="eval-item"><span>${ev.annual_review.frequency}</span> ${(ev.annual_review.review_items || []).join('；')}</div>` : ''}
+            const contingencyPlans = rm.contingency_plans || [];
+            html += `<section id="module-eval" class="career-module career-module-eval" data-module="eval">
+                <div class="career-module-header" data-toggle="module-eval">
+                    <span class="module-icon">🔄</span>
+                    <span class="module-title">评估调整</span>
+                    <span class="module-arrow">▶</span>
                 </div>
-                ${adj.length ? `<div class="adjustment-scenarios"><h5>调整场景</h5>${adj.map(a => `<div class="adj-card"><h6>${a.scenario}</h6><p>可能原因：${(a.possible_reasons || []).join('、')}</p><p>应对：${(a.adjustment_plan?.immediate_actions || []).join('；')}</p></div>`).join('')}</div>` : ''}
-                ${rm.identified_risks?.length ? `<div class="risk-management"><h5>风险管理</h5><ul>${(rm.identified_risks || []).map(r => `<li>${r.risk}（${r.probability}/${r.impact}）→ ${r.mitigation}</li>`).join('')}</ul><p>备选方案：${(rm.contingency_plans || []).join('；')}</p></div>` : ''}
-            </section>`;
-        }
-
-        // 总结
-        if (summary.key_takeaways?.length || summary.next_steps?.length || summary.motivational_message) {
-            html += `<section class="career-section career-summary">
-                <h4 class="career-section-title"><span class="sec-icon">✨</span>报告总结</h4>
-                ${summary.key_takeaways?.length ? `<div class="key-takeaways"><h5>核心要点</h5><ul>${summary.key_takeaways.map(k => `<li>${k}</li>`).join('')}</ul></div>` : ''}
-                ${summary.next_steps?.length ? `<div class="next-steps"><h5>下一步行动</h5><ul>${summary.next_steps.map(n => `<li>${n}</li>`).join('')}</ul></div>` : ''}
-                ${summary.motivational_message ? `<div class="motivational-msg">${summary.motivational_message}</div>` : ''}
+                <div class="career-module-body career-module-collapsed">
+                    <div class="evaluation-system">
+                        ${ev.monthly_review ? `<div class="eval-item"><span>${ev.monthly_review.frequency || ''}</span> ${san((ev.monthly_review.review_items || []).join('；'))}</div>` : ''}
+                        ${ev.quarterly_review ? `<div class="eval-item"><span>${ev.quarterly_review.frequency || ''}</span> ${san((ev.quarterly_review.review_items || []).join('；'))}</div>` : ''}
+                        ${ev.annual_review ? `<div class="eval-item"><span>${ev.annual_review.frequency || ''}</span> ${san((ev.annual_review.review_items || []).join('；'))}</div>` : ''}
+                    </div>
+                    ${adj.length ? `<div class="adjustment-scenarios"><h5>调整场景</h5>${adj.map(a => `<div class="adj-card"><h6>${san(a.scenario)}</h6><p>可能原因：${(a.possible_reasons || []).map(san).join('、')}</p><p>应对：${(a.adjustment_plan?.immediate_actions || []).map(san).join('；')}</p></div>`).join('')}</div>` : ''}
+                    ${(rm.identified_risks?.length || contingencyPlans.length) ? `
+                    <div class="risk-decision-tree">
+                        <h5>风险预案与备选路径</h5>
+                        ${rm.identified_risks?.length ? `<div class="risk-list"><ul>${(rm.identified_risks || []).map(r => `<li><span class="risk-dot">●</span> ${san(r.risk)} → ${san(r.mitigation)}</li>`).join('')}</ul></div>` : ''}
+                        ${contingencyPlans.length ? `
+                        <div class="contingency-priority">
+                            <h6>优先级备选方案</h6>
+                            <ol class="priority-list">
+                                ${contingencyPlans.map((p, i) => {
+                                    const txt = typeof p === 'string' ? p.replace(/^plan\s*[A-Z]\s*[:：]\s*/i, '') : p;
+                                    return `<li><span class="priority-label">方案 ${String.fromCharCode(65 + i)}</span> ${san(txt)}</li>`;
+                                }).join('')}
+                            </ol>
+                        </div>` : ''}
+                    </div>` : ''}
+                </div>
             </section>`;
         }
 
         html += `<div class="career-report-footer">本报告由 AI 职业规划智能体生成 · 仅供参考，具体决策请结合个人实际情况</div></div>`;
 
         contentDiv.innerHTML = html;
+
+        // 折叠/展开 + 目录跳转 + 回到顶部
+        this.bindCareerReportBehavior();
     }
 
-    // 完整性检查
-    async checkReportCompleteness() {
-        const id = this.currentReportId;
-        if (!id) return this.showToast('暂无报告', 'error');
-        const result = await checkCareerCompleteness(id);
-        if (result.success && result.data) {
-            const d = result.data;
-            let msg = `完整度 ${d.completeness_score}%，质量 ${d.quality_score}%。`;
-            if (d.suggestions?.length) msg += ' 建议：' + d.suggestions.map(s => s.suggestion).join('；');
-            this.showToast(msg, 'info');
+    bindCareerReportBehavior() {
+        const wrap = document.querySelector('.career-report-wrap');
+        if (!wrap) return;
+        wrap.querySelectorAll('.career-module-header[data-toggle]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-toggle');
+                const mod = document.getElementById(id);
+                const body = mod?.querySelector('.career-module-body');
+                const arrow = btn.querySelector('.module-arrow');
+                if (!body) return;
+                const isOpen = body.classList.toggle('career-module-collapsed');
+                if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
+                mod?.classList.toggle('career-module-open', !isOpen);
+            });
+        });
+        const backBtn = document.getElementById('reportBackToTop');
+        if (backBtn) {
+            const onScroll = () => backBtn.classList.toggle('hidden', (window.scrollY || document.documentElement.scrollTop) < 200);
+            window.addEventListener('scroll', onScroll, { passive: true });
+            backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         }
     }
 
-    // AI 润色
+    // 7.6 完整性检查 - 弹窗展示完整结果
+    async checkReportCompleteness() {
+        const id = this.currentReportId;
+        if (!id) return this.showToast('暂无报告', 'error');
+        const content = document.getElementById('reportCompletenessContent');
+        const modal = document.getElementById('reportCompletenessModal');
+        if (content) content.innerHTML = '<div class="loading-message">检查中...</div>';
+        if (modal) modal.classList.remove('hidden');
+        const result = await checkCareerCompleteness(id);
+        if (!result.success || !result.data) {
+            if (content) content.innerHTML = '<p class="hint-text">' + (result.msg || '检查失败') + '</p>';
+            return;
+        }
+        const d = result.data;
+        let html = `<div class="completeness-scores">
+            <div class="completeness-score-item"><span class="score-label">完整度</span><span class="score-value">${d.completeness_score ?? '—'}%</span></div>
+            <div class="completeness-score-item"><span class="score-label">质量</span><span class="score-value">${d.quality_score ?? '—'}%</span></div>
+        </div>`;
+        if (d.section_completeness && d.section_completeness.length) {
+            html += `<h4>各章节完整度</h4><ul class="completeness-section-list">`;
+            d.section_completeness.forEach(s => {
+                const issues = (s.issues || []).length ? '<ul>' + (s.issues || []).map(i => `<li>${i}</li>`).join('') + '</ul>' : '';
+                html += `<li><strong>${s.section}</strong> ${s.completeness}%${issues}</li>`;
+            });
+            html += `</ul>`;
+        }
+        if (d.suggestions && d.suggestions.length) {
+            html += `<h4>改进建议</h4><ul class="completeness-suggestions">`;
+            d.suggestions.forEach(s => html += `<li><span class="priority-${(s.priority || '').toLowerCase()}">${s.priority || ''}</span> ${s.suggestion}</li>`);
+            html += `</ul>`;
+        }
+        if (d.strengths && d.strengths.length) {
+            html += `<h4>报告亮点</h4><ul class="completeness-strengths">`;
+            d.strengths.forEach(s => html += `<li>✓ ${s}</li>`);
+            html += `</ul>`;
+        }
+        if (content) content.innerHTML = html;
+    }
+
+    // 7.3 打开编辑报告弹窗
+    openReportEditModal() {
+        const id = this.currentReportId;
+        if (!id) return this.showToast('暂无报告', 'error');
+        const data = this.currentReportData;
+        const msgInput = document.getElementById('editMotivationalMsg');
+        const deadlineInput = document.getElementById('editShortTermDeadline');
+        const timeInput = document.getElementById('editTimeInvestment');
+        if (msgInput) msgInput.value = (data?.summary?.motivational_message || '').slice(0, 500);
+        if (deadlineInput) deadlineInput.value = data?.section_2_career_path?.short_term_goal?.specific_targets?.[0]?.deadline || '';
+        if (timeInput) {
+            const task = data?.section_3_action_plan?.short_term_plan?.monthly_plans?.[0]?.tasks?.[0];
+            timeInput.value = (task && task['时间投入']) ? task['时间投入'] : '';
+        }
+        document.getElementById('reportEditModal')?.classList.remove('hidden');
+    }
+
+    // 7.3 保存编辑
+    async saveReportEdits() {
+        const id = this.currentReportId;
+        const userId = getCurrentUserId();
+        if (!id || !userId) return this.showToast('请先登录', 'error');
+        const edits = {};
+        const msg = document.getElementById('editMotivationalMsg')?.value?.trim();
+        const deadline = document.getElementById('editShortTermDeadline')?.value?.trim();
+        const timeInvestment = document.getElementById('editTimeInvestment')?.value?.trim();
+        if (msg) edits['summary.motivational_message'] = msg;
+        if (deadline) edits['section_2_career_path.short_term_goal.specific_targets[0].deadline'] = deadline;
+        if (timeInvestment) edits['section_3_action_plan.short_term_plan.monthly_plans[0].tasks[0].时间投入'] = timeInvestment;
+        if (Object.keys(edits).length === 0) return this.showToast('请填写需要修改的字段', 'info');
+        const result = await editCareerReport(id, userId, edits);
+        if (result.success) {
+            document.getElementById('reportEditModal')?.classList.add('hidden');
+            this.showToast('保存成功', 'success');
+            this.loadReportContent(id);
+        } else {
+            this.showToast(result.msg || '保存失败', 'error');
+        }
+    }
+
+    // 7.4 AI 润色 - 提交后轮询刷新报告
     async polishCareerReport() {
         const id = this.currentReportId;
         if (!id) return this.showToast('暂无报告', 'error');
-        this.showToast('AI 润色中...', 'info');
+        this.showToast('AI 润色中，约 30 秒后完成...', 'info');
         const result = await polishCareerReport(id);
-        if (result.success) this.showToast('润色任务已提交', 'success');
+        if (!result.success) return this.showToast(result.msg || '润色提交失败', 'error');
+        const userId = getCurrentUserId();
+        setTimeout(async () => {
+            this.showToast('正在刷新报告...', 'info');
+            const r = await getCareerReport(userId, id);
+            if (r.success && r.data && r.data.status === 'completed') {
+                this.currentReportData = r.data;
+                this.renderCareerReportContent(r.data);
+                this.showToast('润色完成，报告已更新', 'success');
+            }
+        }, 30000);
     }
 
-    // 导出职业规划报告 PDF
-    async exportCareerReportPdf() {
+    // 7.5 导出职业规划报告（支持 PDF/Word）
+    async exportCareerReport() {
         const id = this.currentReportId;
         if (!id) return this.showToast('暂无报告', 'error');
-        const result = await exportCareerReport(id);
+        const format = (document.getElementById('reportExportFormat')?.value || 'pdf').toLowerCase();
+        const result = await exportCareerReport(id, format);
         if (result.success && result.data?.download_url) {
-            window.open(result.data.download_url, '_blank');
+            const url = result.data.download_url;
+            window.open(url.startsWith('http') ? url : (window.location.origin + url), '_blank');
             this.showToast('导出成功', 'success');
         } else {
             this.showToast(result.msg || '导出失败', 'error');

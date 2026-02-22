@@ -3879,6 +3879,28 @@ body::before {
     margin-bottom: 6px;
 }
 
+.form-group-full { grid-column: 1 / -1; }
+.pref-target-jobs { display: flex; flex-direction: column; gap: 6px; }
+.pref-target-jobs select { min-height: 80px; }
+.form-hint { font-size: 12px; color: #666; margin-top: 4px; }
+
+.report-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn-toolbar-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #d0d5dc; font-size: 14px; background: #fff; }
+
+.report-completeness-modal .modal-content { max-width: 480px; }
+.completeness-scores { display: flex; gap: 24px; margin-bottom: 20px; }
+.completeness-score-item { text-align: center; }
+.completeness-score-item .score-label { display: block; font-size: 13px; color: #666; }
+.completeness-score-item .score-value { font-size: 24px; font-weight: 700; color: #2e7d32; }
+.completeness-section-list, .completeness-suggestions, .completeness-strengths { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+.report-completeness-modal h4 { font-size: 14px; margin: 16px 0 8px; }
+
+.report-edit-modal .modal-content { max-width: 500px; }
+.edit-form-section { margin-bottom: 16px; }
+.edit-form-section label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.edit-form-section textarea, .edit-form-section input { width: 100%; padding: 10px 12px; border: 1px solid #d0d5dc; border-radius: 6px; font-size: 14px; }
+.edit-form-hint { font-size: 12px; color: #666; margin-bottom: 16px; }
+
 .preferences-grid select,
 .preferences-grid input {
     width: 100%;
@@ -3929,10 +3951,225 @@ body::before {
     color: #666666;
 }
 
-/* 报告内容区 */
+/* 报告内容区：左侧目录 + 主内容 */
 .report-content-area {
     margin-top: 16px;
+    position: relative;
 }
+
+.report-content-with-toc {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.report-toc {
+    position: sticky;
+    top: 24px;
+    flex-shrink: 0;
+    width: 180px;
+    padding: 16px;
+    background: #f5f7fa;
+    border-radius: 10px;
+    border: 1px solid #e0e4e9;
+}
+
+.report-toc-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #d0d5dc;
+}
+
+.report-toc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 13px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.report-toc-item:hover {
+    background: #e8ecf2;
+    color: #1e3a5f;
+}
+
+.report-toc-item .toc-icon { font-size: 14px; }
+
+.report-content-with-toc .report-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 回到顶部 */
+.btn-back-to-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1e3a5f;
+    background: #fff;
+    border: 1px solid #1e3a5f;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-back-to-top:hover {
+    background: #1e3a5f;
+    color: #fff;
+}
+
+/* 可折叠五大模块 */
+.career-module {
+    margin-bottom: 16px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.career-module-summary { background: linear-gradient(135deg, #f0f7ff 0%, #fff 100%); border-left: 4px solid #1e3a5f; }
+.career-module-explore { background: #fff; border-left: 4px solid #2e7d32; }
+.career-module-goal { background: #fff; border-left: 4px solid #1565c0; }
+.career-module-action { background: #fff; border-left: 4px solid #f5a623; }
+.career-module-eval { background: #fff; border-left: 4px solid #7b1fa2; }
+
+.career-module-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.career-module-header:hover { background: rgba(0,0,0,0.03); }
+
+.career-module .module-icon { font-size: 18px; }
+.career-module .module-title { flex: 1; }
+.career-module .module-arrow { font-size: 12px; color: #666; transition: transform 0.2s; }
+
+.career-module-body {
+    padding: 0 20px 20px;
+    overflow: hidden;
+    max-height: 3000px;
+    transition: max-height 0.3s ease-out, opacity 0.2s;
+}
+
+.career-module-body.career-module-collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.career-module-open .career-module-body { max-height: 2000px; opacity: 1; pointer-events: auto; }
+.career-module-open .module-arrow { transform: rotate(0); }
+.career-module-body.career-module-collapsed + .career-module-header .module-arrow,
+.career-module-header:first-child + .career-module-body.career-module-collapsed ~ .career-module-header .module-arrow { }
+.career-module .career-module-header:only-of-type + .career-module-body { }
+
+/* 下一步行动置顶、本周必须完成 */
+.next-steps-block {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+    border-radius: 10px;
+    border: 1px solid #c8e6c9;
+}
+
+.next-steps-block h5 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #1b5e20; }
+.next-steps-list { margin: 0; padding-left: 20px; }
+.next-step-item { margin-bottom: 8px; line-height: 1.6; }
+.next-step-item.step-this-week { font-weight: 600; color: #2e7d32; }
+.next-steps-block .key-takeaways { margin-top: 16px; }
+.goal-deadline { display: inline-block; margin-right: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; color: #1565c0; background: #e3f2fd; border-radius: 4px; }
+.badge-this-week {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: #e53935;
+    border-radius: 4px;
+}
+
+/* 岗位卡片 v2：文字评分 + 薪资区间 */
+.rec-career-card-v2 {
+    position: relative;
+    padding: 20px;
+    margin-bottom: 16px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e0e4e9;
+    transition: all 0.2s;
+}
+
+.rec-career-card-v2:hover { border-color: #1e3a5f; box-shadow: 0 2px 8px rgba(30,58,95,0.08); }
+
+.rec-score-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+}
+.rec-score-badge.rec-score-high { background: #e8f5e9; color: #2e7d32; }
+.rec-score-badge.rec-score-good { background: #e3f2fd; color: #1565c0; }
+.rec-score-badge.rec-score-mid { background: #fff8e1; color: #f57c00; }
+
+.rec-salary-badge { font-weight: 600; color: #1565c0; }
+.rec-career-card-v2 .rec-market { margin-top: 8px; font-size: 13px; color: #666; }
+
+/* 学习路径进度条 */
+.skill-progress-list { margin: 0 0 20px; }
+.skill-progress-item { margin-bottom: 16px; }
+.skill-progress-item .skill-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.skill-progress-item .skill-level { font-weight: 400; color: #666; font-size: 13px; }
+.skill-progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 24px;
+}
+.skill-progress-bar .skill-progress-fill {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1e3a5f, #2e7d32);
+    min-width: 40px;
+}
+.skill-progress-bar .skill-timeline { font-size: 13px; color: #666; }
+
+/* 风险预案与备选路径 */
+.risk-decision-tree { margin-top: 20px; padding: 16px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e4e9; }
+.risk-decision-tree h5 { margin-bottom: 12px; }
+.risk-list ul { margin: 0; padding-left: 20px; }
+.risk-list li { margin-bottom: 6px; }
+.risk-dot { color: #e53935; margin-right: 6px; }
+.contingency-priority { margin-top: 16px; }
+.contingency-priority h6 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #333; }
+.priority-list { margin: 0; padding-left: 24px; }
+.priority-list li { margin-bottom: 8px; }
+.priority-label { font-weight: 600; color: #1e3a5f; margin-right: 6px; }
 
 .report-toolbar {
     display: flex;

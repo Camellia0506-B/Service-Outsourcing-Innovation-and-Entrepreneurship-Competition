@@ -267,20 +267,10 @@ def get_job_relation_graph():
             return error_response(400, "graph_type 参数错误，支持: vertical/transfer/all")
 
         graph_service = get_job_graph_service()
-<<<<<<< Updated upstream
         resp = graph_service.get_relation_graph(job_id, graph_type)
         if resp.get("code") != 200:
             return error_response(resp.get("code", 404), resp.get("msg", "岗位不存在"))
         return success_response(resp.get("data"))
-=======
-        graph_data = graph_service.get_job_graph(job_id, graph_type)
-        # 调试：打印 relation-graph 返回数据（前 800 字符）
-        try:
-            print("relation-graph 返回:", json.dumps(graph_data, ensure_ascii=False, default=str)[:800])
-        except Exception:
-            pass
-        return success_response(graph_data)
->>>>>>> Stashed changes
 
     except Exception as e:
         logger.error(f"[API] /job/relation-graph 异常: {e}", exc_info=True)
@@ -288,7 +278,6 @@ def get_job_relation_graph():
 
 
 # ============================================================
-<<<<<<< Updated upstream
 # GET /api/v1/job/career-path - 职业发展路径（晋升 + 换岗，真实数据）
 # ============================================================
 @job_bp.route("/career-path", methods=["GET"])
@@ -348,33 +337,6 @@ def get_career_path():
 
         return success_response({"path": path, "altPaths": alt_paths})
 
-=======
-# 4.3.1 获取岗位晋升路径（LLM 动态生成 4 阶段）
-# GET /api/v1/job/career-path?jobName=xxx
-# ============================================================
-@job_bp.route("/career-path", methods=["GET"])
-def get_job_career_path():
-    """
-    根据岗位名称返回 4 个晋升阶段，供前端晋升路径卡片使用。
-    返回 data.path: [ { stage, icon, salary, skills, desc, years }, ... ]
-    """
-    try:
-        job_name = (request.args.get("jobName") or "").strip()
-        if not job_name:
-            return error_response(400, "请提供 jobName 参数")
-        raw = generate_career_path(job_name)
-        path = []
-        for i, s in enumerate(raw[:4]):
-            path.append({
-                "stage": s.get("name", ""),
-                "icon": s.get("icon", "🌱"),
-                "salary": s.get("salary_increase", ""),
-                "skills": s.get("key_skills") or [],
-                "desc": s.get("desc", ""),
-                "years": s.get("time_range", ""),
-            })
-        return success_response({"path": path})
->>>>>>> Stashed changes
     except Exception as e:
         logger.error(f"[API] /job/career-path 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")

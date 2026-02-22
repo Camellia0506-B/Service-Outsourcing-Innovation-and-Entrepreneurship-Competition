@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>职业规划智能体</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%231e3a5f' width='32' height='32' rx='4'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>C</text></svg>" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;500;600;700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
@@ -34,7 +35,7 @@
                 </div>
                 <div class="nav-user">
                     <div class="user-info">
-                        <img id="userAvatar" src="" alt="用户头像" class="user-avatar">
+                        <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%23ddd' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666' font-size='20'%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E" alt="用户头像" class="user-avatar">
                         <span id="userName"></span>
                     </div>
                     <button id="logoutBtn" class="btn-logout">退出</button>
@@ -905,6 +906,22 @@
                                     <option value="低">低（事业优先）</option>
                                 </select>
                             </div>
+                            <div class="form-group form-group-full">
+                                <label>目标岗位（可选，可多选）</label>
+                                <div id="prefTargetJobsWrap" class="pref-target-jobs">
+                                    <select id="prefTargetJobs" multiple size="4">
+                                        <option value="job_001">算法工程师</option>
+                                        <option value="job_002">前端开发工程师</option>
+                                        <option value="job_003">后端开发工程师</option>
+                                        <option value="job_004">数据分析师</option>
+                                        <option value="job_005">产品经理</option>
+                                        <option value="job_006">新能源电池工程师</option>
+                                        <option value="job_007">UI/UX设计师</option>
+                                        <option value="job_010">AI应用工程师</option>
+                                    </select>
+                                    <span class="form-hint">按住 Ctrl 可多选</span>
+                                </div>
+                            </div>
                         </div>
                         <button id="confirmGenerateBtn" class="btn-primary">确认生成</button>
                     </div>
@@ -923,10 +940,57 @@
                 <div id="reportContentArea" class="report-content-area hidden">
                     <div class="report-toolbar">
                         <button id="reportCheckCompletenessBtn" class="btn-toolbar">完整性检查</button>
+                        <button id="reportEditBtn" class="btn-toolbar">编辑报告</button>
                         <button id="reportPolishBtn" class="btn-toolbar">AI 润色</button>
+                        <select id="reportExportFormat" class="btn-toolbar-select">
+                            <option value="pdf">PDF</option>
+                            <option value="docx">Word</option>
+                        </select>
+                        <button id="reportExportBtn" class="btn-toolbar btn-export">导出</button>
                         <button id="reportBackBtn" class="btn-toolbar">返回</button>
                     </div>
-                    <div id="reportContent" class="report-content"></div>
+                    <div class="report-content-with-toc">
+                        <nav id="reportToc" class="report-toc"></nav>
+                        <div id="reportContent" class="report-content"></div>
+                    </div>
+                    <button id="reportBackToTop" class="btn-back-to-top hidden" title="回到顶部">↑ 回到顶部</button>
+                </div>
+
+                <!-- 完整性检查结果弹窗 -->
+                <div id="reportCompletenessModal" class="modal-overlay hidden">
+                    <div class="modal-content report-completeness-modal">
+                        <div class="modal-header">
+                            <h3>报告完整性检查</h3>
+                            <button type="button" class="modal-close" id="closeCompletenessModal">&times;</button>
+                        </div>
+                        <div class="modal-body" id="reportCompletenessContent"></div>
+                    </div>
+                </div>
+
+                <!-- 编辑报告弹窗 -->
+                <div id="reportEditModal" class="modal-overlay hidden">
+                    <div class="modal-content report-edit-modal">
+                        <div class="modal-header">
+                            <h3>编辑职业规划报告</h3>
+                            <button type="button" class="modal-close" id="closeEditModal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="edit-form-section">
+                                <label>激励寄语</label>
+                                <textarea id="editMotivationalMsg" rows="4" placeholder="修改报告末尾的激励寄语"></textarea>
+                            </div>
+                            <div class="edit-form-section">
+                                <label>短期目标 - 截止时间（如 2026.07）</label>
+                                <input type="text" id="editShortTermDeadline" placeholder="section_2 第一个目标的 deadline">
+                            </div>
+                            <div class="edit-form-section">
+                                <label>行动计划 - 时间投入（如 每周12小时）</label>
+                                <input type="text" id="editTimeInvestment" placeholder="section_3 第一个任务的时间投入">
+                            </div>
+                            <p class="edit-form-hint">仅填写需要修改的字段，留空则不变</p>
+                            <button type="button" id="saveReportEditsBtn" class="btn-primary">保存修改</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 历史报告侧边/弹层 -->
