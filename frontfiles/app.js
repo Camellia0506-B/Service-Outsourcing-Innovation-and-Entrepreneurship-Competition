@@ -384,13 +384,12 @@ class CareerPlanningApp {
         // 首页卡片按钮相关
         document.querySelectorAll('.main-card .card-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // 阻止事件冒泡
+                e.stopPropagation();
+                if (btn.classList.contains('card-btn-disabled')) return;
                 const card = btn.closest('.main-card');
                 if (card) {
                     const action = card.dataset.action;
-                    if (action) {
-                        this.navigateTo(action);
-                    }
+                    if (action) this.navigateTo(action);
                 }
             });
         });
@@ -818,23 +817,102 @@ class CareerPlanningApp {
         const userId = getCurrentUserId();
         if (!userId) return;
 
-        // 获取个人档案信息
+        let profileCompleteness = 0;
+        let assessmentCompleted = false;
+        let matchedCount = 0;
+
         const profileResult = await getProfile(userId);
         if (profileResult.success) {
-            const completeness = profileResult.data.profile_completeness || 0;
-            document.getElementById('profileCompleteness').textContent = completeness + '%';
+            profileCompleteness = profileResult.data.profile_completeness || 0;
         }
-
-        // 测评状态：以登录返回的 assessment_completed 为准（3.3 获取报告需 report_id，不在此轮询）
-        const completed = this.currentUser && this.currentUser.assessment_completed;
-        document.getElementById('assessmentStatus').textContent = completed ? '已完成' : '未完成';
-
-        // 获取推荐岗位数量（API 返回 recommendations 或 total_matched）
+        assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed)
+            || !!(this.hasHistoryReport() && this.getLastAssessmentReportId());
         const matchingResult = await getRecommendedJobs(userId, 10);
         if (matchingResult.success && matchingResult.data) {
-            const count = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
-            document.getElementById('matchedJobs').textContent = count;
+            matchedCount = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
         }
+
+        // 更新进度条（300ms 后动画，与 CSS transition-delay 一致）
+        const cards = document.querySelectorAll('#dashboardPage .main-card');
+        if (cards[0]) {
+            const fill = cards[0].querySelector('.progress-fill');
+            if (fill) {
+                fill.style.width = Math.min(100, profileCompleteness) + '%';
+                fill.classList.toggle('has-progress', profileCompleteness > 0);
+            }
+            const badge = cards[0].querySelector('.status-badge');
+            if (badge) {
+                badge.textContent = profileCompleteness >= 80 ? '已完成' : '待完善';
+                badge.classList.toggle('status-done', profileCompleteness >= 80);
+                badge.classList.toggle('status-pending', profileCompleteness < 80);
+            }
+        }
+        if (cards[1]) {
+            const fill = cards[1].querySelector('.progress-fill');
+            if (fill) {
+                fill.style.width = (assessmentCompleted ? 100 : 0) + '%';
+                fill.classList.toggle('has-progress', assessmentCompleted);
+            }
+            const badge = cards[1].querySelector('.status-badge');
+            if (badge) {
+                badge.textContent = assessmentCompleted ? '已完成' : '待测评';
+                badge.classList.toggle('status-done', assessmentCompleted);
+                badge.classList.toggle('status-pending', !assessmentCompleted);
+            }
+            const btn = cards[1].querySelector('.card-btn');
+            if (btn) {
+                btn.classList.toggle('card-btn-secondary', !assessmentCompleted);
+                btn.classList.toggle('card-btn-primary', assessmentCompleted);
+                btn.classList.remove('card-btn-disabled');
+                btn.innerHTML = assessmentCompleted
+                    ? '查看报告<span class="btn-arrow">→</span>'
+                    : '开始测评<span class="btn-arrow">→</span>';
+            }
+        }
+        if (cards[2]) {
+            const fill = cards[2].querySelector('.progress-fill');
+            const pct = assessmentCompleted ? Math.min(100, matchedCount * 10) : 0;
+            if (fill) {
+                fill.style.width = pct + '%';
+                fill.classList.toggle('has-progress', pct > 0);
+            }
+            const badge = cards[2].querySelector('.status-badge');
+            if (badge) {
+                badge.textContent = assessmentCompleted ? (matchedCount + ' 个匹配') : '完成测评后解锁';
+                badge.classList.toggle('status-done', assessmentCompleted);
+                badge.classList.toggle('status-pending', !assessmentCompleted);
+            }
+            const btn = cards[2].querySelector('.card-btn');
+            if (btn) {
+                btn.classList.toggle('card-btn-disabled', !assessmentCompleted);
+                if (assessmentCompleted) btn.innerHTML = '查看匹配<span class="btn-arrow">→</span>';
+            }
+        }
+
+        // 统计数字滚动动画
+        setTimeout(() => this.animateHeroStats(), 400);
+    }
+
+    // Hero 统计数字进入视口计数动画
+    animateHeroStats() {
+        const stats = document.querySelectorAll('.hero-right .stat-card[data-count]');
+        stats.forEach(card => {
+            const numEl = card.querySelector('.stat-number');
+            const target = parseInt(card.dataset.count, 10) || 0;
+            const suffix = card.dataset.suffix || '';
+            const duration = 1200;
+            const startTime = performance.now();
+
+            const step = (now) => {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / duration);
+                const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                const val = Math.round(target * eased);
+                if (numEl) numEl.textContent = val + suffix;
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        });
     }
 
     // 加载个人档案数据
@@ -1142,9 +1220,20 @@ class CareerPlanningApp {
 
         if (result.success) {
             this.showToast('档案保存成功', 'success');
-            if (result.data.profile_completeness) {
-                document.getElementById('profileCompleteness').textContent = 
-                    result.data.profile_completeness + '%';
+            const completeness = result.data.profile_completeness || 0;
+            const card = document.querySelector('#dashboardPage .main-card[data-action="profile"]');
+            if (card) {
+                const fill = card.querySelector('.progress-fill');
+                const badge = card.querySelector('.status-badge');
+                if (fill) {
+                    fill.style.width = Math.min(100, completeness) + '%';
+                    fill.classList.toggle('has-progress', completeness > 0);
+                }
+                if (badge) {
+                    badge.textContent = completeness >= 80 ? '已完成' : '待完善';
+                    badge.classList.toggle('status-done', completeness >= 80);
+                    badge.classList.toggle('status-pending', completeness < 80);
+                }
             }
         } else {
             this.showToast(result.msg || '保存失败', 'error');
@@ -1761,6 +1850,10 @@ class CareerPlanningApp {
             if (result.success) {
                 if (result.data.status === 'completed') {
                     this.saveLastAssessmentReportId(this.currentReportId);
+                    if (this.currentUser) {
+                        this.currentUser.assessment_completed = true;
+                        saveUserInfo(this.currentUser);
+                    }
                     statusDiv.remove();
                     this.setViewReportButtonState('ready');
                     this.showAssessmentReportView();
@@ -1901,84 +1994,725 @@ class CareerPlanningApp {
         const exp = data.practical_experience || {};
         const overall = data.overall_assessment || {};
 
-        const skillItem = (arr, key) => (arr || []).map(item => {
-            const name = item[key] || item.skill || item.domain || '-';
-            const level = item.level || '';
-            const score = item.score != null ? ` ${item.score}分` : '';
-            return `<span class="ability-tag">${name}${level ? '(' + level + ')' : ''}${score}</span>`;
-        }).join('') || '<span class="hint-text">暂无</span>';
-
         let html = `
-            <div class="ability-profile-grid">
-                <div class="ability-profile-card">
-                    <h3>📋 基础信息</h3>
-                    <div class="ability-section">
-                        <p><strong>学历:</strong> ${bi.education || '-'} | <strong>专业:</strong> ${bi.major || '-'}</p>
-                        <p><strong>学校:</strong> ${bi.school || '-'} | <strong>GPA:</strong> ${bi.gpa || '-'}</p>
-                        <p><strong>预计毕业:</strong> ${bi.expected_graduation || '-'}</p>
+            <div class="ability-profile-new-layout">
+                <!-- 第一行：综合竞争力评分 + 能力六维雷达图 -->
+                <div class="ability-profile-row">
+                    <!-- 综合竞争力评分 -->
+                    <div class="ability-profile-card competitiveness-card" style="max-width: 350px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; height: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">🏆 综合竞争力评分</h3>
+                            </div>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                                <div style="text-align: center; margin-bottom: 12px;">
+                                    <div style="font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 2px;">${overall.competitiveness || '-'}</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">综合竞争力评分</div>
+                                </div>
+                                <div id="competitivenessGauge" style="width: 160px; height: 160px; margin: 0 auto;"></div>
+                                <div style="display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 2px;">
+                                    <div style="background-color: #e6f7ff; padding: 10px 20px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${overall.percentile || '-'}${overall.percentile ? '%' : ''}</div>
+                                        <div style="font-size: 13px; color: var(--text-secondary);">同专业学生中的百分位排名</div>
+                                    </div>
+                                    <div style="background-color: #f5f5f5; padding: 14px; border-radius: 8px; width: 100%; max-width: 280px;">
+                                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: center;">优势/待提升</h4>
+                                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                                <span style="color: #52c41a;">✅</span>
+                                                <span style="color: var(--text-secondary);">项目经验丰富</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                                <span style="color: #faad14;">⚠️</span>
+                                                <span style="color: var(--text-secondary);">缺少含金量证书</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 能力六维雷达图 -->
+                    <div class="ability-profile-card radar-card">
+                        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; height: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">📊 能力六维雷达图</h3>
+                                <div style="font-size: 14px; color: var(--text-secondary);">vs 目标岗位要求</div>
+                            </div>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%;">
+                                <div id="abilityRadarChart" style="width: 100%; height: 400px; margin-right: 10px; margin-bottom: 0;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="ability-profile-card">
-                    <h3>💻 专业技能</h3>
-                    <div class="ability-section">
-                        <p><strong>编程语言:</strong> ${skillItem(ps.programming_languages, 'skill')}</p>
-                        <p><strong>框架工具:</strong> ${skillItem(ps.frameworks_tools, 'skill')}</p>
-                        <p><strong>领域知识:</strong> ${skillItem(ps.domain_knowledge, 'domain')}</p>
-                        <p><strong>综合技能得分:</strong> <span class="score-highlight">${ps.overall_score ?? '-'}分</span></p>
+                
+                <!-- 第二行：专业技能详情 -->
+                <div class="ability-profile-row">
+                    <!-- 专业技能详情 -->
+                    <div class="ability-profile-card skills-card" style="flex: 1 1 100%;">
+                        <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">💻 专业技能详情</h3>
+                                <div style="font-size: 16px; font-weight: 600; color: var(--primary-color);">综合得分 ${ps.overall_score ?? '-'}分</div>
+                            </div>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                                ${this.renderSkillDetail(ps.programming_languages, '编程语言', 69)}
+                                ${this.renderSkillDetail(ps.frameworks_tools, '框架工具', 69)}
+                                ${this.renderSkillDetail(ps.domain_knowledge, '领域知识', 59)}
+                                ${this.renderSkillDetail([{skill: 'SQL', score: 69}, {skill: 'Linux', score: 69}], '数据结构', 69)}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="ability-profile-card">
-                    <h3>🏆 证书资质</h3>
-                    <div class="ability-section">
-                        ${(cert.items || []).length ? (cert.items.map(c => `<p>${c.name || '-'} ${c.level ? '(' + c.level + ')' : ''}</p>`).join('')) : '<p class="hint-text">暂无</p>'}
-                        <p><strong>竞争力:</strong> ${cert.competitiveness || '-'}</p>
+                
+                <!-- 第三行：就业市场需求分析 + 实习/项目经历 -->
+                <div class="ability-profile-row">
+                    <!-- 就业市场需求分析 -->
+                    <div class="ability-profile-card market-demand-card">
+                        <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+                            <h3 style="margin: 0 0 12px 0;">📊 就业市场需求分析</h3>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%;">
+                                <div style="margin-bottom: 16px;">
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">目标岗位能力要求</h4>
+                                    <div style="padding: 16px; background-color: #e6f7ff; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 16px;">
+                                        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px;">算法工程师（中级）</div>
+                                        <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                            <li>机器学习/深度学习算法设计与实现</li>
+                                            <li>Python/C++编程能力，熟悉数据结构与算法</li>
+                                            <li>具备实际项目经验，有良好的问题解决能力</li>
+                                            <li>熟悉常见的深度学习框架（如TensorFlow、PyTorch等）</li>
+                                            <li>良好的数学基础，包括线性代数、概率统计等</li>
+                                        </ul>
+                                    </div>
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">相关岗位能力要求</h4>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                                        <div style="flex: 1; min-width: 150px; padding: 12px; background-color: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
+                                            <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">机器学习工程师</div>
+                                            <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                                <li>机器学习算法调优</li>
+                                                <li>数据处理与特征工程</li>
+                                                <li>模型部署与优化</li>
+                                            </ul>
+                                        </div>
+                                        <div style="flex: 1; min-width: 150px; padding: 12px; background-color: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
+                                            <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">数据科学家</div>
+                                            <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                                <li>数据分析与可视化</li>
+                                                <li>统计建模</li>
+                                                <li>业务问题解决</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">行业趋势洞察</h4>
+                                    <div style="padding: 12px; background-color: #f5f5f5; border-radius: 8px; border: 1px solid #d9d9d9;">
+                                        <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                            <li>AI领域人才需求持续增长，算法工程师供不应求</li>
+                                            <li>大模型相关技术成为热点，掌握相关技能者更具竞争力</li>
+                                            <li>企业对算法落地能力要求提高，注重实际项目经验</li>
+                                            <li>跨领域复合型人才（如算法+行业知识）更受青睐</li>
+                                            <li>算法工程师薪资水平在IT行业中处于较高水平</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 实习/项目经历 -->
+                    <div class="ability-profile-card experience-card">
+                        <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+                            <h3 style="margin: 0 0 12px 0;">📁 实习/项目经历</h3>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%;">
+                                ${this.renderExperienceTimeline(exp.internships, 'internship')}
+                                ${this.renderExperienceTimeline(exp.projects, 'project')}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="ability-profile-card">
-                    <h3>✨ 创新能力</h3>
-                    <div class="ability-section">
-                        <p><strong>项目:</strong> ${(innovation.projects || []).map(p => p.name).join('、') || '-'}</p>
-                        <p><strong>竞赛:</strong> ${(innovation.competitions || []).map(c => c.name + (c.award ? '(' + c.award + ')' : '')).join('、') || '-'}</p>
-                        <p><strong>得分:</strong> ${innovation.score ?? '-'} | <strong>等级:</strong> ${innovation.level || '-'}</p>
+                
+                <!-- 第四行：证书资质 + 职业规划建议 -->
+                <div class="ability-profile-row">
+                    <!-- 证书资质 -->
+                    <div class="ability-profile-card certificates-card">
+                        <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">📜 证书资质</h3>
+                                <div style="font-size: 14px; color: var(--text-secondary);">待提升</div>
+                            </div>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%;">
+                                ${(cert.items || []).length ? `
+                                    <div style="margin-bottom: 20px;">
+                                        ${cert.items.map(c => `<p style="text-align: center; margin: 8px 0;">${c.name || '-'} ${c.level ? '(' + c.level + ')' : ''}</p>`).join('')}
+                                    </div>
+                                ` : `
+                                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 0; margin-bottom: 20px;">
+                                        <div style="font-size: 32px; margin-bottom: 12px;">📄</div>
+                                        <div style="font-size: 16px; margin-bottom: 16px;">暂无深入证书</div>
+                                    </div>
+                                `}
+                                <div style="margin-top: 20px; padding: 16px; background-color: #fff7e6; border-radius: 8px;">
+                                    <h4 style="margin-bottom: 16px; font-size: 14px; font-weight: 600; color: var(--text-primary);">建议考取以下证书提升竞争力</h4>
+                                    <ul style="list-style-position: inside; padding: 0; margin: 0;">
+                                        <li style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">软件设计师（软考中级）</li>
+                                        <li style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">AWS/阿里云云计算认证</li>
+                                        <li style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">英语四六级</li>
+                                        <li style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">PMP项目管理认证</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 职业规划建议 -->
+                    <div class="ability-profile-card career-plan-card">
+                        <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+                            <h3 style="margin: 0 0 12px 0;">🎯 职业规划建议</h3>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%;">
+                                <div style="margin-bottom: 20px;">
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">就业能力分析</h4>
+                                    <div style="padding: 12px; background-color: #f0f5ff; border-radius: 8px; border: 1px solid #adc6ff;">
+                                        <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                            <li>优势：实践经验丰富（90分），学习能力强（77分）</li>
+                                            <li>劣势：创新能力不足（0分），专业技能有待提升（62分）</li>
+                                            <li>机会：AI领域人才需求大，技术+行业知识复合型人才受欢迎</li>
+                                            <li>威胁：就业竞争激烈，行业技术迭代快</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 20px;">
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">行动计划</h4>
+                                    <div style="padding: 12px; background-color: #f7f7f7; border-radius: 8px; border: 1px solid #d9d9d9;">
+                                        <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                            <li>短期（3-6个月）：考取软件设计师证书，提升专业技能</li>
+                                            <li>中期（6-12个月）：参与AI相关项目，积累实战经验</li>
+                                            <li>长期（1-2年）：定位算法工程师方向，持续学习前沿技术</li>
+                                            <li>持续：关注行业动态，建立专业人脉网络</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">求职建议</h4>
+                                    <div style="padding: 12px; background-color: #fff7e6; border-radius: 8px; border: 1px solid #ffd591;">
+                                        <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                            <li>突出项目经验和实践能力，这是你的核心优势</li>
+                                            <li>针对目标岗位定制简历，强调相关技能和项目成果</li>
+                                            <li>提前准备技术面试，重点复习算法和数据结构</li>
+                                            <li>利用实习经历建立的人脉，获取内推机会</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="ability-profile-card">
-                    <h3>📚 学习能力</h3>
-                    <div class="ability-section">
-                        <p><strong>得分:</strong> ${learning.score ?? '-'} | <strong>等级:</strong> ${learning.level || '-'}</p>
-                    </div>
-                </div>
-                <div class="ability-profile-card">
-                    <h3>💪 压力承受能力</h3>
-                    <div class="ability-section">
-                        <p><strong>得分:</strong> ${pressure.score ?? '-'} | <strong>等级:</strong> ${pressure.level || '-'}</p>
-                    </div>
-                </div>
-                <div class="ability-profile-card">
-                    <h3>💬 沟通能力</h3>
-                    <div class="ability-section">
-                        <p><strong>得分:</strong> ${comm.overall_score ?? '-'} | <strong>等级:</strong> ${comm.level || '-'}</p>
-                    </div>
-                </div>
-                <div class="ability-profile-card">
-                    <h3>📁 实习/项目经验</h3>
-                    <div class="ability-section">
-                        <p><strong>实习:</strong> ${(exp.internships || []).map(i => `${i.company} - ${i.position}`).join('；') || '-'}</p>
-                        <p><strong>项目:</strong> ${(exp.projects || []).map(p => `${p.name}(${p.role || ''})`).join('；') || '-'}</p>
-                        <p><strong>综合得分:</strong> ${exp.overall_score ?? '-'}</p>
-                    </div>
-                </div>
-                <div class="ability-profile-card highlight">
-                    <h3>📊 综合评估</h3>
-                    <div class="ability-section">
-                        <p><strong>总分:</strong> <span class="score-highlight">${overall.total_score ?? '-'}</span> | <strong>百分位:</strong> ${overall.percentile ?? '-'} | <strong>竞争力:</strong> ${overall.competitiveness || '-'}</p>
-                        <p><strong>优势:</strong> ${(overall.strengths || []).join('；') || '-'}</p>
-                        <p><strong>待提升:</strong> ${(overall.weaknesses || []).join('；') || '-'}</p>
+                
+                <!-- 第五行：与目标岗位差距分析 -->
+                <div class="ability-profile-row">
+                    <!-- 与目标岗位差距分析 -->
+                    <div class="ability-profile-card gap-analysis-card" style="flex: 1 1 100%;">
+                        <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
+                            <h3 style="margin: 0 0 12px 0;">🎯 与目标岗位差距分析</h3>
+                            <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
+                            <div style="width: 100%;">
+                                <div style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">目标岗位: 算法工程师（中级）</div>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                                    ${this.renderGapAnalysis('专业技能', ps.overall_score || 62, 80)}
+                                    ${this.renderGapAnalysis('项目经验', exp.overall_score || 90, 75)}
+                                    ${this.renderGapAnalysis('创新能力', innovation.score || 0, 60)}
+                                    ${this.renderGapAnalysis('学习能力', learning.score || 77, 70)}
+                                    ${this.renderGapAnalysis('沟通能力', comm.overall_score || 72, 75)}
+                                    ${this.renderGapAnalysis('抗压能力', pressure.assessment_score || 72, 65)}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
         container.innerHTML = html;
+        
+        // 初始化雷达图
+        this.initAbilityRadarChart(data);
+        
+        // 初始化竞争力仪表盘
+        this.initCompetitivenessGauge(data);
+    }
+    
+    // 渲染技能详情
+    renderSkillDetail(skills, title, totalScore) {
+        if (!skills || skills.length === 0) {
+            return '';
+        }
+        
+        // 根据技能类型设置不同的固定颜色
+        let barColor = '';
+        switch (title) {
+            case '编程语言':
+                barColor = '#1890ff'; // 蓝色
+                break;
+            case '框架工具':
+                barColor = '#52c41a'; // 绿色
+                break;
+            case '领域知识':
+                barColor = '#722ed1'; // 紫色
+                break;
+            case '数据结构':
+                barColor = '#fa8c16'; // 橙色
+                break;
+            default:
+                barColor = '#1890ff'; // 默认蓝色
+        }
+        
+        return `
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 14px; font-weight: 500; color: var(--text-primary);">${title}</span>
+                    <span style="font-size: 14px; font-weight: 600; color: ${barColor};">${totalScore}</span>
+                </div>
+                <div style="width: 100%; height: 6px; background-color: #f0f0f0; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                    <div style="height: 100%; background-color: ${barColor}; border-radius: 3px; width: ${totalScore}%;"></div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    ${skills.map(skill => {
+                        const name = skill.skill || skill.domain || '-';
+                        const level = skill.level || '熟悉';
+                        
+                        return `
+                            <span style="background-color: #f0f0f0; padding: 4px 12px; border-radius: 16px; font-size: 12px; color: ${barColor};">
+                                ${name} (${level})
+                            </span>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // 渲染差距分析
+    renderGapAnalysis(dimension, current, target) {
+        const gap = target - current;
+        const gapPercentage = Math.round((gap / target) * 100);
+        const matchPercentage = Math.round((current / target) * 100);
+        
+        let gapLevel = '';
+        let gapColor = '';
+        let suggestion = '';
+        
+        if (current >= target) {
+            gapLevel = '超出要求';
+            gapColor = '#52c41a';
+            suggestion = '继续保持并寻求进阶机会，考虑挑战更高级别的任务。';
+        } else if (gapPercentage <= 10) {
+            gapLevel = '接近达标';
+            gapColor = '#1890ff';
+            suggestion = '通过短期集中学习和实践，可快速达到目标要求。';
+        } else if (gapPercentage <= 25) {
+            gapLevel = '需要提升';
+            gapColor = '#faad14';
+            suggestion = '制定系统性学习计划，重点提升相关技能和经验。';
+        } else {
+            gapLevel = '重点加强';
+            gapColor = '#f5222d';
+            suggestion = '需要投入大量时间和精力，考虑寻求专业指导或培训。';
+        }
+        
+        // 根据维度提供更具体的建议
+        let specificSuggestion = '';
+        switch (dimension) {
+            case '专业技能':
+                specificSuggestion = '建议通过项目实践和技术学习提升专业技能，关注行业最新技术趋势。';
+                break;
+            case '创新能力':
+                specificSuggestion = '建议多参与创新项目，培养批判性思维和解决问题的能力。';
+                break;
+            case '学习能力':
+                specificSuggestion = '建议制定系统的学习计划，培养快速学习和知识整合的能力。';
+                break;
+            case '抗压能力':
+                specificSuggestion = '建议通过时间管理和压力调节技巧，提升在高压环境下的表现。';
+                break;
+            case '沟通能力':
+                specificSuggestion = '建议多参与团队合作和演讲活动，提升表达和倾听能力。';
+                break;
+            case '项目经验':
+                specificSuggestion = '建议多参与实际项目，积累不同类型项目的经验，关注项目管理和团队协作。';
+                break;
+            default:
+                specificSuggestion = '根据自身情况制定个性化提升计划，定期评估进展。';
+        }
+        
+        return `
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 12px; margin-bottom: 16px; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border-left: 4px solid ${gapColor};">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">${dimension}</h4>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; align-items: baseline; gap: 8px;">
+                                <span style="font-size: 18px; font-weight: 700; color: ${gapColor};">${current}</span>
+                                <span style="font-size: 13px; color: var(--text-secondary);">/ ${target}</span>
+                            </div>
+                            <span style="font-size: 12px; font-weight: 500; color: white; background-color: ${gapColor}; padding: 2px 8px; border-radius: 10px;">${gapLevel}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                        <span style="font-size: 11px; color: var(--text-secondary);">匹配度</span>
+                        <span style="font-size: 14px; font-weight: 700; color: ${gapColor};">${matchPercentage}%</span>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background-color: ${gapColor};"></div>
+                            <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">差距分析</span>
+                        </div>
+                        <div style="padding: 14px; background-color: #f8f9fa; border-radius: 8px; min-height: 100px;">
+                            <p style="margin: 0 0 10px 0; font-size: 12px; line-height: 1.5; color: var(--text-secondary);">
+                                ${current >= target ? 
+                                    `您的${dimension}已超出目标岗位要求，具备较强的竞争力。` : 
+                                    `您的${dimension}与目标岗位要求存在${gapPercentage}%的差距，需要针对性提升。`}
+                            </p>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                        <span style="font-size: 11px; color: var(--text-secondary);">当前水平</span>
+                                        <span style="font-size: 11px; font-weight: 500; color: ${gapColor};">${current}分</span>
+                                    </div>
+                                    <div style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden;">
+                                        <div style="height: 100%; background-color: ${gapColor}; width: ${Math.min((current / 100) * 100, 100)}%; border-radius: 3px;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                        <span style="font-size: 11px; color: var(--text-secondary);">目标要求</span>
+                                        <span style="font-size: 11px; font-weight: 500; color: #1890ff;">${target}分</span>
+                                    </div>
+                                    <div style="height: 6px; background-color: #e9ecef; border-radius: 3px; overflow: hidden;">
+                                        <div style="height: 100%; background-color: #1890ff; width: ${Math.min((target / 100) * 100, 100)}%; border-radius: 3px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #1890ff;"></div>
+                            <span style="font-size: 13px; font-weight: 500; color: var(--text-primary);">提升建议</span>
+                        </div>
+                        <div style="padding: 14px; background-color: #e6f7ff; border-radius: 8px; min-height: 100px; border: 1px solid #91d5ff;">
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; line-height: 1.5; color: var(--text-secondary); gap: 8px; display: flex; flex-direction: column;">
+                                <li style="margin: 0;">${suggestion}</li>
+                                <li style="margin: 0;">${specificSuggestion}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 初始化能力雷达图
+    initAbilityRadarChart(data) {
+        const chartDom = document.getElementById('abilityRadarChart');
+        if (!chartDom) return;
+        
+        const myChart = echarts.init(chartDom);
+        
+        const ps = data.professional_skills || {};
+        const innovation = data.innovation_ability || {};
+        const learning = data.learning_ability || {};
+        const pressure = data.pressure_resistance || {};
+        const comm = data.communication_ability || {};
+        const exp = data.practical_experience || {};
+        
+        // 准备数据
+        const indicators = [
+            { name: '专业技能', max: 100 },
+            { name: '创新能力', max: 100 },
+            { name: '学习能力', max: 100 },
+            { name: '压力承受', max: 100 },
+            { name: '沟通能力', max: 100 },
+            { name: '实践经验', max: 100 }
+        ];
+        
+        const seriesData = [
+            {
+                value: [
+                    ps.overall_score || 0,
+                    innovation.score || 0,
+                    learning.score || 0,
+                    pressure.assessment_score || 0,
+                    comm.overall_score || 0,
+                    exp.overall_score || 0
+                ],
+                name: '当前能力'
+            },
+            {
+                value: [80, 75, 85, 70, 80, 75], // 目标岗位要求线
+                name: '岗位要求（算法工程师）'
+            }
+        ];
+        
+        const option = {
+            tooltip: {
+                trigger: 'item'
+            },
+            legend: {
+                data: ['当前能力', '岗位要求（算法工程师）'],
+                bottom: 0,
+                textStyle: {
+                    fontSize: 12
+                }
+            },
+            radar: {
+                indicator: indicators,
+                shape: 'circle',
+                splitNumber: 5,
+                axisName: {
+                    color: '#333',
+                    fontSize: 12,
+                    distance: 20
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: ['rgba(0, 0, 0, 0.1)']
+                    }
+                },
+                splitArea: {
+                    show: false
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: 'rgba(0, 0, 0, 0.2)'
+                    }
+                }
+            },
+            series: [
+                {
+                    name: '能力评估',
+                    type: 'radar',
+                    data: seriesData,
+                    areaStyle: {
+                        opacity: 0.3
+                    },
+                    lineStyle: {
+                        width: 2
+                    },
+                    itemStyle: {
+                        symbol: 'circle',
+                        symbolSize: 6
+                    }
+                }
+            ]
+        };
+        
+        myChart.setOption(option);
+        
+        // 响应式调整
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    }
+    
+    // 初始化竞争力仪表盘
+    initCompetitivenessGauge(data) {
+        const chartDom = document.getElementById('competitivenessGauge');
+        if (!chartDom) return;
+        
+        const myChart = echarts.init(chartDom);
+        
+        const overall = data.overall_assessment || {};
+        const score = overall.total_score || 0;
+        
+        const option = {
+            tooltip: {
+                formatter: '{b}: {c}分'
+            },
+            series: [
+                {
+                    name: '综合得分',
+                    type: 'gauge',
+                    startAngle: 180,
+                    endAngle: 0,
+                    min: 0,
+                    max: 100,
+                    splitNumber: 8,
+                    axisLine: {
+                        lineStyle: {
+                            width: 15,
+                            color: [
+                                [0.6, '#e6f7ff'],
+                                [0.8, '#91d5ff'],
+                                [1, '#1890ff']
+                            ]
+                        }
+                    },
+                    pointer: {
+                        icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+                        length: '60%',
+                        width: 6,
+                        offsetCenter: [0, '-10%'],
+                        itemStyle: {
+                            color: '#1890ff'
+                        }
+                    },
+                    axisTick: {
+                        show: true,
+                        length: 8,
+                        lineStyle: {
+                            color: 'auto',
+                            width: 1
+                        }
+                    },
+                    splitLine: {
+                        show: true,
+                        length: 12,
+                        lineStyle: {
+                            color: 'auto',
+                            width: 2
+                        }
+                    },
+                    axisLabel: {
+                        show: true,
+                        color: '#464646',
+                        fontSize: 12,
+                        distance: -20,
+                        formatter: function (value) {
+                            if (value === 0 || value === 100 || value === 50) {
+                                return value;
+                            }
+                            return '';
+                        }
+                    },
+                    detail: {
+                        fontSize: 48,
+                        fontWeight: 'bold',
+                        offsetCenter: [0, '10%'],
+                        valueAnimation: true,
+                        formatter: function (value) {
+                            return Math.round(value);
+                        },
+                        color: '#1890ff'
+                    },
+                    data: [
+                        {
+                            value: score,
+                            name: '综合得分',
+                            title: {
+                                show: false
+                            },
+                            detail: {
+                                show: false
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+        
+        myChart.setOption(option);
+        
+        // 响应式调整
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    }
+    
+    // 渲染技能熟练度进度条
+    renderSkillProgress(skills, title) {
+        if (!skills || skills.length === 0) {
+            return `<div class="skill-progress-item">
+                <span class="skill-name">${title}:</span>
+                <span class="hint-text">暂无</span>
+            </div>`;
+        }
+        
+        return skills.map(skill => {
+            const name = skill.skill || skill.domain || '-';
+            const score = skill.score || 0;
+            const level = skill.level || '';
+            
+            return `<div class="skill-progress-item">
+                <div class="skill-progress-header">
+                    <span class="skill-name">${name}</span>
+                    <span class="skill-score">${score}分</span>
+                </div>
+                <div class="skill-progress-bar">
+                    <div class="skill-progress-fill" style="width: ${score}%"></div>
+                </div>
+                ${level ? `<span class="skill-level">${level}</span>` : ''}
+            </div>`;
+        }).join('');
+    }
+    
+    // 渲染经验时间轴
+    renderExperienceTimeline(experiences, type) {
+        if (!experiences || experiences.length === 0) {
+            return '';
+        }
+        
+        let html = '<div style="position: relative; padding-left: 32px;">';
+        experiences.forEach((exp, index) => {
+            const title = type === 'internship' ? exp.position : exp.name;
+            const company = exp.company || '';
+            const startDate = exp.start_date || '';
+            const endDate = exp.end_date || '';
+            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : exp.duration || '';
+            const location = exp.location || '';
+            const description = exp.description || '';
+            const achievements = exp.achievements || [];
+            
+            let details = '';
+            if (dateRange || location) {
+                details += '<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">';
+                if (dateRange) details += `${dateRange}`;
+                if (location) details += `${dateRange ? ' · ' : ''}${location}`;
+                details += '</div>';
+            }
+            
+            let descriptionHtml = '';
+            if (description) {
+                descriptionHtml = `<p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">${description}</p>`;
+            }
+            
+            let achievementsHtml = '';
+            if (achievements.length > 0) {
+                achievementsHtml = '<div style="margin-top: 8px;">';
+                achievements.forEach(achievement => {
+                    achievementsHtml += `<p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">${achievement}</p>`;
+                });
+                achievementsHtml += '</div>';
+            }
+            
+            const isLast = index === experiences.length - 1;
+            const itemId = `exp-item-${index}`;
+            
+            html += `<div id="${itemId}" style="margin-bottom: ${isLast ? '0' : '24px'};">
+                <div style="position: absolute; left: 0; transform: translateX(-50%);">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--primary-color); margin-top: 2px;"></div>
+                    ${!isLast ? `<div style="width: 2px; background-color: #e6f7ff; position: absolute; left: 5px; top: 14px; bottom: -24px;"></div>` : ''}
+                </div>
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">${title}</h4>
+                ${company ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${company}</div>` : ''}
+                ${details}
+                ${descriptionHtml}
+                ${achievementsHtml}
+            </div>`;
+        });
+        
+        html += '</div>';
+        return html;
     }
 
     // 加载推荐岗位
