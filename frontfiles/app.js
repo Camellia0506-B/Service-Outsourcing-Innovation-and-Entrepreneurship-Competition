@@ -4726,9 +4726,11 @@ class CareerPlanningApp {
         const modules = [
             { id: 'module-summary', title: '核心摘要', icon: '✨', defaultOpen: true },
             { id: 'module-explore', title: '职业探索', icon: '🎯', defaultOpen: false },
+            { id: 'module-job-requirements', title: '岗位能力要求拆解', icon: '📋', defaultOpen: false },
             { id: 'module-goal', title: '目标规划', icon: '📈', defaultOpen: false },
             { id: 'module-action', title: '行动计划', icon: '📋', defaultOpen: false },
-            { id: 'module-eval', title: '评估调整', icon: '🔄', defaultOpen: false }
+            { id: 'module-eval', title: '评估调整', icon: '🔄', defaultOpen: false },
+            { id: 'module-painpoints', title: '痛点解决方案', icon: '🎯', defaultOpen: false }
         ];
 
         // 左侧目录
@@ -4819,6 +4821,12 @@ class CareerPlanningApp {
                                 ${scoreHtml}
                                 <div class="rec-career-header"><span class="rec-name">${rc.career}</span></div>
                                 ${(ma.why_suitable || []).length ? `<div class="rec-why"><strong>适合原因：</strong>${san(ma.why_suitable.join('；'))}</div>` : ''}
+                                ${ma.capability_match ? `
+                                <div class="rec-capability-match">
+                                    <strong>能力匹配度：</strong>
+                                    ${ma.capability_match.professional_skills ? `<div class="capability-item">专业技能：${ma.capability_match.professional_skills.score}%（${san(ma.capability_match.professional_skills.description || '')}）</div>` : ''}
+                                    ${ma.capability_match.soft_skills ? `<div class="capability-item">通用素质：${ma.capability_match.soft_skills.score}%（${san(ma.capability_match.soft_skills.description || '')}）</div>` : ''}
+                                </div>` : ''}
                                 ${mo.salary_range ? `<div class="rec-market"><span class="rec-salary-badge">${salaryLabel}</span> 薪资${salaryLabel}</div>` : ''}
                                 ${gaps.length ? `<div class="rec-gaps"><strong>能力差距与提升：</strong><ul>${gaps.map(g => `<li>${san(g.gap)} → ${san(g.solution)}（${g.timeline || ''}）</li>`).join('')}</ul></div>` : ''}
                             </div>`;
@@ -4834,6 +4842,161 @@ class CareerPlanningApp {
                 </div>
             </section>`;
         }
+
+        // === 模块 7：岗位能力要求拆解 ===
+        html += `<section id="module-job-requirements" class="career-module career-module-job-requirements" data-module="job-requirements">
+            <div class="career-module-header" data-toggle="module-job-requirements">
+                <span class="module-icon">📋</span>
+                <span class="module-title">岗位能力要求拆解</span>
+                <span class="module-arrow">▶</span>
+            </div>
+            <div class="career-module-body career-module-collapsed">
+                <div class="job-requirements-section">
+                    <h5>核心岗位能力要求</h5>
+                    <p>以下是当前就业市场对于应届生招聘岗位的主要能力要求拆解：</p>
+                    
+                    <!-- 算法工程师 -->
+                    <div class="job-requirement-card">
+                        <h6>算法工程师</h6>
+                        <div class="job-requirement-details">
+                            <div class="requirement-category">
+                                <strong>专业技能：</strong>
+                                <ul>
+                                    <li>编程语言：Python（精通）、C++（熟悉）</li>
+                                    <li>机器学习：熟悉常见算法原理和应用场景</li>
+                                    <li>深度学习：了解主流框架（TensorFlow/PyTorch）</li>
+                                    <li>数据结构与算法：扎实的基础，熟悉常见算法</li>
+                                    <li>数学基础：概率论、线性代数、微积分</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>通用素质：</strong>
+                                <ul>
+                                    <li>学习能力：快速掌握新技术和算法</li>
+                                    <li>问题解决：能够独立分析和解决复杂问题</li>
+                                    <li>逻辑思维：严谨的逻辑分析能力</li>
+                                    <li>团队协作：能够与跨职能团队有效合作</li>
+                                    <li>沟通能力：清晰表达技术方案和结果</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>项目经验：</strong>
+                                <ul>
+                                    <li>参与过机器学习/深度学习项目</li>
+                                    <li>有相关领域的竞赛经验（如Kaggle）</li>
+                                    <li>熟悉数据处理和特征工程</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 后端开发工程师 -->
+                    <div class="job-requirement-card">
+                        <h6>后端开发工程师</h6>
+                        <div class="job-requirement-details">
+                            <div class="requirement-category">
+                                <strong>专业技能：</strong>
+                                <ul>
+                                    <li>编程语言：Java、Golang、Python等</li>
+                                    <li>框架：Spring Boot、Django、Flask等</li>
+                                    <li>数据库：MySQL、PostgreSQL、Redis等</li>
+                                    <li>系统设计：熟悉分布式系统、微服务架构</li>
+                                    <li>网络协议：HTTP、TCP/IP等</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>通用素质：</strong>
+                                <ul>
+                                    <li>代码质量：注重代码可读性和可维护性</li>
+                                    <li>问题解决：能够快速定位和解决技术问题</li>
+                                    <li>学习能力：持续学习新技术和框架</li>
+                                    <li>团队协作：能够与前端、测试等团队协作</li>
+                                    <li>文档能力：能够编写清晰的技术文档</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>项目经验：</strong>
+                                <ul>
+                                    <li>参与过完整的后端系统开发</li>
+                                    <li>有数据库设计和优化经验</li>
+                                    <li>熟悉版本控制工具（如Git）</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 前端开发工程师 -->
+                    <div class="job-requirement-card">
+                        <h6>前端开发工程师</h6>
+                        <div class="job-requirement-details">
+                            <div class="requirement-category">
+                                <strong>专业技能：</strong>
+                                <ul>
+                                    <li>基础：HTML5、CSS3、JavaScript（ES6+）</li>
+                                    <li>框架：React、Vue、Angular等</li>
+                                    <li>工具：Webpack、Vite、npm/yarn等</li>
+                                    <li>响应式设计：能够适配不同设备</li>
+                                    <li>性能优化：页面加载速度和用户体验</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>通用素质：</strong>
+                                <ul>
+                                    <li>用户体验：关注产品的用户体验</li>
+                                    <li>审美能力：基本的设计美感</li>
+                                    <li>学习能力：持续学习新的前端技术</li>
+                                    <li>团队协作：与后端、设计团队协作</li>
+                                    <li>沟通能力：理解产品需求并转化为技术实现</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>项目经验：</strong>
+                                <ul>
+                                    <li>参与过完整的前端项目开发</li>
+                                    <li>有移动端适配经验</li>
+                                    <li>熟悉前端工程化实践</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 产品经理 -->
+                    <div class="job-requirement-card">
+                        <h6>产品经理</h6>
+                        <div class="job-requirement-details">
+                            <div class="requirement-category">
+                                <strong>专业技能：</strong>
+                                <ul>
+                                    <li>产品思维：能够从用户需求出发设计产品</li>
+                                    <li>需求分析：能够清晰理解和拆解用户需求</li>
+                                    <li>原型设计：熟悉Axure、Figma等工具</li>
+                                    <li>数据分析：能够通过数据驱动产品决策</li>
+                                    <li>项目管理：能够协调跨团队资源推进项目</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>通用素质：</strong>
+                                <ul>
+                                    <li>沟通能力：能够与不同角色有效沟通</li>
+                                    <li>领导力：能够推动项目进展和决策</li>
+                                    <li>学习能力：快速了解新领域和行业</li>
+                                    <li>抗压能力：能够在压力下保持良好状态</li>
+                                    <li>创新能力：能够提出新的产品思路</li>
+                                </ul>
+                            </div>
+                            <div class="requirement-category">
+                                <strong>项目经验：</strong>
+                                <ul>
+                                    <li>参与过产品从0到1的过程</li>
+                                    <li>有用户研究和市场分析经验</li>
+                                    <li>熟悉产品生命周期管理</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>`;
 
         // === 模块 3：目标规划 ===
         if (s2.title) {
@@ -4863,6 +5026,7 @@ class CareerPlanningApp {
                         ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>转岗备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
                     </div>` : ''}
                     ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${san(trends.current_status || '')}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${san(t.trend)}</strong>：${san(t.impact)}；机会：${san(t.opportunity)}</li>`).join('')}</ul><p class="outlook">${san(trends['5_year_outlook'] || '')}</p></div>` : ''}
+                    ${s2.job_data_analysis ? `<div class="job-data-analysis"><h5>企业岗位数据关联性分析</h5><p>${san(s2.job_data_analysis.overview || '')}</p><ul>${(s2.job_data_analysis.associations || []).map(a => `<li><strong>${san(a.job_title)}</strong>：${san(a.relevance)}；能力迁移：${san(a.skill_transferability || '')}</li>`).join('')}</ul></div>` : ''}
                 </div>
             </section>`;
         }
@@ -4907,6 +5071,7 @@ class CareerPlanningApp {
                         </div>
                     </div>` : ''}
                     ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${san(v.goal || '')}</p><ul>${(v.actions || []).map(a => `<li>${san(a)}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
+                    ${s3.evaluation_metrics ? `<div class="evaluation-metrics"><h5>评估指标与调整机制</h5><p>${san(s3.evaluation_metrics.overview || '')}</p><ul>${(s3.evaluation_metrics.metrics || []).map(m => `<li><strong>${san(m.metric)}</strong>：${san(m.description)}；目标值：${san(m.target_value || '')}；评估周期：${san(m.evaluation_cycle || '')}</li>`).join('')}</ul><p class="adjustment-note">${san(s3.evaluation_metrics.adjustment_mechanism || '')}</p></div>` : ''}
                 </div>
             </section>`;
         }
@@ -4948,6 +5113,56 @@ class CareerPlanningApp {
                 </div>
             </section>`;
         }
+
+        // === 模块 6：痛点解决方案 ===
+        html += `<section id="module-painpoints" class="career-module career-module-painpoints" data-module="painpoints">
+            <div class="career-module-header" data-toggle="module-painpoints">
+                <span class="module-icon">🎯</span>
+                <span class="module-title">痛点解决方案</span>
+                <span class="module-arrow">▶</span>
+            </div>
+            <div class="career-module-body career-module-collapsed">
+                <div class="painpoint-solution">
+                    <h5>自我认知与定位</h5>
+                    <p>避免从众规划误区，建立个性化职业定位：</p>
+                    <ul>
+                        <li>定期进行自我评估，关注自身兴趣、能力和价值观的变化</li>
+                        <li>参考但不盲目追随他人的职业选择，分析自身特质与职业的匹配度</li>
+                        <li>寻求专业职业测评和咨询，获取客观的自我认知</li>
+                    </ul>
+                </div>
+                <div class="painpoint-solution">
+                    <h5>职业信息获取</h5>
+                    <p>建立系统的职业信息渠道，避免认知片面：</p>
+                    <ul>
+                        <li>通过行业报告、官方网站等权威渠道了解行业和岗位信息</li>
+                        <li>与行业专业人士建立联系，获取第一手的职业洞察</li>
+                        <li>参与实习、项目等实践活动，深入了解职业真实面貌</li>
+                        <li>关注新兴领域的发展动态，区分 "热门噱头" 与 "真实需求"</li>
+                    </ul>
+                </div>
+                <div class="painpoint-solution">
+                    <h5>外部支持体系</h5>
+                    <p>构建多元化的职业指导网络：</p>
+                    <ul>
+                        <li>积极参与高校的生涯规划课程和活动，获取理论基础</li>
+                        <li>寻找行业导师，获取贴合实际的职业建议</li>
+                        <li>与家人进行有效沟通，平衡家庭期望与个人职业规划</li>
+                        <li>加入职业社群，与志同道合的人交流学习</li>
+                    </ul>
+                </div>
+                <div class="painpoint-solution">
+                    <h5>规划落地与实践</h5>
+                    <p>通过实践验证和动态调整，确保规划的可行性：</p>
+                    <ul>
+                        <li>制定分阶段的行动计划，通过实习、项目等方式验证规划</li>
+                        <li>建立定期评估机制，根据实际情况调整规划</li>
+                        <li>培养适应变化的能力，面对挫折时保持积极心态</li>
+                        <li>积累职业资本，提升自身在就业市场的竞争力</li>
+                    </ul>
+                </div>
+            </div>
+        </section>`;
 
         html += `<div class="career-report-footer">本报告由 AI 职业规划智能体生成 · 仅供参考，具体决策请结合个人实际情况</div></div>`;
 
@@ -5017,6 +5232,27 @@ class CareerPlanningApp {
             html += `</ul>`;
         }
         if (content) content.innerHTML = html;
+    }
+
+    // 编辑职业规划报告
+    async editCareerReport(reportId) {
+        this.openReportEditModal();
+    }
+
+    // AI润色职业规划报告
+    async aiPolishCareerReport(reportId) {
+        this.polishCareerReport();
+    }
+
+    // 导出职业规划报告
+    async exportCareerReport(reportId) {
+        const result = await exportCareerReport(reportId);
+        if (result.success && result.data?.download_url) {
+            this.showToast('报告导出成功，正在下载...', 'success');
+            window.open(result.data.download_url, '_blank');
+        } else {
+            this.showToast(result.msg || '导出失败', 'error');
+        }
     }
 
     // 7.3 打开编辑报告弹窗
@@ -5115,7 +5351,7 @@ class CareerPlanningApp {
     // 渲染报告内容
     // 格式化时间（支持 created_at / assessment_date，无则显示当前日期）
     formatDateTime(dateString) {
-        if (!dateString) return new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        if (!dateString) return '未知时间';
         try {
             const date = new Date(dateString);
             const y = date.getFullYear();
@@ -5416,17 +5652,47 @@ class CareerPlanningApp {
         }
     }
 
-    // 渲染职业规划历史报告列表（仅 7.7 返回的规划报告，不包含测评报告；已去掉完整度字段展示）
+    // 渲染职业规划历史报告列表（仅 7.7 返回的规划报告，不包含测评报告；严格按照API文档结构渲染）
     renderCareerReportHistory(reports) {
         const listDiv = document.getElementById('historyList');
         listDiv.innerHTML = '';
         reports.forEach(report => {
             const item = document.createElement('div');
             item.className = 'career-history-item';
+            
+            // 根据状态显示不同的标签
+            let statusLabel = '';
+            let statusColor = '';
+            switch (report.status) {
+                case 'completed':
+                    statusLabel = '已完成';
+                    statusColor = '#52c41a';
+                    break;
+                case 'processing':
+                    statusLabel = '生成中';
+                    statusColor = '#1890ff';
+                    break;
+                case 'archived':
+                    statusLabel = '已归档';
+                    statusColor = '#bfbfbf';
+                    break;
+                default:
+                    statusLabel = '未知';
+                    statusColor = '#bfbfbf';
+            }
+            
             item.innerHTML = `
-                <div class="history-item-main">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                     <div class="history-item-title">${report.primary_career || '职业规划报告'}</div>
-                    <div class="history-item-meta">${this.formatDateTime(report.created_at)}</div>
+                    <span style="font-size: 11px; font-weight: 500; color: white; background-color: ${statusColor}; padding: 2px 8px; border-radius: 10px;">${statusLabel}</span>
+                </div>
+                <div class="history-item-meta" style="margin-bottom: 8px;">${this.formatDateTime(report.created_at)}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 12px; color: var(--text-secondary);">完整度：</span>
+                        <span style="font-size: 12px; font-weight: 600; color: var(--text-primary);">${report.completeness || 0}%</span>
+                    </div>
+                    ${report.last_viewed ? `<span style="font-size: 11px; color: var(--text-secondary);">最后查看：${this.formatDateTime(report.last_viewed)}</span>` : ''}
                 </div>
             `;
             item.addEventListener('click', () => {

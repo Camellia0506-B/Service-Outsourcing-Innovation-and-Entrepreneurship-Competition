@@ -547,7 +547,7 @@
             <div class="job-profile-container">
                 <header class="job-profile-header">
                     <div class="job-profile-header-left">
-                        <span class="job-profile-tag">AI · 职业规划平台</span>
+                        <span class="job-profile-tag">职业规划智能体</span>
                         <div class="job-profile-title-row">
                             <div class="job-profile-title-bar"></div>
                             <span class="job-profile-title">岗位画像</span>
@@ -870,13 +870,12 @@
 
         <!-- 职业规划报告页面 -->
         <div id="reportPage" class="page hidden report-page">
-            <div class="report-title-bar">
-                <h2>职业规划报告</h2>
-            </div>
-            <div class="report-container">
-                <div class="report-page-header">
+            <div class="matching-container">
+                <div class="ability-profile-header">
+                    <h2>职业规划报告</h2>
                     <p class="report-page-desc">AI 为您生成个性化职业生涯发展规划，含岗位匹配、目标设定、行动计划与动态调整机制</p>
                 </div>
+                <div class="report-container">
 
                 <!-- 生成报告入口区 -->
                 <div id="reportGenerateArea" class="report-generate-area">
@@ -884,8 +883,8 @@
                         <div class="report-generate-icon">📋</div>
                         <h3>生成职业规划报告</h3>
                         <p>基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
-                        <button id="generateReportBtn" class="btn-generate-report">生成新报告</button>
-                        <button id="viewHistoryBtn" class="btn-view-history">查看历史报告</button>
+                        <button id="generateReportBtn" class="btn-primary">生成新报告</button>
+                        <button id="viewHistoryBtn" class="btn-secondary">查看历史报告</button>
                     </div>
 
                     <!-- 生成偏好表单（展开显示） -->
@@ -957,15 +956,30 @@
                 <!-- 报告内容展示区 -->
                 <div id="reportContentArea" class="report-content-area hidden">
                     <div class="report-toolbar">
-                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">完整性检查</button>
-                        <button id="reportEditBtn" class="btn-toolbar">编辑报告</button>
-                        <button id="reportPolishBtn" class="btn-toolbar">AI 润色</button>
+                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">✅</span>
+                            完整性检查
+                        </button>
+                        <button id="reportEditBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">✏️</span>
+                            编辑报告
+                        </button>
+                        <button id="reportPolishBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">✨</span>
+                            AI 润色
+                        </button>
                         <select id="reportExportFormat" class="btn-toolbar-select">
                             <option value="pdf">PDF</option>
                             <option value="docx">Word</option>
                         </select>
-                        <button id="reportExportBtn" class="btn-toolbar btn-export">导出</button>
-                        <button id="reportBackBtn" class="btn-toolbar">返回</button>
+                        <button id="reportExportBtn" class="btn-toolbar btn-export">
+                            <span class="toolbar-icon">📤</span>
+                            导出
+                        </button>
+                        <button id="reportBackBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">⬅️</span>
+                            返回
+                        </button>
                     </div>
                     <div class="report-content-with-toc">
                         <nav id="reportToc" class="report-toc"></nav>
@@ -1018,6 +1032,7 @@
                         <button id="closeHistoryBtn" class="btn-close-history">&times;</button>
                     </div>
                     <div id="historyList" class="report-history-list"></div>
+                </div>
                 </div>
             </div>
         </div>
