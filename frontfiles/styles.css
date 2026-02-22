@@ -1249,7 +1249,7 @@ body::before {
 }
 
 #matchingPage .matching-container { max-width: 1280px; margin: 0 auto; padding: 32px 28px; }
-#matchingPage .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+#matchingPage .page-header { margin-bottom: 28px; }
 #matchingPage .page-header h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; color: var(--match-text); }
 #matchingPage .page-header p { font-size: 16px; color: var(--match-text2); margin-top: 8px; line-height: 1.6; }
 
@@ -2146,13 +2146,16 @@ body::before {
     margin-bottom: 12px;
 }
 
-.job-profile-title-row {
+.job-profile-title-row,
+.page-title-row {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-bottom: 24px;
 }
 
-.job-profile-title-bar {
+.job-profile-title-bar,
+.page-title-bar {
     width: 4px;
     height: 36px;
     border-radius: 2px;
@@ -2160,15 +2163,19 @@ body::before {
     flex-shrink: 0;
 }
 
-.job-profile-title {
+.job-profile-title,
+.page-title {
     font-family: 'Playfair Display', Georgia, serif;
     font-size: 32px;
     font-weight: 700;
     color: #0f1c3f;
-    margin: 0 0 24px 0;
+    margin: 0;
+    line-height: 36px;
+    vertical-align: middle;
 }
 
-.job-profile-subtitle {
+.job-profile-subtitle,
+.page-subtitle {
     color: #7e93c0;
     font-size: 13px;
     margin: 0;
@@ -8308,14 +8315,14 @@ body::before {
 
 .hero-badge {
     display: inline-block;
-    padding: 8px 18px;
-    background: var(--light-blue-bg);
-    color: var(--medium-blue);
-    border: 1px solid var(--light-blue-border);
-    border-radius: 12px;
-    font-size: 13px;
+    padding: 4px 12px;
+    font-size: 11px;
     font-weight: 600;
-    margin-bottom: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
     font-family: var(--font-body);
 }
 
