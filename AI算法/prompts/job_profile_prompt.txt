@@ -46,4 +46,4 @@
   "ai_summary": "200字左右的综合分析，面向大学生，真实呈现该岗位的机遇与挑战，帮助他们客观判断自己是否适合，避免盲目跟风或误判前景"
 }}
 
-请务必按上述格式输出完整JSON，填写所有字段，不要省略或留空。core_skills、reality_check、entry_path、ai_summary 都必须有具体内容。
+请务必按上述格式输出完整JSON，填写所有字段，不要省略或留空。core_skills（含 soft_skills 的 innovation、learning、pressure、communication、internship 五项具体描述）、reality_check、entry_path、ai_summary 都必须有具体内容。

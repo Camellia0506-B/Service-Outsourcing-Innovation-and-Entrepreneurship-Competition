@@ -46,6 +46,18 @@ job_profile_conf = _load_job_profile_config()
 
 # ========== 工具函数 ==========
 
+def to_standard_name(name: str) -> str:
+    """
+    标准化岗位名称：去掉括号及括号内内容、首尾空格。
+    与 DB 的 standard_name 规则一致（TRIM(REGEXP_REPLACE(name, '\\(.*\\)', ''))）。
+    仅用于搜索匹配与图谱节点展示/分组，不修改原始 name。
+    """
+    if not name or not isinstance(name, str):
+        return name or ""
+    s = re.sub(r"\s*[（(].*?[)）]\s*", "", name).strip()
+    return s or name.strip()
+
+
 def _load_prompt(prompt_key: str) -> str:
     prompts_config_path = get_abs_path("config/prompts.yml")
     with open(prompts_config_path, "r", encoding="utf-8") as f:
@@ -197,9 +209,16 @@ def _normalize_job_profile(profile: dict) -> dict:
     soft = core.get("soft_skills")
     if not isinstance(soft, dict):
         soft = {}
+    _default_soft = {
+        "innovation": "能够提出新思路、优化方案，对新技术保持敏感并尝试落地。",
+        "learning": "持续学习新知识、新工具，能快速掌握业务与技术变化。",
+        "pressure": "在项目周期紧、需求变更多的环境下保持交付质量与心态稳定。",
+        "communication": "与产品、业务、协作方清晰对齐需求，能书面与口头表达技术方案。",
+        "internship": "有相关实习、项目或竞赛经历更佳，能体现动手能力与岗位匹配度。",
+    }
     for key in ("innovation", "learning", "pressure", "communication", "internship"):
         if key not in soft or not (soft[key] and str(soft[key]).strip()):
-            soft[key] = soft.get(key) or "暂无描述"
+            soft[key] = (soft.get(key) and str(soft[key]).strip()) or _default_soft.get(key) or "暂无描述"
     core["soft_skills"] = soft
     profile["core_skills"] = core
     # reality_check
@@ -278,26 +297,43 @@ def _old_profile_to_new(profile: dict) -> dict:
         elif isinstance(edu, str):
             certs = [edu]
 
-    # 软技能：旧版可能是列表或字典
-    soft_list = core_skills_old.get("soft_skills")
-    if isinstance(soft_list, list):
-        soft_list = [str(s) for s in soft_list]
-    elif not isinstance(soft_list, list):
-        soft_list = []
-    def _find_soft(keywords):
+    # 软技能：支持 (1) 新格式对象 { innovation, learning, ... } (2) 旧版字符串列表 (3) 对象数组 [{ name, description }]
+    soft_raw = core_skills_old.get("soft_skills")
+    soft_skills = {}
+    if isinstance(soft_raw, dict) and any(k in soft_raw for k in ("innovation", "learning", "pressure", "communication", "internship")):
+        for key in ("innovation", "learning", "pressure", "communication", "internship"):
+            v = soft_raw.get(key)
+            soft_skills[key] = (v if isinstance(v, str) and v.strip() else None) or "暂无描述"
+        soft_skills["internship"] = soft_skills.get("internship") or (basic_req.get("experience") or career.get("experience")) or "暂无描述"
+        if isinstance(soft_skills["internship"], dict):
+            soft_skills["internship"] = str(soft_skills["internship"]) or "暂无描述"
+    else:
+        soft_list = soft_raw if isinstance(soft_raw, list) else []
+        str_list = []
+        obj_list = []
         for s in soft_list:
-            if any(kw in str(s) for kw in keywords):
-                return s
-        return "暂无描述"
-    soft_skills = {
-        "innovation": _find_soft(["创新"]),
-        "learning": _find_soft(["学习"]),
-        "pressure": _find_soft(["压", "抗压"]),
-        "communication": _find_soft(["沟通", "协作"]),
-        "internship": (basic_req.get("experience") or career.get("experience") or "暂无描述"),
-    }
-    if isinstance(soft_skills["internship"], dict):
-        soft_skills["internship"] = str(soft_skills["internship"]) or "暂无描述"
+            if isinstance(s, dict):
+                obj_list.append(s)
+            else:
+                str_list.append(str(s))
+        def _find_soft(keywords):
+            for s in str_list:
+                if any(kw in s for kw in keywords):
+                    return s
+            for o in obj_list:
+                name = (o.get("name") or o.get("label") or o.get("ability") or "").strip()
+                if any(kw in name for kw in keywords):
+                    return (o.get("description") or o.get("desc") or o.get("text") or "").strip() or "暂无描述"
+            return "暂无描述"
+        soft_skills = {
+            "innovation": _find_soft(["创新"]),
+            "learning": _find_soft(["学习"]),
+            "pressure": _find_soft(["压", "抗压"]),
+            "communication": _find_soft(["沟通", "协作"]),
+            "internship": (basic_req.get("experience") or career.get("experience") or _find_soft(["实习", "实践", "经验"])),
+        }
+        if isinstance(soft_skills["internship"], dict):
+            soft_skills["internship"] = str(soft_skills["internship"]) or "暂无描述"
 
     profile["industry"] = basic.get("industry") or profile.get("industry") or ""
     profile["salary_range"] = basic.get("avg_salary") or profile.get("salary_range") or ""
@@ -643,11 +679,14 @@ class JobProfileService:
         profiles = list(self.profiles_store.values())
         total_count_before_filter = len(profiles)  # 调试用：过滤前总数据量
 
-        # 【问题1】仅当 keyword 非空时才按职位名称过滤，避免空字符串当条件导致结果为空或异常
+        # 【问题1】仅当 keyword 非空时才按职位名称过滤；同时用标准化名称匹配（搜「算法工程师」可匹配细分方向）
         kw = (keyword or "").strip()
         if kw:
-            profiles = [p for p in profiles
-                        if kw.lower() in ((p.get("job_name") or "").lower())]
+            def _match_keyword(p):
+                raw = (p.get("job_name") or "").lower()
+                std = to_standard_name(p.get("job_name") or "").lower()
+                return kw.lower() in raw or kw.lower() in std
+            profiles = [p for p in profiles if _match_keyword(p)]
             def _relevance(p):
                 name = (p.get("job_name") or "").lower()
                 k = kw.lower()

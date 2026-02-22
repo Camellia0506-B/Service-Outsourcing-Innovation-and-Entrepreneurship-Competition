@@ -4,7 +4,7 @@ const API_CONFIG = {
     assessmentBaseURL: 'http://localhost:5001/api/v1',   // AI 算法服务（职业测评 / 岗位画像 / AI生成），必须为绝对地址，避免打到 8080
     jobProfilesBaseURL: 'http://localhost:5001/api/v1',  // 岗位画像列表 → Flask AI 服务（5001）
     timeout: 30000,
-    mockMode: true   // 模拟模式：true=使用本地模拟数据（无需启动 Java 后端）；false=连接真实后端
+    mockMode: false  // false=连接真实后端（5000/5001）；true=仅模拟数据不发请求，可按需切换
 };
 
 // API工具类
@@ -202,7 +202,7 @@ class API {
             case '/job/profiles':
             case '/job/list': {
                 let allJobs = this.mockJobs();
-                const keyword = (data.keyword || '').trim();
+                const keyword = (data.keyword || (options.body && options.body.keyword) || '').trim();
                 allJobs = this._filterJobsByKeyword(allJobs, keyword);
                 allJobs = this._filterJobsByFilters(allJobs, {
                     city: data.city,
@@ -210,8 +210,8 @@ class API {
                     salary: data.salary,
                     company_nature: data.company_nature
                 });
-                const page = data.page || 1;
-                const size = data.size || 20;
+                const page = data.page || (options.body && options.body.page) || 1;
+                const size = data.size || (options.body && options.body.size) || 20;
                 const start = (page - 1) * size;
                 const paged = allJobs.slice(start, start + size);
                 return { success: true, data: { total: allJobs.length, page, size, list: paged } };
@@ -305,7 +305,7 @@ class API {
                         { stage: '长期目标', jobName: '架构师/专家', years: '5年以上', salary: '-', level: 'L5' }
                     ], altPaths: [{ jobName: '数据科学家' }, { jobName: 'AI产品经理' }, { jobName: '项目经理' }] } };
                 }
-                if (endpoint.startsWith('/job/profiles')) {
+                if (typeof endpoint === 'string' && endpoint.startsWith('/job/profiles')) {
                     const list = this.mockJobs();
                     return { success: true, data: { total: list.length, page: 1, size: 12, list } };
                 }
@@ -1223,18 +1223,98 @@ async function getAssessmentReport(userId, reportId) {
 
 // ==================== 岗位画像模块 ====================
 
-// 4.1 获取岗位画像列表
+// 4.1 获取岗位画像列表（统一使用 GET，与后端 Flask GET/POST 双支持一致，避免 405）
+// 约定：GET /api/v1/job/profiles?page=1&size=12&keyword=&industry=&level=
+// 兼容返回格式：{ total, page, size, list }（Flask）或 { total, pages, current, records }（Java）
 async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', level = '', filters = null) {
+    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('size', String(size));
+    if (keyword != null && keyword !== '') params.set('keyword', keyword);
+    if (industry) params.set('industry', industry);
+    if (level) params.set('level', level);
+    if (filters && typeof filters === 'object') {
+        if (filters.city) params.set('city', filters.city);
+        if (filters.industry) params.set('industry', filters.industry || industry);
+        if (filters.salary) params.set('salary', filters.salary);
+        if (filters.company_nature) params.set('company_nature', filters.company_nature);
+    }
+    const url = `${base}/job/profiles?${params.toString()}`;
+    try {
+        const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const text = await response.text();
+        if (!response.ok) {
+            console.warn('岗位列表接口异常:', response.status, url);
+            return { success: false, msg: response.status === 405 ? '请使用 GET 请求岗位列表' : '服务暂不可用', data: null };
+        }
+        if (!text || text.trim().startsWith('<')) {
+            console.warn('岗位列表接口返回非 JSON:', url);
+            return { success: false, msg: '服务暂不可用，请确认 AI 服务已启动（5001）', data: null };
+        }
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch (e) {
+            console.error('岗位列表接口返回非合法 JSON:', e);
+            return { success: false, msg: '接口返回异常', data: null };
+        }
+        if (result.code !== 200 || !result.data) {
+            return { success: false, msg: result.msg || '请求失败', data: null };
+        }
+        const d = result.data;
+        let list;
+        const total = d.total ?? 0;
+        const currentPage = d.current ?? d.page ?? page;
+        const pages = d.pages ?? Math.max(1, size ? Math.ceil((total || 0) / size) : 1);
+        if (d.records && Array.isArray(d.records)) {
+            list = d.records.map(r => ({
+                job_id: r.jobId ?? r.job_id,
+                job_name: r.jobName ?? r.job_name,
+                industry: r.industry,
+                level: r.level,
+                avg_salary: r.salaryRange ?? r.avg_salary,
+                skills: r.skills || [],
+                tags: r.skills || r.tags || [],
+                demand_score: r.demandScore ?? r.demand_score,
+                growth_trend: r.trend ?? r.growth_trend
+            }));
+        } else if (d.list && Array.isArray(d.list)) {
+            list = d.list.map(r => ({
+                job_id: r.job_id,
+                job_name: r.job_name,
+                industry: r.industry,
+                level: (r.level_range && r.level_range[0]) || r.level,
+                avg_salary: r.avg_salary,
+                skills: r.skills || [],
+                tags: r.tags || r.skills || [],
+                demand_score: r.demand_score,
+                growth_trend: r.growth_trend
+            }));
+        } else {
+            list = [];
+        }
+        return {
+            success: true,
+            data: { list, total: total || list.length, page: currentPage, size, pages }
+        };
+    } catch (err) {
+        console.error('岗位列表接口请求错误:', err);
+        return { success: false, msg: '网络错误或服务未启动', data: null };
+    }
+}
+
+// 与 getJobProfiles 同义，供 loadJobProfileList 等调用
+async function getJobProfilesFromBackend(page = 1, size = 12, keyword = '', industry = '', level = '') {
+    return getJobProfiles(page, size, keyword, industry, level);
+}
+
+// 兼容：POST 方式（后端也支持 POST，按需使用）
+async function getJobProfilesPost(page = 1, size = 20, keyword = '', industry = '', level = '') {
     const body = { page, size };
     if (keyword) body.keyword = keyword;
     if (industry) body.industry = industry;
     if (level) body.level = level;
-    if (filters && typeof filters === 'object') {
-        if (filters.city) body.city = filters.city;
-        if (filters.industry) body.industry = filters.industry || body.industry;
-        if (filters.salary) body.salary = filters.salary;
-        if (filters.company_nature) body.company_nature = filters.company_nature;
-    }
     return await api.postToAI('/job/profiles', body);
 }
 
@@ -1285,14 +1365,29 @@ async function getJobRelationGraph(jobId, graphType = 'all') {
     return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
 }
 
-// 职业发展路径（晋升 + 换岗，GET）
-async function getCareerPath(jobId) {
+// 4.3.1 获取岗位晋升路径（jobName 查询；返回 { code, data: { path } }，前端晋升路径卡片可接此或静态数据）
+async function getCareerPath(jobName) {
+    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '算法工程师';
+    const url = `${base}/job/career-path?jobName=${encodeURIComponent(effective)}`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        return json;
+    } catch (e) {
+        console.error('getCareerPath:', e);
+        return { code: 500, data: { path: [] } };
+    }
+}
+
+// 职业发展路径（按 jobId，队友侧：晋升+换岗，可与 getCareerPath(jobName) 并存）
+async function getCareerPathByJobId(jobId) {
     const endpoint = '/job/career-path?jobId=' + encodeURIComponent(jobId);
     return await api.requestToAI(endpoint, { method: 'GET' });
 }
 
-// 4.4 AI 生成岗位画像
-async function jobAiGenerateProfile(jobName, jobDescriptions, sampleSize = 50, industry = '', experience = '') {
+// 4.4 AI 生成岗位画像（industry/experience 可选）
+async function jobAiGenerateProfile(jobName, jobDescriptions, sampleSize = 30, industry = '', experience = '') {
     const body = {
         job_name: jobName,
         job_descriptions: jobDescriptions || [],
@@ -1313,17 +1408,11 @@ async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 30, i
     return await jobAiGenerateProfile(jobName, jobDescriptions, sampleSize, industry, experience);
 }
 
-// 搜索岗位（使用 4.1 带 keyword 和 filters）
+// 搜索岗位（使用 4.1 GET /job/profiles，与 getJobProfiles 统一）
 async function searchJobs(keyword, page = 1, size = 20, filters = null) {
-    const body = { page, size };
-    if (keyword) body.keyword = keyword;
-    if (filters && typeof filters === 'object') {
-        if (filters.city) body.city = filters.city;
-        if (filters.industry) body.industry = filters.industry;
-        if (filters.salary) body.salary = filters.salary;
-        if (filters.company_nature) body.company_nature = filters.company_nature;
-    }
-    return await api.postToAI('/job/profiles', body);
+    const industry = (filters && filters.industry) || '';
+    const level = '';
+    return getJobProfiles(page, size, keyword || '', industry, level, filters);
 }
 
 // ==================== 学生能力画像模块 ====================
@@ -1418,12 +1507,12 @@ async function checkCareerCompleteness(reportId) {
     return await api.post('/career/check-completeness', { report_id: reportId });
 }
 
-// 7.7 获取历史职业规划报告列表
+// 7.7 获取历史职业规划报告列表（仅职业规划模块使用，与测评历史分离）
 async function getCareerReportHistory(userId, page = 1, size = 10) {
     return await api.post('/career/report-history', { user_id: userId, page, size });
 }
 
-// 获取测评历史（用于测评报告，走 assessment 服务）
+// 测评报告历史（3.x 测评模块专用，/assessment/report-history，不与 7.7 职业规划历史混用）
 async function getReportHistory(userId) {
     return await api.get('/assessment/report-history', { user_id: userId });
 }

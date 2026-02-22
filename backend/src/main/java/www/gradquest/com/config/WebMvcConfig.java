@@ -52,7 +52,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
-<<<<<<< Updated upstream
                 .allowedOriginPatterns(
                         "http://localhost:8080",
                         "http://localhost:3000",
@@ -63,9 +62,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "http://localhost:*",
                         "http://127.0.0.1:*"
                 )
-=======
-                .allowedOriginPatterns("http://localhost:*", "http://localhost:8080", "http://127.0.0.1:*")
->>>>>>> Stashed changes
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*")

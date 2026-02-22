@@ -31,7 +31,7 @@
                     <a href="#" class="nav-link" data-page="abilityProfile">能力画像</a>
                     <a href="#" class="nav-link" data-page="jobProfile">岗位画像</a>
                     <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
-                    <a href="#" class="nav-link" data-page="report">职业规划</a>
+                    <a href="#" class="nav-link" data-page="report">职业规划报告</a>
                 </div>
                 <div class="nav-user">
                     <div class="user-info">
@@ -507,20 +507,36 @@
             </div>
         </div>
 
-        <!-- 职业测评页面 -->
+        <!-- 职业测评页面（问卷 + 测评报告均在此页展示，不跳转职业规划；测评历史报告仅在此模块展示） -->
         <div id="assessmentPage" class="page hidden">
             <div class="assessment-container">
-                <h2>职业测评问卷</h2>
-                <p class="assessment-intro">请根据您的真实情况回答以下问题,帮助我们更好地了解您的职业倾向</p>
-                
-                <div id="questionnaireContainer">
-                    <div class="loading-message">加载问卷中...</div>
+                <div id="assessmentQuestionnaireSection">
+                    <h2>职业测评问卷</h2>
+                    <p class="assessment-intro">请根据您的真实情况回答以下问题,帮助我们更好地了解您的职业倾向</p>
+                    <div id="questionnaireContainer">
+                        <div class="loading-message">加载问卷中...</div>
+                    </div>
+                    <div class="assessment-actions hidden" id="assessmentActions">
+                        <button id="submitAssessmentBtn" class="btn-primary">提交测评</button>
+                        <button id="viewReportBtn" class="btn-secondary hidden">查看测评报告</button>
+                    </div>
                 </div>
-
-                <div class="assessment-actions hidden" id="assessmentActions">
-                    <button id="submitAssessmentBtn" class="btn-primary">提交测评</button>
-                    <button id="viewReportBtn" class="btn-secondary hidden">查看测评报告</button>
+                <!-- 测评报告展示区（Holland + MBTI），完成后直接在此展示 -->
+                <div id="assessmentReportWrap" class="assessment-report-wrap hidden">
+                    <div id="assessmentReportContent" class="assessment-report-content"></div>
+                    <div class="assessment-report-footer no-print">
+                        <button type="button" id="btnBackToAssessment" class="btn-secondary">返回测评界面</button>
+                        <button type="button" id="btnGoToCareerPlan" class="btn-primary">基于测评结果生成职业规划</button>
+                    </div>
                 </div>
+            </div>
+            <!-- 测评历史报告侧栏（仅测评模块使用，与职业规划历史分离） -->
+            <div id="assessmentReportHistory" class="report-history-panel hidden">
+                <div class="report-history-header">
+                    <h3>测评历史报告</h3>
+                    <button type="button" class="report-history-close" id="closeAssessmentHistory" aria-label="关闭">&times;</button>
+                </div>
+                <div id="assessmentHistoryList" class="report-history-list"></div>
             </div>
         </div>
 

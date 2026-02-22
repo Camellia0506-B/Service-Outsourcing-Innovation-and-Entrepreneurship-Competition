@@ -41,22 +41,79 @@ def error_response(code, msg, data=None):
 # ========== 异步任务管理（用于长耗时的AI生成任务）==========
 
 _tasks = {}  # task_id -> {status, result, error}
+_tasks_lock = threading.Lock()
+_TASKS_STORE_DIR = None  # 延迟计算，避免循环依赖
+
+
+def _get_tasks_store_path():
+    global _TASKS_STORE_DIR
+    if _TASKS_STORE_DIR is None:
+        _TASKS_STORE_DIR = get_abs_path("data/ai_tasks")
+        os.makedirs(_TASKS_STORE_DIR, exist_ok=True)
+    return os.path.join(_TASKS_STORE_DIR, "state.json")
+
+
+def _persist_tasks():
+    """将内存中的任务状态写入文件，便于多进程/重启后仍能查到结果"""
+    try:
+        path = _get_tasks_store_path()
+        with _tasks_lock:
+            snapshot = {}
+            for tid, t in _tasks.items():
+                snapshot[tid] = {
+                    "status": t.get("status", "pending"),
+                    "result": t.get("result"),
+                    "error": t.get("error"),
+                }
+        raw = json.dumps(snapshot, ensure_ascii=False, default=str)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(raw)
+        if os.path.exists(path):
+            os.remove(path)
+        os.rename(tmp, path)
+    except Exception as e:
+        logger.warning(f"[AsyncTask] 持久化任务状态失败: {e}")
+
+
+def _load_persisted_tasks():
+    """从文件加载任务状态，合并到 _tasks（不覆盖已有 key）"""
+    try:
+        path = _get_tasks_store_path()
+        if not os.path.exists(path):
+            return
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        with _tasks_lock:
+            for tid, t in data.items():
+                if tid not in _tasks:
+                    _tasks[tid] = {
+                        "status": t.get("status", "pending"),
+                        "result": t.get("result"),
+                        "error": t.get("error"),
+                    }
+    except Exception as e:
+        logger.warning(f"[AsyncTask] 加载持久化任务失败: {e}")
 
 
 def _run_task_async(task_id: str, func, *args, **kwargs):
-    """在后台线程中运行任务"""
+    """在后台线程中运行任务，状态会持久化到文件，避免多进程/重启后 404"""
     def run():
         try:
             _tasks[task_id]["status"] = "processing"
+            _persist_tasks()
             result = func(*args, **kwargs)
             _tasks[task_id]["status"] = "completed"
             _tasks[task_id]["result"] = result
+            _persist_tasks()
         except Exception as e:
             logger.error(f"[AsyncTask] 任务{task_id}失败: {e}", exc_info=True)
             _tasks[task_id]["status"] = "failed"
             _tasks[task_id]["error"] = str(e)
+            _persist_tasks()
 
     _tasks[task_id] = {"status": "pending", "result": None, "error": None}
+    _persist_tasks()
     thread = threading.Thread(target=run, daemon=True)
     thread.start()
 
@@ -212,6 +269,38 @@ def get_job_industries():
 # 4.2 获取岗位详细画像
 # POST /api/v1/job/profile/detail
 # ============================================================
+def _minimal_profile_from_target_jobs(job_id_or_name):
+    """当 store 中无该岗位时，用 target_jobs 配置兜底，避免「岗位画像」按钮 404。与真实数据接口互独立。"""
+    target = job_profile_conf.get("target_jobs", [])
+    job_id_or_name = (job_id_or_name or "").strip()
+    if not job_id_or_name:
+        return None
+    for j in target:
+        if j.get("job_id") == job_id_or_name or (j.get("name") or "").strip() == job_id_or_name:
+            name = j.get("name", "")
+            level_map = {1: "实习/助理", 2: "初级", 3: "中级", 4: "高级", 5: "架构师", 6: "总监"}
+            level = level_map.get(j.get("layer_level"), "中级")
+            return {
+                "job_id": j.get("job_id", ""),
+                "job_name": name,
+                "basic_info": {
+                    "industry": j.get("category", "互联网/AI"),
+                    "level": level,
+                    "level_range": [level],
+                    "avg_salary": "面议",
+                    "work_locations": [],
+                    "company_scales": [],
+                    "description": f"该岗位暂无详细画像，可在「AI生成」页输入「{name}」生成完整画像。",
+                },
+                "market_analysis": {"demand_score": 80, "growth_trend": "上升"},
+                "description": f"来自岗位配置：{name}（{j.get('category', '')}）。点击 AI 生成可获取完整画像。",
+            }
+    for j in target:
+        if job_id_or_name in (j.get("name") or ""):
+            return _minimal_profile_from_target_jobs(j.get("name"))
+    return None
+
+
 @job_bp.route("/profile/detail", methods=["POST"])
 def get_job_profile_detail():
     """
@@ -231,8 +320,14 @@ def get_job_profile_detail():
 
         if job_id:
             profile = service.get_profile_detail(job_id)
-        elif job_name:
+        if not profile and job_name:
             profile = service.get_profile_by_name(job_name)
+        if not profile and job_id:
+            profile = service.get_profile_by_name(job_id)
+
+        # 若仍无画像（如列表来自精选配置 job_001 但 store 来自 CSV），用 target_jobs 兜底，避免 404
+        if not profile:
+            profile = _minimal_profile_from_target_jobs(job_id or job_name)
 
         if not profile:
             return error_response(404, f"未找到岗位画像：{job_id or job_name}")
@@ -248,95 +343,248 @@ def get_job_profile_detail():
 # 4.3 获取岗位关联图谱
 # POST /api/v1/job/relation-graph
 # ============================================================
+def _empty_graph_data(center_job_id=None, message="暂无数据"):
+    """返回前端期望的空图谱结构，避免空响应或缺失字段导致加载失败"""
+    return {
+        "center_job": {"job_id": center_job_id or "", "job_name": "", "level": 0, "salary_range": "", "avg_salary": "", "demand_score": None},
+        "vertical_graph": {"nodes": [], "edges": [], "track_name": "", "message": message},
+        "transfer_graph": {"nodes": [], "edges": [], "message": message},
+        "career_path": {"promotion_path": []},
+    }
+
+
+def _resolve_job_id_from_name(job_name):
+    """根据岗位名称解析为 target_jobs 的 job_id，用于晋升路径查库。"""
+    job_name = (job_name or "").strip()
+    if not job_name:
+        return None
+    import re
+    name_core = re.sub(r"\s*[（(].*?[)）]\s*", "", job_name).strip() or job_name
+    target_jobs = job_profile_conf.get("target_jobs", [])
+    for t in target_jobs:
+        tid = t.get("job_id", "")
+        tname = (t.get("name") or "").strip()
+        if not tname:
+            continue
+        if name_core in tname or tname in name_core:
+            return tid
+    return None
+
+
+def _resolve_job_id_for_graph(job_id):
+    """
+    将列表/CSV 的 job_id（如 A174435）解析为图谱使用的 target_jobs job_id（如 job_011），
+    以便从 DB 或 graph.json 秒级返回，避免走实时 LLM 导致请求挂起、响应为空。
+    返回 (resolved_id, display_name)：resolved_id 用于查 DB/图，display_name 用于 center_job 展示。
+    """
+    job_id = (job_id or "").strip()
+    if not job_id:
+        return None, ""
+    target_jobs = job_profile_conf.get("target_jobs", [])
+    job_index = {j["job_id"]: j for j in target_jobs}
+    if job_id in job_index:
+        return job_id, (job_index[job_id].get("name") or job_id)
+
+    # 从 profiles_store 取岗位名称，再按名称匹配 target_jobs
+    profiles = _load_profiles_store()
+    job_name = ""
+    if job_id in profiles:
+        job_name = (profiles[job_id].get("job_name") or "").strip()
+    if not job_name:
+        job_name = job_id
+    # 去掉括号后缀便于匹配，如 "算法工程师(A174435)" -> "算法工程师"
+    import re
+    name_core = re.sub(r"\s*[（(].*?[)）]\s*", "", job_name).strip() or job_name
+    for t in target_jobs:
+        tid = t.get("job_id", "")
+        tname = (t.get("name") or "").strip()
+        if not tname:
+            continue
+        if name_core in tname or tname in name_core:
+            return tid, job_name or tname
+    return job_id, job_name or job_id
+
+
+def _build_graph_data_from_json(resolved_id, graph_type, display_name, job_index):
+    """从 data/job_profiles/graph.json 构建 API 所需结构，秒级返回，避免请求挂起。"""
+    graph_path = get_abs_path(job_profile_conf.get("job_graph_store", "data/job_profiles/graph.json"))
+    if not graph_path or not os.path.isfile(graph_path):
+        return None
+    try:
+        with open(graph_path, "r", encoding="utf-8") as f:
+            graph_file = json.load(f)
+    except Exception as e:
+        logger.warning(f"[API] 读取 graph.json 失败: {e}")
+        return None
+    nodes_by_id = {n["job_id"]: n for n in graph_file.get("transfer_graph", {}).get("nodes", [])}
+    all_edges = graph_file.get("transfer_graph", {}).get("edges", [])
+    center_node = nodes_by_id.get(resolved_id, {})
+    center_name = display_name or center_node.get("job_name", resolved_id)
+    center_job = {
+        "job_id": resolved_id,
+        "job_name": center_name,
+        "level": center_node.get("layer_level", job_index.get(resolved_id, {}).get("layer_level", 0)),
+        "salary_range": "",
+        "avg_salary": "",
+        "demand_score": None,
+    }
+    result = {"center_job": center_job}
+
+    # 垂直图谱：从 vertical_graphs 中找到包含 resolved_id 的 track
+    vertical_graphs = graph_file.get("vertical_graphs", [])
+    v_nodes, v_edges, track_name = [], [], ""
+    for track in vertical_graphs:
+        nodes_list = track.get("nodes", [])
+        ids_in_track = [n["job_id"] for n in nodes_list]
+        if resolved_id in ids_in_track and graph_type in ("vertical", "all"):
+            v_nodes = [{"job_id": n["job_id"], "job_name": n.get("job_name", n["job_id"]), "level": n.get("layer_level", 0), "category": n.get("category", ""), "salary_range": "", "description": ""} for n in nodes_list]
+            v_edges = [{"from": e.get("from"), "to": e.get("to"), "years": e.get("years", "2-3年"), "requirements": e.get("requirements", [])} for e in track.get("edges", [])]
+            track_name = track.get("career_track", "晋升路径")
+            break
+    result["vertical_graph"] = {"nodes": v_nodes, "edges": v_edges, "track_name": track_name, "message": "" if v_nodes else "暂无垂直路径"}
+
+    # 转岗图谱：edges 中 from == resolved_id 的边及其 to 节点
+    out_edges = [e for e in all_edges if e.get("from") == resolved_id]
+    to_ids = list({e.get("to") for e in out_edges if e.get("to")})
+    transfer_nodes = [nodes_by_id.get(jid, {"job_id": jid, "job_name": jid}) for jid in to_ids]
+    transfer_nodes = [{"job_id": n["job_id"], "job_name": n.get("job_name", n["job_id"]), "level": n.get("layer_level", 0), "category": n.get("category", ""), "salary_range": "", "description": ""} for n in transfer_nodes]
+    transfer_edges = [
+        {"from": e["from"], "to": e["to"], "relevance_score": e.get("relevance_score", 70), "match_score": e.get("relevance_score", 70), "difficulty": e.get("difficulty", "中"), "time": e.get("time", "6-12个月"), "skills_gap": e.get("skills_gap", [])}
+        for e in out_edges[:15]
+    ]
+    result["transfer_graph"] = {"nodes": transfer_nodes, "edges": transfer_edges, "message": ""}
+    result["career_path"] = {"promotion_path": []}
+    return result
+
+
 @job_bp.route("/relation-graph", methods=["POST"])
 def get_job_relation_graph():
     """
     获取岗位间的血缘关系和转换路径
     请求体：{ job_id, graph_type }
     graph_type: vertical / transfer / all
+    列表 job_id（如 A174435）会解析为 target_jobs id（如 job_011），优先 DB / graph.json 秒级返回，避免响应挂起为空。
     """
-    try:
-        body = request.get_json(silent=True) or {}
-        job_id = body.get("job_id")
-        graph_type = body.get("graph_type", "all")
+    body = request.get_json(silent=True) or {}
+    job_id = (body.get("job_id") or "").strip()
+    graph_type = body.get("graph_type", "all")
+    logger.info(f"[API] relation-graph 接口被调用, 参数: job_id={job_id!r}, graph_type={graph_type!r}")
 
+    try:
         if not job_id:
             return error_response(400, "请提供 job_id 参数")
 
         if graph_type not in ("vertical", "transfer", "all"):
             return error_response(400, "graph_type 参数错误，支持: vertical/transfer/all")
 
-        graph_service = get_job_graph_service()
-        resp = graph_service.get_relation_graph(job_id, graph_type)
-        if resp.get("code") != 200:
-            return error_response(resp.get("code", 404), resp.get("msg", "岗位不存在"))
-        return success_response(resp.get("data"))
+        resolved_id, display_name = _resolve_job_id_for_graph(job_id)
+        if not resolved_id:
+            return error_response(400, "无法解析岗位 ID")
+        job_index = {j["job_id"]: j for j in job_profile_conf.get("target_jobs", [])}
 
+        # 1) 优先从 job_relations 表读取
+        try:
+            from job_profile.job_relations_db import init_db, build_graph_data_from_db
+            init_db()
+            db_data = build_graph_data_from_db(resolved_id, graph_type, job_index)
+            if db_data is not None:
+                for key in ("center_job", "vertical_graph", "transfer_graph", "career_path"):
+                    if key not in db_data:
+                        db_data[key] = _empty_graph_data(resolved_id)[key]
+                if display_name and db_data.get("center_job"):
+                    db_data["center_job"]["job_name"] = display_name
+                return success_response(db_data)
+        except Exception as e:
+            logger.warning(f"[API] relation-graph 从 DB 读取失败: {e}")
+
+        # 2) 从 graph.json 秒级返回，避免实时 LLM 导致挂起、响应为空
+        json_data = _build_graph_data_from_json(resolved_id, graph_type, display_name, job_index)
+        if json_data is not None:
+            for key in ("center_job", "vertical_graph", "transfer_graph", "career_path"):
+                if key not in json_data:
+                    json_data[key] = _empty_graph_data(resolved_id)[key]
+            return success_response(json_data)
+
+        # 3) 回退实时构建（可能较慢）
+        graph_service = get_job_graph_service()
+        graph_data = graph_service.get_job_graph(resolved_id, graph_type)
+
+        if not isinstance(graph_data, dict):
+            graph_data = _empty_graph_data(resolved_id, "数据格式异常")
+        else:
+            for key in ("center_job", "vertical_graph", "transfer_graph", "career_path"):
+                if key not in graph_data:
+                    graph_data[key] = _empty_graph_data(resolved_id)[key]
+        if display_name and graph_data.get("center_job"):
+            graph_data["center_job"]["job_name"] = display_name
+        return success_response(graph_data)
+
+    except ValueError as e:
+        logger.warning(f"[API] /job/relation-graph 业务错误: {e}")
+        return error_response(404, str(e))
     except Exception as e:
         logger.error(f"[API] /job/relation-graph 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
 
 
 # ============================================================
-# GET /api/v1/job/career-path - 职业发展路径（晋升 + 换岗，真实数据）
+# 4.3.1 获取岗位晋升路径（优先 DB job_promotion_path，否则 LLM 生成）
+# GET /api/v1/job/career-path?jobName=xxx（前端晋升路径卡片可接此；队友侧 jobId 换岗数据可另接）
 # ============================================================
 @job_bp.route("/career-path", methods=["GET"])
-def get_career_path():
+def get_job_career_path():
     """
-    获取岗位职业发展路径：晋升路径来自 job_profiles，换岗岗位名来自 CSV。
-    查询参数：jobId 或 job_id
-    返回：{ path: [{ stage, jobName, years, salary, level }, ...], altPaths: [{ jobName }, ...] }
+    根据岗位名称返回 4 个晋升阶段，供前端晋升路径卡片使用。
+    优先从 job_promotion_path 表读取，确保有阶段名、年限、薪资；无则回退 LLM。
+    返回 data.path: [ { stage, icon, salary, skills, desc, years }, ... ]
     """
     try:
-        job_id = request.args.get("jobId") or request.args.get("job_id")
-        if not job_id:
-            return error_response(400, "请提供 jobId 或 job_id 参数")
+        job_name = (request.args.get("jobName") or "").strip()
+        if not job_name:
+            return error_response(400, "请提供 jobName 参数")
 
-        graph_service = get_job_graph_service()
-        resp = graph_service.get_relation_graph(job_id, "all")
-        if resp.get("code") != 200:
-            return error_response(resp.get("code", 404), resp.get("msg", "岗位不存在"))
-
-        data = resp.get("data", {})
-        vg = data.get("vertical_graph") or {}
-        nodes = vg.get("nodes") or []
-        edges = vg.get("edges") or []
-
-        stage_names = ["当前目标", "第一阶段", "第二阶段", "长期目标"]
         path = []
-        for i, node in enumerate(nodes[:4]):
-            years = "-"
-            if i > 0 and i - 1 < len(edges):
-                years = edges[i - 1].get("years", "-")
-            salary = (node.get("salary_range") or "-") if isinstance(node.get("salary_range"), str) else "-"
-            path.append({
-                "stage": stage_names[i] if i < len(stage_names) else f"阶段{i+1}",
-                "jobName": node.get("job_name", ""),
-                "years": years,
-                "salary": salary,
-                "level": f"L{node.get('level', 0)}"
-            })
+        job_id = _resolve_job_id_from_name(job_name)
+        if job_id:
+            try:
+                from job_profile.job_relations_db import init_db, get_promotion_path_by_job_id
+                init_db()
+                rows = get_promotion_path_by_job_id(job_id)
+                if rows and len(rows) >= 4:
+                    default_icons = ["🌱", "🌿", "🌳", "🏆"]
+                    for i, r in enumerate(rows[:4]):
+                        skills = r.get("skills")
+                        if isinstance(skills, str) and skills.strip():
+                            try:
+                                skills = json.loads(skills)
+                            except Exception:
+                                skills = [s.strip() for s in skills.split(",") if s.strip()]
+                        else:
+                            skills = []
+                        path.append({
+                            "stage": r.get("stage_name") or r.get("role_title") or "",
+                            "icon": (r.get("icon") or "").strip() or default_icons[i],
+                            "salary": r.get("salary_range") or "",
+                            "skills": skills if isinstance(skills, list) else [],
+                            "desc": "",
+                            "years": r.get("years_range") or "",
+                        })
+            except Exception as e:
+                logger.warning(f"[API] career-path 从 DB 读取失败，回退 LLM: {e}")
 
-        # 换岗路径：从 CSV 取真实岗位名（职位名称列）
-        alt_paths = []
-        import os
-        csv_path = get_abs_path(job_profile_conf.get("job_data_path", "data/求职岗位信息数据.csv"))
-        try:
-            if csv_path and os.path.exists(csv_path):
-                with open(csv_path, "r", encoding="utf-8") as f:
-                    reader = csv.DictReader(f)
-                    col = "职位名称"
-                    seen = set()
-                    for row in reader:
-                        name = (row.get(col) or "").strip()
-                        if name and name not in seen and len(alt_paths) < 12:
-                            seen.add(name)
-                            alt_paths.append({"jobName": name})
-        except Exception as e:
-            logger.warning(f"[career-path] 读取 CSV 失败: {e}")
+        if not path:
+            raw = generate_career_path(job_name)
+            for i, s in enumerate(raw[:4]):
+                path.append({
+                    "stage": s.get("name", ""),
+                    "icon": s.get("icon", "🌱"),
+                    "salary": s.get("salary_increase", ""),
+                    "skills": s.get("key_skills") or [],
+                    "desc": s.get("desc", ""),
+                    "years": s.get("time_range", ""),
+                })
 
-        return success_response({"path": path, "altPaths": alt_paths})
-
+        return success_response({"path": path})
     except Exception as e:
         logger.error(f"[API] /job/career-path 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
@@ -532,6 +780,8 @@ def get_ai_generate_result():
         if not task_id:
             return error_response(400, "请提供 task_id 参数")
 
+        if task_id not in _tasks:
+            _load_persisted_tasks()
         if task_id not in _tasks:
             return error_response(404, f"任务不存在或已过期: {task_id}")
 
