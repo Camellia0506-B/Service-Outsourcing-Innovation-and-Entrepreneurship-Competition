@@ -1977,16 +1977,6 @@ class CareerPlanningApp {
                     if (select) select.value = id;
                     this.analyzeJobMatch();
                 }
-=======
-                <div class="job-tags">${tags}</div>
-                <div class="job-meta">年薪：${job.avg_salary || '-'}</div>
-            `;
-            jobCard.style.cursor = 'pointer';
-            jobCard.addEventListener('click', () => {
-                this.switchTab('analysis');
-                const select = document.getElementById('jobSelect');
-                if (select) { select.value = job.job_id || job.job_name; this.analyzeJobMatch(); }
->>>>>>> Stashed changes
             });
         });
     }

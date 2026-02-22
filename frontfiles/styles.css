@@ -1621,11 +1621,8 @@ body::before {
     font-family: 'Playfair Display', Georgia, serif;
     font-size: 32px;
     font-weight: 700;
-<<<<<<< Updated upstream
-    margin-bottom: 24px;
-=======
     color: #0f1c3f;
-    margin: 0;
+    margin: 0 0 24px 0;
 }
 
 .job-profile-subtitle {
@@ -1662,7 +1659,6 @@ body::before {
 .job-profile-stat-label {
     font-size: 11px;
     color: #7e93c0;
->>>>>>> Stashed changes
 }
 
 .job-profile-tabs {
