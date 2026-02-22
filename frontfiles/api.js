@@ -169,9 +169,12 @@ class API {
     async mockRequest(endpoint, options) {
         console.log('Mock请求:', endpoint, options);
         await new Promise(resolve => setTimeout(resolve, 150));
-        
-        const data = options.body || {};
-        
+        let data = options.body || {};
+        if (options.formData && options.formData instanceof FormData) {
+            const obj = {};
+            options.formData.forEach((v, k) => { obj[k] = v; });
+            data = obj;
+        }
         switch(endpoint) {
             case '/auth/login':
                 return this.mockLogin(data);
@@ -313,26 +316,46 @@ class API {
         }
     }
 
-    mockLogin(data) {
-        const mockUsers = [
+    // 获取已注册用户列表（localStorage 持久化，仅 mock 模式使用）
+    _getRegisteredUsers() {
+        const key = 'mock_registered_users';
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw) return JSON.parse(raw);
+        } catch (_) {}
+        // 首次使用：预置几个演示账号，写入 localStorage
+        const preset = [
             { username: 'admin', password: '123456', nickname: '管理员', user_id: 10001 },
             { username: 'test', password: '123456', nickname: '测试用户', user_id: 10002 },
             { username: 'demo', password: '123456', nickname: '演示用户', user_id: 10003 },
             { username: 'student', password: '123456', nickname: '学生用户', user_id: 10004 }
         ];
-        const u = String(data.username || '').trim();
+        localStorage.setItem(key, JSON.stringify(preset));
+        return preset;
+    }
+
+    _saveRegisteredUsers(users) {
+        try {
+            localStorage.setItem('mock_registered_users', JSON.stringify(users));
+        } catch (_) {}
+    }
+
+    mockLogin(data) {
+        const u = String(data.username || '').trim().toLowerCase();
         const p = String(data.password || '').trim();
         if (!u || u.length < 2) return { success: false, msg: '请输入账号（至少2位）' };
         if (!p || p.length < 6) return { success: false, msg: '请输入密码（至少6位）' };
-        const user = mockUsers.find(x => x.username === u.toLowerCase() && x.password === p);
-        const uid = user ? user.user_id : (10000 + Math.abs(u.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 9000));
-        const nickname = user ? user.nickname : (u.length <= 8 ? u : u.slice(0, 8) + '…');
+        const registered = this._getRegisteredUsers();
+        const user = registered.find(x => x.username.toLowerCase() === u && x.password === p);
+        if (!user) {
+            return { success: false, msg: '账号或密码错误，请检查后重试。如未注册，请先注册。' };
+        }
         return {
             success: true,
             data: {
-                user_id: uid,
-                username: u,
-                nickname: nickname,
+                user_id: user.user_id,
+                username: user.username,
+                nickname: user.nickname || user.username,
                 avatar: '',
                 token: 'mock_token_' + Date.now(),
                 profile_completed: false,
@@ -343,23 +366,28 @@ class API {
     }
 
     mockRegister(data) {
-        // 预设的用户账号（用于检查重复）
-        const existingUsers = ['admin', 'test', 'demo', 'student'];
-        
-        // 检查用户名是否已存在
-        if (existingUsers.includes(data.username)) {
-            return {
-                success: false,
-                msg: '用户名已存在'
-            };
-        }
-        
+        const u = String(data.username || '').trim();
+        const p = String(data.password || '').trim();
+        const nickname = String(data.nickname || '').trim() || u;
+        if (!u || u.length < 2) return { success: false, msg: '请输入账号（至少2位）' };
+        if (!p || p.length < 6) return { success: false, msg: '请输入密码（至少6位）' };
+        const registered = this._getRegisteredUsers();
+        const exists = registered.some(x => x.username.toLowerCase() === u.toLowerCase());
+        if (exists) return { success: false, msg: '用户名已存在' };
+        const newUser = {
+            username: u,
+            password: p,
+            nickname: nickname,
+            user_id: 10000 + Math.floor(Math.random() * 9000)
+        };
+        registered.push(newUser);
+        this._saveRegisteredUsers(registered);
         return {
             success: true,
             data: {
-                user_id: 10000 + Math.floor(Math.random() * 9000),
-                username: data.username,
-                nickname: data.nickname,
+                user_id: newUser.user_id,
+                username: newUser.username,
+                nickname: newUser.nickname,
                 avatar: '',
                 created_at: new Date().toISOString()
             },

@@ -7631,12 +7631,21 @@ body::before {
 
 .status-badge {
     padding: 6px 14px;
-    background: var(--light-blue-bg);
-    color: var(--medium-blue);
     border-radius: 10px;
     font-size: 12px;
     font-weight: 600;
     font-family: var(--font-body);
+}
+
+.status-badge.status-pending {
+    background: var(--light-blue-bg);
+    color: var(--medium-blue);
+}
+
+.status-badge.status-done {
+    background: rgba(61, 214, 200, 0.12);
+    color: #0d9488;
+    font-weight: 700;
 }
 
 /* 卡片按钮 */

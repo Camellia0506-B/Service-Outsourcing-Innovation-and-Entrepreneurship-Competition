@@ -825,7 +825,8 @@ class CareerPlanningApp {
         if (profileResult.success) {
             profileCompleteness = profileResult.data.profile_completeness || 0;
         }
-        assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed);
+        assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed)
+            || !!(this.hasHistoryReport() && this.getLastAssessmentReportId());
         const matchingResult = await getRecommendedJobs(userId, 10);
         if (matchingResult.success && matchingResult.data) {
             matchedCount = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
@@ -840,7 +841,11 @@ class CareerPlanningApp {
                 fill.classList.toggle('has-progress', profileCompleteness > 0);
             }
             const badge = cards[0].querySelector('.status-badge');
-            if (badge) badge.textContent = profileCompleteness >= 80 ? '已完成' : '待完善';
+            if (badge) {
+                badge.textContent = profileCompleteness >= 80 ? '已完成' : '待完善';
+                badge.classList.toggle('status-done', profileCompleteness >= 80);
+                badge.classList.toggle('status-pending', profileCompleteness < 80);
+            }
         }
         if (cards[1]) {
             const fill = cards[1].querySelector('.progress-fill');
@@ -849,7 +854,20 @@ class CareerPlanningApp {
                 fill.classList.toggle('has-progress', assessmentCompleted);
             }
             const badge = cards[1].querySelector('.status-badge');
-            if (badge) badge.textContent = assessmentCompleted ? '已完成' : '待测评';
+            if (badge) {
+                badge.textContent = assessmentCompleted ? '已完成' : '待测评';
+                badge.classList.toggle('status-done', assessmentCompleted);
+                badge.classList.toggle('status-pending', !assessmentCompleted);
+            }
+            const btn = cards[1].querySelector('.card-btn');
+            if (btn) {
+                btn.classList.toggle('card-btn-secondary', !assessmentCompleted);
+                btn.classList.toggle('card-btn-primary', assessmentCompleted);
+                btn.classList.remove('card-btn-disabled');
+                btn.innerHTML = assessmentCompleted
+                    ? '查看报告<span class="btn-arrow">→</span>'
+                    : '开始测评<span class="btn-arrow">→</span>';
+            }
         }
         if (cards[2]) {
             const fill = cards[2].querySelector('.progress-fill');
@@ -859,7 +877,11 @@ class CareerPlanningApp {
                 fill.classList.toggle('has-progress', pct > 0);
             }
             const badge = cards[2].querySelector('.status-badge');
-            if (badge) badge.textContent = assessmentCompleted ? (matchedCount + ' 个匹配') : '完成测评后解锁';
+            if (badge) {
+                badge.textContent = assessmentCompleted ? (matchedCount + ' 个匹配') : '完成测评后解锁';
+                badge.classList.toggle('status-done', assessmentCompleted);
+                badge.classList.toggle('status-pending', !assessmentCompleted);
+            }
             const btn = cards[2].querySelector('.card-btn');
             if (btn) {
                 btn.classList.toggle('card-btn-disabled', !assessmentCompleted);
@@ -1207,7 +1229,11 @@ class CareerPlanningApp {
                     fill.style.width = Math.min(100, completeness) + '%';
                     fill.classList.toggle('has-progress', completeness > 0);
                 }
-                if (badge) badge.textContent = completeness >= 80 ? '已完成' : '待完善';
+                if (badge) {
+                    badge.textContent = completeness >= 80 ? '已完成' : '待完善';
+                    badge.classList.toggle('status-done', completeness >= 80);
+                    badge.classList.toggle('status-pending', completeness < 80);
+                }
             }
         } else {
             this.showToast(result.msg || '保存失败', 'error');
@@ -1824,6 +1850,10 @@ class CareerPlanningApp {
             if (result.success) {
                 if (result.data.status === 'completed') {
                     this.saveLastAssessmentReportId(this.currentReportId);
+                    if (this.currentUser) {
+                        this.currentUser.assessment_completed = true;
+                        saveUserInfo(this.currentUser);
+                    }
                     statusDiv.remove();
                     this.setViewReportButtonState('ready');
                     this.showAssessmentReportView();
