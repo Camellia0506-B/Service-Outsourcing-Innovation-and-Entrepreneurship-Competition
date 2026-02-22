@@ -56,6 +56,13 @@ body {
     position: relative;
 }
 
+#globalBlobs {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
 /* 背景网格纹理 */
 body::before {
     content: '';
@@ -212,19 +219,32 @@ body::before {
     font-weight: 500;
     font-size: 14px;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 激活项：蓝色文字 + 右侧上箭头指示（参考截图风格） */
+.nav-link.active {
+    color: #2d5be3;
+    font-weight: 600;
+    background: transparent;
+}
+
+.nav-link.active::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 6px solid #2d5be3;
+    margin-left: 2px;
+    flex-shrink: 0;
 }
 
 .nav-link:hover {
     background: #eef3ff;
     color: #2d5be3;
-}
-
-.nav-link.active {
-    background: #eef3ff;
-    color: #2d5be3;
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-weight: 600;
 }
 
 .nav-user {
@@ -349,6 +369,8 @@ body::before {
     font-size: 14px;
     transition: all 0.2s;
     font-family: inherit;
+    background-color: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .form-group input:focus,
@@ -360,17 +382,35 @@ body::before {
 }
 
 /* ========== 出生日期输入框（稳定版）：文本输入 + 原生日历按钮 ========== */
+/* 与姓名/手机号/邮箱一致：透明背景，透出页面蓝灰渐变 */
 .date-input-wrapper {
     position: relative;
     width: 100%;
+    background-color: transparent;
+    border-radius: 8px;
 }
-
-.date-input-wrapper > input[type="text"] {
+.date-input-wrapper > input[type="text"],
+#birthDate {
     width: 100%;
     padding: 12px 52px 12px 16px;
     height: 44px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background-color: transparent !important;
+    background-image: none !important;
+    color: var(--text-primary) !important;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: all 0.2s;
 }
-
+.date-input-wrapper > input[type="text"]:focus,
+#birthDate:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
 .date-picker-btn {
     position: absolute;
     right: 10px;
@@ -7893,7 +7933,7 @@ body::before {
 #dashboardPage.dashboard-page {
     min-height: 100vh;
     padding: 40px 24px 60px;
-    background: var(--page-bg);
+    background: transparent;
     position: relative;
     z-index: 1;
     max-width: 1400px;

@@ -186,10 +186,17 @@ class API {
                 return { success: true, data: { email: options.body?.email || '', expire_minutes: 10 }, msg: '验证码已发送' };
             case '/auth/forgot-password/reset':
                 return { success: true, msg: '密码重置成功' };
-            case '/profile/info':
-                return { success: true, data: this.mockProfileData() };
-            case '/profile/update':
+            case '/profile/info': {
+                const userId = options.body?.user_id;
+                const saved = userId ? this._getProfileSaved(userId) : false;
+                const profileData = saved ? this.mockProfileData() : this.mockEmptyProfile(userId);
+                return { success: true, data: profileData };
+            }
+            case '/profile/update': {
+                const userId = options.body?.user_id;
+                if (userId) this._setProfileSaved(userId);
                 return { success: true, data: { profile_completeness: 90 }, msg: '档案更新成功' };
+            }
             case '/profile/upload-resume':
                 return { success: true, data: { task_id: 'task_' + Date.now() }, msg: '简历上传成功' };
             case '/profile/resume-parse-result':
@@ -341,14 +348,27 @@ class API {
     }
 
     mockLogin(data) {
-        const u = String(data.username || '').trim().toLowerCase();
+        const uRaw = String(data.username || '').trim();
+        const u = uRaw.toLowerCase();
         const p = String(data.password || '').trim();
         if (!u || u.length < 2) return { success: false, msg: '请输入账号（至少2位）' };
         if (!p || p.length < 6) return { success: false, msg: '请输入密码（至少6位）' };
         const registered = this._getRegisteredUsers();
-        const user = registered.find(x => x.username.toLowerCase() === u && x.password === p);
+        let user = registered.find(x => x.username.toLowerCase() === u && x.password === p);
         if (!user) {
-            return { success: false, msg: '账号或密码错误，请检查后重试。如未注册，请先注册。' };
+            const exists = registered.some(x => x.username.toLowerCase() === u);
+            if (exists) {
+                return { success: false, msg: '账号或密码错误，请检查后重试。' };
+            }
+            // 模拟模式：新账号自动创建虚拟用户身份，无需事先注册（与启动指南一致）
+            user = {
+                username: uRaw,
+                password: p,
+                nickname: uRaw,
+                user_id: 10000 + Math.floor(Math.random() * 9000)
+            };
+            registered.push(user);
+            this._saveRegisteredUsers(registered);
         }
         return {
             success: true,
@@ -392,6 +412,31 @@ class API {
                 created_at: new Date().toISOString()
             },
             msg: '注册成功'
+        };
+    }
+
+    _getProfileSaved(userId) {
+        try {
+            const saved = JSON.parse(localStorage.getItem('mock_profile_saved') || '{}');
+            return !!saved[String(userId)];
+        } catch (_) { return false; }
+    }
+
+    _setProfileSaved(userId) {
+        try {
+            const saved = JSON.parse(localStorage.getItem('mock_profile_saved') || '{}');
+            saved[String(userId)] = true;
+            localStorage.setItem('mock_profile_saved', JSON.stringify(saved));
+        } catch (_) {}
+    }
+
+    mockEmptyProfile(userId) {
+        return {
+            user_id: userId,
+            basic_info: {},
+            education_info: {},
+            skills: [],
+            profile_completeness: 0
         };
     }
 

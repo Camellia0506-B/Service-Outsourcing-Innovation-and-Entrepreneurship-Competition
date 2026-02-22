@@ -408,41 +408,22 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
+    /** 仅当简历中有明确的「姓名/Name」标签时才提取，否则不自动识别姓名，避免误填 */
     private static String extractName(String text) {
         if (text == null) return null;
         String[] lines = text.split("\\R");
-        // 策略1：前几行中找"姓名/Name"标签后的值，且优先使用含中文的姓名
-        int max = Math.min(lines.length, 10);
         Pattern p1 = Pattern.compile("^(姓名|Name)[:：\\s]+(.+)$", Pattern.CASE_INSENSITIVE);
+        int max = Math.min(lines.length, 10);
         for (int i = 0; i < max; i++) {
             String line = lines[i].trim();
             Matcher m = p1.matcher(line);
             if (m.find()) {
                 String v = m.group(2).trim();
-                // 取第一个词（可能姓名后面有联系方式）
                 String[] parts = v.split("[\\s\\|\\/\\-]");
                 if (parts.length > 0) v = parts[0].trim();
                 if (!v.isEmpty() && v.length() <= 20 && !v.contains("@") && !v.matches(".*\\d{11}.*")) {
-                    // 若为纯英文/数字且很短（如 AA），不采纳，改由中文行推断
                     if (!v.matches(".*[\\u4e00-\\u9fa5].*") && v.length() <= 4) continue;
                     return v;
-                }
-            }
-        }
-        // 策略2：前几行中提取2-4个连续汉字作为姓名（允许前后有其他字符）
-        for (int i = 0; i < Math.min(8, lines.length); i++) {
-            String line = lines[i].trim();
-            // 匹配2-4个连续汉字，前后可以有空格或标点
-            Pattern namePattern = Pattern.compile("([\\u4e00-\\u9fa5]{2,4})");
-            Matcher nameMatcher = namePattern.matcher(line);
-            if (nameMatcher.find()) {
-                String candidate = nameMatcher.group(1);
-                // 排除包含日期、数字、邮箱、电话的行
-                if (!line.contains("@") && !line.matches(".*\\d{11}.*") 
-                        && !line.matches(".*\\d{4}[年\\-.]\\d.*") && !line.contains("年") && !line.contains("月")
-                        && !candidate.contains("教育") && !candidate.contains("专业") && !candidate.contains("大学")
-                        && candidate.length() >= 2 && candidate.length() <= 4) {
-                    return candidate;
                 }
             }
         }
