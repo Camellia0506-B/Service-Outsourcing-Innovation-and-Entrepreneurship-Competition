@@ -785,6 +785,7 @@ class CareerPlanningApp {
         this.showToast('注册成功，正在登录...', 'success');
         const loginResult = await login(username, password);
         if (loginResult.success) {
+            if (result.data && result.data.avatar) loginResult.data.avatar = result.data.avatar;
             localStorage.setItem('token', loginResult.data.token);
             saveUserInfo(loginResult.data);
             this.currentUser = loginResult.data;

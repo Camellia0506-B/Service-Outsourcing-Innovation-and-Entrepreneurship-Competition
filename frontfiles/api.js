@@ -165,6 +165,16 @@ class API {
         }
     }
 
+    // 将 File 转为 data URL（mock 下存头像用）
+    _fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result);
+            r.onerror = () => reject(new Error('头像读取失败'));
+            r.readAsDataURL(file);
+        });
+    }
+
     // 模拟请求方法
     async mockRequest(endpoint, options) {
         console.log('Mock请求:', endpoint, options);
@@ -174,6 +184,14 @@ class API {
             const obj = {};
             options.formData.forEach((v, k) => { obj[k] = v; });
             data = obj;
+        }
+        // 注册时若有头像文件，转为 data URL 以便 mock 存储并在导航栏显示
+        if (endpoint === '/auth/register' && data.avatar instanceof File) {
+            try {
+                data.avatar = await this._fileToDataUrl(data.avatar);
+            } catch (_) {
+                data.avatar = '';
+            }
         }
         switch(endpoint) {
             case '/auth/login':
@@ -347,6 +365,25 @@ class API {
         } catch (_) {}
     }
 
+    // 头像单独存储，避免大 data URL 撑爆用户列表导致保存失败
+    _getMockAvatars() {
+        try {
+            const raw = localStorage.getItem('mock_avatars');
+            return raw ? JSON.parse(raw) : {};
+        } catch (_) { return {}; }
+    }
+    _saveMockAvatar(userId, dataUrl) {
+        try {
+            const avatars = this._getMockAvatars();
+            avatars[String(userId)] = dataUrl;
+            localStorage.setItem('mock_avatars', JSON.stringify(avatars));
+        } catch (_) {}
+    }
+    _getMockAvatar(userId) {
+        const avatars = this._getMockAvatars();
+        return avatars[String(userId)] || '';
+    }
+
     mockLogin(data) {
         const uRaw = String(data.username || '').trim();
         const u = uRaw.toLowerCase();
@@ -370,13 +407,14 @@ class API {
             registered.push(user);
             this._saveRegisteredUsers(registered);
         }
+        const avatar = this._getMockAvatar(user.user_id) || user.avatar || '';
         return {
             success: true,
             data: {
                 user_id: user.user_id,
                 username: user.username,
                 nickname: user.nickname || user.username,
-                avatar: '',
+                avatar: avatar,
                 token: 'mock_token_' + Date.now(),
                 profile_completed: false,
                 assessment_completed: false
@@ -394,6 +432,7 @@ class API {
         const registered = this._getRegisteredUsers();
         const exists = registered.some(x => x.username.toLowerCase() === u.toLowerCase());
         if (exists) return { success: false, msg: '用户名已存在' };
+        const avatarUrl = (typeof data.avatar === 'string' && data.avatar.startsWith('data:')) ? data.avatar : '';
         const newUser = {
             username: u,
             password: p,
@@ -402,13 +441,14 @@ class API {
         };
         registered.push(newUser);
         this._saveRegisteredUsers(registered);
+        if (avatarUrl) this._saveMockAvatar(newUser.user_id, avatarUrl);
         return {
             success: true,
             data: {
                 user_id: newUser.user_id,
                 username: newUser.username,
                 nickname: newUser.nickname,
-                avatar: '',
+                avatar: avatarUrl,
                 created_at: new Date().toISOString()
             },
             msg: '注册成功'
