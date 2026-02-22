@@ -304,6 +304,24 @@ class API {
             case '/career/check-completeness':
                 return { success: true, data: this.mockCareerCompleteness() };
             default:
+                if (typeof endpoint === 'string' && endpoint.startsWith('/assessment/report-history')) {
+                    const q = endpoint.indexOf('?');
+                    let userId = null;
+                    if (q >= 0) {
+                        const params = new URLSearchParams(endpoint.slice(q));
+                        const u = params.get('user_id');
+                        if (u != null) userId = parseInt(u, 10);
+                    }
+                    let list = [];
+                    if (userId) {
+                        try {
+                            const raw = localStorage.getItem('report_history_' + userId);
+                            if (raw) list = JSON.parse(raw);
+                            if (!Array.isArray(list)) list = [];
+                        } catch (_) {}
+                    }
+                    return { success: true, data: list };
+                }
                 if (typeof endpoint === 'string' && endpoint.startsWith('/job/career-path')) {
                     const q = endpoint.indexOf('jobId='); const cpJobId = (q >= 0 ? (endpoint.slice(q + 6).split('&')[0] || '') : '') || 'job_001';
                     const cpJobs = this.mockJobs();

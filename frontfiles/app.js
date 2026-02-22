@@ -1455,6 +1455,26 @@ class CareerPlanningApp {
         if (userId && reportId) localStorage.setItem('last_assessment_report_id_' + userId, reportId);
     }
 
+    // 将单条测评报告追加到本地历史记录（用于历史报告列表展示与 Mock 模式）
+    appendAssessmentReportHistory(reportId, created_at, extra = {}) {
+        const userId = getCurrentUserId();
+        if (!userId || !reportId) return;
+        const key = 'report_history_' + userId;
+        let list = [];
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw) list = JSON.parse(raw);
+            if (!Array.isArray(list)) list = [];
+        } catch (_) {}
+        const created = created_at || new Date().toISOString();
+        const entry = { report_id: reportId, created_at: created, ...extra };
+        const exists = list.some(item => (item.report_id || item.id) === reportId);
+        if (!exists) list.unshift(entry);
+        try {
+            localStorage.setItem(key, JSON.stringify(list));
+        } catch (_) {}
+    }
+
     // 恢复：读取当前用户最近一次测评报告 ID
     getLastAssessmentReportId() {
         const userId = getCurrentUserId();
@@ -1551,10 +1571,19 @@ class CareerPlanningApp {
         historyDiv.classList.remove('hidden');
         listDiv.innerHTML = '<div class="loading-message">加载测评历史中...</div>';
         try {
-            const result = await getReportHistory(userId);
-            const list = result.success && result.data
+            let result = await getReportHistory(userId);
+            let list = result.success && result.data
                 ? (result.data.list || (Array.isArray(result.data) ? result.data : []))
                 : [];
+            // 兼容：若历史为空但存在“最近一次报告”，将其写入历史并重新拉取
+            const lastId = this.getLastAssessmentReportId();
+            if (list.length === 0 && lastId) {
+                this.appendAssessmentReportHistory(lastId, new Date().toISOString());
+                result = await getReportHistory(userId);
+                list = result.success && result.data
+                    ? (result.data.list || (Array.isArray(result.data) ? result.data : []))
+                    : [];
+            }
             if (list.length > 0) {
                 this.renderAssessmentReportHistory(list);
                 this.showToast('已加载 ' + list.length + ' 条测评历史报告', 'success');
@@ -1830,6 +1859,15 @@ class CareerPlanningApp {
             if (result.success) {
                 if (result.data.status === 'completed') {
                     this.saveLastAssessmentReportId(this.currentReportId);
+                    const created = result.data.created_at || new Date().toISOString();
+                    const interest = result.data.interest_analysis || {};
+                    const personality = result.data.personality_analysis || {};
+                    const primary = interest.primary_interest || {};
+                    this.appendAssessmentReportHistory(this.currentReportId, created, {
+                        holland_code: interest.holland_code || '',
+                        mbti: personality.mbti_type || '',
+                        match_score: primary.score != null ? primary.score : 0
+                    });
                     if (this.currentUser) {
                         this.currentUser.assessment_completed = true;
                         saveUserInfo(this.currentUser);
