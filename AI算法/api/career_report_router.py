@@ -1,7 +1,7 @@
 """
 职业规划报告模块 - 路由层
-与测评报告打通：职业规划报告即测评报告，走 Flask AI 服务（5001）
-接口：generate-report / report-status / view-report
+与测评报告打通：职业规划报告基于测评报告转换为 API 7.x 格式（section_1~4, summary, metadata）
+接口：7.1 generate-report ~ 7.7 report-history
 """
 
 from datetime import datetime, timedelta
@@ -9,6 +9,12 @@ from typing import Optional
 import time
 from flask import Blueprint, request, jsonify
 from assessment.assessment_service import get_assessment_service
+from career_report.career_report_service import (
+    get_career_report_with_edits,
+    apply_edits_and_save,
+    compute_completeness,
+    list_reports_for_career_history,
+)
 from utils.logger_handler import logger
 
 
@@ -36,26 +42,20 @@ def _latest_report_id_for_user(service, user_id: int) -> Optional[str]:
 
 
 # ================================================================
-# POST /api/v1/career/generate-report
+# 7.1 POST /api/v1/career/generate-report
 # ================================================================
 @career_bp.route("/generate-report", methods=["POST"])
 def generate_report():
     """
-    生成职业规划报告。
-    实际逻辑：返回该用户最近一次测评报告的任务 ID，供前端轮询；
-    若用户从未完成测评，则提示先完成职业测评。
-    请求体：{ user_id }
-    响应：{ task_id [, report_id, status ] }
+    7.1 生成职业规划报告。
+    请求体：{ user_id, target_jobs?, preferences? }
+    响应：{ report_id, status }, msg 报告生成中，预计需要30秒...
     """
     try:
-        body = request.get_json()
-        if not body:
-            return error_response(400, "请提供JSON请求体")
-
+        body = request.get_json() or {}
         user_id = body.get("user_id")
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
-
         try:
             user_id = int(user_id)
         except (TypeError, ValueError):
@@ -63,17 +63,15 @@ def generate_report():
 
         service = get_assessment_service()
         report_id = _latest_report_id_for_user(service, user_id)
-
         if not report_id:
             return error_response(400, "请先完成职业测评，完成后再生成报告")
 
         task = service.tasks.get(report_id)
         status = (task or {}).get("status", "processing")
         return success_response(
-            {"task_id": report_id, "report_id": report_id, "status": status},
-            msg="报告生成中" if status == "processing" else "报告已就绪"
+            {"report_id": report_id, "status": status},
+            msg="报告生成中，预计需要30秒..." if status == "processing" else "报告已就绪"
         )
-
     except Exception as e:
         logger.error(f"[API] /career/generate-report 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
@@ -124,63 +122,46 @@ def report():
 
 
 # ================================================================
-# POST /api/v1/career/view-report
+# 7.2 POST /api/v1/career/view-report 与 /report
 # ================================================================
 @career_bp.route("/view-report", methods=["POST"])
 def view_report():
     """
-    查看职业规划报告内容。即测评报告内容。
+    7.2 获取职业规划报告。返回 API 文档格式（section_1_job_matching, metadata 等）。
     请求体：{ user_id, report_id }
-    响应：完整报告对象（与 /assessment/report 一致）
     """
     try:
-        body = request.get_json()
-        if not body:
-            return error_response(400, "请提供JSON请求体")
-
+        body = request.get_json() or {}
         report_id = body.get("report_id")
         if not report_id:
             return error_response(400, "请提供 report_id 参数")
-
-        service = get_assessment_service()
         user_id = body.get("user_id")
         if user_id is not None:
             try:
                 user_id = int(user_id)
-                report = service.get_report(user_id, report_id)
             except (TypeError, ValueError):
                 return error_response(400, "user_id 必须为数字")
-        else:
-            # 仅传 report_id 时：先查任务状态，再查已完成的报告
-            task = service.tasks.get(report_id)
-            if task and task.get("status") == "processing":
-                report = {"report_id": report_id, "status": "processing", "message": "报告生成中，请稍后查询"}
-            elif task and task.get("status") == "failed":
-                report = {"report_id": report_id, "status": "failed", "error": task.get("error", "未知错误")}
-            else:
-                report = service.reports.get(report_id)
 
+        service = get_assessment_service()
+        report = get_career_report_with_edits(service, report_id, user_id)
         if not report:
             return error_response(404, "报告不存在或已过期")
-
         if report.get("status") == "processing":
             return success_response(report, msg="报告生成中...")
         if report.get("status") == "failed":
             return error_response(500, report.get("error", "报告生成失败"))
-
-        return success_response(report, msg="报告获取成功")
-
+        return success_response(report, msg="success")
     except Exception as e:
         logger.error(f"[API] /career/view-report 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
 
 
 # ================================================================
-# POST /api/v1/career/report-history  （前端用 POST 传 user_id, page, size）
+# 7.7 POST /api/v1/career/report-history
 # ================================================================
 @career_bp.route("/report-history", methods=["POST"])
 def report_history():
-    """职业规划报告历史列表（与测评报告打通）"""
+    """7.7 获取历史职业规划报告列表。返回 total, list（含 report_id, created_at, status, primary_career, completeness, last_viewed）。"""
     try:
         body = request.get_json() or {}
         user_id = body.get("user_id")
@@ -193,7 +174,7 @@ def report_history():
         page = max(1, int(body.get("page", 1)))
         size = max(1, min(50, int(body.get("size", 10))))
         service = get_assessment_service()
-        all_list = service.list_reports_for_user(user_id)
+        all_list = list_reports_for_career_history(service, user_id)
         total = len(all_list)
         start = (page - 1) * size
         list_page = all_list[start : start + size]
@@ -204,27 +185,102 @@ def report_history():
 
 
 # ================================================================
-# 以下为占位接口，避免前端 404；后续可接入真实逻辑
+# 7.3 POST /api/v1/career/edit-report
 # ================================================================
 @career_bp.route("/edit-report", methods=["POST"])
 def edit_report():
-    """编辑报告（占位）"""
-    return success_response({"updated_at": datetime.now().isoformat()}, msg="已保存")
+    """
+    7.3 编辑职业规划报告。应用 edits 并持久化。
+    请求体：{ report_id, user_id, edits: { "path": value, ... } }
+    响应：{ updated_at }
+    """
+    try:
+        body = request.get_json() or {}
+        report_id = body.get("report_id")
+        edits = body.get("edits")
+        if not report_id:
+            return error_response(400, "请提供 report_id 参数")
+        if not edits or not isinstance(edits, dict):
+            return error_response(400, "请提供 edits 对象")
+        updated_at = apply_edits_and_save(report_id, edits)
+        return success_response({"updated_at": updated_at}, msg="报告编辑成功")
+    except Exception as e:
+        logger.error(f"[API] /career/edit-report 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
 
 
+# ================================================================
+# 7.4 POST /api/v1/career/ai-polish-report
+# ================================================================
 @career_bp.route("/ai-polish-report", methods=["POST"])
 def ai_polish_report():
-    """AI 润色报告（占位）"""
-    return success_response({"task_id": "polish_" + str(time.time()), "status": "processing"}, msg="AI润色中...")
+    """
+    7.4 AI 润色报告。返回 task_id 供前端轮询（占位实现）。
+    请求体：{ report_id, polish_options? }
+    响应：{ task_id, status: "processing" }
+    """
+    try:
+        body = request.get_json() or {}
+        report_id = body.get("report_id", "")
+        task_id = "polish_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + str(int(time.time() * 1000) % 10000)
+        return success_response({"task_id": task_id, "status": "processing"}, msg="AI优化中...")
+    except Exception as e:
+        logger.error(f"[API] /career/ai-polish-report 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
 
 
+# ================================================================
+# 7.5 POST /api/v1/career/export-report
+# ================================================================
 @career_bp.route("/export-report", methods=["POST"])
 def export_report():
-    """导出报告（占位）"""
-    return success_response({"download_url": "/downloads/report.pdf", "expires_at": (datetime.now() + timedelta(days=7)).isoformat()}, msg="导出链接已生成")
+    """
+    7.5 导出职业规划报告为 PDF/Word。返回下载链接（占位实现）。
+    请求体：{ report_id, format?, include_sections?, template_style? }
+    响应：{ download_url, file_size, expires_at }
+    """
+    try:
+        body = request.get_json() or {}
+        report_id = body.get("report_id", "")
+        fmt = body.get("format", "pdf")
+        expires = datetime.now() + timedelta(days=7)
+        filename = f"career_report_{report_id}_{datetime.now().strftime('%Y%m%d')}.{('docx' if fmt == 'docx' else 'pdf')}"
+        return success_response({
+            "download_url": f"/downloads/{filename}",
+            "file_size": "2.5MB",
+            "expires_at": expires.strftime("%Y-%m-%d %H:%M:%S"),
+        }, msg="报告导出成功")
+    except Exception as e:
+        logger.error(f"[API] /career/export-report 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
 
 
+# ================================================================
+# 7.6 POST /api/v1/career/check-completeness
+# ================================================================
 @career_bp.route("/check-completeness", methods=["POST"])
 def check_completeness():
-    """报告完整性检查（占位）"""
-    return success_response({"completeness": 85, "suggestions": []}, msg="success")
+    """
+    7.6 获取报告完整性检查。AI 检查报告完整性和质量。
+    请求体：{ report_id [, user_id] }
+    响应：{ completeness_score, quality_score, section_completeness, suggestions, strengths }
+    """
+    try:
+        body = request.get_json() or {}
+        report_id = body.get("report_id")
+        user_id = body.get("user_id")
+        if not report_id:
+            return error_response(400, "请提供 report_id 参数")
+
+        service = get_assessment_service()
+        report = get_career_report_with_edits(service, report_id, int(user_id) if user_id else None)
+        if not report:
+            return error_response(404, "报告不存在")
+        if report.get("status") in ("processing", "failed"):
+            return error_response(400, "报告尚未完成生成，无法检查完整性")
+
+        result = compute_completeness(report)
+        return success_response(result, msg="success")
+    except Exception as e:
+        logger.error(f"[API] /career/check-completeness 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
