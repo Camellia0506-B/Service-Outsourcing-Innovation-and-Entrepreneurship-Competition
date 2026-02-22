@@ -8367,11 +8367,6 @@ body::before {
     color: #1a1a2e;
 }
 
-.hero-title-ready {
-    font-size: 1.22em;
-    font-weight: 900;
-}
-
 .hero-subtitle {
     font-family: var(--font-body);
     font-size: 15px;
