@@ -46,10 +46,12 @@
             </div>
         </nav>
 
-        <!-- 漂移光晕背景 -->
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
+        <!-- 漂移光晕背景（仅登录/注册页显示，主应用使用 dashboardBg） -->
+        <div id="globalBlobs">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+        </div>
         
         <!-- 登录页面 -->
         <div id="loginPage" class="page">
@@ -341,9 +343,6 @@
                         <h3 class="card-title">完善个人档案</h3>
                         <p class="card-description">填写您的教育背景、专业技能和项目经历，AI将为你构建完整的职业能力画像</p>
                         <div class="card-status">
-                            <div class="progress-bar-wrap">
-                                <div class="progress-bar" data-progress="0"><div class="progress-fill"></div></div>
-                            </div>
                             <span class="status-badge">待完善</span>
                         </div>
                     </div>
@@ -365,9 +364,6 @@
                         <h3 class="card-title">职业测评</h3>
                         <p class="card-description">完成 Holland RIASEC × MBTI 双维度综合测评，深入了解您的职业兴趣与性格特质</p>
                         <div class="card-status">
-                            <div class="progress-bar-wrap">
-                                <div class="progress-bar" data-progress="0"><div class="progress-fill"></div></div>
-                            </div>
                             <span class="status-badge">待测评</span>
                         </div>
                     </div>
@@ -387,9 +383,6 @@
                         <h3 class="card-title">岗位匹配</h3>
                         <p class="card-description">查看与您匹配度最高的相关岗位，获取人岗匹配度分析和个性化规划报告</p>
                         <div class="card-status">
-                            <div class="progress-bar-wrap">
-                                <div class="progress-bar" data-progress="0"><div class="progress-fill"></div></div>
-                            </div>
                             <span class="status-badge">完成测评后解锁</span>
                         </div>
                     </div>
