@@ -328,7 +328,8 @@ class CareerPlanningApp {
                         });
                     } else {
                         this._graphJobSuggestions = [];
-                        graphSuggestionsEl.innerHTML = '<div class="graph-suggestion-empty">暂无匹配岗位</div>';
+                        const hint = (!result.success && result.msg && result.msg.indexOf('5001') !== -1) ? result.msg : '暂无匹配岗位';
+                        graphSuggestionsEl.innerHTML = '<div class="graph-suggestion-empty">' + (hint.replace(/</g, '&lt;')) + '</div>';
                         graphSuggestionsEl.classList.remove('hidden');
                     }
                 }, 300);
@@ -3074,7 +3075,7 @@ class CareerPlanningApp {
             const softTags = (job.tags || []).slice(0, 4).map(t => `<span class="tag-soft">${(t + '').replace(/</g, '&lt;')}</span>`).join('');
             const techTags = (job.skills || []).slice(0, 4).map(s => `<span class="tag-tech">${(s + '').replace(/</g, '&lt;')}</span>`).join('');
             const stripeStyle = stripeGradients[idx % 3];
-            const jobName = (job.job_name || '-').replace(/</g, '&lt;');
+            const jobName = (job.job_name || job.jobName || '-').replace(/</g, '&lt;');
             const industry = (job.industry || '-').replace(/</g, '&lt;');
             const level = (job.level || '-').replace(/</g, '&lt;');
             const salary = (job.avg_salary || '-').replace(/</g, '&lt;');
@@ -3099,7 +3100,8 @@ class CareerPlanningApp {
             `;
             jobCard.querySelector('.btn-profile')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.showJobProfileDetail(job.job_id || job.job_name, !job.job_id);
+                const rawName = (job.job_name || job.jobName || '-').trim();
+                this.openJobProfileModalStream(rawName, (job.description || job.job_description || '').trim());
             });
             jobCard.querySelector('.btn-realdata')?.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -3200,23 +3202,476 @@ class CareerPlanningApp {
         });
     }
 
-    // 4.2 显示岗位详细画像（弹窗 Modal）
-    async showJobProfileDetail(jobIdOrName, byName = false) {
+    // 精选岗位 ID 前缀（前端写死的 12 条），点击时用本地数据渲染详情，保证卡片与弹窗一致
+    _isFeaturedJobId(idOrName) {
+        if (!idOrName || typeof idOrName !== 'string') return false;
+        const s = idOrName.trim();
+        return /^job_0(0[1-9]|1[0-2])$/.test(s);
+    }
+
+    _featuredJobToDetailData(featured) {
+        if (!featured) return null;
+        const name = featured.jobName || featured.job_name || '-';
+        const skills = featured.techSkills || featured.skills || [];
+        return {
+            job_id: featured.jobId || featured.job_id,
+            job_name: name,
+            basic_info: {
+                avg_salary: featured.salaryRange || featured.avg_salary || '-',
+                industry: featured.industry || '-',
+                level: featured.level || '-',
+                work_locations: [],
+                company_scales: [],
+                description: ''
+            },
+            market_analysis: { demand_score: featured.demandScore ?? null, growth_trend: featured.trend || '稳定' },
+            skills: Array.isArray(skills) ? skills : [],
+            description: `该岗位暂无详细画像，可在「AI生成」页输入「${name}」生成完整画像。`
+        };
+    }
+
+    // 4.2 岗位画像弹窗：全部走流式 AI 生成（无硬编码数据）
+    openJobProfileModalStream(jobName, jobDescription) {
+        const self = this;
         const modal = document.getElementById('jobDetailModal');
         const contentEl = document.getElementById('jobDetailModalContent');
         if (!modal || !contentEl) return;
-
-        contentEl.innerHTML = '<div class="loading-message">加载岗位详情中...</div>';
-        modal.classList.remove('hidden');
-
-        const result = await getJobProfileDetail(jobIdOrName, !byName);
-
-        if (result.success) {
-            this._currentJobDetail = { job_id: result.data.job_id, job_name: result.data.job_name };
-            this.renderJobProfileDetail(result.data, contentEl);
-        } else {
-            contentEl.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
+        if (!self || typeof self._tryPartialRender !== 'function') {
+            contentEl.innerHTML = '<div class="hint-text">加载异常，请刷新页面重试</div>';
+            return;
         }
+
+        self._currentJobDetail = { job_id: null, job_name: jobName };
+        modal.classList.remove('hidden');
+        self._renderStreamingSkeleton(contentEl, jobName);
+
+        const streamUrl = typeof getJobProfileStreamURL === 'function' ? getJobProfileStreamURL() : (window.API_CONFIG && (window.API_CONFIG.jobProfilesBaseURL || window.API_CONFIG.assessmentBaseURL) ? (window.API_CONFIG.jobProfilesBaseURL || window.API_CONFIG.assessmentBaseURL) + '/job/generate-profile-stream' : 'http://localhost:5001/api/v1/job/generate-profile-stream');
+        let buffer = '';
+
+        fetch(streamUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_name: jobName, job_description: jobDescription || '' })
+        }).then(res => {
+            if (!res.ok) {
+                if (contentEl) contentEl.innerHTML = '<div class="hint-text">请求失败: ' + res.status + '，请确认 AI 服务已启动</div>';
+                return;
+            }
+            return res.body.getReader();
+        }).then(reader => {
+            if (!reader) return;
+            const decoder = new TextDecoder();
+            const readNext = () => {
+                reader.read().then(({ done, value }) => {
+                    if (done) {
+                        let parsed = null;
+                        try { parsed = JSON.parse(buffer); } catch (_) {
+                            const start = buffer.indexOf('{');
+                            if (start >= 0) {
+                                let depth = 0, end = -1;
+                                for (let i = start; i < buffer.length; i++) {
+                                    if (buffer[i] === '{') depth++; else if (buffer[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+                                }
+                                if (end > start) try { parsed = JSON.parse(buffer.slice(start, end + 1)); } catch (_) {}
+                            }
+                        }
+                        if (parsed && !parsed.error && self && self._mapStreamToProfileData && self.renderJobProfileDetail) {
+                            const mapped = self._mapStreamToProfileData(jobName, parsed);
+                            self.renderJobProfileDetail(mapped, contentEl);
+                        } else if (parsed && parsed.error && contentEl) {
+                            contentEl.innerHTML = '<div class="hint-text">生成异常: ' + (parsed.error || '').replace(/</g, '&lt;') + '</div>';
+                        } else if (contentEl) {
+                            contentEl.querySelectorAll('.streaming-cursor').forEach(el => el.classList.remove('streaming-cursor'));
+                        }
+                        return;
+                    }
+                    try {
+                        const chunk = decoder.decode(value != null ? value : new Uint8Array(0), { stream: true });
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (!line.startsWith('data: ')) continue;
+                            const payload = line.slice(6).trim();
+                            if (payload === '[DONE]') continue;
+                            try {
+                                const obj = JSON.parse(payload);
+                                if (obj.text) buffer += obj.text;
+                                if (obj.error) buffer += '';
+                            } catch (_) {}
+                        }
+                        if (self && typeof self._tryPartialRender === 'function') self._tryPartialRender(contentEl, jobName, buffer);
+                    } catch (e) {
+                        if (contentEl) contentEl.innerHTML = '<div class="hint-text">解析数据异常，请重试</div>';
+                        return;
+                    }
+                    return readNext();
+                }).catch(err => {
+                    const msg = (err && err.message) ? err.message : '连接中断，请重试';
+                    if (contentEl) contentEl.innerHTML = '<div class="hint-text">网络错误: ' + String(msg).replace(/</g, '&lt;') + '</div>';
+                });
+            };
+            readNext();
+        }).catch(err => {
+            const msg = (err && err.message) ? err.message : '无法连接';
+            if (contentEl) contentEl.innerHTML = '<div class="hint-text">无法连接 AI 服务，请确认已启动 (http://localhost:5001)。' + String(msg).replace(/</g, '&lt;') + '</div>';
+        });
+    }
+
+    _renderStreamingSkeleton(container, jobName) {
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        container.innerHTML = `
+            <div class="modal-header">
+                <div class="header-top">
+                    <div>
+                        <div class="job-title">${esc(jobName)}</div>
+                        <div class="job-meta"></div>
+                    </div>
+                    <div class="salary-badge">—</div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item"><span class="stat-icon">\uD83D\uDCCD</span><div class="stat-label">工作地点</div><div class="stat-value"><span class="skeleton" style="width:60px;display:inline-block"></span></div></div>
+                    <div class="stat-item"><span class="stat-icon">\uD83C\uDFE2</span><div class="stat-label">公司规模</div><div class="stat-value"><span class="skeleton" style="width:50px;display:inline-block"></span></div></div>
+                    <div class="stat-item"><span class="stat-icon">\uD83D\uDCC8</span><div class="stat-label">需求热度</div><div class="stat-value"><span class="skeleton" style="width:40px;display:inline-block"></span><div class="stat-demand-bar"><div class="stat-demand-fill" style="width:0%"></div></div></div></div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="section"><div class="section-title">快速概览</div>
+                    <div class="quick-stats">
+                        <div class="qs-card"><div class="qs-icon">\uD83C\uDF93</div><div class="qs-label">学历要求</div><div class="qs-val"><span class="skeleton" style="width:70px;display:inline-block"></span></div></div>
+                        <div class="qs-card"><div class="qs-icon">\u23F1\uFE0F</div><div class="qs-label">工作经验</div><div class="qs-val"><span class="skeleton" style="width:60px;display:inline-block"></span></div></div>
+                        <div class="qs-card"><div class="qs-icon">\uD83C\uDFC6</div><div class="qs-label">竞赛加分</div><div class="qs-val"><span class="skeleton" style="width:80px;display:inline-block"></span></div></div>
+                        <div class="qs-card"><div class="qs-icon">\uD83D\uDCBC</div><div class="qs-label">实习要求</div><div class="qs-val"><span class="skeleton" style="width:50px;display:inline-block"></span></div></div>
+                    </div>
+                </div>
+                <div class="section"><div class="section-title">核心技能要求</div><div class="skills-grid"><span class="skeleton" style="width:80px;height:28px;display:inline-block"></span><span class="skeleton" style="width:90px;height:28px;display:inline-block"></span></div></div>
+                <div class="section"><div class="section-title">岗位描述</div><p class="job-detail-desc streaming-cursor">正在生成...</p></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="jobDetailBtnGraph">查看关联图谱</button>
+                <button type="button" class="btn btn-primary" id="jobDetailBtnTarget">加入目标岗位</button>
+            </div>`;
+    }
+
+    _tryPartialRender(container, jobName, text) {
+        const simple = ['salary', 'location', 'company_size', 'demand_score', 'trend', 'experience', 'education', 'competition', 'english', 'internship'];
+        simple.forEach(field => {
+            const strMatch = text.match(new RegExp('"' + field + '"\\s*:\\s*"([^"]*)"'));
+            if (strMatch) this._renderStreamField(container, field, strMatch[1]);
+            const numMatch = text.match(new RegExp('"' + field + '"\\s*:\\s*(\\d+)'));
+            if (numMatch && field === 'demand_score') this._renderStreamField(container, field, parseInt(numMatch[1], 10));
+        });
+        const trendMatch = text.match(/"trend"\s*:\s*"([^"]*)"/);
+        if (trendMatch) this._renderStreamField(container, 'trend', trendMatch[1]);
+
+        // 岗位描述流式：从 buffer 中提取 "description": "..." 的当前内容并实时更新
+        const descKey = '"description"';
+        const descKeyIdx = text.indexOf(descKey);
+        if (descKeyIdx >= 0) {
+            const afterColon = text.indexOf(':', descKeyIdx) + 1;
+            const openQuote = text.indexOf('"', afterColon);
+            if (openQuote >= 0) {
+                let desc = '';
+                for (let i = openQuote + 1; i < text.length; i++) {
+                    if (text[i] === '\\' && text[i + 1] === '"') { desc += '"'; i++; continue; }
+                    if (text[i] === '\\' && text[i + 1] === '\\') { desc += '\\'; i++; continue; }
+                    if (text[i] === '"') break;
+                    desc += text[i];
+                }
+                this._renderStreamField(container, 'description', desc);
+            }
+        }
+
+        // 核心技能流式：从 buffer 中解析出已完整的技能字符串数组并增量渲染
+        ['skills_core', 'skills_advanced', 'skills_plus'].forEach(field => {
+            const partial = this._extractPartialStringArray(text, field);
+            if (partial.length > 0) this._renderStreamField(container, field, partial);
+        });
+
+        // 综合能力要求流式：解析出已完整的 ability 对象并逐条渲染
+        const partialAbilities = this._extractPartialObjectArray(text, 'abilities');
+        if (partialAbilities.length > (container._streamAbilitiesCount || 0)) {
+            container._streamAbilitiesCount = partialAbilities.length;
+            this._renderStreamField(container, 'abilities', partialAbilities);
+        }
+        // 证书 & 认证要求流式：解析出已完整的 cert 对象并逐条渲染
+        const partialCerts = this._extractPartialObjectArray(text, 'certs');
+        if (partialCerts.length > (container._streamCertsCount || 0)) {
+            container._streamCertsCount = partialCerts.length;
+            this._renderStreamField(container, 'certs', partialCerts);
+        }
+
+        const arrays = ['intern_directions'];
+        arrays.forEach(field => {
+            const m = text.match(new RegExp('"' + field + '"\\s*:\\s*(\\[)', 's'));
+            if (!m) return;
+            let depth = 0, start = text.indexOf('"', text.indexOf(field)) + field.length + 4;
+            if (text[start] !== '[') return;
+            let end = start;
+            for (let i = start; i < text.length; i++) {
+                if (text[i] === '[') depth++; else if (text[i] === ']') { depth--; if (depth === 0) { end = i + 1; break; } }
+            }
+            try {
+                const arr = JSON.parse(text.slice(start, end));
+                this._renderStreamField(container, field, arr);
+            } catch (_) {}
+        });
+    }
+
+    _extractPartialObjectArray(text, key) {
+        const keyStr = '"' + key + '"';
+        const idx = text.indexOf(keyStr);
+        if (idx < 0) return [];
+        const bracket = text.indexOf('[', idx);
+        if (bracket < 0) return [];
+        const result = [];
+        let i = bracket + 1;
+        while (i < text.length) {
+            while (i < text.length && /[\s,]/.test(text[i])) i++;
+            if (i >= text.length || text[i] === ']') break;
+            if (text[i] !== '{') return result;
+            const start = i;
+            let depth = 1;
+            let inString = false;
+            let escape = false;
+            i++;
+            while (i < text.length && depth > 0) {
+                const c = text[i];
+                if (escape) { escape = false; i++; continue; }
+                if (inString) {
+                    if (c === '\\') escape = true;
+                    else if (c === '"') inString = false;
+                    i++;
+                    continue;
+                }
+                if (c === '"') { inString = true; i++; continue; }
+                if (c === '{') depth++;
+                else if (c === '}') depth--;
+                i++;
+            }
+            if (depth === 0) {
+                try {
+                    const obj = JSON.parse(text.slice(start, i));
+                    result.push(obj);
+                } catch (_) {}
+            }
+        }
+        return result;
+    }
+
+    _extractPartialStringArray(text, key) {
+        const keyStr = '"' + key + '"';
+        const idx = text.indexOf(keyStr);
+        if (idx < 0) return [];
+        const bracket = text.indexOf('[', idx);
+        if (bracket < 0) return [];
+        const result = [];
+        let i = bracket + 1;
+        while (i < text.length) {
+            while (i < text.length && /[\s,]/.test(text[i])) i++;
+            if (i >= text.length || text[i] === ']') break;
+            if (text[i] !== '"') return result;
+            let s = '';
+            i++;
+            while (i < text.length) {
+                if (text[i] === '\\' && (text[i + 1] === '"' || text[i + 1] === '\\')) { s += text[i + 1]; i += 2; continue; }
+                if (text[i] === '"') { i++; result.push(s); break; }
+                s += text[i];
+                i++;
+            }
+        }
+        return result;
+    }
+
+    _renderStreamField(container, field, value) {
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        const sel = (q) => container.querySelector(q);
+        const all = (q) => container.querySelectorAll(q);
+        switch (field) {
+            case 'salary': {
+                const sb = sel('.salary-badge');
+                if (sb) {
+                    const s = (value != null ? String(value) : '—').replace(/\/月|／月/g, '').trim() || '—';
+                    sb.textContent = s;
+                }
+                break;
+            }
+            case 'location': {
+                const vals = all('.header-stats .stat-value');
+                if (vals[0]) vals[0].innerHTML = value != null ? esc(value) : '—';
+                break;
+            }
+            case 'company_size': {
+                const vals = all('.header-stats .stat-value');
+                if (vals[1]) vals[1].textContent = value != null ? String(value) : '—';
+                break;
+            }
+            case 'demand_score': {
+                const vals = all('.header-stats .stat-value');
+                if (vals[2]) {
+                    const trend = (container._streamTrend || '稳定').trim();
+                    const trendHtml = trend === '上升' ? '<span class="trend-up">▲ 上升</span>' : (trend === '下降' ? '<span style="color:#dc2626">▼ 下降</span>' : '<span style="color:#64748b">稳定</span>');
+                    vals[2].innerHTML = (value != null ? '<span class="stat-demand-num">' + value + '</span> ' + trendHtml : '—') + (value != null ? '<div class="stat-demand-bar"><div class="stat-demand-fill" style="width:' + Math.min(100, Number(value)) + '%"></div></div>' : '');
+                }
+                break;
+            }
+            case 'trend':
+                container._streamTrend = value;
+                const v2 = all('.header-stats .stat-value');
+                if (v2[2]) {
+                    const v = container._streamTrend;
+                    const trendHtml = v === '上升' ? '<span class="trend-up">▲ 上升</span>' : (v === '下降' ? '<span style="color:#dc2626">▼ 下降</span>' : '<span style="color:#64748b">稳定</span>');
+                    const num = (v2[2].textContent || '').replace(/\D/g, '') || '—';
+                    const bar = v2[2].querySelector('.stat-demand-bar');
+                    const barHtml = bar ? bar.outerHTML : (num !== '—' ? '<div class="stat-demand-bar"><div class="stat-demand-fill" style="width:' + Math.min(100, parseInt(num, 10)) + '%"></div></div>' : '');
+                    v2[2].innerHTML = (num !== '—' ? '<span class="stat-demand-num">' + num + '</span> ' + trendHtml : '—') + barHtml;
+                    const barEl = v2[2].querySelector('.stat-demand-bar');
+                    if (barEl && barEl.querySelector('.stat-demand-fill')) barEl.querySelector('.stat-demand-fill').style.width = (num !== '—' ? Math.min(100, parseInt(num, 10)) : 0) + '%';
+                }
+                break;
+            case 'experience': case 'education': case 'competition': case 'english': case 'internship': {
+                const idx = { education: 0, experience: 1, competition: 2, internship: 3 }[field];
+                if (idx === undefined) break;
+                const qv = all('.quick-stats .qs-val');
+                if (qv[idx]) qv[idx].innerHTML = value != null ? esc(value) : '—';
+                break;
+            }
+            case 'description': {
+                const descEl = sel('.job-detail-desc');
+                if (descEl) {
+                    const raw = (value != null ? String(value) : '').replace(/</g, '&lt;').replace(/\n/g, '<br>');
+                    descEl.innerHTML = raw || '正在生成...';
+                    descEl.classList.add('streaming-cursor');
+                }
+                break;
+            }
+            case 'skills_core': case 'skills_advanced': case 'skills_plus': {
+                const grid = sel('.skills-grid');
+                if (!grid || !Array.isArray(value)) return;
+                container._streamSkills = container._streamSkills || { core: [], advanced: [], plus: [] };
+                if (field === 'skills_core') container._streamSkills.core = value;
+                else if (field === 'skills_advanced') container._streamSkills.advanced = value;
+                else container._streamSkills.plus = value;
+                grid.innerHTML = '';
+                ['core', 'advanced', 'plus'].forEach(k => {
+                    (container._streamSkills[k] || []).forEach(s => {
+                        const span = document.createElement('span');
+                        span.className = 'skill-chip';
+                        span.innerHTML = '<span class="skill-dot"></span>' + esc(s);
+                        grid.appendChild(span);
+                    });
+                });
+                break;
+            }
+            case 'abilities':
+                if (!Array.isArray(value)) return;
+                let tbody = container.querySelector('.ability-table tbody');
+                if (!tbody) {
+                    const sec = document.createElement('div');
+                    sec.className = 'section';
+                    sec.innerHTML = '<div class="section-title">综合能力要求</div><table class="ability-table"><tbody></tbody></table>';
+                    container.querySelector('.modal-body').appendChild(sec);
+                    tbody = container.querySelector('.ability-table tbody');
+                }
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    value.forEach(ab => {
+                        const lvClass = (ab.level_type === 'high') ? 'lv-high' : (ab.level_type === 'medium') ? 'lv-medium' : 'lv-base';
+                        let descHtml = (ab.desc || '').replace(/</g, '&lt;');
+                        (ab.keywords || []).forEach(kw => { descHtml = descHtml.replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '<span class="ab-kw">' + esc(kw) + '</span>'); });
+                        tbody.appendChild((() => { const tr = document.createElement('tr'); tr.innerHTML = '<td class="ab-icon-col"><div class="ab-icon-wrap">' + (ab.icon || '') + '</div></td><td class="ab-name-col"><div class="ab-name">' + esc(ab.name) + '</div><span class="ab-level ' + lvClass + '">' + esc(ab.level) + '</span></td><td class="ab-desc-col"><div class="ab-desc">' + descHtml + '</div></td>'; return tr; })());
+                    });
+                }
+                break;
+            case 'certs':
+                if (!Array.isArray(value)) return;
+                let certList = container.querySelector('.cert-list');
+                if (!certList) {
+                    const sec = document.createElement('div');
+                    sec.className = 'section';
+                    sec.innerHTML = '<div class="section-title">证书 & 认证要求</div><div class="cert-list"></div>';
+                    container.querySelector('.modal-body').appendChild(sec);
+                    certList = container.querySelector('.cert-list');
+                }
+                if (certList) {
+                    certList.innerHTML = '';
+                    value.forEach(c => {
+                        const bClass = c.type_code === 'must' ? 'b-must' : c.type_code === 'plus' ? 'b-plus' : 'b-opt';
+                        const row = document.createElement('div');
+                        row.className = 'cert-row';
+                        row.innerHTML = '<div class="cert-icon-wrap">' + (c.icon || '') + '</div><div class="cert-main"><div class="cert-name">' + esc(c.name) + '</div><div class="cert-sub">' + esc(c.desc) + '</div></div><span class="cert-badge ' + bClass + '">' + esc(c.type) + '</span>';
+                        certList.appendChild(row);
+                    });
+                }
+                break;
+            case 'intern_directions':
+                if (!Array.isArray(value)) return;
+                let internGrid = container.querySelector('.intern-grid');
+                if (!internGrid) {
+                    const sec = document.createElement('div');
+                    sec.className = 'section';
+                    sec.innerHTML = '<div class="section-title">推荐实习方向</div><div class="intern-grid"></div>';
+                    container.querySelector('.modal-body').appendChild(sec);
+                    internGrid = container.querySelector('.intern-grid');
+                }
+                if (internGrid) {
+                    internGrid.innerHTML = '';
+                    value.forEach(intern => {
+                        const card = document.createElement('div');
+                        card.className = 'intern-card';
+                        const tags = (intern.companies || []).map(c => '<span class="itag">' + esc(c) + '</span>').join('');
+                        card.innerHTML = '<div class="intern-co">' + (intern.icon || '') + ' ' + esc(intern.type) + '</div><div class="intern-role">' + esc(intern.role) + '</div><div class="intern-tags">' + tags + '</div>';
+                        internGrid.appendChild(card);
+                    });
+                }
+                break;
+        }
+    }
+
+    _mapStreamToProfileData(jobName, raw) {
+        const loc = raw.location || '';
+        const scale = raw.company_size || '';
+        const skills = [].concat(raw.skills_core || [], raw.skills_advanced || [], raw.skills_plus || []);
+        return {
+            job_id: null,
+            job_name: jobName,
+            basic_info: {
+                avg_salary: raw.salary || '-',
+                industry: '—',
+                level: '—',
+                work_locations: loc ? [loc] : [],
+                company_scales: scale ? [scale] : [],
+                education_requirement: raw.education || '-',
+                work_experience: raw.experience || '-',
+                competition_bonus: raw.competition || '-',
+                internship_requirement: raw.internship || '-',
+                description: raw.description || ''
+            },
+            market_analysis: { demand_score: raw.demand_score != null ? Number(raw.demand_score) : null, growth_trend: raw.trend || '稳定' },
+            skills,
+            abilities: raw.abilities,
+            certs: raw.certs,
+            intern_directions: raw.intern_directions
+        };
+    }
+
+    _bindJobDetailFooterButtons() {
+        document.getElementById('jobDetailBtnGraph')?.addEventListener('click', () => {
+            this.closeJobDetailModal();
+            this.switchJobProfileTab('graph');
+            const input = document.getElementById('graphJobName');
+            if (input && this._currentJobDetail) {
+                const jobName = this._currentJobDetail.job_name || '';
+                input.value = jobName;
+                this._graphJobName = jobName;
+                this.selectedGraphJobId = this._currentJobDetail.job_id || null;
+                if (this._currentJobDetail.job_id) this.loadJobRelationGraph(this._currentJobDetail.job_id);
+                else this.loadJobRelationGraphBySearch();
+            }
+        });
+        document.getElementById('jobDetailBtnTarget')?.addEventListener('click', () => {
+            this.closeJobDetailModal();
+            this.navigateTo('matching');
+            this.showToast('已加入目标岗位，可在「岗位匹配」中查看', 'success');
+        });
     }
 
     closeJobDetailModal() {
@@ -3224,43 +3679,74 @@ class CareerPlanningApp {
         if (modal) modal.classList.add('hidden');
     }
 
-    // 渲染岗位详细画像（新设计：头部 + 主体两列/技能/描述/路径 + 底部按钮）
+    // 渲染岗位详细画像（严格按 job_profile_modal.html 模拟画面：Header + 快速概览 + 专业技能 + 岗位描述 + 路径 + Footer）
     renderJobProfileDetail(data, container) {
         const bi = data.basic_info || {};
         const ma = data.market_analysis || {};
-        const salary = bi.avg_salary || data.avg_salary || '-';
-        const industry = bi.industry || '-';
-        const level = bi.level || '-';
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        let salary = (bi.avg_salary || data.avg_salary || '-').toString().replace(/\/月|／月/g, '').trim() || '-';
+        const industry = (bi.industry || '-').toString().trim();
+        const level = (bi.level || '-').toString().trim();
         const locations = bi.work_locations ? bi.work_locations.join('、') : '-';
         const scales = bi.company_scales ? bi.company_scales.join('、') : '-';
         const demandScore = ma.demand_score != null ? Number(ma.demand_score) : null;
         const trend = (ma.growth_trend || data.growth_trend || '稳定').trim();
-        const trendClass = trend === '上升' ? 'up' : (trend === '下降' ? 'down' : 'stable');
-        const trendText = trend === '上升' ? '上升' : (trend === '下降' ? '下降' : '稳定');
+        const trendHtml = trend === '上升' ? '<span class="trend-up">▲ 上升</span>' : (trend === '下降' ? '<span style="color:#dc2626">▼ 下降</span>' : '<span style="color:#64748b">稳定</span>');
+        const jobName = data.job_name || '-';
+
+        // 快速概览（学历/经验/竞赛/实习）- 无数据时显示「暂无」
+        const edu = bi.education_requirement || bi.education || '-';
+        const exp = bi.work_experience || bi.experience || '-';
+        const competition = bi.competition_bonus || '-';
+        const intern = bi.internship_requirement || bi.internship || '-';
 
         let html = `
-            <div class="job-detail-modal-header">
-                <div class="job-detail-modal-header-left">
-                    <h2 class="job-detail-modal-header-title">${(data.job_name || '-').replace(/</g, '&lt;')}</h2>
-                    <p class="job-detail-modal-header-subtitle">${(industry + ' | ' + level).replace(/</g, '&lt;')}</p>
+            <div class="modal-header">
+                <div class="header-top">
+                    <div>
+                        <div class="job-title">${esc(jobName)}</div>
+                        <div class="job-meta">
+                            ${industry && industry !== '-' && industry !== '—' ? `<span class="meta-tag">${esc(industry)}</span>` : ''}
+                            ${level && level !== '-' && level !== '—' ? `<span class="meta-tag">${esc(level)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="salary-badge">${esc(salary)}</div>
                 </div>
-                <div class="job-detail-modal-header-salary">${(salary + '').replace(/</g, '&lt;')}</div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-icon">\uD83D\uDCCD</span>
+                        <div class="stat-label">工作地点</div>
+                        <div class="stat-value">${esc(locations) || '—'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">\uD83C\uDFE2</span>
+                        <div class="stat-label">公司规模</div>
+                        <div class="stat-value">${esc(scales) || '—'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">\uD83D\uDCC8</span>
+                        <div class="stat-label">需求热度</div>
+                        <div class="stat-value">
+                            ${demandScore != null ? `<span class="stat-demand-num">${demandScore}</span> ${trendHtml}` : '—'}
+                            ${demandScore != null ? `<div class="stat-demand-bar"><div class="stat-demand-fill" style="width:${Math.min(100, demandScore)}%"></div></div>` : ''}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="job-detail-modal-body-inner">
-                <div class="job-detail-modal-grid">
-                    <div class="job-detail-modal-grid-item"><span class="label">📍 工作地点</span>${(locations + '').replace(/</g, '&lt;')}</div>
-                    <div class="job-detail-modal-grid-item"><span class="label">🏢 公司规模</span>${(scales + '').replace(/</g, '&lt;')}</div>
-                    <div class="job-detail-modal-grid-item">
-                        <span class="label">📈 需求热度</span>${demandScore != null ? demandScore : '-'}
-                        ${demandScore != null ? `<div class="job-detail-modal-demand-bar"><div class="job-detail-modal-demand-fill" style="width: ${Math.min(100, demandScore)}%"></div></div>` : ''}
-                    </div>
-                    <div class="job-detail-modal-grid-item">
-                        <span class="label">📊 市场趋势</span><span class="job-detail-modal-trend ${trendClass}">${trendText}</span>
+            <div class="modal-body">
+                <div class="section">
+                    <div class="section-title">快速概览</div>
+                    <div class="quick-stats">
+                        <div class="qs-card"><div class="qs-icon">\uD83C\uDF93</div><div class="qs-label">学历要求</div><div class="qs-val">${esc(edu)}</div></div>
+                        <div class="qs-card"><div class="qs-icon">\u23F1\uFE0F</div><div class="qs-label">工作经验</div><div class="qs-val">${esc(exp)}</div></div>
+                        <div class="qs-card"><div class="qs-icon">\uD83C\uDFC6</div><div class="qs-label">竞赛加分</div><div class="qs-val">${esc(competition)}</div></div>
+                        <div class="qs-card"><div class="qs-icon">\uD83D\uDCBC</div><div class="qs-label">实习要求</div><div class="qs-val">${esc(intern)}</div></div>
                     </div>
                 </div>
-        `;
+                <div class="section">
+                    <div class="section-title">核心技能要求</div>
+                    <div class="skills-grid">`;
 
-        // 核心技能要求
         const skills = [];
         if (data.requirements && data.requirements.professional_skills) {
             const ps = data.requirements.professional_skills;
@@ -3269,36 +3755,63 @@ class CareerPlanningApp {
         }
         if (data.skills && Array.isArray(data.skills)) data.skills.forEach(s => skills.push(typeof s === 'string' ? s : (s.skill || s.name)));
         if (skills.length > 0) {
-            html += `
-                <div class="job-detail-block">
-                    <h4 class="job-detail-block-title">核心技能要求</h4>
-                    <div class="job-detail-skills">${skills.slice(0, 12).map(s => `<span class="job-detail-skill-tag">${(s + '').replace(/</g, '&lt;')}</span>`).join('')}</div>
-                </div>`;
+            skills.slice(0, 12).forEach(s => {
+                html += `<span class="skill-chip"><span class="skill-dot"></span>${esc(s)}</span>`;
+            });
+        } else {
+            html += '<span class="skill-chip"><span class="skill-dot"></span>暂无</span>';
         }
 
-        // 岗位描述
         const desc = bi.description || data.description || '';
         html += `
-                <div class="job-detail-block">
-                    <h4 class="job-detail-block-title">岗位描述</h4>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="section-title">岗位描述</div>
                     <p class="job-detail-desc">${desc ? (desc + '').replace(/</g, '&lt;').replace(/\n/g, '<br>') : '暂无描述'}</p>
                 </div>`;
 
-        // 职业发展路径（箭头连接）
+        if (data.abilities && Array.isArray(data.abilities) && data.abilities.length > 0) {
+            const lvClass = (lt) => (lt === 'high' ? 'lv-high' : lt === 'medium' ? 'lv-medium' : 'lv-base');
+            html += '<div class="section"><div class="section-title">综合能力要求</div><table class="ability-table"><tbody>';
+            data.abilities.forEach(ab => {
+                const descHtml = (ab.desc || '').replace(/</g, '&lt;');
+                const kwWrap = (ab.keywords || []).reduce((s, kw) => s.replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '<span class="ab-kw">' + esc(kw) + '</span>'), descHtml);
+                html += '<tr><td class="ab-icon-col"><div class="ab-icon-wrap">' + (ab.icon || '') + '</div></td><td class="ab-name-col"><div class="ab-name">' + esc(ab.name) + '</div><span class="ab-level ' + lvClass(ab.level_type) + '">' + esc(ab.level) + '</span></td><td class="ab-desc-col"><div class="ab-desc">' + kwWrap + '</div></td></tr>';
+            });
+            html += '</tbody></table></div>';
+        }
+        if (data.certs && Array.isArray(data.certs) && data.certs.length > 0) {
+            const bClass = (tc) => (tc === 'must' ? 'b-must' : tc === 'plus' ? 'b-plus' : 'b-opt');
+            html += '<div class="section"><div class="section-title">证书 & 认证要求</div><div class="cert-list">';
+            data.certs.forEach(c => {
+                html += '<div class="cert-row"><div class="cert-icon-wrap">' + (c.icon || '') + '</div><div class="cert-main"><div class="cert-name">' + esc(c.name) + '</div><div class="cert-sub">' + esc(c.desc) + '</div></div><span class="cert-badge ' + bClass(c.type_code) + '">' + esc(c.type) + '</span></div>';
+            });
+            html += '</div></div>';
+        }
+        if (data.intern_directions && Array.isArray(data.intern_directions) && data.intern_directions.length > 0) {
+            html += '<div class="section"><div class="section-title">推荐实习方向</div><div class="intern-grid">';
+            data.intern_directions.forEach(intern => {
+                const tags = (intern.companies || []).map(c => '<span class="itag">' + esc(c) + '</span>').join('');
+                html += '<div class="intern-card"><div class="intern-co">' + (intern.icon || '') + ' ' + esc(intern.type) + '</div><div class="intern-role">' + esc(intern.role) + '</div><div class="intern-tags">' + tags + '</div></div>';
+            });
+            html += '</div></div>';
+        }
+
         if (data.career_path && data.career_path.promotion_path && data.career_path.promotion_path.length > 0) {
-            const nodes = data.career_path.promotion_path.map(p => (p.level || '').replace(/</g, '&lt;'));
+            const nodes = data.career_path.promotion_path.map(p => esc(p.level || p.stage_name || ''));
             html += `
-                <div class="job-detail-block">
-                    <h4 class="job-detail-block-title">职业发展路径</h4>
+                <div class="section">
+                    <div class="section-title">职业发展路径</div>
                     <div class="job-detail-path">${nodes.map((n, i) => (i > 0 ? '<span class="job-detail-path-arrow">→</span>' : '') + `<span class="job-detail-path-node">${n || '-'}</span>`).join('')}</div>
                 </div>`;
         }
 
         html += `
             </div>
-            <div class="job-detail-modal-footer">
-                <button type="button" class="btn-outline" id="jobDetailBtnGraph">查看关联图谱</button>
-                <button type="button" class="btn-primary-solid" id="jobDetailBtnTarget">加入目标岗位</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="jobDetailBtnGraph">查看关联图谱</button>
+                <button type="button" class="btn btn-primary" id="jobDetailBtnTarget">加入目标岗位</button>
             </div>`;
 
         container.innerHTML = html;
@@ -3592,7 +4105,7 @@ class CareerPlanningApp {
         });
     }
 
-    // 转岗路径：圆形放射布局，周围节点按角度均分（从顶部 -90° 顺时针）；3 节点时 120° 均分
+    // 转岗路径：圆形放射布局，周围节点按角度均分（从顶部 -90° 顺时针）；3 节点时 120° 均分；中心卡片上移，并绘制换岗连线
     _layoutTransferGraphCircle(container) {
         const graph = container.querySelector('.transfer-graph');
         if (!graph) return;
@@ -3605,7 +4118,18 @@ class CareerPlanningApp {
         const R = 260;
         const nodes = graph.querySelectorAll('.tg-node.tg-surround');
         const count = nodes.length;
-        if (count === 0) return;
+
+        // 中心卡片：用 JS 固定上移，避免遮挡周围换岗卡片
+        const centerEl = graph.querySelector('.tg-center');
+        const centerOffsetY = 80;
+        const centerVisualY = centerY - centerOffsetY;
+        if (centerEl) {
+            centerEl.style.left = centerX + 'px';
+            centerEl.style.top = centerVisualY + 'px';
+            centerEl.style.transform = 'translate(-50%, -50%)';
+        }
+
+        const nodePositions = [];
         nodes.forEach((node, i) => {
             const angle = count === 3
                 ? -Math.PI / 2 + i * (2 * Math.PI / 3)
@@ -3615,6 +4139,32 @@ class CareerPlanningApp {
             node.style.left = x + 'px';
             node.style.top = y + 'px';
             node.style.transform = 'translate(-50%, -50%)';
+            nodePositions.push({ x, y });
+        });
+
+        // 换岗连线：从中心卡片到各推荐岗位
+        let svg = graph.querySelector('.transfer-graph-lines');
+        if (!svg) {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'transfer-graph-lines');
+            svg.setAttribute('aria-hidden', 'true');
+            graph.insertBefore(svg, graph.firstChild);
+        }
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.innerHTML = '';
+        nodePositions.forEach(({ x, y }) => {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', centerX);
+            line.setAttribute('y1', centerVisualY);
+            line.setAttribute('x2', x);
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', 'rgba(102, 126, 234, 0.45)');
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(line);
         });
     }
 
@@ -4135,7 +4685,16 @@ class CareerPlanningApp {
         let jobId = this.selectedGraphJobId;
         if (!jobId) {
             const result = await getJobProfiles(1, 20, keyword, '', '');
-            if (!result.success || !result.data.list || result.data.list.length === 0) {
+            if (!result.success) {
+                const msg = (result.msg || '').indexOf('5001') !== -1 ? result.msg : '未找到匹配的岗位，请检查名称或从下拉中选择';
+                this.showToast(msg, 'error');
+                const graphContainer = document.getElementById('jobProfileGraph');
+                if (graphContainer && !graphContainer.querySelector('.graph-job-title-card')) {
+                    graphContainer.innerHTML = '<div class="hint-text" style="padding:24px;text-align:center">' + (result.msg || msg) + '</div>';
+                }
+                return;
+            }
+            if (!result.data.list || result.data.list.length === 0) {
                 this.showToast('未找到匹配的岗位，请检查名称或从下拉中选择', 'error');
                 return;
             }

@@ -1329,7 +1329,9 @@ async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', 
         };
     } catch (err) {
         console.error('岗位列表接口请求错误:', err);
-        return { success: false, msg: '网络错误或服务未启动', data: null };
+        const isRefused = (err && (err.message || '').toLowerCase().includes('fetch')) || (err && (err.message || '').includes('CONNECTION_REFUSED'));
+        const msg = isRefused ? '请先启动 AI 服务 (http://localhost:5001)' : (err && err.message ? err.message : '网络错误或服务未启动');
+        return { success: false, msg, data: null };
     }
 }
 
@@ -1387,6 +1389,12 @@ async function getJobDetail(jobIdOrName) {
 // app.js 调用的封装：获取岗位详细画像
 async function getJobProfileDetail(jobIdOrName, byName = false) {
     return await api.postToAI('/job/profile/detail', { job_id: jobIdOrName });
+}
+
+// 岗位画像流式生成接口 URL（供 app.js 使用 fetch + ReadableStream）
+function getJobProfileStreamURL() {
+    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || 'http://localhost:5001/api/v1';
+    return base + '/job/generate-profile-stream';
 }
 
 // 4.3 获取岗位关联图谱

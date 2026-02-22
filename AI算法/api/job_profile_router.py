@@ -13,9 +13,10 @@
 import csv
 import json
 import os
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 from datetime import datetime
 import threading
+import json as _json
 
 import csv
 from job_profile.job_profile_service import get_job_profile_service, job_profile_conf, _load_profiles_store
@@ -247,6 +248,103 @@ def get_real_data():
             results = []
 
     return success_response(results)
+
+
+# ============================================================
+# 岗位画像流式生成（SSE）
+# POST /api/v1/job/generate-profile-stream
+# ============================================================
+def _stream_job_profile_generate(job_name: str, job_description: str):
+    """Generator: yield SSE events (data: {...}\n\n). 使用 dashscope Generation 流式调用。"""
+    prompt = f"""你是职业规划专家。根据岗位"{job_name}"和描述"{job_description}"生成岗位画像。
+严格按以下JSON格式输出，不加任何多余内容，不加markdown代码块：
+{{
+  "salary": "薪资范围",
+  "location": "主要城市",
+  "company_size": "公司规模",
+  "demand_score": 88,
+  "trend": "上升",
+  "experience": "1-3年",
+  "education": "本科及以上",
+  "competition": "推荐竞赛经历",
+  "english": "英语要求描述",
+  "internship": "推荐3个月以上相关实习经历，大厂或AI实验室优先",
+  "description": "针对该岗位的职责、要求与工作内容的详细描述，约150-200字",
+  "skills_core": ["核心技能1","核心技能2","核心技能3","核心技能4","核心技能5"],
+  "skills_advanced": ["进阶技能1","进阶技能2","进阶技能3"],
+  "skills_plus": ["加分技能1","加分技能2"],
+  "abilities": [
+    {{"icon":"🧠","name":"学习能力","level":"高要求","level_type":"high","desc":"针对{job_name}的学习能力要求详细描述，约100字，说明需要掌握哪些知识体系、如何持续学习","keywords":["关键词1","关键词2"]}},
+    {{"icon":"💡","name":"创新能力","level":"高要求","level_type":"high","desc":"针对{job_name}的创新能力要求详细描述，约100字","keywords":["关键词1"]}},
+    {{"icon":"🔥","name":"抗压能力","level":"中等要求","level_type":"medium","desc":"针对{job_name}的抗压能力要求详细描述，约100字","keywords":["关键词1"]}},
+    {{"icon":"💬","name":"沟通能力","level":"中等要求","level_type":"medium","desc":"针对{job_name}的沟通能力要求详细描述，约100字","keywords":["关键词1"]}},
+    {{"icon":"🤝","name":"团队协作","level":"中等要求","level_type":"medium","desc":"针对{job_name}的团队协作要求详细描述，约100字","keywords":["关键词1"]}},
+    {{"icon":"🏢","name":"实习能力","level":"基础要求","level_type":"base","desc":"针对{job_name}的实习能力要求详细描述，约100字，包含推荐实习时长和方向","keywords":["关键词1","关键词2"]}}
+  ],
+  "certs": [
+    {{"icon":"🏅","name":"证书名称","desc":"证书说明和要求分数","type":"必须","type_code":"must"}},
+    {{"icon":"📜","name":"证书名称","desc":"证书说明","type":"加分项","type_code":"plus"}},
+    {{"icon":"🌐","name":"证书名称","desc":"证书说明","type":"推荐","type_code":"opt"}}
+  ],
+  "intern_directions": [
+    {{"type":"方向类型","icon":"🏢","role":"推荐实习岗位名称","companies":["公司1","公司2","公司3","公司4"]}},
+    {{"type":"方向类型","icon":"🔬","role":"推荐实习岗位名称","companies":["公司1","公司2","公司3"]}}
+  ]
+}}
+所有内容必须针对{job_name}个性化生成，abilities必须包含以上6项且顺序不变，level_type只能是high/medium/base，type_code只能是must/plus/opt。"""
+
+    try:
+        from dashscope import Generation
+        response = Generation.call(
+            model="qwen3-max",
+            messages=[{"role": "user", "content": prompt}],
+            result_format="message",
+            stream=True,
+        )
+        for chunk in response:
+            content = ""
+            if getattr(chunk, "output", None) and getattr(chunk.output, "choices", None):
+                choices = chunk.output.choices
+                if choices and len(choices) > 0:
+                    msg = getattr(choices[0], "message", None)
+                    if msg is not None:
+                        content = getattr(msg, "content", None) or ""
+            if content:
+                yield f"data: {_json.dumps({'text': content}, ensure_ascii=False)}\n\n"
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        logger.error(f"[API] generate-profile-stream 异常: {e}", exc_info=True)
+        yield f"data: {_json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
+        yield "data: [DONE]\n\n"
+
+
+@job_bp.route("/generate-profile-stream", methods=["POST"])
+def generate_profile_stream():
+    """
+    岗位画像流式生成，返回 SSE。
+    请求体：{ job_name, job_description }，job_description 可选。
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        job_name = (body.get("job_name") or "").strip() or ""
+        job_description = (body.get("job_description") or "").strip() or ""
+
+        def stream_generator():
+            for chunk in _stream_job_profile_generate(job_name, job_description):
+                yield chunk
+
+        return Response(
+            stream_generator(),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
+    except Exception as e:
+        logger.error(f"[API] /job/generate-profile-stream 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
 
 
 # ============================================================
