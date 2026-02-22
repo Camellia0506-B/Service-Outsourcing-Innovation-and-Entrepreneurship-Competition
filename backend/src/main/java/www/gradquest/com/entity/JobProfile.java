@@ -16,6 +16,9 @@ public class JobProfile {
     private Long id;
     private String jobId;
     private String jobName;
+    /** 标准化岗位名称（用于图谱分组与搜索匹配），不修改原 jobName */
+    @TableField("standard_name")
+    private String standardName;
     private String industry;
     private String level;
     @TableField("salary_range")

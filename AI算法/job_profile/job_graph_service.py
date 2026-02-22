@@ -27,6 +27,7 @@ from job_profile.job_profile_service import (
     job_profile_conf,
     _load_profiles_store,
     get_job_profile_service,
+    to_standard_name,
 )
 from job_profile.job_dataset_service import calculate_weighted_skill_match  # 加权匹配算法
 from job_profile.career_path_generator import generate_career_path  # LLM 动态晋升阶段
@@ -425,15 +426,16 @@ class AIJobGraphBuilder:
     # 辅助方法
     # ----------------------------------------------------------
     def _get_node_info(self, job_id: str, profiles: dict) -> dict:
-        """获取节点信息"""
+        """获取节点信息；节点名称用 standard_name 便于图谱按标准化名称分组/展示"""
         cfg = self._job_index.get(job_id, {})
         profile = profiles.get(job_id, {})
-        
+        raw_name = profile.get("job_name", cfg.get("name", job_id))
         basic = profile.get("basic_info", {})
-        
+
         return {
             "job_id": job_id,
-            "job_name": profile.get("job_name", cfg.get("name", job_id)),
+            "job_name": raw_name,
+            "standard_name": to_standard_name(raw_name),
             "level": cfg.get("layer_level", 0),
             "category": cfg.get("category", ""),
             "salary_range": basic.get("avg_salary", ""),
@@ -509,10 +511,12 @@ class JobGraphService:
         ma = center_job.get("market_analysis", {})
         sr = bi.get("salary_range")
         avg_salary = bi.get("avg_salary") or (sr.get("junior", "") if isinstance(sr, dict) else (sr or ""))
+        center_name = center_job.get("job_name", "")
         result = {
             "center_job": {
                 "job_id": job_id,
-                "job_name": center_job.get("job_name", ""),
+                "job_name": center_name,
+                "standard_name": to_standard_name(center_name),
                 "level": self.builder._job_index.get(job_id, {}).get("layer_level", 0),
                 "salary_range": sr if isinstance(sr, str) else (bi.get("avg_salary") or ""),
                 "avg_salary": avg_salary,
@@ -520,31 +524,38 @@ class JobGraphService:
             }
         }
         
-        # 获取用户技能（如果提供user_id）
-        user_skills = None
-        if user_id:
-            user_skills = self._get_user_skills(user_id)
-        
-        # 构建图谱
-        if graph_type in ["vertical", "all"]:
-            vertical_graphs = self.builder.build_vertical_graphs(profiles)
-            # 找到包含当前岗位的晋升链
-            result["vertical_graph"] = self._find_vertical_path(job_id, vertical_graphs)
-        
-        if graph_type in ["transfer", "all"]:
-            result["transfer_graph"] = self.builder.build_transfer_graph_ai(
-                job_id, profiles, user_skills
-            )
-        
-        # 晋升路径：使用 qwen3-max 根据岗位名称动态生成 4 阶段（name/time_range/salary_increase/key_skills/icon）
-        center_job_name = center_job.get("job_name", "")
         try:
-            result["career_path"] = {
-                "promotion_path": generate_career_path(center_job_name)
-            }
+            # 获取用户技能（如果提供user_id）
+            user_skills = None
+            if user_id:
+                user_skills = self._get_user_skills(user_id)
+            
+            # 构建图谱（任一环节异常时用空图兜底，避免接口返回空响应）
+            if graph_type in ["vertical", "all"]:
+                vertical_graphs = self.builder.build_vertical_graphs(profiles)
+                result["vertical_graph"] = self._find_vertical_path(job_id, vertical_graphs)
+            else:
+                result["vertical_graph"] = {"nodes": [], "edges": [], "track_name": "", "message": "未请求垂直图谱"}
+            
+            if graph_type in ["transfer", "all"]:
+                result["transfer_graph"] = self.builder.build_transfer_graph_ai(
+                    job_id, profiles, user_skills
+                )
+            else:
+                result["transfer_graph"] = {"nodes": [], "edges": [], "message": "未请求转岗图谱"}
+            
+            # 晋升路径：使用 LLM 动态生成 4 阶段
+            center_job_name = center_job.get("job_name", "")
+            try:
+                result["career_path"] = {"promotion_path": generate_career_path(center_job_name)}
+            except Exception as e:
+                logger.warning(f"[JobGraph] 晋升路径生成失败，前端将使用兜底: {e}")
+                result["career_path"] = {"promotion_path": []}
         except Exception as e:
-            logger.warning(f"[JobGraph] 晋升路径生成失败，前端将使用兜底: {e}")
-            result["career_path"] = {"promotion_path": []}
+            logger.error(f"[JobGraph] 构建图谱异常，返回空图: {e}", exc_info=True)
+            result.setdefault("vertical_graph", {"nodes": [], "edges": [], "track_name": "", "message": "图谱生成失败"})
+            result.setdefault("transfer_graph", {"nodes": [], "edges": [], "message": "图谱生成失败"})
+            result.setdefault("career_path", {"promotion_path": []})
         
         return {
             "code": 200,

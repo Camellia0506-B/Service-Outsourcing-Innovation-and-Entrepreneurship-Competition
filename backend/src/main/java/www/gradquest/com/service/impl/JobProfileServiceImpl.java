@@ -32,7 +32,8 @@ public class JobProfileServiceImpl implements JobProfileService {
         Page<JobProfile> p = new Page<>(page, size);
         LambdaQueryWrapper<JobProfile> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            wrapper.like(JobProfile::getJobName, keyword);
+            wrapper.and(w -> w.like(JobProfile::getJobName, keyword)
+                    .or().like(JobProfile::getStandardName, keyword));
         }
         if (StringUtils.hasText(industry)) {
             wrapper.eq(JobProfile::getIndustry, industry);
