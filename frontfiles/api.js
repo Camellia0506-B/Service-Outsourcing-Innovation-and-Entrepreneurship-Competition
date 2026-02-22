@@ -4,7 +4,7 @@ const API_CONFIG = {
     assessmentBaseURL: 'http://localhost:5001/api/v1',   // AI 算法服务（职业测评 / 岗位画像 / AI生成），必须为绝对地址，避免打到 8080
     jobProfilesBaseURL: 'http://localhost:5001/api/v1',  // 岗位画像列表 → Flask AI 服务（5001）
     timeout: 30000,
-    mockMode: false  // false=连接真实后端（5000/5001）；true=仅模拟数据不发请求，可按需切换
+    mockMode: true   // true=模拟数据，无需后端；false=连接真实后端（Java:5000 / AI:5001）
 };
 
 // API工具类
@@ -320,25 +320,26 @@ class API {
             { username: 'demo', password: '123456', nickname: '演示用户', user_id: 10003 },
             { username: 'student', password: '123456', nickname: '学生用户', user_id: 10004 }
         ];
-        const u = String(data.username || '').trim().toLowerCase();
+        const u = String(data.username || '').trim();
         const p = String(data.password || '').trim();
-        const user = mockUsers.find(x => x.username === u && x.password === p);
-        if (user) {
-            return {
-                success: true,
-                data: {
-                    user_id: user.user_id,
-                    username: user.username,
-                    nickname: user.nickname,
-                    avatar: '',
-                    token: 'mock_token_' + Date.now(),
-                    profile_completed: false,
-                    assessment_completed: false
-                },
-                msg: '登录成功'
-            };
-        }
-        return { success: false, msg: '用户名或密码错误。请用：admin / 123456（小写）' };
+        if (!u || u.length < 2) return { success: false, msg: '请输入账号（至少2位）' };
+        if (!p || p.length < 6) return { success: false, msg: '请输入密码（至少6位）' };
+        const user = mockUsers.find(x => x.username === u.toLowerCase() && x.password === p);
+        const uid = user ? user.user_id : (10000 + Math.abs(u.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 9000));
+        const nickname = user ? user.nickname : (u.length <= 8 ? u : u.slice(0, 8) + '…');
+        return {
+            success: true,
+            data: {
+                user_id: uid,
+                username: u,
+                nickname: nickname,
+                avatar: '',
+                token: 'mock_token_' + Date.now(),
+                profile_completed: false,
+                assessment_completed: false
+            },
+            msg: '登录成功'
+        };
     }
 
     mockRegister(data) {

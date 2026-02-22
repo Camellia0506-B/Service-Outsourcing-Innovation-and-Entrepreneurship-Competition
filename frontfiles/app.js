@@ -384,13 +384,12 @@ class CareerPlanningApp {
         // 首页卡片按钮相关
         document.querySelectorAll('.main-card .card-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // 阻止事件冒泡
+                e.stopPropagation();
+                if (btn.classList.contains('card-btn-disabled')) return;
                 const card = btn.closest('.main-card');
                 if (card) {
                     const action = card.dataset.action;
-                    if (action) {
-                        this.navigateTo(action);
-                    }
+                    if (action) this.navigateTo(action);
                 }
             });
         });
@@ -818,23 +817,80 @@ class CareerPlanningApp {
         const userId = getCurrentUserId();
         if (!userId) return;
 
-        // 获取个人档案信息
+        let profileCompleteness = 0;
+        let assessmentCompleted = false;
+        let matchedCount = 0;
+
         const profileResult = await getProfile(userId);
         if (profileResult.success) {
-            const completeness = profileResult.data.profile_completeness || 0;
-            document.getElementById('profileCompleteness').textContent = completeness + '%';
+            profileCompleteness = profileResult.data.profile_completeness || 0;
         }
-
-        // 测评状态：以登录返回的 assessment_completed 为准（3.3 获取报告需 report_id，不在此轮询）
-        const completed = this.currentUser && this.currentUser.assessment_completed;
-        document.getElementById('assessmentStatus').textContent = completed ? '已完成' : '未完成';
-
-        // 获取推荐岗位数量（API 返回 recommendations 或 total_matched）
+        assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed);
         const matchingResult = await getRecommendedJobs(userId, 10);
         if (matchingResult.success && matchingResult.data) {
-            const count = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
-            document.getElementById('matchedJobs').textContent = count;
+            matchedCount = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
         }
+
+        // 更新进度条（300ms 后动画，与 CSS transition-delay 一致）
+        const cards = document.querySelectorAll('#dashboardPage .main-card');
+        if (cards[0]) {
+            const fill = cards[0].querySelector('.progress-fill');
+            if (fill) {
+                fill.style.width = Math.min(100, profileCompleteness) + '%';
+                fill.classList.toggle('has-progress', profileCompleteness > 0);
+            }
+            const badge = cards[0].querySelector('.status-badge');
+            if (badge) badge.textContent = profileCompleteness >= 80 ? '已完成' : '待完善';
+        }
+        if (cards[1]) {
+            const fill = cards[1].querySelector('.progress-fill');
+            if (fill) {
+                fill.style.width = (assessmentCompleted ? 100 : 0) + '%';
+                fill.classList.toggle('has-progress', assessmentCompleted);
+            }
+            const badge = cards[1].querySelector('.status-badge');
+            if (badge) badge.textContent = assessmentCompleted ? '已完成' : '待测评';
+        }
+        if (cards[2]) {
+            const fill = cards[2].querySelector('.progress-fill');
+            const pct = assessmentCompleted ? Math.min(100, matchedCount * 10) : 0;
+            if (fill) {
+                fill.style.width = pct + '%';
+                fill.classList.toggle('has-progress', pct > 0);
+            }
+            const badge = cards[2].querySelector('.status-badge');
+            if (badge) badge.textContent = assessmentCompleted ? (matchedCount + ' 个匹配') : '完成测评后解锁';
+            const btn = cards[2].querySelector('.card-btn');
+            if (btn) {
+                btn.classList.toggle('card-btn-disabled', !assessmentCompleted);
+                if (assessmentCompleted) btn.innerHTML = '查看匹配<span class="btn-arrow">→</span>';
+            }
+        }
+
+        // 统计数字滚动动画
+        setTimeout(() => this.animateHeroStats(), 400);
+    }
+
+    // Hero 统计数字进入视口计数动画
+    animateHeroStats() {
+        const stats = document.querySelectorAll('.hero-right .stat-card[data-count]');
+        stats.forEach(card => {
+            const numEl = card.querySelector('.stat-number');
+            const target = parseInt(card.dataset.count, 10) || 0;
+            const suffix = card.dataset.suffix || '';
+            const duration = 1200;
+            const startTime = performance.now();
+
+            const step = (now) => {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / duration);
+                const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                const val = Math.round(target * eased);
+                if (numEl) numEl.textContent = val + suffix;
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        });
     }
 
     // 加载个人档案数据
@@ -1142,9 +1198,16 @@ class CareerPlanningApp {
 
         if (result.success) {
             this.showToast('档案保存成功', 'success');
-            if (result.data.profile_completeness) {
-                document.getElementById('profileCompleteness').textContent = 
-                    result.data.profile_completeness + '%';
+            const completeness = result.data.profile_completeness || 0;
+            const card = document.querySelector('#dashboardPage .main-card[data-action="profile"]');
+            if (card) {
+                const fill = card.querySelector('.progress-fill');
+                const badge = card.querySelector('.status-badge');
+                if (fill) {
+                    fill.style.width = Math.min(100, completeness) + '%';
+                    fill.classList.toggle('has-progress', completeness > 0);
+                }
+                if (badge) badge.textContent = completeness >= 80 ? '已完成' : '待完善';
             }
         } else {
             this.showToast(result.msg || '保存失败', 'error');
