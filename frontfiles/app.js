@@ -1203,7 +1203,7 @@ class CareerPlanningApp {
         console.log('保存结果:', result);
 
         if (result.success) {
-            this.showToast('档案保存成功', 'success');
+            this.showToast('档案保存成功，正在重新生成能力画像…', 'success');
             const completeness = result.data.profile_completeness || 0;
             const card = document.querySelector('#dashboardPage .main-card[data-action="profile"]');
             if (card) {
@@ -1214,6 +1214,13 @@ class CareerPlanningApp {
                     badge.classList.toggle('status-pending', completeness < 80);
                 }
             }
+            
+            // 档案更新后重新生成能力画像，确保学生画像随简历和档案变化而更新
+            aiGenerateAbilityProfile(userId, 'profile').then((res) => {
+                if (res.success) {
+                    this.showToast('能力画像已更新，岗位匹配将基于新档案', 'success');
+                }
+            }).catch(() => {});
         } else {
             this.showToast(result.msg || '保存失败', 'error');
         }
