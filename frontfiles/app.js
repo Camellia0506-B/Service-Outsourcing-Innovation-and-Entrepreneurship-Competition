@@ -832,14 +832,9 @@ class CareerPlanningApp {
             matchedCount = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
         }
 
-        // 更新进度条（300ms 后动画，与 CSS transition-delay 一致）
+        // 更新卡片状态
         const cards = document.querySelectorAll('#dashboardPage .main-card');
         if (cards[0]) {
-            const fill = cards[0].querySelector('.progress-fill');
-            if (fill) {
-                fill.style.width = Math.min(100, profileCompleteness) + '%';
-                fill.classList.toggle('has-progress', profileCompleteness > 0);
-            }
             const badge = cards[0].querySelector('.status-badge');
             if (badge) {
                 badge.textContent = profileCompleteness >= 80 ? '已完成' : '待完善';
@@ -848,11 +843,6 @@ class CareerPlanningApp {
             }
         }
         if (cards[1]) {
-            const fill = cards[1].querySelector('.progress-fill');
-            if (fill) {
-                fill.style.width = (assessmentCompleted ? 100 : 0) + '%';
-                fill.classList.toggle('has-progress', assessmentCompleted);
-            }
             const badge = cards[1].querySelector('.status-badge');
             if (badge) {
                 badge.textContent = assessmentCompleted ? '已完成' : '待测评';
@@ -870,12 +860,6 @@ class CareerPlanningApp {
             }
         }
         if (cards[2]) {
-            const fill = cards[2].querySelector('.progress-fill');
-            const pct = assessmentCompleted ? Math.min(100, matchedCount * 10) : 0;
-            if (fill) {
-                fill.style.width = pct + '%';
-                fill.classList.toggle('has-progress', pct > 0);
-            }
             const badge = cards[2].querySelector('.status-badge');
             if (badge) {
                 badge.textContent = assessmentCompleted ? (matchedCount + ' 个匹配') : '完成测评后解锁';
@@ -1223,12 +1207,7 @@ class CareerPlanningApp {
             const completeness = result.data.profile_completeness || 0;
             const card = document.querySelector('#dashboardPage .main-card[data-action="profile"]');
             if (card) {
-                const fill = card.querySelector('.progress-fill');
                 const badge = card.querySelector('.status-badge');
-                if (fill) {
-                    fill.style.width = Math.min(100, completeness) + '%';
-                    fill.classList.toggle('has-progress', completeness > 0);
-                }
                 if (badge) {
                     badge.textContent = completeness >= 80 ? '已完成' : '待完善';
                     badge.classList.toggle('status-done', completeness >= 80);
