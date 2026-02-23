@@ -10,9 +10,112 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from langchain.prompts import PromptTemplate
+from langchain_community.chat_models import ChatTongyi
+from langchain.schema import StrOutputParser
+
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
+from utils.yaml_config import get_yaml_config
 
+
+# 配置读取
+config = get_yaml_config()
+rag_conf = config.get("rag", {})
+
+# ===================================================
+# 模型调用
+# ===================================================
+def get_chat_model():
+    """获取通义大模型实例"""
+    model_name = rag_conf.get("chat_model_name", "qwen3-max")
+    return ChatTongyi(model=model_name)
+
+# 缓存模型实例
+_chat_model = None
+
+def _get_model():
+    """获取模型实例（单例模式）"""
+    global _chat_model
+    if _chat_model is None:
+        _chat_model = get_chat_model()
+    return _chat_model
+
+def _build_career_chain():
+    """构建职业规划生成链"""
+    prompt_text = """
+你是一位专业的职业规划顾问，擅长根据用户的测评结果生成个性化的职业规划建议。
+
+请根据以下用户信息，为用户生成个性化的：
+1. 行动计划（短期和中期）
+2. 评估调整机制
+3. 痛点解决方案
+
+用户信息：
+- 报告ID: {report_id}
+- 用户ID: {user_id}
+- 兴趣分析: {interest_analysis}
+- 性格分析: {personality_analysis}
+- 能力分析: {ability_analysis}
+- 推荐职业: {recommended_careers}
+- 当前时间: {current_time}
+
+要求：
+1. 生成的内容要与用户的具体情况相符，不要泛泛而谈
+2. 行动计划要具体可行，包含时间节点和可衡量的目标
+3. 评估调整机制要合理，包含不同时间周期的评估内容
+4. 痛点解决方案要针对用户可能面临的具体问题
+5. 输出格式为JSON，包含以下字段：
+   - action_plan: 包含short_term_plan和mid_term_plan
+   - evaluation: 包含evaluation_system和adjustment_scenarios
+   - pain_points: 包含identified_risks和contingency_plans
+
+JSON输出：
+"""
+    template = PromptTemplate.from_template(prompt_text)
+    return template | _get_model() | StrOutputParser()
+
+def generate_personalized_content(report_id: str, user_id: int, assessment_report: dict) -> dict:
+    """生成个性化的职业规划内容"""
+    try:
+        interest = assessment_report.get("interest_analysis", {})
+        personality = assessment_report.get("personality_analysis", {})
+        ability = assessment_report.get("ability_analysis", {})
+        comp = assessment_report.get("comprehensive_recommendation", {})
+        careers = comp.get("recommended_careers") or comp.get("careers") or []
+        
+        chain = _build_career_chain()
+        raw_output = chain.invoke({
+            "report_id": report_id,
+            "user_id": user_id,
+            "interest_analysis": json.dumps(interest, ensure_ascii=False),
+            "personality_analysis": json.dumps(personality, ensure_ascii=False),
+            "ability_analysis": json.dumps(ability, ensure_ascii=False),
+            "recommended_careers": json.dumps(careers, ensure_ascii=False),
+            "current_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        })
+        
+        # 解析JSON
+        content = raw_output if isinstance(raw_output, str) else getattr(raw_output, "content", str(raw_output))
+        print("=== qwen生成个性化内容 ===")
+        print(content)
+        print("========================")
+        
+        # 提取JSON
+        try:
+            result = json.loads(content)
+        except Exception:
+            # 尝试提取JSON部分
+            json_match = re.search(r'\{[\s\S]*\}', content)
+            if json_match:
+                result = json.loads(json_match.group(0))
+            else:
+                result = {}
+        
+        return result
+    except Exception as e:
+        logger.error(f"生成个性化内容失败: {e}")
+        return {}
 
 def _career_edits_path() -> str:
     p = get_abs_path("data/career_report/edits.json")
@@ -183,6 +286,35 @@ def transform_assessment_to_career(assessment_report: dict, report_id: str, user
     s1["career_choice_advice"]["primary_recommendation"] = (s1["recommended_careers"][0].get("career") if s1["recommended_careers"] else "") or "技术岗位"
     s1["career_choice_advice"]["reasons"] = comp.get("reasons") or s1["career_choice_advice"]["reasons"]
 
+    # 生成个性化内容：行动计划、评估调整、痛点解决方案
+    personalized_content = generate_personalized_content(report_id, user_id, assessment_report)
+    
+    # section_3: 行动计划与成果展示
+    s3 = base["section_3_action_plan"]
+    if "action_plan" in personalized_content:
+        action_plan = personalized_content["action_plan"]
+        if "short_term_plan" in action_plan:
+            s3["short_term_plan"] = action_plan["short_term_plan"]
+        if "mid_term_plan" in action_plan:
+            s3["mid_term_plan"] = action_plan["mid_term_plan"]
+    
+    # section_4: 评估周期与动态调整
+    s4 = base["section_4_evaluation"]
+    if "evaluation" in personalized_content:
+        evaluation = personalized_content["evaluation"]
+        if "evaluation_system" in evaluation:
+            s4["evaluation_system"] = evaluation["evaluation_system"]
+        if "adjustment_scenarios" in evaluation:
+            s4["adjustment_scenarios"] = evaluation["adjustment_scenarios"]
+    
+    # 添加痛点解决方案
+    if "pain_points" in personalized_content:
+        pain_points = personalized_content["pain_points"]
+        if "identified_risks" in pain_points:
+            s4["risk_management"]["identified_risks"] = pain_points["identified_risks"]
+        if "contingency_plans" in pain_points:
+            s4["risk_management"]["contingency_plans"] = pain_points["contingency_plans"]
+
     base["metadata"]["confidence_score"] = assessment_report.get("confidence_score") or 0.88
     base["metadata"]["completeness"] = min(95, 70 + (len(s1["self_assessment"]["strengths"]) + len(s1["recommended_careers"])) * 5)
     return base
@@ -256,15 +388,30 @@ def list_reports_for_career_history(assessment_service, user_id: int) -> List[di
     raw = assessment_service.list_reports_for_user(user_id)
     out = []
     for r in raw:
-        interest = (assessment_service.reports.get(r["report_id"]) or {}).get("interest_analysis") or {}
+        # 获取完整报告信息
+        report = assessment_service.reports.get(r["report_id"])
+        if not report:
+            continue
+        
+        # 检查是否为职业规划报告（包含职业规划特有的字段）
+        # 职业规划报告通常包含 section_1_job_matching 等字段
+        if not (report.get("section_1_job_matching") or report.get("section_2_career_path") or report.get("section_3_action_plan")):
+            # 跳过测评报告，只保留职业规划报告
+            continue
+        
+        interest = report.get("interest_analysis") or {}
         primary = interest.get("primary_interest") or {}
         primary_career = primary.get("type") or "综合"
+        
+        # 计算完整度（如果报告中没有完整度字段）
+        completeness = report.get("completeness", 85)
+        
         out.append({
             "report_id": r["report_id"],
             "created_at": r["created_at"],
             "status": "completed",
             "primary_career": primary_career,
-            "completeness": 85,
-            "last_viewed": r.get("created_at") or r["created_at"],
+            "completeness": completeness,
+            "last_viewed": r.get("last_viewed") or r.get("created_at") or r["created_at"],
         })
     return out

@@ -11,6 +11,12 @@
     <link rel="stylesheet" href="styles.css?v=4">
     <!-- ECharts库 -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- 导出功能所需库 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
 </head>
 <body>
     <div id="app">
@@ -1020,6 +1026,10 @@
                             <span class="toolbar-icon">✨</span>
                             AI 润色
                         </button>
+                        <button id="reportAgentBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">🤖</span>
+                            智能体
+                        </button>
                         <select id="reportExportFormat" class="btn-toolbar-select">
                             <option value="pdf">PDF</option>
                             <option value="docx">Word</option>
@@ -1040,6 +1050,58 @@
                     <button id="reportBackToTop" class="btn-back-to-top hidden" title="回到顶部">↑ 回到顶部</button>
                 </div>
 
+                <!-- 智能体交互弹窗 -->
+                <div id="reportAgentModal" class="modal-overlay hidden">
+                    <div class="modal-content agent-modal">
+                        <div class="modal-header">
+                            <h3>职业规划智能体</h3>
+                            <button type="button" class="modal-close" id="closeAgentModal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="agent-info">
+                                <div class="agent-avatar">🤖</div>
+                                <div class="agent-details">
+                                    <h4>职业规划助手</h4>
+                                    <p>我是你的智能职业规划助手，可以帮你分析报告、提供建议、优化规划方案。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-chat-container">
+                                <div id="agentChatHistory" class="agent-chat-history">
+                                    <div class="agent-message">
+                                        <div class="message-avatar">🤖</div>
+                                        <div class="message-content">
+                                            <p>你好！我是你的职业规划智能助手。我可以帮你：</p>
+                                            <ul>
+                                                <li>分析你的职业规划报告</li>
+                                                <li>提供针对性的改进建议</li>
+                                                <li>优化你的职业发展路径</li>
+                                                <li>回答关于职业规划的问题</li>
+                                            </ul>
+                                            <p>请告诉我你需要什么帮助？</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="agent-chat-input">
+                                    <input type="text" id="agentChatInput" placeholder="输入你的问题或需求...">
+                                    <button id="agentSendBtn" class="btn-primary">发送</button>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-quick-actions">
+                                <h4>快捷操作</h4>
+                                <div class="quick-actions-grid">
+                                    <button class="quick-action-btn" data-action="analyze">分析报告</button>
+                                    <button class="quick-action-btn" data-action="improve">优化建议</button>
+                                    <button class="quick-action-btn" data-action="path">职业路径</button>
+                                    <button class="quick-action-btn" data-action="skills">技能提升</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 完整性检查结果弹窗 -->
                 <div id="reportCompletenessModal" class="modal-overlay hidden">
                     <div class="modal-content report-completeness-modal">
@@ -1059,20 +1121,90 @@
                             <button type="button" class="modal-close" id="closeEditModal">&times;</button>
                         </div>
                         <div class="modal-body">
+                            <!-- 职业目标设置 -->
                             <div class="edit-form-section">
-                                <label>激励寄语</label>
-                                <textarea id="editMotivationalMsg" rows="4" placeholder="修改报告末尾的激励寄语"></textarea>
+                                <h4>职业目标设置</h4>
+                                <div class="edit-form-grid">
+                                    <div class="edit-form-item">
+                                        <label>职业目标类型</label>
+                                        <select id="editCareerGoal">
+                                            <option value="">不修改</option>
+                                            <option value="技术专家">技术专家</option>
+                                            <option value="管理岗位">管理岗位</option>
+                                            <option value="创业">创业</option>
+                                            <option value="专业深耕">专业深耕</option>
+                                        </select>
+                                    </div>
+                                    <div class="edit-form-item">
+                                        <label>期望工作地点</label>
+                                        <input type="text" id="editWorkLocation" placeholder="如：北京、上海、杭州">
+                                    </div>
+                                </div>
+                                <div class="edit-form-grid">
+                                    <div class="edit-form-item">
+                                        <label>薪资预期</label>
+                                        <input type="text" id="editSalaryExpectation" placeholder="如：15k-25k、30k+">
+                                    </div>
+                                    <div class="edit-form-item">
+                                        <label>工作生活平衡</label>
+                                        <select id="editWorkLifeBalance">
+                                            <option value="">不修改</option>
+                                            <option value="高">高</option>
+                                            <option value="中">中</option>
+                                            <option value="低">低</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
+                            
+                            <!-- 目标设置 -->
                             <div class="edit-form-section">
-                                <label>短期目标 - 截止时间（如 2026.07）</label>
-                                <input type="text" id="editShortTermDeadline" placeholder="section_2 第一个目标的 deadline">
+                                <h4>目标设置</h4>
+                                <div class="edit-form-item">
+                                    <label>短期目标（1年内）</label>
+                                    <textarea id="editShortTermGoal" rows="3" placeholder="如：成功入职目标岗位，获得2+ offer"></textarea>
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>短期目标截止时间</label>
+                                    <input type="text" id="editShortTermDeadline" placeholder="如：2026.07">
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>中期目标（3-5年）</label>
+                                    <textarea id="editMidTermGoal" rows="3" placeholder="如：成长为中高级工程师，独立负责核心项目"></textarea>
+                                </div>
                             </div>
+                            
+                            <!-- 行动计划 -->
                             <div class="edit-form-section">
-                                <label>行动计划 - 时间投入（如 每周12小时）</label>
-                                <input type="text" id="editTimeInvestment" placeholder="section_3 第一个任务的时间投入">
+                                <h4>行动计划</h4>
+                                <div class="edit-form-item">
+                                    <label>短期行动计划</label>
+                                    <textarea id="editShortTermPlan" rows="3" placeholder="如：学习核心技术栈，完成2个项目，准备面试"></textarea>
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>每周时间投入</label>
+                                    <input type="text" id="editTimeInvestment" placeholder="如：每周12小时">
+                                </div>
                             </div>
+                            
+                            <!-- 报告内容 -->
+                            <div class="edit-form-section">
+                                <h4>报告内容</h4>
+                                <div class="edit-form-item">
+                                    <label>激励寄语</label>
+                                    <textarea id="editMotivationalMsg" rows="3" placeholder="修改报告末尾的激励寄语"></textarea>
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>关键要点</label>
+                                    <textarea id="editKeyTakeaways" rows="3" placeholder="修改报告中的关键要点"></textarea>
+                                </div>
+                            </div>
+                            
                             <p class="edit-form-hint">仅填写需要修改的字段，留空则不变</p>
-                            <button type="button" id="saveReportEditsBtn" class="btn-primary">保存修改</button>
+                            <div class="edit-form-actions">
+                                <button type="button" id="saveReportEditsBtn" class="btn-primary">保存修改</button>
+                                <button type="button" id="previewReportBtn" class="btn-secondary">预览效果</button>
+                            </div>
                         </div>
                     </div>
                 </div>
