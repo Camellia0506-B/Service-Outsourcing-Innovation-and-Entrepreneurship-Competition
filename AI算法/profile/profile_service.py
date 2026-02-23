@@ -435,6 +435,48 @@ class ProfileService:
         confidence_score = parsed.pop("confidence_score", 0.85)
         suggestions = parsed.pop("suggestions", [])
 
+        # 规范化 skills：保证 items 为字符串数组，便于前端「专业技能」等正确展示
+        if isinstance(parsed.get("skills"), list):
+            normalized_skills = []
+            for s in parsed["skills"]:
+                if not s:
+                    continue
+                if isinstance(s, str):
+                    normalized_skills.append({"category": "专业技能", "items": [s]})
+                elif isinstance(s, dict):
+                    cat = s.get("category") or s.get("type") or "专业技能"
+                    raw = s.get("items") or (s.get("name") and [s["name"]]) or []
+                    if not isinstance(raw, list):
+                        raw = [raw] if raw else []
+                    items = []
+                    for it in raw:
+                        if isinstance(it, str):
+                            items.append(it)
+                        elif isinstance(it, dict):
+                            items.append(it.get("name") or it.get("skill") or it.get("item") or "")
+                        else:
+                            items.append(str(it) if it else "")
+                    items = [x.strip() for x in items if x and x.strip()]
+                    if items:
+                        normalized_skills.append({"category": cat, "items": items})
+            parsed["skills"] = normalized_skills
+
+        # 规范化 internships：剔除 company 仅为年份或无效词的条目不作为实习公司
+        if isinstance(parsed.get("internships"), list):
+            import re
+            cleaned = []
+            for i in parsed["internships"]:
+                if not i or not isinstance(i, dict):
+                    continue
+                company = (i.get("company") or "").strip()
+                # 若 company 仅为 4 位数字（年份）或明显无效词，则丢弃该条或仅保留 description
+                if re.match(r"^\d{4}$", company) or company in ("提交有效", "无", "暂无", "—", "－"):
+                    continue
+                if len(company) < 2 and not (i.get("description") or "").strip():
+                    continue
+                cleaned.append(i)
+            parsed["internships"] = cleaned
+
         # parsed 剩余部分就是 parsed_data
         return {
             "parsed_data": parsed,

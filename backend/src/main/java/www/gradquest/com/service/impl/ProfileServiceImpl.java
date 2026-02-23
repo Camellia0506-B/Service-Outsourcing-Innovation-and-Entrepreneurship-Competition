@@ -216,26 +216,32 @@ public class ProfileServiceImpl implements ProfileService {
             String text = pdfProcessor.extractText(tmp);
             tmp.delete();
 
-            // 简单抽取：邮箱/手机号/姓名（可后续替换为 AI 结构化解析）
+            // 简单抽取：邮箱/手机号/姓名/出生日期/性别
             String email = extractEmail(text);
             String phone = extractPhone(text);
             String name = extractName(text);
+            String birthDateStr = extractBirthDate(text);
+            String gender = extractGender(text);
 
-            // 写回个人档案：user_profiles(phone/email) & users.nickname（若为空且能抽取到姓名）
+            // 写回个人档案：user_profiles(phone/email/birthDate/gender) & users.nickname
             UserProfile profile = userProfileMapper.selectById(userId);
             if (profile == null) {
                 profile = new UserProfile();
                 profile.setUserId(userId);
             }
-            // 新简历解析结果覆盖原有档案（不再仅填充空字段）
-            boolean profileChanged = false;
             if (phone != null && !phone.isBlank()) {
                 profile.setPhone(phone);
-                profileChanged = true;
             }
             if (email != null && !email.isBlank()) {
                 profile.setEmail(email);
-                profileChanged = true;
+            }
+            if (birthDateStr != null && !birthDateStr.isBlank()) {
+                try {
+                    profile.setBirthDate(LocalDate.parse(birthDateStr));
+                } catch (Exception ignored) {}
+            }
+            if (gender != null && !gender.isBlank()) {
+                profile.setGender(gender);
             }
             profile.setUpdatedAt(LocalDateTime.now());
             if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
@@ -286,6 +292,8 @@ public class ProfileServiceImpl implements ProfileService {
             basic.put("nickname", name != null ? name : "");
             basic.put("phone", phone != null ? phone : "");
             basic.put("email", email != null ? email : "");
+            basic.put("birth_date", birthDateStr != null ? birthDateStr : "");
+            basic.put("gender", gender != null ? gender : "");
             parsed.put("basic_info", basic);
             parsed.put("education", List.of(toEducationMap(profile)));
             parsed.put("skills", parsedSkills.stream().map(s -> Map.<String, Object>of("category", s.getCategory(), "items", parseJsonList(s.getItems()))).collect(Collectors.toList()));
@@ -405,12 +413,55 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
-    /** 仅当简历中有明确的「姓名/Name」标签时才提取，否则不自动识别姓名，避免误填 */
+    /** 出生日期：匹配 出生日期/生日/出生/Birth 等后的 yyyy-MM、yyyy/MM/dd、yyyy年M月 等，归一化为 yyyy-MM-dd */
+    private static String extractBirthDate(String text) {
+        if (text == null) return null;
+        String half = text.replace('／', '/').replace('．', '.');
+        // 出生日期：1999-01 或 1999年1月 或 1999/01/01 或 1999.1.15
+        Pattern p = Pattern.compile("(?:出生日期|生日|出生|Birth|DOB|Date of Birth)[:：\\s]*" +
+                "(\\d{4})[-/年.](\\d{1,2})(?:[-/日.](\\d{1,2}))?", Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(half);
+        if (m.find()) {
+            String y = m.group(1);
+            String mo = m.group(2).length() == 1 ? "0" + m.group(2) : m.group(2);
+            String d = m.group(3);
+            if (d == null || d.isEmpty()) d = "01";
+            else if (d.length() == 1) d = "0" + d;
+            return y + "-" + mo + "-" + d;
+        }
+        // 仅年份或 年月
+        Pattern p2 = Pattern.compile("(?:出生日期|生日|出生)[:：\\s]*(\\d{4})年?(\\d{1,2})?");
+        Matcher m2 = p2.matcher(half);
+        if (m2.find()) {
+            String y = m2.group(1);
+            String mo = m2.group(2);
+            if (mo == null || mo.isEmpty()) return y + "-01-01";
+            if (mo.length() == 1) mo = "0" + mo;
+            return y + "-" + mo + "-01";
+        }
+        return null;
+    }
+
+    /** 性别：匹配 性别/Gender 后的 男/女 */
+    private static String extractGender(String text) {
+        if (text == null) return null;
+        Pattern p = Pattern.compile("(?:性别|Gender)[:：\\s]*(男|女)", Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(text);
+        if (m.find()) return m.group(1);
+        return null;
+    }
+
+    /** 奖项/级别等不得作为姓名返回 */
+    private static final Set<String> NAME_BLOCKLIST = Set.of(
+            "国家级", "省级", "校级", "院级", "一等奖", "二等奖", "三等奖", "优秀奖", "特等奖",
+            "金奖", "银奖", "铜奖", "获奖", "等级", "级别", "等级证书");
+
+    /** 姓名：优先「姓名/Name」标签行；排除奖项级别；若无则取前几行中 2～4 个汉字作为姓名 */
     private static String extractName(String text) {
         if (text == null) return null;
         String[] lines = text.split("\\R");
         Pattern p1 = Pattern.compile("^(姓名|Name)[:：\\s]+(.+)$", Pattern.CASE_INSENSITIVE);
-        int max = Math.min(lines.length, 10);
+        int max = Math.min(lines.length, 15);
         for (int i = 0; i < max; i++) {
             String line = lines[i].trim();
             Matcher m = p1.matcher(line);
@@ -420,9 +471,19 @@ public class ProfileServiceImpl implements ProfileService {
                 if (parts.length > 0) v = parts[0].trim();
                 if (!v.isEmpty() && v.length() <= 20 && !v.contains("@") && !v.matches(".*\\d{11}.*")) {
                     if (!v.matches(".*[\\u4e00-\\u9fa5].*") && v.length() <= 4) continue;
+                    if (NAME_BLOCKLIST.contains(v)) continue;
                     return v;
                 }
             }
+        }
+        // 前几行中首个 2～4 个汉字（常见简历首行为姓名）
+        Pattern chineseName = Pattern.compile("^[\\u4e00-\\u9fa5]{2,4}$");
+        for (int i = 0; i < Math.min(lines.length, 8); i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty()) continue;
+            if (chineseName.matcher(line).matches()) return line;
+            String firstToken = line.split("[\\s\\|\\/\\-、]")[0].trim();
+            if (chineseName.matcher(firstToken).matches()) return firstToken;
         }
         return null;
     }

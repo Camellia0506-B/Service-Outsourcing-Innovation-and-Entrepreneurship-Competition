@@ -1,10 +1,10 @@
 // API配置
 const API_CONFIG = {
-    baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、个人档案等）
-    assessmentBaseURL: 'http://localhost:5001/api/v1',   // AI 算法服务（职业测评 / 岗位画像 / AI生成），必须为绝对地址，避免打到 8080
-    jobProfilesBaseURL: 'http://localhost:5001/api/v1',  // 岗位画像列表 → Flask AI 服务（5001）
+    baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、档案更新等）
+    assessmentBaseURL: 'http://localhost:5001/api/v1', // Python AI 服务（职业测评/岗位画像/简历AI解析等），须先启动 AI算法 服务
+    jobProfilesBaseURL: 'http://localhost:5001/api/v1', // 岗位画像 → Flask AI（5001）
     timeout: 30000,
-    mockMode: false  // true=模拟数据（仅用于演示，所有数据为假）；false=连接真实后端（Java:5000 / AI:5001），使用真实数据库和岗位数据
+    mockMode: false  // true=模拟数据；false=真实后端（Java:5000 / Python AI:5001）
 };
 
 // API工具类
@@ -130,7 +130,7 @@ class API {
         return this.request(endpoint + sep + qs, { method: 'GET' });
     }
 
-    // 文件上传请求
+    // 文件上传请求（走 Java 后端）
     async upload(endpoint, formData) {
         const token = localStorage.getItem('token');
         const url = `${this.baseURL}${endpoint}`;
@@ -160,6 +160,35 @@ class API {
             console.error('文件上传错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch'))
                 ? '无法连接后端，请确认已启动 Java 后端 (http://localhost:5000/api/v1)，并在项目 backend 目录运行'
+                : (error.message || '上传失败');
+            return { success: false, msg };
+        }
+    }
+
+    // 向 AI 服务（Python）上传文件，用于简历 AI 解析等
+    async uploadToAI(endpoint, formData) {
+        const token = localStorage.getItem('token');
+        const url = `${this.aiBaseURL}${endpoint}`;
+        if (API_CONFIG.mockMode) {
+            return this.mockRequest(endpoint, { formData });
+        }
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: formData
+            });
+            const result = await response.json();
+            if (result.code === 200) {
+                return { success: true, data: result.data, msg: result.msg };
+            }
+            return { success: false, msg: result.msg, code: result.code };
+        } catch (error) {
+            console.error('AI 服务上传错误:', error);
+            const msg = (error.message && error.message.toLowerCase().includes('fetch'))
+                ? '无法连接 AI 服务 (http://localhost:5001)，请确认已启动 Python AI 算法服务'
                 : (error.message || '上传失败');
             return { success: false, msg };
         }
@@ -1308,18 +1337,17 @@ async function updateProfile(userId, profileData) {
     });
 }
 
-// 上传简历
+// 上传简历（使用 Python AI 服务解析，走 5001）
 async function uploadResume(userId, resumeFile) {
     const formData = new FormData();
     formData.append('user_id', userId);
     formData.append('resume_file', resumeFile);
-    
-    return await api.upload('/profile/upload-resume', formData);
+    return await api.uploadToAI('/profile/upload-resume', formData);
 }
 
-// 获取简历解析结果
+// 获取简历解析结果（Python AI 服务，5001）
 async function getResumeParseResult(userId, taskId) {
-    return await api.post('/profile/resume-parse-result', {
+    return await api.postToAI('/profile/resume-parse-result', {
         user_id: userId,
         task_id: taskId
     });

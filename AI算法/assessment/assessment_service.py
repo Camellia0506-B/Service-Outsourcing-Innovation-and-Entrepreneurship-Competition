@@ -252,6 +252,8 @@ class AssessmentService:
                 report = self._generate_report_with_ai(user_id, assessment_id, answers, scores)
                 # 2.5 用后端计分覆盖能力分析、兴趣匹配度（保证能力有区分度、兴趣匹配度基于 Holland）
                 report = self._inject_scores_into_report(report, scores)
+                # 2.55 能力详细分析：AI 生成每项能力的文字描述（不写死）
+                report = self._generate_ability_descriptions(report)
                 # 2.6 注入计算机相关岗位推荐（适合职业领域 + 最匹配职业，来自数据集 + Holland/MBTI）
                 try:
                     from assessment.career_recommender import inject_career_recommendations
@@ -403,21 +405,20 @@ class AssessmentService:
         report["ability_analysis"]["strengths"] = strengths
         report["ability_analysis"]["areas_to_improve"] = areas_to_improve
 
-        # 2) 性格特质：用后端计分（0-100）覆盖，保证进度条基准一致
+        # 2) 性格特质：始终用后端计分覆盖五项，最低 20 分（避免 AI 或旧数据出现 0 分）
         trait_scores = scores.get("traits") or {}
-        if trait_scores:
-            trait_names = ["外向性", "开放性", "尽责性", "宜人性", "情绪稳定性"]
-            level_map = lambda s: "高" if s >= 70 else "偏高" if s >= 55 else "中等" if s >= 40 else "偏低" if s >= 25 else "低"
-            report["personality_analysis"] = report.get("personality_analysis") or {}
-            report["personality_analysis"]["traits"] = [
-                {
-                    "trait_name": name,
-                    "score": min(100, max(0, int(trait_scores.get(name, 0)))),
-                    "level": level_map(trait_scores.get(name, 0)),
-                    "description": ""
-                }
-                for name in trait_names
-            ]
+        trait_names = ["外向性", "开放性", "尽责性", "宜人性", "情绪稳定性"]
+        level_map = lambda s: "高" if s >= 70 else "偏高" if s >= 55 else "中等" if s >= 40 else "偏低" if s >= 25 else "低"
+        report["personality_analysis"] = report.get("personality_analysis") or {}
+        report["personality_analysis"]["traits"] = [
+            {
+                "trait_name": name,
+                "score": min(100, max(20, int(trait_scores.get(name, 0)))),
+                "level": level_map(max(20, trait_scores.get(name, 0))),
+                "description": ""
+            }
+            for name in trait_names
+        ]
 
         # 3) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
         holland = scores.get("holland") or {}
@@ -438,6 +439,49 @@ class AssessmentService:
             dist = [{"type": type_names.get(k, k), "score": holland[k]} for k in ["R", "I", "A", "S", "E", "C"]]
             dist.sort(key=lambda x: -x["score"])
             report["interest_analysis"]["interest_distribution"] = dist
+        return report
+
+    def _generate_ability_descriptions(self, report: dict) -> dict:
+        """
+        用 AI 为能力分析中的优势与待提升项生成简短文字描述，不写死在前后端。
+        写入 ability_analysis.strengths[].description 与 areas_to_improve[].suggestions
+        """
+        aa = report.get("ability_analysis") or {}
+        strengths = aa.get("strengths") or []
+        areas = aa.get("areas_to_improve") or []
+        if not strengths and not areas:
+            return report
+        ability_data = json.dumps(
+            {"strengths": [{"ability": x.get("ability"), "score": x.get("score")} for x in strengths],
+             "areas_to_improve": [{"ability": x.get("ability"), "score": x.get("score")} for x in areas]},
+            ensure_ascii=False, indent=2
+        )
+        try:
+            from langchain_core.output_parsers import StrOutputParser
+            from langchain_core.prompts import PromptTemplate
+            try:
+                from model.factory import chat_model
+                model = chat_model
+            except ImportError:
+                from langchain_community.chat_models.tongyi import ChatTongyi
+                from utils.config_handler import rag_conf
+                model = ChatTongyi(model=rag_conf["chat_model_name"])
+            prompt_template = _load_prompt("ability_descriptions_prompt_path")
+            prompt = PromptTemplate(input_variables=["ability_data"], template=prompt_template)
+            chain = prompt | model | StrOutputParser()
+            raw = chain.invoke({"ability_data": ability_data})
+            out = _extract_json(raw)
+            desc_by_ability = {x.get("ability"): x.get("description") or "" for x in (out.get("strengths") or [])}
+            sugg_by_ability = {x.get("ability"): x.get("suggestions") or [] for x in (out.get("areas_to_improve") or [])}
+            for s in strengths:
+                s["description"] = desc_by_ability.get(s.get("ability")) or s.get("description") or "该项能力表现较好，可在职业发展中持续发挥。"
+            for a in areas:
+                a["suggestions"] = sugg_by_ability.get(a.get("ability")) or a.get("suggestions") or ["可通过练习与项目实践持续提升。"]
+            report["ability_analysis"]["strengths"] = strengths
+            report["ability_analysis"]["areas_to_improve"] = areas
+            logger.info("[Assessment] 能力描述 AI 生成完成")
+        except Exception as e:
+            logger.warning("[Assessment] 能力描述 AI 生成失败，保留原描述: %s", e)
         return report
 
     def _generate_report_with_ai(self, user_id: int, assessment_id: str, answers: List[dict], scores: dict) -> dict:

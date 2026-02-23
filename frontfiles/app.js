@@ -968,11 +968,13 @@ class CareerPlanningApp {
         if (data.skills !== undefined) {
             const container = document.getElementById('skillsContainer');
             if (container) {
+                const toStr = (it) => (typeof it === 'string' ? it : (it && (it.name || it.skill || it.item || it.label))) || '';
                 container.innerHTML = '';
                 (data.skills || []).forEach(skill => {
                     const div = document.createElement('div');
                     div.className = 'skill-category';
-                    const items = Array.isArray(skill.items) ? skill.items : [];
+                    const raw = Array.isArray(skill.items) ? skill.items : [];
+                    const items = raw.map(toStr).filter(Boolean);
                     div.innerHTML = `
                         <input type="text" placeholder="技能分类" class="skill-category-input" value="${(skill.category || '').replace(/"/g, '&quot;')}">
                         <input type="text" placeholder="技能列表" class="skill-items-input" value="${items.join(', ').replace(/"/g, '&quot;')}">
@@ -1017,11 +1019,13 @@ class CareerPlanningApp {
 
         const container = document.getElementById('skillsContainer');
         if (container) {
+            const toStr = (it) => (typeof it === 'string' ? it : (it && (it.name || it.skill || it.item || it.label))) || '';
             container.innerHTML = '';
             skills.forEach(skill => {
                 const div = document.createElement('div');
                 div.className = 'skill-category';
-                const items = Array.isArray(skill.items) ? skill.items : [];
+                const raw = Array.isArray(skill.items) ? skill.items : [];
+                const items = raw.map(toStr).filter(Boolean);
                 div.innerHTML = `
                     <input type="text" placeholder="技能分类" class="skill-category-input" value="${(skill.category || '').replace(/"/g, '&quot;')}">
                     <input type="text" placeholder="技能列表" class="skill-items-input" value="${items.join(', ').replace(/"/g, '&quot;')}">
@@ -1063,16 +1067,27 @@ class CareerPlanningApp {
         };
 
         if (skillsFromResume.length > 0) {
+            const toItemStr = (it) => (typeof it === 'string' ? it : (it && (it.name || it.skill || it.item || it.label))) || '';
+            const toItemsArray = (raw) => {
+                if (!Array.isArray(raw)) return [];
+                return raw.map(toItemStr).filter(Boolean);
+            };
+            const categoryLabel = (c) => {
+                const v = (c || '').trim();
+                const map = { '专业技能': '专业技能', 'professional skills': '专业技能', '编程语言': '编程语言', 'programming languages': '编程语言', '工具与框架': '工具与框架', '语言能力': '语言能力' };
+                return map[v.toLowerCase()] || map[v] || v || '简历技能';
+            };
             if (typeof skillsFromResume[0] === 'string') {
-                profileData.skills.push({ category: '简历技能', items: skillsFromResume });
+                profileData.skills.push({ category: '专业技能', items: skillsFromResume });
             } else {
                 skillsFromResume.forEach(s => {
                     if (!s) return;
                     if (typeof s === 'string') {
-                        profileData.skills.push({ category: '简历技能', items: [s] });
+                        profileData.skills.push({ category: '专业技能', items: [s] });
                     } else {
-                        const category = s.category || s.type || '简历技能';
-                        const items = Array.isArray(s.items) ? s.items : (s.name ? [s.name] : []);
+                        const category = categoryLabel(s.category || s.type);
+                        const rawItems = Array.isArray(s.items) ? s.items : (s.name ? [s.name] : []);
+                        const items = toItemsArray(rawItems);
                         if (items.length > 0) {
                             profileData.skills.push({ category, items });
                         }
@@ -6016,13 +6031,14 @@ class CareerPlanningApp {
         const sortedByScore = allAbilities.length ? [...allAbilities].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)) : [];
         const topAbility = sortedByScore[0] || null;
         const secondAbility = sortedByScore[1] || null;
-        // 性格特质：后端/AI 返回 0-100，进度条与雷达图满分基准 = 100
+        // 性格特质：展示时最低 20 分，避免旧报告或 AI 返回 0 分
         const TRAIT_MAX_SCORE = 100;
+        const safeTraitScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(20, Math.min(100, v)) : 20; };
         if (traits.length) {
-            traits.forEach(t => { console.log('[性格特质]', t.trait_name, 'score=', t.score, '范围应为 0-' + TRAIT_MAX_SCORE); });
+            traits.forEach(t => { console.log('[性格特质]', t.trait_name, 'score=', t.score, '展示不低于 20'); });
         }
         const radarLabels = traits.map(t => t.trait_name);
-        const radarValues = traits.map(t => safePct(Number(t.score) || 0));
+        const radarValues = traits.map(t => safePct(safeTraitScore(t.score)));
 
         const reportId = this.currentReportId;
         let html = `
@@ -6081,14 +6097,14 @@ class CareerPlanningApp {
                     <div class="report-section-title"><span class="dot"></span>性格特质分析 — ${mbti}</div>
                     <div class="report-trait-list">
                         ${traits.map(t => {
-                            const scoreNum = Number(t.score) || 0;
+                            const scoreNum = safeTraitScore(t.score);
                             const pct = safePct((scoreNum / TRAIT_MAX_SCORE) * 100);
                             const levelClass = pct >= 60 ? 'report-level-high' : pct >= 40 ? 'report-level-mid' : 'report-level-low';
                             const levelText = pct >= 60 ? '偏强' : pct >= 40 ? '中等' : '偏低';
                             return `<div class="report-trait-item">
                                 <span class="report-trait-name">${t.trait_name}</span>
                                 <div class="report-trait-bar-bg"><div class="report-trait-bar" style="width:${pct}%; background:linear-gradient(90deg,#667eea,#764ba2)"></div></div>
-                                <span class="report-trait-score">${t.score}分 <span class="report-level-tag ${levelClass}">${t.level || levelText}</span></span>
+                                <span class="report-trait-score">${scoreNum}分 <span class="report-level-tag ${levelClass}">${t.level || levelText}</span></span>
                             </div>`;
                         }).join('')}
                     </div>
@@ -6111,6 +6127,9 @@ class CareerPlanningApp {
                             const color = score >= 75 ? '#48bb78' : score >= 60 ? '#f5a623' : '#e94560';
                             const level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '重点提升';
                             const levelTag = score >= 70 ? 'report-level-high' : score >= 50 ? 'report-level-mid' : 'report-level-low';
+                            const desc = (a.description || '').trim();
+                            const sugg = Array.isArray(a.suggestions) ? a.suggestions.filter(Boolean).join(' ') : '';
+                            const textBlock = desc || sugg;
                             return `<div class="report-ability-card">
                                 <div class="report-ability-name">${a.ability}</div>
                                 <div class="report-ability-score-row">
@@ -6118,6 +6137,7 @@ class CareerPlanningApp {
                                     <span class="report-level-tag ${levelTag}">${level}</span>
                                 </div>
                                 <div class="report-ability-bar-bg"><div class="report-ability-bar" style="width:${score}%; background:linear-gradient(90deg,${color},${color}99)"></div></div>
+                                ${textBlock ? `<div class="report-ability-desc">${String(textBlock).replace(/</g, '&lt;')}</div>` : ''}
                             </div>`;
                         }).join('')}
                     </div>

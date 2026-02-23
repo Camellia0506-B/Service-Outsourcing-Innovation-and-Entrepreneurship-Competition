@@ -6,3 +6,4 @@ career_report_prompt_path: prompts/career_report_prompt.txt
 resume_parse_prompt_path: prompts/resume_parse_prompt.txt
 
 assessment_report_prompt_path: prompts/assessment_report_prompt.txt
+ability_descriptions_prompt_path: prompts/ability_descriptions_prompt.txt
