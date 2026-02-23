@@ -174,6 +174,7 @@ class AssessmentService:
         dimensions = []
 
         for dim_id, dim_cfg in dim_configs.items():
+            questions: List[dict] = []
             try:
                 # 一次多取一些题，再随机抽取目标数量，保证每次问卷题目组合不同
                 retrieve_count = dim_cfg["count"] * 3
@@ -189,19 +190,33 @@ class AssessmentService:
                 if len(questions) > dim_cfg["count"]:
                     random.shuffle(questions)
                     questions = questions[:dim_cfg["count"]]
-                dimensions.append({
-                    "dimension_id": dim_id,
-                    "dimension_name": dim_cfg["dimension_name"],
-                    "questions": questions
-                })
                 logger.info(f"[Assessment] 从RAG检索 {dim_id} 维度题目: {len(questions)}题")
             except Exception as e:
-                logger.error(f"[Assessment] 检索 {dim_id} 维度题目失败: {e}")
-                dimensions.append({
-                    "dimension_id": dim_id,
-                    "dimension_name": dim_cfg["dimension_name"],
-                    "questions": []
-                })
+                logger.error(f"[Assessment] 检索 {dim_id} 维度题目失败，尝试使用内置题库: {e}")
+
+            # 若上面检索不到题目（包括异常或题库为空），从内置题库兜底生成题目
+            if not questions:
+                try:
+                    builtin_getter = getattr(self.question_bank, "_get_builtin_questions", None)
+                    if callable(builtin_getter):
+                        bank = builtin_getter()
+                        dim_bank = bank.get(dim_id, {}).get("questions", [])
+                        dim_bank = [_ensure_question_options(q) for q in dim_bank]
+                        questions = list(dim_bank) if dim_bank else []
+                        if len(questions) > dim_cfg["count"]:
+                            random.shuffle(questions)
+                            questions = questions[:dim_cfg["count"]]
+                        logger.info(f"[Assessment] 使用内置题库为 {dim_id} 维度生成 {len(questions)} 题")
+                    else:
+                        logger.warning(f"[Assessment] 未找到内置题库获取方法，维度 {dim_id} 将无题目")
+                except Exception as be:
+                    logger.error(f"[Assessment] 使用内置题库为 {dim_id} 维度生成题目失败: {be}")
+
+            dimensions.append({
+                "dimension_id": dim_id,
+                "dimension_name": dim_cfg["dimension_name"],
+                "questions": questions
+            })
 
         return dimensions
 
@@ -490,46 +505,111 @@ class AssessmentService:
         输入：用户档案 + 答题数据 + 计分结果
         输出：霍兰德分析 + MBTI分析 + 能力分析 + 价值观分析 + 职业建议
         """
-        from langchain_core.output_parsers import StrOutputParser
-        from langchain_core.prompts import PromptTemplate
-
-        # 模型加载（与profile_service保持一致）
         try:
-            from model.factory import chat_model
-            model = chat_model
-        except ImportError:
-            from langchain_community.chat_models.tongyi import ChatTongyi
-            from utils.config_handler import rag_conf
-            model = ChatTongyi(model=rag_conf["chat_model_name"])
+            from langchain_core.output_parsers import StrOutputParser
+            from langchain_core.prompts import PromptTemplate
 
-        # 加载用户档案（如果有的话）
-        try:
-            from profile.profile_service import ProfileService
-            profile_service = ProfileService()
-            user_profile_data = profile_service.get_profile(user_id)
-            user_profile = json.dumps(user_profile_data, ensure_ascii=False, indent=2)
-        except Exception:
-            user_profile = "用户档案暂无"
+            # 模型加载（与profile_service保持一致）
+            try:
+                from model.factory import chat_model
+                model = chat_model
+            except ImportError:
+                from langchain_community.chat_models.tongyi import ChatTongyi
+                from utils.config_handler import rag_conf
+                model = ChatTongyi(model=rag_conf["chat_model_name"])
 
-        # 构造prompt输入
-        prompt_template = _load_prompt("assessment_report_prompt_path")
-        prompt = PromptTemplate(
-            input_variables=["user_profile", "answers_data", "dimension_scores"],
-            template=prompt_template
-        )
-        chain = prompt | model | StrOutputParser()
+            # 加载用户档案（如果有的话）
+            try:
+                from profile.profile_service import ProfileService
+                profile_service = ProfileService()
+                user_profile_data = profile_service.get_profile(user_id)
+                user_profile = json.dumps(user_profile_data, ensure_ascii=False, indent=2)
+            except Exception:
+                user_profile = "用户档案暂无"
 
-        # 调用模型
-        raw_output = chain.invoke({
-            "user_profile": user_profile,
-            "answers_data": json.dumps(answers, ensure_ascii=False, indent=2),
-            "dimension_scores": json.dumps(scores, ensure_ascii=False, indent=2)
-        })
+            # 构造prompt输入
+            prompt_template = _load_prompt("assessment_report_prompt_path")
+            prompt = PromptTemplate(
+                input_variables=["user_profile", "answers_data", "dimension_scores"],
+                template=prompt_template
+            )
+            chain = prompt | model | StrOutputParser()
 
-        # 解析JSON
-        report_data = _extract_json(raw_output)
-        logger.info(f"[Assessment] AI报告生成完成，confidence={report_data.get('confidence_score', 0)}")
-        return report_data
+            # 调用模型
+            raw_output = chain.invoke({
+                "user_profile": user_profile,
+                "answers_data": json.dumps(answers, ensure_ascii=False, indent=2),
+                "dimension_scores": json.dumps(scores, ensure_ascii=False, indent=2)
+            })
+
+            # 解析JSON
+            report_data = _extract_json(raw_output)
+            logger.info(f"[Assessment] AI报告生成完成，confidence={report_data.get('confidence_score', 0)}")
+            return report_data
+        except Exception as e:
+            # 大模型调用失败时，使用本地模板生成一个基础报告，避免前端 500
+            logger.error("[Assessment] 调用大模型生成报告失败，使用本地模板: %s", e, exc_info=True)
+            holland = scores.get("holland") or {}
+            traits = scores.get("traits") or {}
+            abilities = scores.get("abilities") or {}
+            values = scores.get("values") or {}
+
+            # 生成一个简单的本地报告结构，兼容前端字段
+            primary_trait = max(traits.items(), key=lambda x: x[1])[0] if traits else "外向性"
+            primary_ability = max(abilities.items(), key=lambda x: x[1])[0] if abilities else "学习能力"
+
+            return {
+                "status": "completed",
+                "holland_scores": holland,
+                "trait_scores": traits,
+                "ability_scores": abilities,
+                "value_scores": values,
+                "interest_analysis": {
+                    "primary_interest": {
+                        "type": "综合兴趣",
+                        "score": max(holland.values()) if holland else 75,
+                        "description": "根据答题结果生成的本地基础兴趣分析。"
+                    },
+                    "holland_code": "".join(sorted(holland, key=lambda k: -holland[k])[:3]) if holland else "RIA",
+                    "interest_distribution": [
+                        {"type": k, "score": v} for k, v in holland.items()
+                    ],
+                },
+                "personality_analysis": {
+                    "traits": [
+                        {
+                            "trait_name": name,
+                            "score": score,
+                            "level": "高" if score >= 70 else "中等" if score >= 40 else "偏低",
+                            "description": ""
+                        }
+                        for name, score in traits.items()
+                    ],
+                    "primary_trait": primary_trait,
+                },
+                "ability_analysis": {
+                    "strengths": [
+                        {"ability": name, "score": score, "description": "该项能力表现较为突出"}
+                        for name, score in abilities.items() if score >= 75
+                    ],
+                    "areas_to_improve": [
+                        {"ability": name, "score": score, "suggestions": ["可以通过实践和项目训练进行提升"]}
+                        for name, score in abilities.items() if score < 70
+                    ],
+                },
+                "values_analysis": {
+                    "scores": values
+                },
+                "career_suggestions": {
+                    "summary": "这是基于本地规则生成的基础职业建议，用于在大模型不可用时保障功能可用。",
+                    "suggested_fields": [],
+                    "tips": [
+                        "可以根据自己的兴趣和能力，重点关注与计算机、互联网、数据相关的岗位。",
+                        "建议多参与项目实践，丰富个人履历。"
+                    ]
+                },
+                "confidence_score": 0.6,
+            }
 
     # ==================================================
     # 3.3 获取测评报告

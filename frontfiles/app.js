@@ -867,7 +867,7 @@ class CareerPlanningApp {
         if (cards[1]) {
             const badge = cards[1].querySelector('.status-badge');
             if (badge) {
-                badge.textContent = assessmentCompleted ? '已完成' : '待测评';
+                badge.textContent = assessmentCompleted ? '已完成' : '未完成';
                 badge.classList.toggle('status-done', assessmentCompleted);
                 badge.classList.toggle('status-pending', !assessmentCompleted);
             }
