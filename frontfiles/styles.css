@@ -1256,9 +1256,9 @@ body::before {
 }
 
 #matchingPage .matching-container { max-width: 1280px; margin: 0 auto; padding: 32px 28px; }
-#matchingPage .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+#matchingPage .page-header { margin-bottom: 28px; display: flex; flex-direction: column; align-items: flex-start; }
 #matchingPage .page-header h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; color: var(--match-text); }
-#matchingPage .page-header p { font-size: 16px; color: var(--match-text2); margin-top: 8px; line-height: 1.6; }
+#matchingPage .page-header p { font-size: 13px; color: #7e93c0; margin: 0; line-height: 1.4; }
 
 #matchingPage .matching-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--match-border); margin-bottom: 28px; }
 #matchingPage .tab-btn {
@@ -2054,16 +2054,20 @@ body::before {
 }
 
 .ability-profile-header {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto 30px;
-    padding: 0 20px;
+    padding: 0;
     box-sizing: border-box;
+    width: 100%;
 }
 
 .ability-profile-header h2 {
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 32px;
     font-weight: 700;
-    margin-bottom: 24px;
+    color: #0f1c3f;
+    margin: 0;
+    line-height: 36px;
 }
 
 .ability-profile-card {
@@ -2122,6 +2126,36 @@ body::before {
     border: 1px solid var(--border-color);
 }
 
+/* 通用页面标题样式 */
+.page-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-title-bar {
+    width: 4px;
+    height: 36px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #2563eb, #0ea5e9);
+    flex-shrink: 0;
+}
+
+.page-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f1c3f;
+    margin: 0;
+    line-height: 36px;
+}
+
+.page-subtitle {
+    color: #7e93c0;
+    font-size: 13px;
+    margin: 0;
+}
+
 /* 岗位画像页面 */
 .job-profile-container {
     max-width: 1400px;
@@ -2172,7 +2206,8 @@ body::before {
     font-size: 32px;
     font-weight: 700;
     color: #0f1c3f;
-    margin: 0 0 24px 0;
+    margin: 0;
+    line-height: 36px;
 }
 
 .job-profile-subtitle {
@@ -4762,8 +4797,12 @@ body::before {
 }
 
 .report-page-header {
-    margin-bottom: 24px;
+    max-width: 1200px;
+    margin: 0 auto 24px;
+    padding: 24px 20px 0;
     text-align: left;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .report-page-desc {
@@ -8509,15 +8548,14 @@ body::before {
 
 .hero-badge {
     display: inline-block;
-    padding: 6px 16px;
-    background: rgba(255, 255, 255, 0.25);
-    color: #3b5bdb;
-    border: 1px solid rgba(199, 215, 255, 0.4);
-    border-radius: 100px;
-    font-size: 13px;
+    padding: 4px 12px;
+    font-size: 11px;
     font-weight: 600;
-    margin-bottom: 20px;
-    backdrop-filter: blur(6px);
+    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
 }
 
 .hero-title {
