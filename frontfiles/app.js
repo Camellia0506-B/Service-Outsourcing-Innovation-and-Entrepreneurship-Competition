@@ -277,6 +277,21 @@ class CareerPlanningApp {
         document.getElementById('reportCheckCompletenessBtn')?.addEventListener('click', () => this.checkReportCompleteness());
         document.getElementById('reportEditBtn')?.addEventListener('click', () => this.openReportEditModal());
         document.getElementById('reportPolishBtn')?.addEventListener('click', () => this.polishCareerReport());
+        document.getElementById('reportAgentBtn')?.addEventListener('click', () => this.openAgentModal());
+        document.getElementById('agentSendBtn')?.addEventListener('click', () => this.sendAgentMessage());
+        document.getElementById('agentChatInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.sendAgentMessage();
+        });
+        document.querySelectorAll('.quick-action-btn')?.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                this.handleQuickAction(action);
+            });
+        });
+        document.getElementById('closeAgentModal')?.addEventListener('click', () => this.closeAgentModal());
+        document.getElementById('reportAgentModal')?.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'reportAgentModal') this.closeAgentModal();
+        });
         document.getElementById('reportExportBtn')?.addEventListener('click', () => this.exportCareerReport());
         document.getElementById('closeCompletenessModal')?.addEventListener('click', () => document.getElementById('reportCompletenessModal')?.classList.add('hidden'));
         document.getElementById('closeEditModal')?.addEventListener('click', () => document.getElementById('reportEditModal')?.classList.add('hidden'));
@@ -6667,12 +6682,42 @@ class CareerPlanningApp {
         const userId = getCurrentUserId();
         if (!id || !userId) return this.showToast('请先登录', 'error');
         const edits = {};
-        const msg = document.getElementById('editMotivationalMsg')?.value?.trim();
-        const deadline = document.getElementById('editShortTermDeadline')?.value?.trim();
+        
+        // 职业目标设置
+        const careerGoal = document.getElementById('editCareerGoal')?.value?.trim();
+        const workLocation = document.getElementById('editWorkLocation')?.value?.trim();
+        const salaryExpectation = document.getElementById('editSalaryExpectation')?.value?.trim();
+        const workLifeBalance = document.getElementById('editWorkLifeBalance')?.value?.trim();
+        
+        // 目标设置
+        const shortTermGoal = document.getElementById('editShortTermGoal')?.value?.trim();
+        const shortTermDeadline = document.getElementById('editShortTermDeadline')?.value?.trim();
+        const midTermGoal = document.getElementById('editMidTermGoal')?.value?.trim();
+        
+        // 行动计划
+        const shortTermPlan = document.getElementById('editShortTermPlan')?.value?.trim();
         const timeInvestment = document.getElementById('editTimeInvestment')?.value?.trim();
-        if (msg) edits['summary.motivational_message'] = msg;
-        if (deadline) edits['section_2_career_path.short_term_goal.specific_targets[0].deadline'] = deadline;
+        
+        // 报告内容
+        const motivationalMsg = document.getElementById('editMotivationalMsg')?.value?.trim();
+        const keyTakeaways = document.getElementById('editKeyTakeaways')?.value?.trim();
+        
+        // 映射到报告结构
+        if (careerGoal) edits['career_choice_advice.primary_recommendation'] = careerGoal;
+        if (workLocation) edits['preferences.work_location'] = workLocation;
+        if (salaryExpectation) edits['preferences.salary_expectation'] = salaryExpectation;
+        if (workLifeBalance) edits['preferences.work_life_balance'] = workLifeBalance;
+        
+        if (shortTermGoal) edits['section_2_career_path.short_term_goal.primary_goal'] = shortTermGoal;
+        if (shortTermDeadline) edits['section_2_career_path.short_term_goal.specific_targets[0].deadline'] = shortTermDeadline;
+        if (midTermGoal) edits['section_2_career_path.mid_term_goal.primary_goal'] = midTermGoal;
+        
+        if (shortTermPlan) edits['section_3_action_plan.short_term_plan.goal'] = shortTermPlan;
         if (timeInvestment) edits['section_3_action_plan.short_term_plan.monthly_plans[0].tasks[0].时间投入'] = timeInvestment;
+        
+        if (motivationalMsg) edits['summary.motivational_message'] = motivationalMsg;
+        if (keyTakeaways) edits['summary.key_takeaways'] = keyTakeaways.split('\n');
+        
         if (Object.keys(edits).length === 0) return this.showToast('请填写需要修改的字段', 'info');
         const result = await editCareerReport(id, userId, edits);
         if (result.success) {
@@ -6702,20 +6747,270 @@ class CareerPlanningApp {
             }
         }, 30000);
     }
+    
+    // 打开智能体弹窗
+    openAgentModal() {
+        document.getElementById('reportAgentModal').classList.remove('hidden');
+    }
+    
+    // 关闭智能体弹窗
+    closeAgentModal() {
+        document.getElementById('reportAgentModal').classList.add('hidden');
+    }
+    
+    // 发送消息给智能体
+    sendAgentMessage() {
+        const input = document.getElementById('agentChatInput');
+        const message = input.value.trim();
+        if (!message) return;
+        
+        // 添加用户消息到聊天记录
+        this.addMessageToChat('user', message);
+        input.value = '';
+        
+        // 显示正在输入状态
+        this.showTypingIndicator();
+        
+        // 模拟智能体响应
+        setTimeout(() => {
+            this.removeTypingIndicator();
+            const response = this.getAgentResponse(message);
+            this.addMessageToChat('agent', response);
+        }, 1500);
+    }
+    
+    // 添加消息到聊天记录
+    addMessageToChat(sender, content) {
+        const chatHistory = document.getElementById('agentChatHistory');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = sender === 'user' ? 'user-message' : 'agent-message';
+        
+        const avatar = sender === 'user' ? '👤' : '🤖';
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content">
+                ${this.formatMessageContent(content)}
+            </div>
+        `;
+        
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    
+    // 格式化消息内容
+    formatMessageContent(content) {
+        if (typeof content === 'string') {
+            return `<p>${content}</p>`;
+        } else if (Array.isArray(content)) {
+            return `<ul>${content.map(item => `<li>${item}</li>`).join('')}</ul>`;
+        } else {
+            return `<p>${JSON.stringify(content)}</p>`;
+        }
+    }
+    
+    // 显示正在输入状态
+    showTypingIndicator() {
+        const chatHistory = document.getElementById('agentChatHistory');
+        const typingDiv = document.createElement('div');
+        typingDiv.id = 'typingIndicator';
+        typingDiv.className = 'agent-message';
+        typingDiv.innerHTML = `
+            <div class="message-avatar">🤖</div>
+            <div class="message-content">
+                <p>正在输入...</p>
+            </div>
+        `;
+        chatHistory.appendChild(typingDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    
+    // 移除正在输入状态
+    removeTypingIndicator() {
+        const typingDiv = document.getElementById('typingIndicator');
+        if (typingDiv) {
+            typingDiv.remove();
+        }
+    }
+    
+    // 处理快捷操作
+    handleQuickAction(action) {
+        const actions = {
+            analyze: '请分析我的职业规划报告，指出优势和不足',
+            improve: '请提供针对性的改进建议',
+            path: '请优化我的职业发展路径',
+            skills: '请推荐我需要提升的技能'
+        };
+        
+        const message = actions[action];
+        if (message) {
+            const input = document.getElementById('agentChatInput');
+            input.value = message;
+            this.sendAgentMessage();
+        }
+    }
+    
+    // 获取智能体响应
+    getAgentResponse(message) {
+        // 简单的关键词匹配，实际项目中可以接入真实的AI模型
+        const lowerMessage = message.toLowerCase();
+        
+        if (lowerMessage.includes('分析') && lowerMessage.includes('报告')) {
+            return {
+                type: 'analysis',
+                content: [
+                    '根据你的职业规划报告分析：',
+                    '优势：',
+                    '- 职业目标明确',
+                    '- 技能评估全面',
+                    '- 发展路径合理',
+                    '不足：',
+                    '- 缺乏具体的时间规划',
+                    '- 技能提升计划不够详细',
+                    '- 风险应对策略不足'
+                ]
+            };
+        } else if (lowerMessage.includes('优化') || lowerMessage.includes('建议')) {
+            return {
+                type: 'suggestions',
+                content: [
+                    '针对性改进建议：',
+                    '1. 制定详细的月度/季度目标',
+                    '2. 为每个技能提升项设定具体的学习计划',
+                    '3. 增加行业 networking 活动',
+                    '4. 定期回顾和调整职业规划'
+                ]
+            };
+        } else if (lowerMessage.includes('职业') && lowerMessage.includes('路径')) {
+            return {
+                type: 'career_path',
+                content: [
+                    '优化后的职业发展路径：',
+                    '1. 近期（1-2年）：技能积累和经验提升',
+                    '2. 中期（3-5年）：职位晋升和责任扩大',
+                    '3. 长期（5年以上）：行业专家或管理层'
+                ]
+            };
+        } else if (lowerMessage.includes('技能') && lowerMessage.includes('提升')) {
+            return {
+                type: 'skills',
+                content: [
+                    '推荐提升的技能：',
+                    '1. 专业技能：深化行业知识和技术能力',
+                    '2. 软技能：沟通能力、领导力、团队协作',
+                    '3. 工具技能：数据分析工具、项目管理工具',
+                    '4. 行业趋势：持续关注行业最新发展'
+                ]
+            };
+        } else if (lowerMessage.includes('你好') || lowerMessage.includes('hi') || lowerMessage.includes('hello')) {
+            return '你好！我是你的职业规划智能助手，有什么可以帮你的吗？';
+        } else {
+            return '感谢你的问题。作为你的职业规划智能助手，我可以帮你分析报告、提供建议、优化职业路径。请告诉我你具体需要什么帮助？';
+        }
+    }
 
     // 7.5 导出职业规划报告（支持 PDF/Word）
     async exportCareerReport() {
         const id = this.currentReportId;
         if (!id) return this.showToast('暂无报告', 'error');
         const format = (document.getElementById('reportExportFormat')?.value || 'pdf').toLowerCase();
-        const result = await exportCareerReport(id, format);
-        if (result.success && result.data?.download_url) {
-            const url = result.data.download_url;
-            window.open(url.startsWith('http') ? url : (window.location.origin + url), '_blank');
-            this.showToast('导出成功', 'success');
-        } else {
-            this.showToast(result.msg || '导出失败', 'error');
+        
+        // 检查报告内容是否存在
+        const reportContent = document.getElementById('reportContent');
+        if (!reportContent || reportContent.innerHTML.includes('加载中') || reportContent.innerHTML.includes('暂无报告')) {
+            return this.showToast('报告内容未加载完成，请稍后再试', 'error');
         }
+        
+        this.showToast('正在生成导出文件，请稍候...', 'info');
+        
+        try {
+            if (format === 'pdf') {
+                await this.exportToPDF(id);
+            } else if (format === 'docx') {
+                await this.exportToWord(id);
+            } else {
+                this.showToast('不支持的导出格式', 'error');
+            }
+        } catch (error) {
+            console.error('导出失败:', error);
+            this.showToast('导出失败: ' + (error.message || '未知错误'), 'error');
+        }
+    }
+    
+    // 导出为PDF
+    async exportToPDF(reportId) {
+        const { jsPDF } = window.jspdf;
+        const reportContent = document.getElementById('reportContent');
+        
+        // 克隆内容以避免修改原始DOM
+        const contentClone = reportContent.cloneNode(true);
+        
+        // 设置克隆内容的样式
+        contentClone.style.width = '1000px';
+        contentClone.style.maxWidth = '1000px';
+        contentClone.style.padding = '20px';
+        contentClone.style.backgroundColor = '#fff';
+        contentClone.style.color = '#000';
+        
+        // 将克隆内容添加到页面
+        document.body.appendChild(contentClone);
+        
+        try {
+            // 使用html2canvas将内容转换为图片
+            const canvas = await html2canvas(contentClone, {
+                scale: 2, // 提高清晰度
+                useCORS: true,
+                logging: false,
+                letterRendering: true
+            });
+            
+            // 创建PDF文档
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            // 计算图片在PDF中的尺寸
+            const imgWidth = 210; // A4宽度
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            
+            // 添加图片到PDF
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, imgWidth, imgHeight);
+            
+            // 保存PDF文件
+            const filename = `career_report_${reportId}_${new Date().toISOString().split('T')[0]}.pdf`;
+            pdf.save(filename);
+            
+            this.showToast('PDF导出成功', 'success');
+        } finally {
+            // 移除克隆内容
+            document.body.removeChild(contentClone);
+        }
+    }
+    
+    // 导出为Word
+    exportToWord(reportId) {
+        const reportContent = document.getElementById('reportContent');
+        
+        // 提取报告内容
+        const reportHtml = reportContent.innerHTML;
+        
+        // 使用Turndown将HTML转换为Markdown
+        const turndownService = new TurndownService();
+        const markdown = turndownService.turndown(reportHtml);
+        
+        // 创建Word文档内容
+        const content = `# 职业规划报告\n\n${markdown}`;
+        
+        // 创建Blob对象
+        const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        
+        // 保存Word文件
+        const filename = `career_report_${reportId}_${new Date().toISOString().split('T')[0]}.docx`;
+        saveAs(blob, filename);
+        
+        this.showToast('Word导出成功', 'success');
     }
 
     // 加载测评报告内容（职业规划报告页的历史列表若展示测评报告时可复用；主入口已改为 showAssessmentReportOnAssessmentPage）
@@ -7066,7 +7361,22 @@ class CareerPlanningApp {
     renderCareerReportHistory(reports) {
         const listDiv = document.getElementById('historyList');
         listDiv.innerHTML = '';
-        reports.forEach(report => {
+        
+        // 过滤只显示职业规划报告，排除测评报告
+        const careerReports = reports.filter(report => {
+            // 职业规划报告通常包含以下特征：
+            // 1. 有 primary_career 字段
+            // 2. 有 completeness 字段
+            // 3. 状态为 completed
+            return report.primary_career || report.completeness !== undefined || report.status === 'completed';
+        });
+        
+        if (careerReports.length === 0) {
+            listDiv.innerHTML = '<div class="hint-text">暂无职业规划历史报告</div>';
+            return;
+        }
+        
+        careerReports.forEach(report => {
             const item = document.createElement('div');
             item.className = 'career-history-item';
             
