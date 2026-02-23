@@ -185,11 +185,29 @@ def upload_resume():
         return error_response(500, f"服务器内部错误: {str(e)}")
 
 
+def _is_readable_text(text: str) -> bool:
+    """
+    粗略判断一段文本是否“可读”（主要由中英文、数字组成），用于识别扫描件/乱码PDF。
+    """
+    if not text:
+        return False
+    sample = text[:2000]
+    total = len(sample)
+    if total == 0:
+        return False
+    import re
+    readable_chars = re.findall(r"[A-Za-z0-9\u4e00-\u9fa5]", sample)
+    ratio = len(readable_chars) / total
+    # 阈值不宜过高，避免正常排版中包含较多标点/空白时被误判为不可读
+    return ratio >= 0.2
+
+
 def _extract_text(file_path: str, ext: str) -> str:
     """
     从文件提取纯文本内容。
     PDF优先用 pymupdf（fitz），提取效果更好，兼容内嵌字体；
-    未安装则降级用 pdfplumber；再不行读原始字节。
+    再尝试 pdfplumber；如均失败，再考虑 OCR 或原始字节。
+    对明显为乱码/底层编码的内容会返回空字符串，避免误判为有效简历。
     """
     try:
         if ext == ".pdf":
@@ -204,9 +222,11 @@ def _extract_text(file_path: str, ext: str) -> str:
                         pages_text.append(text)
                 doc.close()
                 result = "\n".join(pages_text)
-                if result.strip():
+                if result.strip() and _is_readable_text(result):
                     logger.info(f"[Profile] pymupdf提取成功，字符数={len(result)}")
                     return result
+                elif result.strip():
+                    logger.warning("[Profile] pymupdf提取结果可读性较差，可能为扫描件或底层编码，尝试其他方式")
             except ImportError:
                 logger.warning("[Profile] pymupdf未安装，降级使用pdfplumber")
             except Exception as e:
@@ -219,31 +239,73 @@ def _extract_text(file_path: str, ext: str) -> str:
                     result = "\n".join(
                         page.extract_text() or "" for page in pdf.pages
                     )
-                if result.strip():
+                if result.strip() and _is_readable_text(result):
                     logger.info(f"[Profile] pdfplumber提取成功，字符数={len(result)}")
                     return result
+                elif result.strip():
+                    logger.warning("[Profile] pdfplumber提取结果可读性较差，可能为扫描件或底层编码，尝试OCR/原始字节")
             except ImportError:
                 logger.warning("[Profile] pdfplumber未安装")
             except Exception as e:
                 logger.warning(f"[Profile] pdfplumber提取失败({e})")
 
-            # 方案3：读原始字节（最后兜底）
+            # 方案3：OCR 识别（可选，需要安装 pytesseract 和 Pillow）
+            try:
+                import fitz  # 复用 pymupdf 以渲染页面
+                import pytesseract
+                from PIL import Image
+
+                doc = fitz.open(file_path)
+                ocr_pages = []
+                for page in doc:
+                    pix = page.get_pixmap()
+                    mode = "RGB" if pix.n < 4 else "RGBA"
+                    img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+                    text = pytesseract.image_to_string(img, lang="chi_sim+eng")
+                    if text.strip():
+                        ocr_pages.append(text)
+                doc.close()
+
+                result = "\n".join(ocr_pages)
+                if result.strip() and _is_readable_text(result):
+                    logger.info(f"[Profile] OCR提取成功，字符数={len(result)}")
+                    return result
+            except ImportError:
+                logger.warning("[Profile] OCR 依赖(pytesseract/Pillow)未安装，跳过OCR")
+            except Exception as e:
+                logger.warning(f"[Profile] OCR提取失败({e})，将尝试原始字节")
+
+            # 方案4：读原始字节（最后兜底，若仍不可读则返回空字符串）
             logger.warning("[Profile] 降级为原始字节读取")
             with open(file_path, "rb") as f:
-                return f.read().decode("utf-8", errors="ignore")
+                raw = f.read().decode("utf-8", errors="ignore")
+            if raw.strip() and _is_readable_text(raw):
+                return raw
+            logger.warning("[Profile] 原始字节内容不可读，视为无效简历文本")
+            return ""
 
         elif ext in (".docx", ".doc"):
             try:
                 import docx
                 doc = docx.Document(file_path)
-                return "\n".join(p.text for p in doc.paragraphs)
+                text = "\n".join(p.text for p in doc.paragraphs)
+                if text.strip() and _is_readable_text(text):
+                    return text
+                if text.strip():
+                    logger.warning("[Profile] Word 文本提取结果可读性较差，可能为损坏文档")
+                return ""
             except ImportError:
                 logger.warning("[Profile] python-docx未安装，无法解析Word文档")
                 return ""
 
         else:  # .txt 及其他
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                return f.read()
+                text = f.read()
+            if text.strip() and _is_readable_text(text):
+                return text
+            if text.strip():
+                logger.warning("[Profile] 文本文件内容可读性较差，可能不是合法的简历文本")
+            return ""
 
     except Exception as e:
         logger.error(f"[Profile] 文本提取失败 {file_path}: {e}")

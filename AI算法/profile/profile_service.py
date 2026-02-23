@@ -131,9 +131,9 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
     """
     当大模型未解析出有效结构时，使用正则从原始文本里兜底提取几项关键信息：
     - 姓名（匹配“姓名：XXX”或首行为 2-4 个汉字的中文名）
-    - 出生日期（匹配“出生日期/生日：YYYY/MM/DD”或 YYYY-MM-DD）
-    - 性别（匹配“性别：男/女”）
-    - 手机号、邮箱
+    - 手机号（11位国内手机号）、邮箱
+    - 性别（匹配“性别：男/女”，兼容 Gender: Male/Female）
+    - 出生日期（匹配“出生日期/生日/出生”后的 YYYY-MM 或 YYYY-MM-DD）
     - 教育经历中第一所学校和专业
     """
     import re
@@ -158,16 +158,35 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
         name_match = re.search(r"姓名\s+([\u4e00-\u9fa5]{2,4})(?:\s|$|[\|，])", text)
         if name_match:
             name = name_match.group(1).strip()
-    if not name:
-        for ln in lines[:5]:
-            ln_clean = ln.strip()
-            if re.match(r"^[\u4e00-\u9fa5]{2,4}$", ln_clean) and not re.search(
-                r"手机|邮箱|教育|专业|技能|项目|实习|荣誉|证书|简历|大学|学院", ln_clean
-            ):
-                name = ln_clean
-                break
+    if not name and lines:
+        first = lines[0]
+        m = re.match(r"^([\u4e00-\u9fa5·]{2,4})\s*$", first)
+        if m:
+            name = m.group(1).strip()
+        elif not name:
+            m = re.match(r"^([\u4e00-\u9fa5·]{2,4})\s+[A-Za-z\u00C0-\u024F\s·.]+$", first)
+            if m:
+                name = m.group(1).strip()
+        if not name:
+            for ln in lines[:5]:
+                ln_clean = ln.strip()
+                if re.match(r"^[\u4e00-\u9fa5]{2,4}$", ln_clean) and not re.search(
+                    r"手机|邮箱|教育|专业|技能|项目|实习|荣誉|证书|简历|大学|学院", ln_clean
+                ):
+                    name = ln_clean
+                    break
 
-    # 出生日期：支持 出生日期：2003/08/15、生日：2003/08/15、含全角/半角
+    # 性别（匹配“性别：男/女”；兼容 Gender: Male/Female）
+    gender = ""
+    gender_match = re.search(r"性别[:：]\s*([男女])", text)
+    if gender_match:
+        gender = gender_match.group(1).strip()
+    if not gender:
+        en_g = re.search(r"Gender[:：]?\s*(Male|Female)", text, re.IGNORECASE)
+        if en_g:
+            gender = "男" if en_g.group(1).lower().startswith("m") else "女"
+
+    # 出生日期：支持 出生日期：2003/08/15、生日：2003/08/15、含全角/半角及行内匹配
     birth_date = ""
     for pattern in [
         r"出生日期\s*[:：]\s*(\d{4})\s*[/\-]\s*(\d{1,2})\s*[/\-]\s*(\d{1,2})",
@@ -181,12 +200,6 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
             d = g[2].zfill(2) if len(g) > 2 and g[2] else "01"
             birth_date = f"{y}-{m}-{d}"
             break
-
-    # 性别
-    gender = ""
-    gender_match = re.search(r"性别\s*[:：]\s*([男女])", text)
-    if gender_match:
-        gender = gender_match.group(1).strip()
 
     # 学校/专业
     school = ""
@@ -461,24 +474,24 @@ class ProfileService:
         raw_output = chain.invoke({"resume_text": resume_text})
         parsed = _extract_json(raw_output)
 
-        # 如果模型没有解析出有效结构，用本地正则做一次兜底解析
-        try:
-            bi = (parsed.get("basic_info") or {}) if isinstance(parsed, dict) else {}
-            no_basic = not bi or all(
-                not (bi.get(k) or "").strip() for k in ("name", "phone", "email")
-            )
-        except Exception:
-            bi = {}
-            no_basic = True
-
-        if no_basic:
-            fallback = _fallback_parse_resume_text(resume_text)
-            if isinstance(parsed, dict):
-                for k, v in fallback.items():
-                    if k not in parsed or not parsed[k]:
-                        parsed[k] = v
-            else:
-                parsed = fallback
+        # 始终执行兜底解析，用正则结果补全 basic_info 中缺失的字段（姓名、性别、出生日期、手机、邮箱）
+        fallback = _fallback_parse_resume_text(resume_text)
+        if not isinstance(parsed, dict):
+            parsed = fallback
+        else:
+            parsed_bi = parsed.setdefault("basic_info", {})
+            if not isinstance(parsed_bi, dict):
+                parsed_bi = {}
+                parsed["basic_info"] = parsed_bi
+            fb_bi = (fallback.get("basic_info") or {}) if isinstance(fallback.get("basic_info"), dict) else {}
+            for key in ("name", "gender", "birth_date", "phone", "email"):
+                if not (parsed_bi.get(key) or "").strip() and (fb_bi.get(key) or "").strip():
+                    parsed_bi[key] = (fb_bi.get(key) or "").strip()
+            # 若 education/skills 等为空，用兜底结果补全
+            for key in ("education", "skills", "internships", "projects", "awards"):
+                if key not in parsed or not parsed[key]:
+                    if fallback.get(key):
+                        parsed[key] = fallback[key]
 
         # 始终用兜底结果补全 basic_info 中缺失的字段（解决模型未识别姓名、出生日期等问题）
         fallback = _fallback_parse_resume_text(resume_text)

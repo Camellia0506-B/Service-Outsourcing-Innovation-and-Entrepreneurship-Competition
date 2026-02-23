@@ -135,5 +135,11 @@
         "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
       }
     ]
+  },
+  "5": {
+    "basic_info": {},
+    "user_id": 5,
+    "updated_at": "2026-02-23 17:55:26",
+    "profile_completeness": 0
   }
 }
