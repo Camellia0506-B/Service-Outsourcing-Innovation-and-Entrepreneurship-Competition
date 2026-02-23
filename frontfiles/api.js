@@ -1622,10 +1622,45 @@ async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 30, i
     return await jobAiGenerateProfile(jobName, jobDescriptions, sampleSize, industry, experience);
 }
 
-// 搜索岗位（使用 4.1 GET /job/profiles，与 getJobProfiles 统一）
+// 搜索岗位（优先使用语义搜索 /matching/search-jobs，失败时回退到 4.1 GET /job/profiles）
 async function searchJobs(keyword, page = 1, size = 20, filters = null) {
     const industry = (filters && filters.industry) || '';
     const level = '';
+
+    // 语义搜索：调用岗位匹配模块提供的 search-jobs 接口（走 AI 服务 5001）
+    try {
+        const body = {
+            keyword: keyword || '',
+            top_n: size,
+            filters: filters || {}
+        };
+        const res = await api.postToAI('/matching/search-jobs', body);
+        if (res && res.success && res.data && Array.isArray(res.data.jobs)) {
+            const list = res.data.jobs.map(j => ({
+                job_id: j.job_id,
+                job_name: j.job_name,
+                industry: j.industry,
+                level: j.level,
+                avg_salary: j.avg_salary,
+                tags: j.tags || [],
+                semantic_score: j.semantic_score ?? null
+            }));
+            return {
+                success: true,
+                data: {
+                    list,
+                    total: res.data.total ?? list.length,
+                    page,
+                    size,
+                    pages: 1
+                }
+            };
+        }
+    } catch (e) {
+        console.warn('语义岗位搜索接口异常，回退到关键词搜索:', e);
+    }
+
+    // 回退：使用原有岗位列表接口进行关键词搜索
     return getJobProfiles(page, size, keyword || '', industry, level, filters);
 }
 

@@ -679,6 +679,8 @@ class HighPrecisionMatchingEngine:
             "fine_grained_scores": fine_grained_scores,
             "highlights": self._generate_highlights(dimension_scores),
             "gaps": skills_result.get("gaps", []),
+            # 暴露专业技能匹配的细节，供 CareerAgent 决策分析模块使用
+            "skills_details": skills_result.get("details", {}),
             "confidence": skills_result.get("confidence", 0.90),
             "calibration_applied": abs(final_score - raw_score) > 1
         }

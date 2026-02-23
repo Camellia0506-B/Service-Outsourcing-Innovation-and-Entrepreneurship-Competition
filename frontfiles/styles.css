@@ -2448,6 +2448,30 @@ body::before {
     color: #fff;
 }
 
+/* CareerAgent 推荐理由与成长建议 */
+.career-agent-reason {
+    padding: 8px 0 4px;
+    font-size: 12px;
+    color: #4b5563;
+}
+.career-agent-reason .reason-text {
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+.career-agent-reason .reason-strengths {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.strength-pill {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 11px;
+}
+
 .job-footer {
     margin-top: 12px;
     display: flex;
@@ -2455,6 +2479,94 @@ body::before {
     align-items: center;
     font-size: 12px;
     color: var(--text-secondary);
+}
+
+/* 智能体提示样式 */
+.ai-hint {
+    margin: 8px 0 12px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.ai-hint-blue {
+    background: #eef2ff;
+    color: #1d4ed8;
+}
+.ai-hint-purple {
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+.ai-hint-label {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+/* CareerAgent 决策分析中心 */
+.ca-skill-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 6px;
+}
+.ca-skill-table th,
+.ca-skill-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+.ca-skill-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+.career-path-line {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #374151;
+}
+.path-step {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #3730a3;
+    margin-right: 4px;
+}
+.career-transitions {
+    margin-top: 10px;
+    display: grid;
+    gap: 8px;
+}
+.transition-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px dashed #e5e7eb;
+}
+.transition-role {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #111827;
+}
+.transition-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.ability-pill {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: #ecfeff;
+    color: #0369a1;
 }
 
 .job-footer .demand-score {

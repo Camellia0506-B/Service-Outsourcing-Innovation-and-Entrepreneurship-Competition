@@ -67,6 +67,37 @@ def recommend_jobs():
 
 
 # ============================================================
+# 6.x 语义岗位搜索（Embedding + FAISS）
+# POST /api/v1/matching/search-jobs
+# ============================================================
+@matching_bp.route("/search-jobs", methods=["POST"])
+def search_jobs():
+    """
+    使用语义搜索获取岗位列表。
+    请求体：{ keyword, top_n?, filters? }
+    返回：{ total, jobs: [{ job_id, job_name, industry, level, avg_salary, tags, semantic_score }] }
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        keyword = body.get("keyword", "") or ""
+        top_n = body.get("top_n", 20)
+        filters = body.get("filters", {}) or {}
+
+        if top_n < 1 or top_n > 50:
+            return error_response(400, "top_n 参数应在1-50之间")
+
+        service = get_job_matching_service()
+        result = service.search_jobs(keyword, top_n, filters)
+
+        logger.info(f"[API] 语义搜索岗位，keyword='{keyword}', total={result.get('total', 0)}")
+        return success_response(result)
+
+    except Exception as e:
+        logger.error(f"[API] /matching/search-jobs 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ============================================================
 # 6.2 获取单个岗位匹配分析
 # POST /api/v1/matching/analyze
 # ============================================================

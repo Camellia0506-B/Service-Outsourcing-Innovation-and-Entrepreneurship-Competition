@@ -4991,6 +4991,11 @@ class CareerPlanningApp {
         const dimScores = data.dimension_scores || {};
         const highlights = data.highlights || [];
         const gaps = data.gaps || [];
+        const matchedSkills = data.matched_skills || [];
+        const skillGaps = data.skill_gaps || [];
+        const improvementPlan = data.improvement_plan || {};
+        const promotionPath = data.promotion_path || [];
+        const transitionPaths = data.transition_paths || [];
         const jobInfo = data.job_info || {};
         const jobName = data.job_name || '岗位';
 
@@ -5072,7 +5077,8 @@ class CareerPlanningApp {
             `<button type="button" class="dim-tab ${i === 0 ? 'active' : ''}" data-dim-tab="${key}">${['📐', '💡', '🌟', '🚀'][i]} ${dimLabels[key]}</button>`
         ).join('');
         const youItems = highlights.slice(0, 4).map(h => `<div class="cmp-item"><span class="cmp-ico">✅</span><div><div class="cmp-name">${h}</div></div><span class="lvl lvl-have">✓ 符合</span></div>`).join('');
-        const gapRowsHtml = gaps.slice(0, 5).map((g, i) =>
+        const gapSource = (skillGaps && skillGaps.length) ? skillGaps : gaps;
+        const gapRowsHtml = gapSource.slice(0, 5).map((g, i) =>
             `<div class="gap-row"><div class="gap-n">${i + 1}</div><div><strong>${g.gap || ''}：</strong>${g.suggestion || ''}</div></div>`
         ).join('');
         const dimContentHtml = dimKeys.map((key, i) => {
@@ -5088,16 +5094,28 @@ class CareerPlanningApp {
                         <div class="cmp-item"><span class="cmp-ico">${s >= req ? '✅' : '⚡'}</span><div><div class="cmp-name">当前 ${s} 分</div><div class="cmp-note">${s >= req ? '已达标' : '需提升'}</div></div><span class="lvl ${s >= req ? 'lvl-have' : 'lvl-part'}">${s >= req ? '✓ 符合' : '需提升'}</span></div>
                     </div>
                 </div>
-                ${i === 1 && gapRowsHtml ? `<div class="gap-box"><div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}</div>` : ''}
+                ${i === 1 && gapRowsHtml ? `<div class="gap-box">
+                    <div class="ai-hint-label">🤖 智能体通过能力差距分析识别影响匹配度的关键短板，并生成个性化提升建议。</div>
+                    <div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}
+                </div>` : ''}
             </div>`;
         }).join('');
 
-        // 行动计划：从 gaps 生成；若 gaps 为空则根据低分维度生成兜底建议
+        // 行动计划：优先使用 CareerAgent 返回的 improvement_plan；若为空再回退到 gaps 生成
         const dimSuggestions = { basic_requirements: '补充学历/专业/GPA等基础条件', professional_skills: '通过项目或课程提升岗位所需技能', soft_skills: '加强沟通协作、学习能力等软技能', development_potential: '积累项目经验、参与竞赛或实习' };
         let planItems = [];
-        if (gaps.length > 0) {
-            planItems = [...gaps.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', desc: g.suggestion || '', tag: 't-urgent' })),
-                ...gaps.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', desc: g.suggestion || '', tag: 't-mid' }))];
+        const shortPlan = (improvementPlan.short_term || []).slice(0, 3);
+        const midPlan = (improvementPlan.mid_term || []).slice(0, 3);
+        if (shortPlan.length || midPlan.length) {
+            planItems = [
+                ...shortPlan.map((t, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i] || '🎯', title: t, desc: '', tag: 't-urgent' })),
+                ...midPlan.map((t, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i] || '☁️', title: t, desc: '', tag: 't-mid' }))
+            ];
+        } else if (gapSource.length > 0) {
+            planItems = [
+                ...gapSource.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', desc: g.suggestion || '', tag: 't-urgent' })),
+                ...gapSource.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', desc: g.suggestion || '', tag: 't-mid' }))
+            ];
         } else {
             const lowDims = dimKeys.filter(k => (dimScores[k]?.score ?? 0) < 70).slice(0, 3);
             planItems = lowDims.map((k, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: `提升${dimLabels[k]}`, desc: dimSuggestions[k] || '根据岗位要求针对性提升', tag: 't-urgent' }));
@@ -5138,6 +5156,23 @@ class CareerPlanningApp {
                 ${dimContentHtml}
             </div>
             <div class="sec">
+                <div class="sec-title" style="margin-bottom:10px">✅ 已匹配核心技能</div>
+                ${matchedSkills.length ? `
+                <table class="ca-skill-table">
+                    <thead><tr><th>岗位技能</th><th>你的技能</th><th>匹配分</th><th>语义相似</th></tr></thead>
+                    <tbody>
+                        ${matchedSkills.slice(0, 6).map(ms => `
+                            <tr>
+                                <td>${ms.skill || '-'}</td>
+                                <td>${ms.student_skill || '-'}</td>
+                                <td>${ms.match_score ?? 0}</td>
+                                <td>${(ms.similarity != null ? Math.round(ms.similarity * 100) : 0)}%</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>` : '<p class="hint-text">暂无可展示的匹配技能。</p>'}
+            </div>
+            <div class="sec">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                     <div class="sec-title" style="margin-bottom:0">个性化提升行动计划</div>
                     <div class="plan-tabs">
@@ -5149,7 +5184,10 @@ class CareerPlanningApp {
             </div>
             <div class="sec">
                 <div class="sec-title" style="margin-bottom:16px">📈 职业发展路径</div>
-                <div class="sec-sub" style="margin-top:-8px;margin-bottom:12px">结合岗位画像与个人擅长方向，构建本职业清晰的发展路径</div>
+                <div class="ai-hint ai-hint-purple">
+                    🤖 智能体决策说明：系统基于技能相似度、行业发展趋势与薪资成长潜力进行综合评估，优先推荐最具长期发展价值的职业路径。
+                </div>
+                <div class="sec-sub" style="margin-top:4px;margin-bottom:12px">结合岗位画像与个人擅长方向，构建本职业清晰的发展路径</div>
                 <div id="reportCareerPathContainer"></div>
             </div>
         `;
