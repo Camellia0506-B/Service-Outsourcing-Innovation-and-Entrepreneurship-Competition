@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>职业路径图谱</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f2f5ff;
+  --white: #fff;
+  --accent: #4f7cff;
+  --accent2: #7c5cff;
+  --green: #00b894;
+  --gold: #f5a623;
+  --red: #ff4d6d;
+  --text: #1a2340;
+  --dim: #5a6a8a;
+  --muted: #aab4cc;
+  --border: rgba(79,124,255,0.12);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); padding:20px 24px; }
+
+/* 顶部信息卡 */
+.job-header {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 20px;
+  box-shadow: 0 2px 10px rgba(79,100,200,0.06);
+}
+.jh-title { font-size: 20px; font-weight: 700; color: var(--text); display:flex;align-items:center;gap:8px; }
+.jh-metas { display:flex;gap:16px;margin-left:auto; }
+.jh-meta { font-size:12px;color:var(--dim);display:flex;align-items:center;gap:4px; }
+
+/* Tab */
+.tab-bar { display:flex;background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px; }
+.tab-btn { flex:1;padding:12px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s; }
+.tab-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff; }
+.tab-btn:not(.active):hover { background:rgba(79,124,255,0.04);color:var(--accent); }
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* ══════════════════
+   晋升路径 — 垂直图谱
+══════════════════ */
+.promo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  padding: 10px 20px 20px;
+}
+
+/* 阶段行 */
+.stage-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.stage-row.fork {
+  align-items: flex-start;
+}
+
+/* 左侧信息面板 */
+.stage-info {
+  width: 200px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 8px;
+}
+.si-year { font-size:11px;font-weight:600;color:var(--muted);margin-bottom:3px; }
+.si-sal { font-size:13px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace; }
+.si-tip { font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4; }
+
+/* 中轴 */
+.axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 48px;
+}
+.axis-dot {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 3px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 12px rgba(79,124,255,0.2);
+  position: relative;
+  z-index: 2;
+}
+.axis-dot.current {
+  background: linear-gradient(135deg,var(--accent),var(--accent2));
+  border-color: #fff;
+  box-shadow: 0 4px 18px rgba(79,124,255,0.4), 0 0 0 5px rgba(79,124,255,0.15);
+}
+.axis-dot.top {
+  background: linear-gradient(135deg,#f5a623,#ff8142);
+  border-color: #fff;
+  box-shadow: 0 4px 18px rgba(245,166,35,0.4);
+}
+
+/* 连线段 */
+.connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  position: relative;
+}
+.conn-line {
+  width: 2px;
+  height: 32px;
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+}
+.conn-arrow {
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid var(--accent2);
+}
+.conn-label {
+  position: absolute;
+  left: calc(50% + 16px);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 10px; font-weight: 600;
+  color: var(--dim);
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(79,100,200,0.07);
+}
+
+/* 主卡片 */
+.stage-card {
+  flex: 1;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: fadeUp 0.4s ease both;
+}
+.stage-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,100,200,0.1); }
+.stage-card::before {
+  content:''; position:absolute; left:0;top:0;bottom:0;width:3px;border-radius:14px 0 0 14px;
+}
+.stage-card.current { background:linear-gradient(135deg,rgba(79,124,255,0.06),rgba(124,92,255,0.04));border-color:rgba(79,124,255,0.3); }
+.stage-card.current::before { background:linear-gradient(180deg,var(--accent),var(--accent2)); }
+.stage-card.next::before { background:var(--green); }
+.stage-card.top::before { background:var(--gold); }
+
+.sc-top { display:flex;align-items:center;gap:8px;margin-bottom:10px; }
+.sc-name { font-size:15px;font-weight:700;color:var(--text); }
+.sc-badge { margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px; }
+.badge-cur { background:rgba(79,124,255,0.1);color:#3d65e0;border:1px solid rgba(79,124,255,0.2); }
+.badge-next { background:rgba(0,184,148,0.1);color:#009e7a;border:1px solid rgba(0,184,148,0.2); }
+.badge-top { background:rgba(245,166,35,0.1);color:#c47d00;border:1px solid rgba(245,166,35,0.2); }
+
+.sc-desc { font-size:12px;color:var(--dim);line-height:1.6;margin-bottom:10px; }
+
+.sc-row { display:flex;gap:20px;margin-bottom:10px; }
+.sc-stat { display:flex;flex-direction:column;gap:2px; }
+.sc-stat-label { font-size:10px;color:var(--muted); }
+.sc-stat-val { font-size:12px;font-weight:700;color:var(--text); }
+
+.sc-skills { display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px; }
+.chip { font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.14); }
+.chip.new { background:rgba(0,184,148,0.07);color:#009e7a;border-color:rgba(0,184,148,0.18); }
+
+.sc-companies { font-size:11px;color:var(--muted); }
+.sc-companies span { color:var(--dim);font-weight:500; }
+
+/* 分叉节点 */
+.fork-cards { display:flex;gap:14px;flex:1; }
+.fork-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 4px;
+}
+.fork-line-h { height:2px;background:linear-gradient(90deg,var(--accent2),var(--gold));width:60px; }
+.fork-line-v { width:2px;height:40px;background:linear-gradient(180deg,var(--accent2),var(--gold)); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+
+/* ══════════════════
+   换岗路径 — 血缘图谱
+══════════════════ */
+.transfer-container {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 16px rgba(79,100,200,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.transfer-container::before {
+  content:''; position:absolute;inset:0;
+  background: radial-gradient(circle, rgba(79,124,255,0.045) 1px, transparent 1px);
+  background-size: 30px 30px; pointer-events:none;
+}
+
+/* 图例 */
+.legend-row { display:flex;gap:14px;margin-bottom:14px;align-items:center; }
+.leg { display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim); }
+.leg-line { width:24px;height:2px; }
+.leg-dot { width:9px;height:9px;border-radius:50%; }
+
+/* SVG画布 */
+.graph-svg-wrap {
+  position:relative;
+  height: 640px;
+}
+.graph-svg { position:absolute;inset:0;width:100%;height:100%; }
+
+/* 节点卡片 */
+.g-node {
+  position:absolute;
+  border-radius:12px;
+  cursor:pointer;
+  transition: transform 0.2s, box-shadow 0.2s, z-index 0s;
+  animation: fadeUp 0.45s ease both;
+  z-index: 2;
+}
+.g-node:hover { transform:scale(1.03) translateY(-3px); box-shadow:0 10px 28px rgba(79,100,200,0.15); z-index:10; }
+
+/* 中心节点 */
+.cn { width:136px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border-radius:16px; padding:16px 14px; text-align:center; box-shadow:0 8px 28px rgba(79,124,255,0.38),0 0 0 6px rgba(79,124,255,0.12); }
+.cn-ico { font-size:24px;margin-bottom:6px; }
+.cn-name { font-size:13px;font-weight:700;margin-bottom:5px;line-height:1.3; }
+.cn-badge { display:inline-block;background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.3);font-size:10px;padding:2px 9px;border-radius:10px; }
+
+/* 岗位节点 */
+.jn { width:150px;background:var(--white);border:1.5px solid;border-radius:12px;padding:11px 13px; }
+.jn-top { display:flex;align-items:center;gap:7px;margin-bottom:7px; }
+.jn-ico { width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0; }
+.jn-name { font-size:12px;font-weight:700;color:var(--text);line-height:1.3; }
+.jn-sal { font-size:10px;color:var(--muted);margin-top:1px; }
+.jn-bar-bg { height:3px;background:rgba(79,124,255,0.08);border-radius:3px;overflow:hidden;margin-bottom:6px; }
+.jn-bar { height:100%;border-radius:3px;animation:grow 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+@keyframes grow{from{width:0!important}}
+.jn-mr { display:flex;justify-content:space-between;margin-bottom:3px; }
+.jn-ml { font-size:10px;color:var(--muted); }
+.jn-mv { font-size:10px;font-weight:700; }
+.jn-tags { display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px; }
+.jn-tag { font-size:9px;padding:1px 6px;border-radius:4px;font-weight:600; }
+.jn-skills { font-size:9px;color:var(--muted);line-height:1.4;margin-bottom:6px; }
+.jn-skills em { font-style:normal;color:var(--accent);font-weight:600; }
+.jn-btn { width:100%;padding:4px;border-radius:6px;border:none;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s; }
+
+/* 边标签 */
+.edge-lbl {
+  position:absolute;
+  font-size:9px;font-weight:600;
+  color:var(--dim);background:var(--white);
+  border:1px solid var(--border);
+  padding:1px 7px;border-radius:8px;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  box-shadow:0 1px 5px rgba(79,100,200,0.08);
+  white-space:nowrap;z-index:5;
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<div class="job-header">
+  <div class="jh-title">🎯 算法工程师</div>
+  <div class="jh-metas">
+    <span class="jh-meta">🔥 20k–35k</span>
+    <span class="jh-meta">📊 需求热度：高</span>
+    <span class="jh-meta">⚡ 匹配度：88%</span>
+    <span class="jh-meta">📍 北京·上海·深圳</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('promo',this)">📋 晋升路径</button>
+  <button class="tab-btn" onclick="switchTab('transfer',this)">🔄 换岗路径</button>
+</div>
+
+<!-- ══ 晋升路径 ══ -->
+<div class="panel active" id="panel-promo">
+<div class="promo-container">
+
+  <!-- Stage 1 -->
+  <div class="stage-row">
+    <div class="stage-info">
+      <div class="si-year">0 – 2 年</div>
+      <div class="si-sal">10k–18k</div>
+      <div class="si-tip">掌握基础算法、<br>参与实习项目</div>
+    </div>
+    <div class="axis"><div class="axis-dot">🌱</div></div>
+    <div class="stage-card next" style="animation-delay:0.05s">
+      <div class="sc-top">
+        <span style="font-size:18px">🌱</span>
+        <span class="sc-name">初级算法工程师</span>
+        <span class="sc-badge badge-next">入门级</span>
+      </div>
+      <div class="sc-desc">负责数据预处理、特征工程、基础模型训练；协助高级工程师完成算法优化；能独立完成 CIFAR、ImageNet 级别任务。</div>
+      <div class="sc-row">
+        <div class="sc-stat"><div class="sc-stat-label">核心技能</div><div class="sc-stat-val">Python · 基础ML</div></div>
+        <div class="sc-stat"><div class="sc-stat-label">代表公司</div><div class="sc-stat-val">中小型互联网</div></div>
+        <div class="sc-stat"><div class="sc-stat-label">晋升周期</div><div class="sc-stat-val">1–2 年</div></div>
+      </div>
+      <div class="sc-skills">
+        <span class="chip">Python</span><span class="chip">Sklearn</span><span class="chip">数据处理</span><span class="chip">模型评估</span><span class="chip">Git</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+    <div class="conn-label">积累项目经验 · 深化技术栈</div>
+  </div>
+
+  <!-- Stage 2 当前 -->
+  <div class="stage-row">
+    <div class="stage-info">
+      <div class="si-year">2 – 4 年 ← 当前</div>
+      <div class="si-sal" style="color:#7c5cff">20k–35k</div>
+      <div class="si-tip">独立负责算法模块<br>具备工程化能力</div>
+    </div>
+    <div class="axis"><div class="axis-dot current">🤖</div></div>
+    <div class="stage-card current" style="animation-delay:0.1s">
+      <div class="sc-top">
+        <span style="font-size:18px">🤖</span>
+        <span class="sc-name">算法工程师（当前）</span>
+        <span class="sc-badge badge-cur">当前岗位</span>
+      </div>
+      <div class="sc-desc">主导推荐/搜索/CV/NLP等方向的算法设计与优化；具备从实验到上线的完整链路能力；能独立分析业务问题并提出算法解决方案。</div>
+      <div class="sc-row">
+        <div class="sc-stat"><div class="sc-stat-label">核心技能</div><div class="sc-stat-val">深度学习 · 工程部署</div></div>
+        <div class="sc-stat"><div class="sc-stat-label">代表公司</div><div class="sc-stat-val">字节/阿里/腾讯</div></div>
+        <div class="sc-stat"><div class="sc-stat-label">晋升周期</div><div class="sc-stat-val">2–3 年</div></div>
+      </div>
+      <div class="sc-skills">
+        <span class="chip">PyTorch</span><span class="chip">Transformer</span><span class="chip">模型优化</span><span class="chip">A/B 实验</span><span class="chip">Docker</span><span class="chip">分布式训练</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <div class="conn-line" style="background:linear-gradient(180deg,var(--accent2),var(--green))"></div>
+    <div class="conn-arrow" style="border-top-color:var(--green)"></div>
+    <div class="conn-label" style="left:auto;right:calc(50% + 24px)">技术深耕 / 向管理转型</div>
+  </div>
+
+  <!-- Stage 3 高级 -->
+  <div class="stage-row">
+    <div class="stage-info">
+      <div class="si-year">4 – 7 年</div>
+      <div class="si-sal" style="color:var(--green)">35k–65k</div>
+      <div class="si-tip">带领小组 · 制定<br>算法技术方向</div>
+    </div>
+    <div class="axis"><div class="axis-dot" style="border-color:var(--green)">⭐</div></div>
+    <div class="stage-card" style="animation-delay:0.15s;border-color:rgba(0,184,148,0.25)">
+      <div class="sc-top">
+        <span style="font-size:18px">⭐</span>
+        <span class="sc-name">高级算法工程师</span>
+        <span class="sc-badge" style="background:rgba(0,184,148,0.09);color:#009e7a;border:1px solid rgba(0,184,148,0.2)">进阶</span>
+      </div>
+      <div class="sc-desc">主导核心算法系统架构设计；指导初中级工程师；参与顶会论文投稿；能独立推动从0到1的算法产品落地，对关键业务指标负责。</div>
+      <div class="sc-row">
+        <div class="sc-stat"><div class="sc-stat-label">新增技能</div><div class="sc-stat-val">系统设计 · Mentoring</div></div>
+        <div class="sc-stat"><div class="sc-stat-label">代表公司</div><div class="sc-stat-val">大厂 / AI 独角兽</div></div>
+        <div class="sc-stat"><div class="sc-stat-label">晋升周期</div><div class="sc-stat-val">3–5 年</div></div>
+      </div>
+      <div class="sc-skills">
+        <span class="chip">大模型 Fine-tune</span><span class="chip">RLHF</span><span class="chip new">系统架构</span><span class="chip new">团队 Mentoring</span><span class="chip new">论文产出</span>
+      </div>
+      <div class="sc-companies">代表企业：<span>字节跳动、百度飞桨、商汤、智谱AI</span></div>
+    </div>
+  </div>
+
+  <div class="connector">
+    <div class="conn-line" style="background:linear-gradient(180deg,var(--green),var(--gold))"></div>
+    <div class="conn-arrow" style="border-top-color:var(--gold)"></div>
+    <div class="conn-label">两条路线可选择</div>
+  </div>
+
+  <!-- Stage 4 分叉 -->
+  <div class="stage-row fork">
+    <div class="stage-info" style="padding-top:16px">
+      <div class="si-year">7 + 年</div>
+      <div class="si-sal" style="color:var(--gold)">60k–150k+</div>
+      <div class="si-tip">顶端岗位<br>两条路线</div>
+    </div>
+    <div class="axis" style="padding-top:16px"><div class="axis-dot top">🏆</div></div>
+    <div class="fork-cards">
+      <!-- 专家路线 -->
+      <div class="stage-card" style="animation-delay:0.2s;border-color:rgba(124,92,255,0.25)">
+        <div class="sc-top">
+          <span style="font-size:18px">🔬</span>
+          <span class="sc-name">算法专家 / 研究员</span>
+          <span class="sc-badge" style="background:rgba(124,92,255,0.09);color:#6644cc;border:1px solid rgba(124,92,255,0.2)">专家路线</span>
+        </div>
+        <div class="sc-desc">深耕前沿算法研究，在 NeurIPS/ICML/CVPR 发表论文，主导公司级别核心算法突破，成为行业技术标准制定者。</div>
+        <div class="sc-skills">
+          <span class="chip">顶会论文</span><span class="chip">核心算法创新</span><span class="chip">技术布道</span><span class="chip new">专利申请</span>
+        </div>
+        <div class="sc-companies">代表：<span>OpenAI、DeepMind、字节AI Lab、百川智能</span></div>
+      </div>
+      <!-- 管理路线 -->
+      <div class="stage-card" style="animation-delay:0.25s;border-color:rgba(245,166,35,0.25)">
+        <div class="sc-top">
+          <span style="font-size:18px">👔</span>
+          <span class="sc-name">算法负责人 / 总监</span>
+          <span class="sc-badge badge-top">管理路线</span>
+        </div>
+        <div class="sc-desc">统筹算法团队整体方向，对齐业务战略与技术投入；构建算法人才梯队；负责百亿级别业务的算法体系搭建。</div>
+        <div class="sc-skills">
+          <span class="chip">团队管理</span><span class="chip">战略规划</span><span class="chip">跨部门协作</span><span class="chip new">OKR 制定</span>
+        </div>
+        <div class="sc-companies">代表：<span>BAT、美团、滴滴、京东算法部门</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ 换岗路径 ══ -->
+<div class="panel" id="panel-transfer">
+<div class="transfer-container">
+
+  <div class="legend-row">
+    <span style="font-size:12px;color:var(--dim);font-weight:600">图例：</span>
+    <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--green));height:2px"></span>高匹配（≥80%）</span>
+    <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--gold));height:2px"></span>中匹配（60-79%）</span>
+    <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--red));height:2px;border-top:2px dashed var(--red);background:none"></span>低匹配（&lt;60%）</span>
+    <span class="leg"><span style="font-size:14px">→</span>转岗方向</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--muted)">实线=技能高度迁移 · 虚线=需较大跨度学习</span>
+  </div>
+
+  <div class="graph-svg-wrap" id="graphWrap">
+    <svg class="graph-svg" id="svgLayer"></svg>
+    <!-- 节点由JS渲染 -->
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ── Tab ── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'transfer') setTimeout(buildGraph, 60);
+}
+
+/* ══ 换岗图谱数据 ══
+   每个岗位至少2条换岗路径，共6个主岗+中心 */
+const nodes = {
+  center: { name:'算法工程师', icon:'🤖', isCenter:true },
+
+  pm:    { name:'AI产品经理',   icon:'📱', sal:'25k–45k', match:88, color:'#00b894', desc:'利用算法理解优势驱动产品决策', diff:'低', time:'3–6月', skills:'需求分析·用户调研·技术理解', transfers:['ds','arch'] },
+  ds:    { name:'数据科学家',   icon:'📊', sal:'28k–50k', match:84, color:'#00b894', desc:'深化统计建模与数据挖掘能力',   diff:'低', time:'3–6月', skills:'统计建模·数据挖掘·A/B测试', transfers:['pm','quant'] },
+  mle:   { name:'ML工程师',    icon:'⚙️', sal:'30k–55k', match:76, color:'#f5a623', desc:'专注大规模模型训练与工程化落地', diff:'中', time:'6–12月',skills:'MLOps·分布式训练·模型服务', transfers:['res','arch'] },
+  quant: { name:'量化研究员',   icon:'📈', sal:'35k–80k', match:70, color:'#f5a623', desc:'数学建模能力迁移至金融策略',   diff:'中', time:'6–12月',skills:'金融数学·策略回测·风险建模', transfers:['ds','mle'] },
+  res:   { name:'AI研究员',    icon:'🧪', sal:'40k–100k',match:55, color:'#ff4d6d', desc:'深耕前沿研究，产出顶会论文',    diff:'高', time:'12–24月',skills:'论文写作·实验设计·创新算法', transfers:['mle','pm'] },
+  arch:  { name:'大数据架构师', icon:'🏗️', sal:'45k–90k', match:52, color:'#ff4d6d', desc:'基于数据处理经验转向系统架构',  diff:'高', time:'18–24月',skills:'分布式系统·Spark·架构设计', transfers:['mle','quant'] },
+};
+
+// 布局坐标（百分比，相对画布宽高）
+const layout = {
+  center:{ rx:0.5,  ry:0.5  },
+  pm:    { rx:0.5,  ry:0.1  },
+  ds:    { rx:0.82, ry:0.22 },
+  mle:   { rx:0.82, ry:0.72 },
+  quant: { rx:0.5,  ry:0.88 },
+  res:   { rx:0.18, ry:0.72 },
+  arch:  { rx:0.18, ry:0.22 },
+};
+
+// 卡片尺寸
+const CARD = { center:{w:136,h:108}, job:{w:150,h:172} };
+
+function buildGraph() {
+  const wrap = document.getElementById('graphWrap');
+  const W = wrap.offsetWidth, H = wrap.offsetHeight;
+  wrap.querySelectorAll('.g-node,.edge-lbl').forEach(e=>e.remove());
+
+  const pos = {};
+  Object.keys(layout).forEach(id=>{
+    pos[id] = { x: layout[id].rx * W, y: layout[id].ry * H };
+  });
+
+  // SVG
+  const svg = document.getElementById('svgLayer');
+  let defs = `<defs>
+    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#00b894"/></marker>
+    <marker id="arr-gold"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f5a623"/></marker>
+    <marker id="arr-red"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ff4d6d"/></marker>
+    <marker id="arr-blue"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#4f7cff"/></marker>
+  </defs>`;
+  let paths = '';
+
+  // 中心到各节点的连线
+  Object.keys(nodes).forEach(id=>{
+    if(id==='center') return;
+    const n = nodes[id];
+    const p1 = pos.center, p2 = pos[id];
+    const color = n.match>=80 ? '#00b894' : n.match>=60 ? '#f5a623' : '#ff4d6d';
+    const arrId = n.match>=80 ? 'arr-green' : n.match>=60 ? 'arr-gold' : 'arr-red';
+    const dash = n.match < 60 ? 'stroke-dasharray="7 4"' : n.match < 80 ? 'stroke-dasharray="10 3"' : '';
+    // 曲线控制点
+    const cpx = (p1.x+p2.x)/2 + (p2.y-p1.y)*0.15;
+    const cpy = (p1.y+p2.y)/2 - (p2.x-p1.x)*0.15;
+    paths += `<path d="M${p1.x},${p1.y} Q${cpx},${cpy} ${p2.x},${p2.y}"
+      fill="none" stroke="${color}" stroke-width="2" ${dash} opacity="0.75"
+      marker-end="url(#${arrId})"
+      style="animation:dashFlow 2s linear infinite"/>`;
+
+    // 中间标签
+    const lx = (p1.x*0.45 + p2.x*0.55 + (p2.y-p1.y)*0.08);
+    const ly = (p1.y*0.45 + p2.y*0.55 - (p2.x-p1.x)*0.08);
+    const lbl = document.createElement('div');
+    lbl.className = 'edge-lbl';
+    lbl.textContent = `${n.match}% · ${n.diff}`;
+    lbl.style.cssText = `left:${lx}px;top:${ly}px;color:${color};border-color:${color}30`;
+    wrap.appendChild(lbl);
+  });
+
+  // 岗位间换岗连线（细虚线）
+  const drawn = new Set();
+  Object.keys(nodes).forEach(fromId=>{
+    if(fromId==='center') return;
+    const n = nodes[fromId];
+    (n.transfers||[]).forEach(toId=>{
+      const key = [fromId,toId].sort().join('-');
+      if(drawn.has(key)) return;
+      drawn.add(key);
+      const p1=pos[fromId], p2=pos[toId];
+      const cpx=(p1.x+p2.x)/2+(p2.y-p1.y)*0.2;
+      const cpy=(p1.y+p2.y)/2-(p2.x-p1.x)*0.2;
+      paths += `<path d="M${p1.x},${p1.y} Q${cpx},${cpy} ${p2.x},${p2.y}"
+        fill="none" stroke="#7c5cff" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.5"
+        marker-end="url(#arr-blue)"/>`;
+    });
+  });
+
+  svg.innerHTML = defs + `<style>@keyframes dashFlow{to{stroke-dashoffset:-20}}</style>` + paths;
+
+  // 渲染节点
+  let delay = 0;
+  Object.keys(nodes).forEach(id=>{
+    const n = nodes[id];
+    const p = pos[id];
+    const el = document.createElement('div');
+    el.className = 'g-node';
+    el.style.animationDelay = (delay+=0.07) + 's';
+
+    if(n.isCenter){
+      el.style.cssText = `left:${p.x - CARD.center.w/2}px;top:${p.y - CARD.center.h/2}px;animation-delay:0s`;
+      el.innerHTML = `<div class="cn"><div class="cn-ico">🤖</div><div class="cn-name">算法工程师</div><div class="cn-badge">当前岗位</div></div>`;
+    } else {
+      const diff_color = n.match>=80?'#009e7a':n.match>=60?'#c47d00':'#d03050';
+      const diff_bg    = n.match>=80?'rgba(0,184,148,0.1)':n.match>=60?'rgba(245,166,35,0.1)':'rgba(255,77,109,0.08)';
+      const diff_bd    = n.match>=80?'rgba(0,184,148,0.2)':n.match>=60?'rgba(245,166,35,0.2)':'rgba(255,77,109,0.18)';
+      el.style.cssText = `left:${p.x - CARD.job.w/2}px;top:${p.y - CARD.job.h/2}px;animation-delay:${delay}s;opacity:0`;
+      el.innerHTML = `
+        <div class="jn" style="border-color:${n.color}40">
+          <div class="jn-top">
+            <div class="jn-ico" style="background:${n.color}15">${n.icon}</div>
+            <div><div class="jn-name">${n.name}</div><div class="jn-sal">${n.sal}</div></div>
+          </div>
+          <div class="jn-mr"><span class="jn-ml">匹配度</span><span class="jn-mv" style="color:${n.color}">${n.match}%</span></div>
+          <div class="jn-bar-bg"><div class="jn-bar" style="width:${n.match}%;background:${n.color}"></div></div>
+          <div class="jn-tags">
+            <span class="jn-tag" style="background:${diff_bg};color:${diff_color};border:1px solid ${diff_bd}">难度${n.diff}</span>
+            <span class="jn-tag" style="background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.15)">⏱ ${n.time}</span>
+          </div>
+          <div class="jn-skills"><em>可迁移：</em>${n.skills}</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${n.desc}</div>
+          <button class="jn-btn" style="background:${n.color}12;color:${n.color};border:1px solid ${n.color}30">→ 查看详情</button>
+        </div>`;
+    }
+    wrap.appendChild(el);
+  });
+}
+</script>
+</body>
+</html>
