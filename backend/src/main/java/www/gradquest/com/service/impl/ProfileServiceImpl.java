@@ -462,6 +462,7 @@ public class ProfileServiceImpl implements ProfileService {
         String[] lines = text.split("\\R");
         Pattern p1 = Pattern.compile("^(姓名|Name)[:：\\s]+(.+)$", Pattern.CASE_INSENSITIVE);
         int max = Math.min(lines.length, 15);
+        String labelCandidate = null;
         for (int i = 0; i < max; i++) {
             String line = lines[i].trim();
             Matcher m = p1.matcher(line);
@@ -474,16 +475,19 @@ public class ProfileServiceImpl implements ProfileService {
                     if (NAME_BLOCKLIST.contains(v)) continue;
                     return v;
                 }
+                labelCandidate = v;
             }
         }
-        // 前几行中首个 2～4 个汉字（常见简历首行为姓名）
-        Pattern chineseName = Pattern.compile("^[\\u4e00-\\u9fa5]{2,4}$");
-        for (int i = 0; i < Math.min(lines.length, 8); i++) {
-            String line = lines[i].trim();
-            if (line.isEmpty()) continue;
-            if (chineseName.matcher(line).matches()) return line;
-            String firstToken = line.split("[\\s\\|\\/\\-、]")[0].trim();
-            if (chineseName.matcher(firstToken).matches()) return firstToken;
+        // 若标签行匹配到的是奖项级别等，则尝试前几行中首个「纯 2～4 个汉字」作为姓名（常见简历首行为姓名）
+        if (labelCandidate == null || NAME_BLOCKLIST.contains(labelCandidate)) {
+            Pattern chineseName = Pattern.compile("^[\\u4e00-\\u9fa5]{2,4}$");
+            for (int i = 0; i < Math.min(lines.length, 8); i++) {
+                String line = lines[i].trim();
+                if (line.isEmpty()) continue;
+                if (chineseName.matcher(line).matches()) return line;
+                String firstToken = line.split("[\\s\\|\\/\\-、]")[0].trim();
+                if (chineseName.matcher(firstToken).matches()) return firstToken;
+            }
         }
         return null;
     }

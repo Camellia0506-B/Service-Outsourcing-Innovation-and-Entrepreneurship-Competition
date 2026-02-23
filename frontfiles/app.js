@@ -1689,6 +1689,11 @@ class CareerPlanningApp {
         const wrap = document.getElementById('assessmentReportWrap');
         if (q) q.classList.add('hidden');
         if (wrap) wrap.classList.remove('hidden');
+        // 仅绑定一次：返回职业测评初始界面
+        if (!this._assessmentFooterBound) {
+            document.getElementById('btnBackToAssessment')?.addEventListener('click', () => this.loadAssessmentData());
+            this._assessmentFooterBound = true;
+        }
     }
 
     // 隐藏测评报告视图（显示问卷区，隐藏 assessmentReportWrap）
@@ -1699,18 +1704,50 @@ class CareerPlanningApp {
         if (wrap) wrap.classList.add('hidden');
     }
 
-    // 有历史报告时展示的入口（查看最新报告 → 本页展示测评报告；查看历史报告 → 测评历史列表；重新测评 → 问卷）
-    showAssessmentWelcomeWithHistory() {
+    // 有历史报告时展示的入口（参考 assessment_status 设计：完成题目 20 道、能力详细分析得分等权、三按钮）
+    async showAssessmentWelcomeWithHistory() {
         const container = document.getElementById('questionnaireContainer');
         const actionsEl = document.getElementById('assessmentActions');
         if (actionsEl) actionsEl.classList.add('hidden');
+        let latestDate = '—';
+        let abilityAvg = '—';
+        let historyCount = 0;
+        const userId = getCurrentUserId();
+        if (userId && this.currentReportId) {
+            try {
+                const reportRes = await getAssessmentReport(userId, this.currentReportId);
+                if (reportRes.success && reportRes.data && reportRes.data.status === 'completed') {
+                    const d = reportRes.data;
+                    if (d.created_at || d.assessment_date) latestDate = this.formatDateTime(d.created_at || d.assessment_date).replace(/\s*\d{2}:\d{2}$/, '').trim() || '—';
+                    const aa = d.ability_analysis || {};
+                    const list = (aa.strengths || []).concat(aa.areas_to_improve || []);
+                    if (list.length > 0) {
+                        const sum = list.reduce((acc, x) => acc + (Number(x.score) || 0), 0);
+                        abilityAvg = Math.round(sum / list.length) + ' 分';
+                    }
+                }
+                const histRes = await getReportHistory(userId);
+                const list = histRes.success && histRes.data ? (histRes.data.list || (Array.isArray(histRes.data) ? histRes.data : [])) : [];
+                historyCount = list.length;
+            } catch (e) {}
+        }
         container.innerHTML = `
-            <div class="assessment-welcome-card">
-                <p class="assessment-welcome-text">您已有测评报告，可查看最新报告或重新测评。</p>
+            <div class="assessment-welcome-card assessment-welcome-card-new">
+                <div class="assessment-welcome-illus-wrap">
+                    <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">✓</span></span>
+                </div>
+                <p class="assessment-welcome-title">您已有测评报告，可查看最新报告或重新测评。</p>
+                <p class="assessment-welcome-desc">系统已根据您的测评结果生成个性化职业规划报告，您可以查看最新报告，或重新作答以获取更新的分析结果。</p>
+                <div class="assessment-welcome-meta">
+                    <div class="assessment-meta-item"><span class="assessment-meta-label">最近测评</span><span class="assessment-meta-val">${latestDate}</span></div>
+                    <div class="assessment-meta-item"><span class="assessment-meta-label">完成题目</span><span class="assessment-meta-val assessment-meta-accent">20 道</span></div>
+                    <div class="assessment-meta-item"><span class="assessment-meta-label">能力详细分析得分</span><span class="assessment-meta-val assessment-meta-green">${abilityAvg}</span></div>
+                    <div class="assessment-meta-item"><span class="assessment-meta-label">历史报告</span><span class="assessment-meta-val">${historyCount} 份</span></div>
+                </div>
                 <div class="assessment-welcome-actions">
-                    <button type="button" id="btnViewLatestReport" class="btn-primary">查看最新报告</button>
-                    <button type="button" id="btnViewAssessmentHistory" class="btn-secondary">查看历史报告</button>
-                    <button type="button" id="btnRetakeAssessment" class="btn-secondary">重新测评</button>
+                    <button type="button" id="btnViewLatestReport" class="btn-assessment-primary">查看最新报告</button>
+                    <button type="button" id="btnViewAssessmentHistory" class="btn-assessment-secondary">查看历史报告</button>
+                    <button type="button" id="btnRetakeAssessment" class="btn-assessment-secondary">重新测评</button>
                 </div>
             </div>
         `;
@@ -1795,9 +1832,6 @@ class CareerPlanningApp {
         if (result.success && result.data && result.data.status === 'completed') {
             this.currentReportId = reportId;
             this.renderReportContent(result.data, contentEl);
-            document.getElementById('btnBackToAssessment')?.addEventListener('click', () => {
-                this.hideAssessmentReportView();
-            });
             document.getElementById('btnGoToCareerPlan')?.addEventListener('click', () => {
                 this.navigateTo('report');
             });
@@ -2038,9 +2072,6 @@ class CareerPlanningApp {
                     const contentEl = document.getElementById('assessmentReportContent');
                     if (contentEl) {
                         this.renderReportContent(result.data, contentEl);
-                        document.getElementById('btnBackToAssessment')?.addEventListener('click', () => {
-                            this.hideAssessmentReportView();
-                        });
                         document.getElementById('btnGoToCareerPlan')?.addEventListener('click', () => {
                             this.navigateTo('report');
                         });
@@ -6299,26 +6330,44 @@ class CareerPlanningApp {
                 </div>
                 <div class="report-section-card">
                     <div class="report-section-title"><span class="dot"></span>能力详细分析</div>
-                    <div class="report-ability-grid">
-                        ${allAbilities.map(a => {
-                            const score = safeAbilityScore(a.score);
-                            const cls = score >= 75 ? 'excellent' : score >= 60 ? 'good' : 'needs';
-                            const color = score >= 75 ? '#48bb78' : score >= 60 ? '#f5a623' : '#e94560';
-                            const level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '重点提升';
-                            const levelTag = score >= 70 ? 'report-level-high' : score >= 50 ? 'report-level-mid' : 'report-level-low';
-                            const desc = (a.description || '').trim();
-                            const sugg = Array.isArray(a.suggestions) ? a.suggestions.filter(Boolean).join(' ') : '';
-                            const textBlock = desc || sugg;
-                            return `<div class="report-ability-card">
-                                <div class="report-ability-name">${a.ability}</div>
-                                <div class="report-ability-score-row">
-                                    <span class="report-ability-score" style="color:${color}">${score}分</span>
-                                    <span class="report-level-tag ${levelTag}">${level}</span>
-                                </div>
-                                <div class="report-ability-bar-bg"><div class="report-ability-bar" style="width:${score}%; background:linear-gradient(90deg,${color},${color}99)"></div></div>
-                                ${textBlock ? `<div class="report-ability-desc">${String(textBlock).replace(/</g, '&lt;')}</div>` : ''}
-                            </div>`;
-                        }).join('')}
+                    <div class="report-ability-detail">
+                        <div class="ability-grid" id="reportAbilityGrid">
+                        ${(function() {
+                            const iconMap = { '学习能力':'📚', '沟通表达':'💬', '沟通表达能力':'💬', '执行能力':'⚡', '逻辑分析':'🧩', '逻辑分析能力':'🧩', '创新能力':'💡', '抗压能力':'🔥', '团队协作':'🤝', '领导力':'👤' };
+                            const getIcon = (name) => iconMap[name] || (name && name.indexOf('学习') >= 0 ? '📚' : name && name.indexOf('沟通') >= 0 ? '💬' : name && name.indexOf('执行') >= 0 ? '⚡' : name && name.indexOf('逻辑') >= 0 ? '🧩' : name && name.indexOf('创新') >= 0 ? '💡' : name && name.indexOf('抗压') >= 0 ? '🔥' : '📊');
+                            return allAbilities.map(a => {
+                                const score = safeAbilityScore(a.score);
+                                const level = score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '待提升';
+                                const themeClass = score >= 80 ? 'theme-green' : score >= 70 ? 'theme-blue' : score >= 60 ? 'theme-orange' : 'theme-red';
+                                const desc = (a.description || '').trim();
+                                const sugg = Array.isArray(a.suggestions) ? a.suggestions.filter(Boolean).join(' ') : '';
+                                const textBlock = desc || sugg || '可通过练习与项目实践持续提升';
+                                const name = (a.ability || a.name || '').trim();
+                                const icon = getIcon(name);
+                                return `<div class="${themeClass}">
+                                    <div class="ab-card">
+                                        <div class="card-top">
+                                            <div class="card-name">
+                                                <div class="card-icon">${icon}</div>
+                                                ${name}
+                                            </div>
+                                            <span class="level-badge">${level}</span>
+                                        </div>
+                                        <div class="score-row">
+                                            <span class="score-num">${score}</span>
+                                            <span class="score-unit">分</span>
+                                        </div>
+                                        <div class="bar-wrap">
+                                            <div class="bar-bg">
+                                                <div class="bar-fill" style="width:${score}%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="card-desc">${String(textBlock).replace(/</g, '&lt;')}</div>
+                                    </div>
+                                </div>`;
+                            }).join('');
+                        })()}
+                        </div>
                     </div>
                 </div>
                 ${suggestions.length ? `
