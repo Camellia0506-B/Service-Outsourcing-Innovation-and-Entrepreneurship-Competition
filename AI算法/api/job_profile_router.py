@@ -24,6 +24,12 @@ from job_profile.job_graph_service import get_job_graph_service
 from job_profile.career_path_generator import generate_career_path
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
+from utils.config_handler import rag_conf
+
+# 大模型（与其它模块保持一致：通义千问 DashScope / ChatTongyi）
+from langchain_community.chat_models.tongyi import ChatTongyi
+from langchain.prompts import PromptTemplate
+from langchain.schema import StrOutputParser
 
 # 创建Blueprint
 job_bp = Blueprint("job", __name__, url_prefix="/api/v1/job")
@@ -37,6 +43,143 @@ def success_response(data, msg="success"):
 
 def error_response(code, msg, data=None):
     return jsonify({"code": code, "msg": msg, "data": data}), code
+
+
+# ============================================================
+# Agent：自然语言需求解析（用于“AI生成岗位画像页面”的智能对话生成）
+# POST /api/v1/job/agent/parse-requirement
+# ============================================================
+_JOB_AGENT_SYSTEM_PROMPT = """
+你是岗位画像生成助手，从用户输入中提取以下信息并返回JSON格式（仅返回JSON，无其他内容）：
+{{
+  "岗位名称": "",
+  "行业方向": "", // 仅可选：互联网/AI、新能源、金融、医疗、制造业、咨询
+  "经验阶段": ""  // 仅可选：应届生、1-3年、3-5年、5年以上
+}}
+""".strip()
+
+
+def _extract_json_obj(text: str):
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    # 截取第一个 { ... } JSON 块
+    s = text.find("{")
+    e = text.rfind("}")
+    if s >= 0 and e > s:
+        block = text[s : e + 1]
+        try:
+            return json.loads(block)
+        except Exception:
+            return None
+    return None
+
+
+def _fallback_parse_job_requirement(text: str) -> dict:
+    """
+    当大模型不可用时的本地兜底解析：
+    - 行业方向：按关键词简单映射
+    - 经验阶段：按常见年份/关键词匹配
+    - 岗位名称：暂留空，交由前端补充
+    """
+    t = (text or "").strip()
+    lower = t.lower()
+
+    # 行业方向简单规则
+    if any(k in t for k in ["互联网", "AI", "大数据", "算法", "前端", "后端", "产品经理", "测试", "运维"]):
+        industry = "互联网/AI"
+    elif any(k in t for k in ["新能源", "光伏", "风电", "储能", "锂电"]):
+        industry = "新能源"
+    elif any(k in t for k in ["银行", "证券", "基金", "保险", "金融"]):
+        industry = "金融"
+    elif any(k in t for k in ["医院", "医疗", "医药", "护理", "诊所"]):
+        industry = "医疗"
+    elif any(k in t for k in ["制造", "工厂", "生产线", "机械"]):
+        industry = "制造业"
+    elif any(k in t for k in ["咨询", "顾问"]):
+        industry = "咨询"
+    else:
+        industry = ""
+
+    # 经验阶段简单规则
+    if any(k in t for k in ["应届", "实习", "校招", "毕业生"]):
+        experience = "应届生"
+    elif "1-3" in lower or "1~3" in lower or "1～3" in lower or ("一年" in t and "三年" in t):
+        experience = "1-3年"
+    elif "3-5" in lower or "3~5" in lower or "3～5" in lower or ("三年" in t and "五年" in t):
+        experience = "3-5年"
+    elif any(k in t for k in ["5年以上", "五年以上", "资深", "高级", "专家", "架构师"]):
+        experience = "5年以上"
+    else:
+        experience = ""
+
+    # 岗位名称：为了避免误判，这里留空，让前端弹窗提示用户填写
+    job_name = ""
+
+    return {
+        "岗位名称": job_name,
+        "行业方向": industry,
+        "经验阶段": experience,
+    }
+
+
+@job_bp.route("/agent/parse-requirement", methods=["POST"])
+def agent_parse_job_profile_requirement():
+    """
+    Agent核心逻辑 - 大模型解析：
+    输入：{ "text": "生成互联网/AI行业应届生算法工程师画像" }
+    输出：{ "岗位名称": "...", "行业方向": "...", "经验阶段": "..." }
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        text = (body.get("text") or body.get("query") or "").strip()
+        if not text:
+            return error_response(400, "请输入岗位画像生成需求")
+
+        parsed = None
+        try:
+            # 优先尝试使用大模型解析
+            model_name = (rag_conf or {}).get("chat_model_name", "qwen3-max")
+            model = ChatTongyi(model=model_name)
+            template = PromptTemplate.from_template(
+                _JOB_AGENT_SYSTEM_PROMPT
+                + "\n\n用户输入：{user_text}\n\n只输出JSON："
+            )
+            chain = template | model | StrOutputParser()
+            raw = chain.invoke({"user_text": text})
+            raw_text = raw if isinstance(raw, str) else getattr(raw, "content", str(raw))
+            parsed = _extract_json_obj(raw_text)
+        except Exception as e:
+            logger.error("[API] /job/agent/parse-requirement 大模型调用失败，使用本地规则解析: %s", e, exc_info=True)
+            parsed = None
+
+        if not isinstance(parsed, dict):
+            parsed = _fallback_parse_job_requirement(text)
+
+        # 规范化/白名单校验（非法值置空，交给前端追问补充）
+        out = {
+            "岗位名称": str(parsed.get("岗位名称", "") or "").strip(),
+            "行业方向": str(parsed.get("行业方向", "") or "").strip(),
+            "经验阶段": str(parsed.get("经验阶段", "") or "").strip(),
+        }
+        allowed_industry = {"互联网/AI", "新能源", "金融", "医疗", "制造业", "咨询"}
+        allowed_exp = {"应届生", "1-3年", "3-5年", "5年以上"}
+        if out["行业方向"] not in allowed_industry:
+            out["行业方向"] = ""
+        if out["经验阶段"] not in allowed_exp:
+            out["经验阶段"] = ""
+
+        return success_response(out, msg="智能解析成功")
+    except Exception as e:
+        logger.error(f"[API] /job/agent/parse-requirement 异常: {e}", exc_info=True)
+        # 最终兜底：返回空结构，由前端弹窗引导用户手动补充
+        return success_response(
+            {"岗位名称": "", "行业方向": "", "经验阶段": ""},
+            msg="智能解析失败，已降级为本地规则，请手动补充信息"
+        )
 
 
 # ========== 异步任务管理（用于长耗时的AI生成任务）==========

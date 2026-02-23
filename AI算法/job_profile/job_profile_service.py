@@ -473,6 +473,89 @@ def _normalize_job_profile(profile: dict) -> dict:
     return profile
 
 
+def _fallback_job_profile(job_name: str, job_id: str, category: str,
+                          matched_rows: list[dict], market_meta: dict) -> dict:
+    """
+    当大模型不可用或输出异常时，本地兜底生成一个简化版岗位画像：
+    - 基于 CSV 中匹配到的 JD 与岗位名称关键词提取技能与要求
+    - 不依赖外部大模型，仅使用规则和数据集，保证前端至少有可展示内容
+    """
+    row = matched_rows[0] if (matched_rows and isinstance(matched_rows[0], dict)) else {}
+
+    # 基础信息：优先从 CSV 行中获取
+    industry = row.get(CsvDataExtractor.FIELD_INDUSTRY, "") if row else ""
+    salary = row.get(CsvDataExtractor.FIELD_SALARY, "") if row else ""
+    location = row.get(CsvDataExtractor.FIELD_ADDRESS, "") if row else ""
+    company = row.get(CsvDataExtractor.FIELD_COMPANY, "") if row else ""
+    scale = row.get(CsvDataExtractor.FIELD_SCALE, "") if row else ""
+    desc = row.get(CsvDataExtractor.FIELD_JD, "") if row else ""
+
+    # 专业技能：JD 提取 + 岗位名称兜底
+    pro_from_jd = _extract_skills_from_description(desc)
+    pro_from_name = _skills_from_job_name(job_name)
+    professional_skills = _merge_professional_skills(pro_from_jd, pro_from_name)
+
+    # 基础要求与软技能：按岗位名称规则兜底
+    basic_req = _basic_requirements_from_job_name(job_name)
+    soft_req = _soft_skills_requirements_from_job_name(job_name)
+
+    # 文本摘要：优先用 JD 前 200 字，否则给一段说明文案
+    if isinstance(desc, str) and desc.strip():
+        summary = (desc[:200] + "…") if len(desc) > 200 else desc
+    else:
+        summary = f"这是基于公开招聘信息与经验规则生成的「{job_name}」基础岗位画像，用于在 AI 服务不可用时提供参考。"
+
+    profile = {
+        "job_id": job_id,
+        "job_name": job_name,
+        "category": category,
+        "basic_info": {
+            "industry": industry,
+            "salary_range": salary,
+            "avg_salary": salary,
+            "location": location,
+            "work_locations": [location] if location else [],
+            "company": company,
+            "company_scale": scale,
+            "company_type": "",
+            "level": "初级",
+            "level_range": ["初级"],
+        },
+        "requirements": {
+            "professional_skills": professional_skills,
+            "basic_requirements": basic_req,
+            "soft_skills": soft_req,
+        },
+    }
+
+    # 市场信息与简单职业发展文案，避免前端完全为空
+    profile["market_analysis"] = {
+        "demand_score": 80,
+        "growth_trend": "稳定",
+        "tags": [],
+    }
+    profile["career_development"] = {
+        "advantages": [f"「{job_name}」属于{industry or '当前'}行业的典型岗位，适合具备相关技术基础与学习能力的学生。"],
+        "challenges": ["需要持续学习新技术、跟进行业变化，对自我驱动力与时间管理有一定要求。"],
+        "suitable_personality": "对该岗位方向有兴趣，愿意投入时间提升专业技能、能够与团队协作的同学。",
+        "entry_advice": f"建议通过相关课程、项目和实习逐步积累经验，朝「{job_name}」方向发展。",
+        "timeline": "通常需要 1-3 年时间完成从入门到熟练的成长。",
+        "recommended_projects": [],
+    }
+    profile["description"] = summary
+
+    if isinstance(market_meta, dict) and market_meta:
+        ma = profile.setdefault("market_analysis", {})
+        ma.update({
+            "salaries": market_meta.get("salaries", []),
+            "cities": market_meta.get("cities", []),
+            "companies": market_meta.get("companies", []),
+            "industries": market_meta.get("industries", []),
+        })
+
+    return profile
+
+
 def _old_profile_to_new(profile: dict) -> dict:
     """
     若模型返回旧版 job_profile（含 basic_info/requirements 等），
@@ -783,41 +866,49 @@ class JobProfileService:
             )
             data_source_label = "模型行业知识生成（数据集无匹配）"
 
-        # Step 3: 调用模型
-        chain = self._build_chain()
-        raw_output = chain.invoke({
-            "job_name":     job_name,
-            "job_id":       job_id,
-            "category":     category,
-            "data_section": data_section,
-            "dim_weights":  json.dumps(weights, ensure_ascii=False),
-        })
-        # 调试：打印 qwen 完整返回内容（StrOutputParser 下 raw_output 即为模型输出字符串）
-        content = raw_output if isinstance(raw_output, str) else getattr(raw_output, "content", str(raw_output))
-        print("=== qwen完整返回 ===")
-        print(content)
-        print("=== 返回长度:", len(content), "===")
-
-        # Step 4: 解析JSON
+        # Step 3: 调用模型（失败时自动降级为本地兜底画像）
+        profile = None
+        raw_output = None
         try:
+            chain = self._build_chain()
+            raw_output = chain.invoke({
+                "job_name":     job_name,
+                "job_id":       job_id,
+                "category":     category,
+                "data_section": data_section,
+                "dim_weights":  json.dumps(weights, ensure_ascii=False),
+            })
+            # 调试：打印 qwen 完整返回内容（StrOutputParser 下 raw_output 即为模型输出字符串）
+            content = raw_output if isinstance(raw_output, str) else getattr(raw_output, "content", str(raw_output))
+            print("=== qwen完整返回 ===")
+            print(content)
+            print("=== 返回长度:", len(content), "===")
+
+            # Step 4: 解析JSON
             profile = _extract_json(raw_output)
+            if not isinstance(profile, dict):
+                profile = {}
         except Exception as e:
-            logger.error(f"  [画像] JSON解析失败，输出长度: {len(raw_output)}，前500字: {raw_output[:500]}")
-            raise
-        if not isinstance(profile, dict):
-            profile = {}
-        # 调试：打印解析后的 job_profile 关键字段（解析后、转换前的原始结构）
-        req = profile.get("requirements") or {}
-        core_skills = req.get("core_skills") or {}
-        career = profile.get("career_development") or {}
-        print("=== 解析后 profile 关键字段 ===")
-        print("technical_skills:", core_skills.get("technical_skills"))
-        print("soft_skills:", core_skills.get("soft_skills"))
-        print("advantages:", career.get("advantages"))
-        print("core_skills(新格式):", profile.get("core_skills"))
-        print("reality_check(新格式):", profile.get("reality_check"))
-        print("ai_summary/description:", profile.get("ai_summary") or profile.get("description"))
-        print("================================")
+            logger.error(f"[JobProfileService] 调用大模型生成画像失败，将使用本地规则兜底: {e}", exc_info=True)
+            profile = None
+
+        # 若模型不可用或输出异常，则使用本地兜底画像（不依赖外部大模型）
+        if not isinstance(profile, dict) or not profile:
+            logger.warning(f"[JobProfileService] 使用本地兜底画像: {job_name} ({job_id})")
+            profile = _fallback_job_profile(job_name, job_id, category, matched_rows, market_meta)
+        else:
+            # 调试：打印解析后的 job_profile 关键字段（解析后、转换前的原始结构）
+            req = profile.get("requirements") or {}
+            core_skills = req.get("core_skills") or {}
+            career = profile.get("career_development") or {}
+            print("=== 解析后 profile 关键字段 ===")
+            print("technical_skills:", core_skills.get("technical_skills"))
+            print("soft_skills:", core_skills.get("soft_skills"))
+            print("advantages:", career.get("advantages"))
+            print("core_skills(新格式):", profile.get("core_skills"))
+            print("reality_check(新格式):", profile.get("reality_check"))
+            print("ai_summary/description:", profile.get("ai_summary") or profile.get("description"))
+            print("================================")
         # 若模型返回旧版结构（basic_info/requirements），转为新结构（core_skills/reality_check/entry_path/ai_summary）
         profile = _old_profile_to_new(profile)
         # 规范化结构，确保前端所需字段存在（避免全空展示）

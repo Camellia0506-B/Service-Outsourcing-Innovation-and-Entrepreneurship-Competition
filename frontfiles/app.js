@@ -5041,6 +5041,187 @@ class CareerPlanningApp {
                 pill.classList.add('active');
             });
         });
+
+        // ==================== Agent 智能对话生成（岗位画像AI生成页） ====================
+        // Agent核心逻辑：自然语言解析 -> 自动填充表单 -> 缺失信息追问 -> 自动触发生成
+        this._initAIGenAgent();
+    }
+
+    _initAIGenAgent() {
+        const input = document.getElementById('aiAgentQuery');
+        const btn = document.getElementById('aiAgentGenerateBtn');
+        if (!input || !btn) return;
+
+        const syncBtnState = () => {
+            const val = (input.value || '').trim();
+            btn.disabled = !val;
+        };
+        input.addEventListener('input', syncBtnState);
+        syncBtnState();
+
+        // 回车提交（避免和原表单冲突：仅在该输入框内生效）
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!btn.disabled) this.aiAgentGenerateJobProfile();
+            }
+        });
+
+        btn.addEventListener('click', () => this.aiAgentGenerateJobProfile());
+
+        // 补充信息弹窗按钮
+        document.getElementById('aiAgentSupplementClose')?.addEventListener('click', () => this._closeAIAgentSupplement());
+        document.getElementById('aiAgentSupplementCancel')?.addEventListener('click', () => this._closeAIAgentSupplement());
+        document.getElementById('aiAgentSupplementOk')?.addEventListener('click', () => this._confirmAIAgentSupplement());
+    }
+
+    _setAgentLoading(loading) {
+        const btn = document.getElementById('aiAgentGenerateBtn');
+        const spinner = document.querySelector('#aiAgentGenerateBtn .ai-agent-spinner');
+        const text = document.querySelector('#aiAgentGenerateBtn .ai-agent-btn-text');
+        const input = document.getElementById('aiAgentQuery');
+        if (!btn || !spinner || !text || !input) return;
+        if (loading) {
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            text.textContent = '智能生成中...';
+            input.disabled = true;
+        } else {
+            spinner.classList.add('hidden');
+            text.textContent = '智能生成';
+            input.disabled = false;
+            // 重新根据输入内容决定是否可点
+            btn.disabled = !String(input.value || '').trim();
+        }
+    }
+
+    _normalizeAgentParsed(obj) {
+        const out = {
+            jobName: (obj && (obj['岗位名称'] ?? obj.jobName ?? obj.job_name)) || '',
+            industry: (obj && (obj['行业方向'] ?? obj.industry)) || '',
+            experience: (obj && (obj['经验阶段'] ?? obj.experience)) || '',
+        };
+        out.jobName = String(out.jobName || '').trim();
+        out.industry = String(out.industry || '').trim();
+        out.experience = String(out.experience || '').trim();
+
+        const allowedIndustries = ['互联网/AI', '新能源', '金融', '医疗', '制造业', '咨询'];
+        const allowedExp = ['应届生', '1-3年', '3-5年', '5年以上'];
+        if (!allowedIndustries.includes(out.industry)) out.industry = '';
+        if (!allowedExp.includes(out.experience)) out.experience = '';
+        return out;
+    }
+
+    _selectAIGenPill(groupId, value) {
+        if (!value) return false;
+        const group = document.getElementById(groupId);
+        if (!group) return false;
+        const target = Array.from(group.querySelectorAll('.ai-gen-pill')).find(p => (p.dataset.value || p.textContent || '').trim() === value);
+        if (!target) return false;
+        // 触发“change”效果：用点击走原有事件逻辑
+        target.click();
+        return true;
+    }
+
+    _fillAIGenForm({ jobName, industry, experience }) {
+        const jobNameInput = document.getElementById('aiJobName');
+        if (jobNameInput && jobName) jobNameInput.value = jobName;
+        if (industry) this._selectAIGenPill('aiIndustryGroup', industry);
+        if (experience) this._selectAIGenPill('aiExperienceGroup', experience);
+    }
+
+    _openAIAgentSupplement(initial) {
+        const modal = document.getElementById('aiAgentSupplementModal');
+        if (!modal) return;
+        this._aiAgentSupplementResolver = null;
+        this._aiAgentSupplementRejecter = null;
+
+        const jobNameEl = document.getElementById('aiAgentSupJobName');
+        const indEl = document.getElementById('aiAgentSupIndustry');
+        const expEl = document.getElementById('aiAgentSupExperience');
+        if (jobNameEl) jobNameEl.value = initial.jobName || '';
+        if (indEl) indEl.value = initial.industry || '';
+        if (expEl) expEl.value = initial.experience || '';
+
+        modal.classList.remove('hidden');
+        return new Promise((resolve, reject) => {
+            this._aiAgentSupplementResolver = resolve;
+            this._aiAgentSupplementRejecter = reject;
+        });
+    }
+
+    _closeAIAgentSupplement() {
+        const modal = document.getElementById('aiAgentSupplementModal');
+        if (modal) modal.classList.add('hidden');
+        if (this._aiAgentSupplementRejecter) this._aiAgentSupplementRejecter(new Error('cancelled'));
+        this._aiAgentSupplementResolver = null;
+        this._aiAgentSupplementRejecter = null;
+    }
+
+    _confirmAIAgentSupplement() {
+        const jobNameEl = document.getElementById('aiAgentSupJobName');
+        const indEl = document.getElementById('aiAgentSupIndustry');
+        const expEl = document.getElementById('aiAgentSupExperience');
+        const payload = {
+            jobName: String(jobNameEl?.value || '').trim(),
+            industry: String(indEl?.value || '').trim(),
+            experience: String(expEl?.value || '').trim(),
+        };
+        const modal = document.getElementById('aiAgentSupplementModal');
+        if (modal) modal.classList.add('hidden');
+        if (this._aiAgentSupplementResolver) this._aiAgentSupplementResolver(payload);
+        this._aiAgentSupplementResolver = null;
+        this._aiAgentSupplementRejecter = null;
+    }
+
+    async aiAgentGenerateJobProfile() {
+        const queryInput = document.getElementById('aiAgentQuery');
+        const text = String(queryInput?.value || '').trim();
+        if (!text) {
+            this.showToast('请输入岗位画像生成需求', 'error');
+            return;
+        }
+
+        this._setAgentLoading(true);
+        try {
+            // ===== 大模型解析（Agent核心步骤1）=====
+            const parsedRes = await agentParseJobProfileRequirement(text);
+            if (!parsedRes || !parsedRes.success) {
+                this.showToast(parsedRes?.msg || '智能解析失败，请手动填写表单', 'error');
+                return;
+            }
+
+            // ===== 自动填充表单（Agent核心步骤2）=====
+            let parsed = this._normalizeAgentParsed(parsedRes.data);
+            this._fillAIGenForm(parsed);
+
+            // ===== 缺失信息追问（Agent核心步骤3）=====
+            const missing = (!parsed.jobName) || (!parsed.industry) || (!parsed.experience);
+            if (missing) {
+                try {
+                    const supplemented = await this._openAIAgentSupplement(parsed);
+                    parsed = this._normalizeAgentParsed({
+                        '岗位名称': supplemented.jobName,
+                        '行业方向': supplemented.industry,
+                        '经验阶段': supplemented.experience,
+                    });
+                    this._fillAIGenForm(parsed);
+                } catch (_) {
+                    // 用户取消
+                    return;
+                }
+            }
+
+            if (!parsed.jobName || !parsed.industry || !parsed.experience) {
+                this.showToast('信息不完整，请手动填写表单', 'error');
+                return;
+            }
+
+            // ===== 自动触发生成（Agent核心步骤4）=====
+            document.getElementById('aiGenerateJobBtn')?.click();
+        } finally {
+            this._setAgentLoading(false);
+        }
     }
 
     _getAIGenIndustry() {

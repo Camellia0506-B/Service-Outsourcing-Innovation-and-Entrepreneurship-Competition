@@ -4920,6 +4920,61 @@ body::before {
 .ai-gen-form-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
 .ai-gen-form-sub { font-size: 12px; color: var(--text-secondary); }
 
+/* 岗位画像 - Agent 智能对话生成 */
+.ai-agent-card {
+    border: 1px solid #e6f7ff;
+    background: #f6fbff;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 0 0 16px 0;
+}
+.ai-agent-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.ai-agent-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+.ai-agent-row { display: flex; gap: 12px; align-items: center; }
+.ai-agent-input {
+    flex: 1;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid rgba(37, 99, 235, 0.15);
+    background: #fff;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ai-agent-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+.ai-agent-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.10), rgba(99, 102, 241, 0.08));
+    color: var(--blue);
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ai-agent-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.ai-agent-tip { margin-top: 10px; font-size: 12px; color: #7b8ab0; }
+.ai-agent-spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(37, 99, 235, 0.22);
+    border-top-color: rgba(37, 99, 235, 0.85);
+    animation: aiAgentSpin 0.9s linear infinite;
+}
+@keyframes aiAgentSpin { to { transform: rotate(360deg); } }
+@media (max-width: 768px) {
+    .ai-agent-row { flex-direction: column; align-items: stretch; }
+    .ai-agent-btn { justify-content: center; width: 100%; }
+}
+
 .ai-gen-field { margin-bottom: 20px; }
 .ai-gen-label { font-size: 13px; font-weight: 500; color: var(--soft-blue-text, #2e4070); margin-bottom: 8px; display: block; }
 .ai-gen-label .required { color: var(--danger-color); }

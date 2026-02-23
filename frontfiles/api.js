@@ -7,6 +7,36 @@ const API_CONFIG = {
     mockMode: false  // true=模拟数据（仅用于演示，所有数据为假）；false=连接真实后端（Java:5000 / AI:5001），使用真实数据库和岗位数据
 };
 
+// ==================== 大模型解析（Agent核心：自然语言 → JSON，走本地AI服务） ====================
+// 与后端其它模块保持一致：由 Flask + ChatTongyi(qwen3-max) 调通义千问，
+// 前端只请求本地接口 /api/v1/job/agent/parse-requirement，不直接暴露外部 API Key。
+async function agentParseJobProfileRequirement(userText) {
+    if (!userText || !String(userText).trim()) {
+        return { success: false, msg: '请输入岗位画像生成需求' };
+    }
+    const url = `${API_CONFIG.jobProfilesBaseURL}/job/agent/parse-requirement`.replace(/\/api\/v1\/?$/, '/api/v1/job/agent/parse-requirement');
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: String(userText).trim() })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (data.code === 200 && data.data) {
+            return { success: true, data: data.data };
+        }
+        const msg = data.msg || '智能解析失败，请手动填写表单';
+        return { success: false, msg };
+    } catch (e) {
+        console.error('[Agent] 智能解析接口异常:', e);
+        return {
+            success: false,
+            msg: '智能解析失败，请确认 AI 服务 (http://localhost:5001) 已启动',
+            error: e
+        };
+    }
+}
+
 // API工具类
 class API {
     constructor() {
