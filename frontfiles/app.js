@@ -296,6 +296,7 @@ class CareerPlanningApp {
         document.getElementById('closeCompletenessModal')?.addEventListener('click', () => document.getElementById('reportCompletenessModal')?.classList.add('hidden'));
         document.getElementById('closeEditModal')?.addEventListener('click', () => document.getElementById('reportEditModal')?.classList.add('hidden'));
         document.getElementById('saveReportEditsBtn')?.addEventListener('click', () => this.saveReportEdits());
+        document.getElementById('previewReportBtn')?.addEventListener('click', () => this.previewReportEdits());
 
         // 岗位画像相关：搜索防抖 300ms，清空按钮，返回精选
         let jobProfileSearchDebounce = null;
@@ -6334,9 +6335,9 @@ class CareerPlanningApp {
     }
 
     // 渲染职业规划报告内容（5 大模块、可折叠、左侧目录、无 7.x 数字）
-    renderCareerReportContent(data) {
-        const contentDiv = document.getElementById('reportContent');
-        const tocDiv = document.getElementById('reportToc');
+    renderCareerReportContent(data, container) {
+        const contentDiv = container || document.getElementById('reportContent');
+        const tocDiv = container ? null : document.getElementById('reportToc');
         const san = (t) => this.sanitizeCareerText(t || '');
         const genTime = this.formatDateTime(data.generated_at || data.created_at);
         const meta = data.metadata || {};
@@ -6922,7 +6923,7 @@ class CareerPlanningApp {
         const keyTakeaways = document.getElementById('editKeyTakeaways')?.value?.trim();
         
         // 映射到报告结构
-        if (careerGoal) edits['career_choice_advice.primary_recommendation'] = careerGoal;
+        if (careerGoal) edits['section_1_job_matching.career_choice_advice.primary_recommendation'] = careerGoal;
         if (workLocation) edits['preferences.work_location'] = workLocation;
         if (salaryExpectation) edits['preferences.salary_expectation'] = salaryExpectation;
         if (workLifeBalance) edits['preferences.work_life_balance'] = workLifeBalance;
@@ -6946,6 +6947,129 @@ class CareerPlanningApp {
         } else {
             this.showToast(result.msg || '保存失败', 'error');
         }
+    }
+    
+    // 7.5 预览效果
+    previewReportEdits() {
+        const id = this.currentReportId;
+        if (!id) return this.showToast('暂无报告', 'error');
+        
+        // 职业目标设置
+        const careerGoal = document.getElementById('editCareerGoal')?.value?.trim();
+        const workLocation = document.getElementById('editWorkLocation')?.value?.trim();
+        const salaryExpectation = document.getElementById('editSalaryExpectation')?.value?.trim();
+        const workLifeBalance = document.getElementById('editWorkLifeBalance')?.value?.trim();
+        
+        // 目标设置
+        const shortTermGoal = document.getElementById('editShortTermGoal')?.value?.trim();
+        const shortTermDeadline = document.getElementById('editShortTermDeadline')?.value?.trim();
+        const midTermGoal = document.getElementById('editMidTermGoal')?.value?.trim();
+        
+        // 行动计划
+        const shortTermPlan = document.getElementById('editShortTermPlan')?.value?.trim();
+        const timeInvestment = document.getElementById('editTimeInvestment')?.value?.trim();
+        
+        // 报告内容
+        const motivationalMsg = document.getElementById('editMotivationalMsg')?.value?.trim();
+        const keyTakeaways = document.getElementById('editKeyTakeaways')?.value?.trim();
+        
+        // 创建报告数据的副本
+        const previewReport = JSON.parse(JSON.stringify(this.currentReportData || {}));
+        
+        // 应用修改
+        if (careerGoal) {
+            previewReport.section_1_job_matching = previewReport.section_1_job_matching || {};
+            previewReport.section_1_job_matching.career_choice_advice = previewReport.section_1_job_matching.career_choice_advice || {};
+            previewReport.section_1_job_matching.career_choice_advice.primary_recommendation = careerGoal;
+        }
+        if (workLocation) {
+            previewReport.preferences = previewReport.preferences || {};
+            previewReport.preferences.work_location = workLocation;
+        }
+        if (salaryExpectation) {
+            previewReport.preferences = previewReport.preferences || {};
+            previewReport.preferences.salary_expectation = salaryExpectation;
+        }
+        if (workLifeBalance) {
+            previewReport.preferences = previewReport.preferences || {};
+            previewReport.preferences.work_life_balance = workLifeBalance;
+        }
+        
+        if (shortTermGoal) {
+            previewReport.section_2_career_path = previewReport.section_2_career_path || {};
+            previewReport.section_2_career_path.short_term_goal = previewReport.section_2_career_path.short_term_goal || {};
+            previewReport.section_2_career_path.short_term_goal.primary_goal = shortTermGoal;
+        }
+        if (shortTermDeadline) {
+            previewReport.section_2_career_path = previewReport.section_2_career_path || {};
+            previewReport.section_2_career_path.short_term_goal = previewReport.section_2_career_path.short_term_goal || {};
+            previewReport.section_2_career_path.short_term_goal.specific_targets = previewReport.section_2_career_path.short_term_goal.specific_targets || [{}];
+            previewReport.section_2_career_path.short_term_goal.specific_targets[0].deadline = shortTermDeadline;
+        }
+        if (midTermGoal) {
+            previewReport.section_2_career_path = previewReport.section_2_career_path || {};
+            previewReport.section_2_career_path.mid_term_goal = previewReport.section_2_career_path.mid_term_goal || {};
+            previewReport.section_2_career_path.mid_term_goal.primary_goal = midTermGoal;
+        }
+        
+        if (shortTermPlan) {
+            previewReport.section_3_action_plan = previewReport.section_3_action_plan || {};
+            previewReport.section_3_action_plan.short_term_plan = previewReport.section_3_action_plan.short_term_plan || {};
+            previewReport.section_3_action_plan.short_term_plan.goal = shortTermPlan;
+        }
+        if (timeInvestment) {
+            previewReport.section_3_action_plan = previewReport.section_3_action_plan || {};
+            previewReport.section_3_action_plan.short_term_plan = previewReport.section_3_action_plan.short_term_plan || {};
+            previewReport.section_3_action_plan.short_term_plan.monthly_plans = previewReport.section_3_action_plan.short_term_plan.monthly_plans || [{}];
+            previewReport.section_3_action_plan.short_term_plan.monthly_plans[0].tasks = previewReport.section_3_action_plan.short_term_plan.monthly_plans[0].tasks || [{}];
+            previewReport.section_3_action_plan.short_term_plan.monthly_plans[0].tasks[0]['时间投入'] = timeInvestment;
+        }
+        
+        if (motivationalMsg) {
+            previewReport.summary = previewReport.summary || {};
+            previewReport.summary.motivational_message = motivationalMsg;
+        }
+        if (keyTakeaways) {
+            previewReport.summary = previewReport.summary || {};
+            previewReport.summary.key_takeaways = keyTakeaways.split('\n');
+        }
+        
+        // 创建预览弹窗
+        const previewModal = document.createElement('div');
+        previewModal.id = 'previewModal';
+        previewModal.className = 'modal';
+        previewModal.style.display = 'block';
+        previewModal.innerHTML = `
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>预览效果</h2>
+                    <button type="button" class="modal-close" id="closePreviewModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContent" class="career-report-wrap"></div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(previewModal);
+        
+        // 渲染预览内容
+        const previewContent = document.getElementById('previewContent');
+        if (previewContent) {
+            this.renderCareerReportContent(previewReport, previewContent);
+        }
+        
+        // 关闭预览弹窗
+        document.getElementById('closePreviewModal')?.addEventListener('click', () => {
+            previewModal.remove();
+        });
+        
+        // 点击弹窗外部关闭
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) {
+                previewModal.remove();
+            }
+        });
     }
 
     // 7.4 AI 润色 - 提交后轮询刷新报告
@@ -7004,7 +7128,7 @@ class CareerPlanningApp {
         const messageDiv = document.createElement('div');
         messageDiv.className = sender === 'user' ? 'user-message' : 'agent-message';
         
-        const avatar = sender === 'user' ? '👤' : '🤖';
+        const avatar = sender === 'user' ? '👤' : '🎯';
         
         messageDiv.innerHTML = `
             <div class="message-avatar">${avatar}</div>
@@ -7019,13 +7143,49 @@ class CareerPlanningApp {
     
     // 格式化消息内容
     formatMessageContent(content) {
+        // 处理字符串内容，确保正确编码
         if (typeof content === 'string') {
-            return `<p>${content}</p>`;
-        } else if (Array.isArray(content)) {
-            return `<ul>${content.map(item => `<li>${item}</li>`).join('')}</ul>`;
-        } else {
-            return `<p>${JSON.stringify(content)}</p>`;
+            // 对特殊字符进行HTML编码，防止乱码
+            const encodedContent = this.htmlEncode(content);
+            return `<p>${encodedContent}</p>`;
+        } 
+        // 处理数组内容
+        else if (Array.isArray(content)) {
+            return `<ul>${content.map(item => {
+                const encodedItem = this.htmlEncode(String(item));
+                return `<li>${encodedItem}</li>`;
+            }).join('')}</ul>`;
+        } 
+        // 处理对象内容
+        else if (typeof content === 'object' && content !== null) {
+            // 如果对象有content字段，使用其值
+            if (content.content) {
+                if (Array.isArray(content.content)) {
+                    return `<ul>${content.content.map(item => {
+                        const encodedItem = this.htmlEncode(String(item));
+                        return `<li>${encodedItem}</li>`;
+                    }).join('')}</ul>`;
+                } else {
+                    const encodedContent = this.htmlEncode(String(content.content));
+                    return `<p>${encodedContent}</p>`;
+                }
+            } else {
+                const encodedContent = this.htmlEncode(JSON.stringify(content));
+                return `<p>${encodedContent}</p>`;
+            }
+        } 
+        // 处理其他类型
+        else {
+            const encodedContent = this.htmlEncode(String(content));
+            return `<p>${encodedContent}</p>`;
         }
+    }
+    
+    // HTML编码函数，防止乱码
+    htmlEncode(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
     
     // 显示正在输入状态
@@ -7035,9 +7195,13 @@ class CareerPlanningApp {
         typingDiv.id = 'typingIndicator';
         typingDiv.className = 'agent-message';
         typingDiv.innerHTML = `
-            <div class="message-avatar">🤖</div>
+            <div class="message-avatar">🎯</div>
             <div class="message-content">
-                <p>正在输入...</p>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
             </div>
         `;
         chatHistory.appendChild(typingDiv);

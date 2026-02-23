@@ -399,18 +399,25 @@ def list_reports_for_career_history(assessment_service, user_id: int) -> List[di
             # 跳过测评报告，只保留职业规划报告
             continue
         
-        interest = report.get("interest_analysis") or {}
-        primary = interest.get("primary_interest") or {}
-        primary_career = primary.get("type") or "综合"
-        
         # 计算完整度（如果报告中没有完整度字段）
         completeness = report.get("completeness", 85)
+        
+        # 生成有区分度的规划报告名称
+        created_date = r.get("created_at", "")
+        if created_date:
+            # 从创建时间中提取日期部分作为区分
+            date_part = created_date.split(' ')[0]
+            report_name = f"职业规划报告 - {date_part}"
+        else:
+            # 如果没有创建时间，使用报告ID的最后几位作为区分
+            report_id_suffix = r["report_id"][-4:] if len(r["report_id"]) >= 4 else r["report_id"]
+            report_name = f"职业规划报告 - {report_id_suffix}"
         
         out.append({
             "report_id": r["report_id"],
             "created_at": r["created_at"],
             "status": "completed",
-            "primary_career": primary_career,
+            "primary_career": report_name,
             "completeness": completeness,
             "last_viewed": r.get("last_viewed") or r.get("created_at") or r["created_at"],
         })
