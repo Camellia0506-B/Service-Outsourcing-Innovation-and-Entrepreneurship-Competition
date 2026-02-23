@@ -4,7 +4,7 @@ const API_CONFIG = {
     assessmentBaseURL: 'http://localhost:5001/api/v1', // Python AI 服务（职业测评/岗位画像/简历AI解析等），须先启动 AI算法 服务
     jobProfilesBaseURL: 'http://localhost:5001/api/v1', // 岗位画像 → Flask AI（5001）
     timeout: 30000,
-    mockMode: false  // true=模拟数据；false=真实后端（Java:5000 / Python AI:5001）
+    mockMode: false  // true=模拟数据（仅用于演示，所有数据为假）；false=连接真实后端（Java:5000 / AI:5001），使用真实数据库和岗位数据
 };
 
 // API工具类
@@ -1133,6 +1133,53 @@ class API {
 
     mockCareerReportFull() {
         const now = new Date().toISOString();
+        
+        // 随机生成不同类型的报告内容，模拟个性化
+        const reportType = Math.floor(Math.random() * 3);
+        let careerFocus, skillsFocus, targetJobs,个性化内容;
+        
+        switch (reportType) {
+            case 0:
+                // 算法工程师方向
+                careerFocus = '算法工程师';
+                skillsFocus = ['深度学习', '大数据处理', '算法优化'];
+                targetJobs = ['算法工程师', '机器学习工程师', '数据科学家'];
+                个性化内容 = {
+                    strengths: ['学习能力强，快速掌握新技术', '逻辑思维能力突出', '有扎实的编程基础和项目经验'],
+                    interests: ['对人工智能和算法有浓厚兴趣', '喜欢解决复杂技术问题', '追求技术深度'],
+                    gap: '缺少大规模数据处理经验',
+                    solution: '学习Spark等大数据框架',
+                    timeline: '2-3个月'
+                };
+                break;
+            case 1:
+                // 后端开发方向
+                careerFocus = '后端开发工程师';
+                skillsFocus = ['分布式系统', '数据库设计', 'API开发'];
+                targetJobs = ['后端开发工程师', '全栈工程师', '系统架构师'];
+                个性化内容 = {
+                    strengths: ['编程基础扎实', '系统设计能力良好', '代码质量高'],
+                    interests: ['对系统架构设计感兴趣', '喜欢解决工程问题', '追求代码质量'],
+                    gap: '分布式系统经验不足',
+                    solution: '学习微服务架构和容器技术',
+                    timeline: '3-4个月'
+                };
+                break;
+            case 2:
+                // 前端开发方向
+                careerFocus = '前端开发工程师';
+                skillsFocus = ['前端框架', '响应式设计', '用户体验'];
+                targetJobs = ['前端开发工程师', '全栈工程师', 'UI/UX工程师'];
+                个性化内容 = {
+                    strengths: ['前端技术栈熟练', '用户界面设计感强', '学习能力强'],
+                    interests: ['对用户体验设计感兴趣', '喜欢创造美观的界面', '关注前端技术发展'],
+                    gap: '大型项目经验不足',
+                    solution: '参与开源项目或大型前端工程',
+                    timeline: '2-3个月'
+                };
+                break;
+        }
+        
         return {
             report_id: 'report_career_' + Date.now(),
             user_id: 10001,
@@ -1142,71 +1189,70 @@ class API {
             section_1_job_matching: {
                 title: '职业探索与岗位匹配',
                 self_assessment: {
-                    strengths: ['学习能力强，快速掌握新技术', '逻辑思维能力突出', '有扎实的编程基础和项目经验'],
-                    interests: ['对人工智能和算法有浓厚兴趣', '喜欢解决复杂技术问题', '追求技术深度'],
+                    strengths: 个性化内容.strengths,
+                    interests: 个性化内容.interests,
                     values: ['重视个人技术成长', '追求工作成就感', '希望参与有影响力的项目']
                 },
                 recommended_careers: [
-                    { career: '算法工程师', match_score: 92,
+                    { career: careerFocus, match_score: 92,
                       match_analysis: {
-                        why_suitable: ['你的研究型兴趣与算法岗位高度契合', '强大的学习能力适合快速迭代的算法领域', '逻辑分析能力是算法工程师的核心素质'],
+                        why_suitable: ['你的兴趣与' + careerFocus + '岗位高度契合', '你的能力与岗位要求匹配度高', '你的价值观与职业发展方向一致'],
                         capability_match: { professional_skills: { score: 88, description: '技术栈覆盖80%岗位需求' }, soft_skills: { score: 90, description: '学习能力、创新能力与岗位要求高度匹配' } },
                         gaps_and_solutions: [
-                            { gap: '缺少大规模数据处理经验', solution: '学习Spark等大数据框架', priority: '高', timeline: '2-3个月' },
-                            { gap: '深度学习框架需要进阶', solution: '深入学习TensorFlow/PyTorch', priority: '高', timeline: '1-2个月' }
+                            { gap: 个性化内容.gap, solution: 个性化内容.solution, priority: '高', timeline: 个性化内容.timeline }
                         ]
                       },
-                      market_outlook: { demand: '高', growth_trend: '持续上升', salary_range: '15k-25k（应届）→ 25k-40k（2-3年）', key_trends: ['大模型应用爆发式增长', '多模态AI成为新热点'] }
+                      market_outlook: { demand: '高', growth_trend: '持续上升', salary_range: '15k-25k（应届）→ 25k-40k（2-3年）', key_trends: ['技术栈持续更新', '工程化要求提高'] }
                     },
-                    { career: '后端开发工程师', match_score: 85,
-                      match_analysis: { why_suitable: ['编程基础扎实', '系统设计能力良好'], capability_match: {}, gaps_and_solutions: [] },
+                    { career: targetJobs[1], match_score: 85,
+                      match_analysis: { why_suitable: ['你的技能可以迁移到' + targetJobs[1] + '岗位', '你有相关的能力基础'], capability_match: {}, gaps_and_solutions: [] },
                       market_outlook: { demand: '高', growth_trend: '稳定', salary_range: '12k-20k（应届）' }
                     }
                 ],
                 career_choice_advice: {
-                    primary_recommendation: '算法工程师',
+                    primary_recommendation: careerFocus,
                     reasons: ['与你的兴趣、能力、价值观高度契合', '市场需求旺盛，发展前景好', '能够充分发挥你的技术优势'],
-                    alternative_option: '机器学习工程师（偏工程化方向）',
-                    risk_mitigation: '建议同时关注后端开发技能，增加就业灵活性'
+                    alternative_option: targetJobs[1],
+                    risk_mitigation: '建议同时关注相关技术领域，增加就业灵活性'
                 }
             },
             section_2_career_path: {
                 title: '职业目标设定与职业路径规划',
                 short_term_goal: {
                     timeline: '2026.06 - 2026.06',
-                    primary_goal: '成功入职算法工程师岗位，完成职业起步',
+                    primary_goal: '成功入职' + careerFocus + '岗位，完成职业起步',
                     specific_targets: [
-                        { target: '获得算法工程师offer', metrics: '至少2个中大厂offer', deadline: '2026.06' },
-                        { target: '快速融入团队', metrics: '3个月内独立负责算法模块', deadline: '2026.09' }
+                        { target: '获得' + careerFocus + 'offer', metrics: '至少2个中大厂offer', deadline: '2026.06' },
+                        { target: '快速融入团队', metrics: '3个月内独立负责核心模块', deadline: '2026.09' }
                     ]
                 },
                 mid_term_goal: {
                     timeline: '2026 - 2030',
-                    primary_goal: '成长为中高级算法工程师，建立技术影响力',
+                    primary_goal: '成长为中高级' + careerFocus + '，建立技术影响力',
                     specific_targets: [
-                        { target: '晋升为中级算法工程师', metrics: '独立负责关键算法项目', deadline: '2027' },
+                        { target: '晋升为中级' + careerFocus, metrics: '独立负责关键项目', deadline: '2027' },
                         { target: '技术深度突破', metrics: '在某一细分领域成为团队专家', deadline: '2028' }
                     ]
                 },
                 career_roadmap: {
                     path_type: '技术专家路线',
                     stages: [
-                        { stage: '初级算法工程师', period: '1-2年', key_responsibilities: ['完成分配的算法开发任务', '优化现有算法性能'], success_criteria: ['独立完成算法模块开发', '代码质量达到团队标准'] },
-                        { stage: '中级算法工程师', period: '2-3年', key_responsibilities: ['负责核心算法设计', '解决技术难题'], success_criteria: ['设计的算法性能提升显著', '攻克2-3个技术难点'] },
-                        { stage: '高级算法工程师/算法专家', period: '3-5年', key_responsibilities: ['设计算法架构', '带领算法团队'], success_criteria: ['成为某领域的技术专家', '带领团队完成重要项目'] }
+                        { stage: '初级' + careerFocus, period: '1-2年', key_responsibilities: ['完成分配的开发任务', '优化现有代码性能'], success_criteria: ['独立完成模块开发', '代码质量达到团队标准'] },
+                        { stage: '中级' + careerFocus, period: '2-3年', key_responsibilities: ['负责核心模块设计', '解决技术难题'], success_criteria: ['设计的系统性能提升显著', '攻克2-3个技术难点'] },
+                        { stage: '高级' + careerFocus + '/技术专家', period: '3-5年', key_responsibilities: ['设计系统架构', '带领技术团队'], success_criteria: ['成为某领域的技术专家', '带领团队完成重要项目'] }
                     ],
                     alternative_paths: [
-                        { path: '横向转岗 → 数据科学家', timing: '2-3年工作经验后', reason: '算法能力可迁移', preparation: ['加强统计学和业务理解', '学习数据可视化工具'] },
-                        { path: '向上转型 → AI产品经理', timing: '4-5年工作经验后', reason: '技术背景+产品思维', preparation: ['培养产品sense', '提升沟通和项目管理能力'] }
+                        { path: '横向转岗 → ' + targetJobs[1], timing: '2-3年工作经验后', reason: '技能可迁移', preparation: ['学习相关技术栈', '参与相关项目'] },
+                        { path: '向上转型 → 技术管理者', timing: '4-5年工作经验后', reason: '技术背景+管理能力', preparation: ['培养管理能力', '提升沟通和项目管理能力'] }
                     ]
                 },
                 industry_trends: {
-                    current_status: 'AI算法岗位需求持续旺盛',
+                    current_status: careerFocus + '岗位需求持续旺盛',
                     key_trends: [
-                        { trend: '大模型应用普及', impact: '对算法工程师的工程能力要求提高', opportunity: '掌握大模型应用开发将成为核心竞争力' },
-                        { trend: 'AI+垂直行业融合', impact: '需要懂业务的算法工程师', opportunity: '选择一个垂直领域深耕（如医疗AI、金融AI）' }
+                        { trend: '技术栈持续更新', impact: '对工程师的学习能力要求提高', opportunity: '持续学习新技术将成为核心竞争力' },
+                        { trend: '工程化要求提高', impact: '需要更注重代码质量和系统稳定性', opportunity: '提升工程化能力将脱颖而出' }
                     ],
-                    '5_year_outlook': '算法工程师将从纯技术岗位向技术+业务复合型人才转变'
+                    '5_year_outlook': careerFocus + '将从纯技术岗位向技术+业务复合型人才转变'
                 }
             },
             section_3_action_plan: {
@@ -1216,17 +1262,17 @@ class API {
                     goal: '补齐能力短板，冲刺校招offer',
                     monthly_plans: [
                         { month: '2026.02 - 2026.03', focus: '技能提升',
-                          tasks: [{ task: '深度学习进阶', '具体行动': ['完成斯坦福CS231n课程', '复现3篇经典论文'], '预期成果': '掌握深度学习核心算法', '时间投入': '每周15小时' }],
-                          milestone: '完成2个深度学习项目' },
+                          tasks: [{ task: skillsFocus[0] + '进阶', '具体行动': ['完成相关课程学习', '实践项目开发'], '预期成果': '掌握核心技能', '时间投入': '每周15小时' }],
+                          milestone: '完成2个相关项目' },
                         { month: '2026.04 - 2026.06', focus: '求职冲刺',
-                          tasks: [{ task: '算法刷题', '具体行动': ['LeetCode刷300题'], '预期成果': '算法面试通过率80%+', '时间投入': '每周15小时' }],
-                          milestone: '获得2-3个算法工程师offer' }
+                          tasks: [{ task: '算法刷题/技术面试准备', '具体行动': ['刷LeetCode题目/准备技术面试'], '预期成果': '面试通过率80%+', '时间投入': '每周15小时' }],
+                          milestone: '获得2-3个' + careerFocus + 'offer' }
                     ]
                 },
                 learning_path: {
                     technical_skills: [
-                        { skill_area: '深度学习', current_level: '熟悉', target_level: '精通', learning_resources: ['课程：斯坦福CS231n、CS224n', '实践：Kaggle竞赛'], timeline: '6个月' },
-                        { skill_area: '大数据处理', current_level: '了解', target_level: '熟练', learning_resources: ['课程：Spark官方教程'], timeline: '3个月' }
+                        { skill_area: skillsFocus[0], current_level: '熟悉', target_level: '精通', learning_resources: ['课程学习', '实践项目'], timeline: '6个月' },
+                        { skill_area: skillsFocus[1], current_level: '了解', target_level: '熟练', learning_resources: ['官方文档', '实战项目'], timeline: '3个月' }
                     ],
                     soft_skills: [{ skill: '技术沟通', improvement_plan: ['每月1次技术分享', '撰写清晰的技术文档'], timeline: '持续提升' }]
                 },
@@ -1234,7 +1280,7 @@ class API {
                     portfolio_building: {
                         github: { goal: '打造个人技术品牌', actions: ['开源2-3个高质量项目', '维护技术博客 Star 500+'] },
                         technical_blog: { goal: '建立技术影响力', actions: ['每月1-2篇技术文章', '总阅读量10万+'] },
-                        competitions: { goal: '验证技术能力', actions: ['参加3次Kaggle竞赛 Top 10%'] }
+                        competitions: { goal: '验证技术能力', actions: ['参加相关技术竞赛'] }
                     }
                 }
             },
@@ -1247,20 +1293,20 @@ class API {
                 },
                 adjustment_scenarios: [
                     { scenario: '求职不顺利（offer<预期）', possible_reasons: ['技能储备不足', '面试表现欠佳'], adjustment_plan: { immediate_actions: ['分析面试反馈，针对性提升', '降低目标公司档次'], long_term_actions: ['系统提升薄弱技能', '积累更多项目经验'] } },
-                    { scenario: '工作后发现不适合算法岗', possible_reasons: ['兴趣不符', '能力不匹配'], adjustment_plan: { evaluation_period: '工作6个月内', fallback_options: ['转向机器学习工程师', '转向数据科学家', '转向后端开发'] } }
+                    { scenario: '工作后发现不适合' + careerFocus + '岗', possible_reasons: ['兴趣不符', '能力不匹配'], adjustment_plan: { evaluation_period: '工作6个月内', fallback_options: [targetJobs[1], targetJobs[2], '相关技术岗位'] } }
                 ],
                 risk_management: {
                     identified_risks: [
-                        { risk: 'AI技术迭代导致部分岗位需求变化', probability: '中', impact: '高', mitigation: '保持学习，关注前沿技术' },
+                        { risk: '技术迭代导致部分岗位需求变化', probability: '中', impact: '高', mitigation: '保持学习，关注前沿技术' },
                         { risk: '市场竞争加剧', probability: '高', impact: '中', mitigation: '提前准备，建立差异化竞争力' }
                     ],
-                    contingency_plans: ['plan A: 坚持算法方向', 'plan B: 转向ML工程师或数据科学家', 'plan C: 转向后端开发']
+                    contingency_plans: ['plan A: 坚持' + careerFocus + '方向', 'plan B: 转向' + targetJobs[1], 'plan C: 转向相关技术领域']
                 }
             },
             summary: {
-                key_takeaways: ['你适合从事算法工程师职业', '短期目标是补齐技能短板，获得2-3个offer', '中期目标是3-5年内成长为中高级算法工程师', '需要重点提升深度学习和大数据处理能力'],
-                next_steps: ['立即开始：深度学习课程学习（本周内）', '2周内：启动1个深度学习项目', '1个月内：完成Spark学习和实战', '3个月内：完成2个高质量项目并开源'],
-                motivational_message: '你已经具备了成为优秀算法工程师的潜质。接下来的6个月是关键期，保持专注和持续行动，你一定能够实现职业目标。加油！'
+                key_takeaways: ['你适合从事' + careerFocus + '职业', '短期目标是补齐技能短板，获得2-3个offer', '中期目标是3-5年内成长为中高级' + careerFocus, '需要重点提升' + skillsFocus[0] + '和' + skillsFocus[1] + '能力'],
+                next_steps: ['立即开始：' + skillsFocus[0] + '学习（本周内）', '2周内：启动1个相关项目', '1个月内：完成' + skillsFocus[1] + '学习和实战', '3个月内：完成2个高质量项目并开源'],
+                motivational_message: '你已经具备了成为优秀' + careerFocus + '的潜质。接下来的6个月是关键期，保持专注和持续行动，你一定能够实现职业目标。加油！'
             }
         };
     }
@@ -1632,7 +1678,8 @@ async function generateCareerReport(userId, options = {}) {
     return await api.post('/career/generate-report', {
         user_id: userId,
         target_jobs: options.target_jobs || [],
-        preferences: options.preferences || {}
+        preferences: options.preferences || {},
+        user_context: options.user_context || {}
     });
 }
 

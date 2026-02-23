@@ -191,6 +191,12 @@ class CareerPlanningApp {
         document.getElementById('addSkillCategory')?.addEventListener('click', () => {
             this.addSkillCategory();
         });
+        document.getElementById('addInternship')?.addEventListener('click', () => {
+            this.addInternship();
+        });
+        document.getElementById('addProject')?.addEventListener('click', () => {
+            this.addProject();
+        });
 
         document.getElementById('uploadResumeBtn')?.addEventListener('click', () => {
             document.getElementById('resumeUpload').click();
@@ -1222,7 +1228,9 @@ class CareerPlanningApp {
                 expected_graduation: this.normalizeMonthForStorage(document.getElementById('expectedGraduation').value),
                 gpa: document.getElementById('gpa').value
             },
-            skills: this.collectSkills()
+            skills: this.collectSkills(),
+            internships: this.collectInternships(),
+            projects: this.collectProjects()
         };
 
         console.log('保存档案数据:', JSON.stringify(profileData, null, 2));
@@ -1252,6 +1260,14 @@ class CareerPlanningApp {
                     this.showToast('能力画像已更新，岗位匹配将基于新档案', 'success');
                     // 能力画像更新后，推荐岗位数量可能变化，刷新首页数据
                     this.loadDashboardData();
+                    
+                    // 提示用户是否需要更新职业规划报告
+                    setTimeout(() => {
+                        if (confirm('您的个人信息已更新，能力画像也已重新生成。\n\n是否需要更新您的职业规划报告，使其与最新信息保持一致？')) {
+                            // 跳转到职业规划报告页面
+                            document.getElementById('nav-career-report')?.click();
+                        }
+                    }, 1500);
                 }
             }).catch(() => {});
         } else {
@@ -1275,6 +1291,54 @@ class CareerPlanningApp {
         return skills;
     }
 
+    // 收集实习经历数据
+    collectInternships() {
+        const internships = [];
+        document.querySelectorAll('.internship-item').forEach(item => {
+            const company = item.querySelector('.internship-company').value;
+            const position = item.querySelector('.internship-position').value;
+            const startDate = item.querySelector('.internship-start-date').value;
+            const endDate = item.querySelector('.internship-end-date').value;
+            const description = item.querySelector('.internship-description').value;
+            
+            if (company || position || startDate || endDate || description) {
+                internships.push({
+                    company: company.trim(),
+                    position: position.trim(),
+                    start_date: startDate.trim(),
+                    end_date: endDate.trim(),
+                    description: description.trim()
+                });
+            }
+        });
+        return internships;
+    }
+
+    // 收集项目经历数据
+    collectProjects() {
+        const projects = [];
+        document.querySelectorAll('.project-item').forEach(item => {
+            const name = item.querySelector('.project-name').value;
+            const role = item.querySelector('.project-role').value;
+            const startDate = item.querySelector('.project-start-date').value;
+            const endDate = item.querySelector('.project-end-date').value;
+            const description = item.querySelector('.project-description').value;
+            const techStack = item.querySelector('.project-tech-stack').value;
+            
+            if (name || role || startDate || endDate || description || techStack) {
+                projects.push({
+                    name: name.trim(),
+                    role: role.trim(),
+                    start_date: startDate.trim(),
+                    end_date: endDate.trim(),
+                    description: description.trim(),
+                    tech_stack: techStack ? techStack.split(',').map(s => s.trim()).filter(s => s) : []
+                });
+            }
+        });
+        return projects;
+    }
+
     // 添加技能分类
     addSkillCategory() {
         const container = document.getElementById('skillsContainer');
@@ -1283,6 +1347,37 @@ class CareerPlanningApp {
         div.innerHTML = `
             <input type="text" placeholder="技能分类 (如: 编程语言)" class="skill-category-input">
             <input type="text" placeholder="技能列表 (用逗号分隔)" class="skill-items-input">
+        `;
+        container.appendChild(div);
+    }
+
+    // 添加实习经历
+    addInternship() {
+        const container = document.getElementById('internshipsContainer');
+        const div = document.createElement('div');
+        div.className = 'internship-item';
+        div.innerHTML = `
+            <input type="text" placeholder="公司名称" class="internship-company">
+            <input type="text" placeholder="职位" class="internship-position">
+            <input type="text" placeholder="开始日期 (YYYY-MM)" class="internship-start-date">
+            <input type="text" placeholder="结束日期 (YYYY-MM)" class="internship-end-date">
+            <input type="text" placeholder="描述" class="internship-description">
+        `;
+        container.appendChild(div);
+    }
+
+    // 添加项目经历
+    addProject() {
+        const container = document.getElementById('projectsContainer');
+        const div = document.createElement('div');
+        div.className = 'project-item';
+        div.innerHTML = `
+            <input type="text" placeholder="项目名称" class="project-name">
+            <input type="text" placeholder="角色" class="project-role">
+            <input type="text" placeholder="开始日期 (YYYY-MM)" class="project-start-date">
+            <input type="text" placeholder="结束日期 (YYYY-MM)" class="project-end-date">
+            <input type="text" placeholder="描述" class="project-description">
+            <input type="text" placeholder="技术栈 (用逗号分隔)" class="project-tech-stack">
         `;
         container.appendChild(div);
     }
@@ -1362,6 +1457,47 @@ class CareerPlanningApp {
             `;
             data.certificates.forEach(cert => {
                 html += `<tr><th>${cert.name}</th><td>${cert.issue_date || '-'}</td></tr>`;
+            });
+            html += `
+                    </table>
+                </div>
+            `;
+        }
+        
+        if (data.internships && data.internships.length > 0) {
+            html += `
+                <div class="profile-section">
+                    <h4>实习经历</h4>
+                    <table class="profile-table">
+            `;
+            data.internships.forEach((intern, index) => {
+                html += `<tr><th>实习 ${index + 1}</th><td></td></tr>`;
+                html += `<tr><th>公司</th><td>${intern.company || '-'}</td></tr>`;
+                html += `<tr><th>职位</th><td>${intern.position || '-'}</td></tr>`;
+                html += `<tr><th>时间</th><td>${intern.start_date || '-'} 至 ${intern.end_date || '-'}</td></tr>`;
+                html += `<tr><th>描述</th><td>${intern.description || '-'}</td></tr>`;
+            });
+            html += `
+                    </table>
+                </div>
+            `;
+        }
+        
+        if (data.projects && data.projects.length > 0) {
+            html += `
+                <div class="profile-section">
+                    <h4>项目经历</h4>
+                    <table class="profile-table">
+            `;
+            data.projects.forEach((project, index) => {
+                html += `<tr><th>项目 ${index + 1}</th><td></td></tr>`;
+                html += `<tr><th>名称</th><td>${project.name || '-'}</td></tr>`;
+                html += `<tr><th>角色</th><td>${project.role || '-'}</td></tr>`;
+                html += `<tr><th>时间</th><td>${project.start_date || '-'} 至 ${project.end_date || '-'}</td></tr>`;
+                html += `<tr><th>描述</th><td>${project.description || '-'}</td></tr>`;
+                if (project.tech_stack && project.tech_stack.length > 0) {
+                    html += `<tr><th>技术栈</th><td>${project.tech_stack.join(', ')}</td></tr>`;
+                }
             });
             html += `
                     </table>
@@ -2104,10 +2240,10 @@ class CareerPlanningApp {
                             </div>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                                ${this.renderSkillDetail(ps.programming_languages, '编程语言', 69)}
-                                ${this.renderSkillDetail(ps.frameworks_tools, '框架工具', 69)}
-                                ${this.renderSkillDetail(ps.domain_knowledge, '领域知识', 59)}
-                                ${this.renderSkillDetail([{skill: 'SQL', score: 69}, {skill: 'Linux', score: 69}], '数据结构', 69)}
+                                ${this.renderSkillDetail(ps.programming_languages, '编程语言', ps.overall_score || 60)}
+                                ${this.renderSkillDetail(ps.frameworks_tools, '框架工具', ps.overall_score || 60)}
+                                ${this.renderSkillDetail(ps.domain_knowledge, '领域知识', ps.overall_score || 60)}
+                                ${this.renderSkillDetail([], '数据结构', ps.overall_score || 60)}
                             </div>
                         </div>
                     </div>
@@ -2294,10 +2430,6 @@ class CareerPlanningApp {
     
     // 渲染技能详情
     renderSkillDetail(skills, title, totalScore) {
-        if (!skills || skills.length === 0) {
-            return '';
-        }
-        
         // 根据技能类型设置不同的固定颜色
         let barColor = '';
         switch (title) {
@@ -2327,7 +2459,7 @@ class CareerPlanningApp {
                     <div style="height: 100%; background-color: ${barColor}; border-radius: 3px; width: ${totalScore}%;"></div>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    ${skills.map(skill => {
+                    ${skills && skills.length > 0 ? skills.map(skill => {
                         const name = skill.skill || skill.domain || '-';
                         const level = skill.level || '熟悉';
                         
@@ -2336,7 +2468,7 @@ class CareerPlanningApp {
                                 ${name} (${level})
                             </span>
                         `;
-                    }).join('')}
+                    }).join('') : '<span style="font-size: 12px; color: var(--text-secondary);">暂无数据</span>'}
                 </div>
             </div>
         `;
@@ -2353,11 +2485,11 @@ class CareerPlanningApp {
         let suggestion = '';
         
         if (current >= target) {
-            gapLevel = '超出要求';
+            gapLevel = '表现优异';
             gapColor = '#52c41a';
             suggestion = '继续保持并寻求进阶机会，考虑挑战更高级别的任务。';
         } else if (gapPercentage <= 10) {
-            gapLevel = '接近达标';
+            gapLevel = '达标在望';
             gapColor = '#1890ff';
             suggestion = '通过短期集中学习和实践，可快速达到目标要求。';
         } else if (gapPercentage <= 25) {
@@ -2486,7 +2618,7 @@ class CareerPlanningApp {
             { name: '专业技能', max: 100 },
             { name: '创新能力', max: 100 },
             { name: '学习能力', max: 100 },
-            { name: '压力承受', max: 100 },
+            { name: '抗压能力', max: 100 },
             { name: '沟通能力', max: 100 },
             { name: '实践经验', max: 100 }
         ];
@@ -2498,6 +2630,16 @@ class CareerPlanningApp {
         const pressureScore = pressure.assessment_score || pressure.score || 65;
         const communicationScore = comm.overall_score || comm.score || 65;
         const experienceScore = exp.overall_score || exp.score || 55;
+        
+        // 从API数据中获取目标岗位要求（如果有），否则使用合理默认值
+        const jobRequirements = data.target_job_requirements || {
+            professional_skills: 80,
+            innovation_ability: 75,
+            learning_ability: 85,
+            pressure_resistance: 70,
+            communication_ability: 80,
+            practical_experience: 75
+        };
         
         const seriesData = [
             {
@@ -2512,8 +2654,15 @@ class CareerPlanningApp {
                 name: '当前能力'
             },
             {
-                value: [80, 75, 85, 70, 80, 75], // 目标岗位要求线
-                name: '岗位要求（算法工程师）'
+                value: [
+                    jobRequirements.professional_skills || 80,
+                    jobRequirements.innovation_ability || 75,
+                    jobRequirements.learning_ability || 85,
+                    jobRequirements.pressure_resistance || 70,
+                    jobRequirements.communication_ability || 80,
+                    jobRequirements.practical_experience || 75
+                ],
+                name: data.target_job_name ? `岗位要求（${data.target_job_name}）` : '岗位要求（算法工程师）'
             }
         ];
         
@@ -2522,7 +2671,7 @@ class CareerPlanningApp {
                 trigger: 'item'
             },
             legend: {
-                data: ['当前能力', '岗位要求（算法工程师）'],
+                data: ['当前能力', data.target_job_name ? `岗位要求（${data.target_job_name}）` : '岗位要求（算法工程师）'],
                 bottom: 0,
                 textStyle: {
                     fontSize: 12
@@ -2712,25 +2861,30 @@ class CareerPlanningApp {
     // 渲染经验时间轴
     renderExperienceTimeline(experiences, type) {
         if (!experiences || experiences.length === 0) {
-            return '';
+            return '<div style="padding: 20px 0; text-align: center; color: var(--text-secondary);">暂无相关经历</div>';
         }
         
         let html = '<div style="position: relative; padding-left: 32px;">';
         experiences.forEach((exp, index) => {
             const title = type === 'internship' ? exp.position : exp.name;
             const company = exp.company || '';
+            const role = exp.role || '';
             const startDate = exp.start_date || '';
             const endDate = exp.end_date || '';
             const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : exp.duration || '';
             const location = exp.location || '';
             const description = exp.description || '';
             const achievements = exp.achievements || [];
+            const score = exp.score || '';
+            const complexity = exp.complexity || '';
             
             let details = '';
-            if (dateRange || location) {
+            if (dateRange || location || score || complexity) {
                 details += '<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">';
                 if (dateRange) details += `${dateRange}`;
                 if (location) details += `${dateRange ? ' · ' : ''}${location}`;
+                if (score) details += `${(dateRange || location) ? ' · ' : ''}评分: ${score}`;
+                if (complexity) details += `${(dateRange || location || score) ? ' · ' : ''}复杂度: ${complexity}`;
                 details += '</div>';
             }
             
@@ -2757,7 +2911,7 @@ class CareerPlanningApp {
                     ${!isLast ? `<div style="width: 2px; background-color: #e6f7ff; position: absolute; left: 5px; top: 14px; bottom: -24px;"></div>` : ''}
                 </div>
                 <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">${title}</h4>
-                ${company ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${company}</div>` : ''}
+                ${company ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${company}${role ? ` · ${role}` : ''}</div>` : role ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${role}</div>` : ''}
                 ${details}
                 ${descriptionHtml}
                 ${achievementsHtml}
@@ -5235,6 +5389,8 @@ class CareerPlanningApp {
             this.showToast('请先登录', 'error');
             return;
         }
+        
+        // 收集用户偏好设置
         const prefs = {
             career_goal: document.getElementById('prefCareerGoal')?.value || '',
             work_location: document.getElementById('prefWorkLocation')?.value?.trim() || '',
@@ -5242,15 +5398,38 @@ class CareerPlanningApp {
             work_life_balance: document.getElementById('prefWorkLifeBalance')?.value || ''
         };
         const preferences = Object.fromEntries(Object.entries(prefs).filter(([, v]) => v));
+        
+        // 收集目标岗位
         const targetSelect = document.getElementById('prefTargetJobs');
         const targetJobs = targetSelect ? Array.from(targetSelect.selectedOptions).map(o => o.value).filter(Boolean) : [];
+        
+        // 显示生成中状态
         this.showReportGeneratingArea();
-        const result = await generateCareerReport(userId, { preferences, target_jobs: targetJobs });
-        if (result.success && result.data?.report_id) {
-            this.pollCareerReportReady(userId, result.data.report_id);
-        } else {
+        
+        try {
+            // 先获取用户最新的能力画像，确保报告基于最新数据
+            const abilityProfileResult = await getAbilityProfile(userId);
+            
+            // 生成报告，传递用户偏好、目标岗位和最新能力画像信息
+            const result = await generateCareerReport(userId, {
+                preferences,
+                target_jobs: targetJobs,
+                user_context: {
+                    has_ability_profile: abilityProfileResult.success && abilityProfileResult.data,
+                    profile_completeness: abilityProfileResult.data?.overall_assessment?.completeness || 0
+                }
+            });
+            
+            if (result.success && result.data?.report_id) {
+                this.pollCareerReportReady(userId, result.data.report_id);
+            } else {
+                this.showReportGenerateArea();
+                this.showToast(result.msg || '生成失败', 'error');
+            }
+        } catch (error) {
+            console.error('生成报告时出错:', error);
             this.showReportGenerateArea();
-            this.showToast(result.msg || '生成失败', 'error');
+            this.showToast('生成失败，请稍后重试', 'error');
         }
     }
 
