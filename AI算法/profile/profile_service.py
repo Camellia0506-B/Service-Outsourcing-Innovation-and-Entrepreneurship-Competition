@@ -130,14 +130,15 @@ def _extract_json(text: str) -> dict:
 def _fallback_parse_resume_text(resume_text: str) -> dict:
     """
     当大模型未解析出有效结构时，使用正则从原始文本里兜底提取几项关键信息：
-    - 姓名（匹配“姓名：XXX”）
-    - 手机号（11位国内手机号）
-    - 邮箱
-    - 教育经历中第一所学校和专业（尽量猜测，有则填，没有就留空）
+    - 姓名（匹配“姓名：XXX”或首行为 2-4 个汉字的中文名）
+    - 出生日期（匹配“出生日期/生日：YYYY/MM/DD”或 YYYY-MM-DD）
+    - 性别（匹配“性别：男/女”）
+    - 手机号、邮箱
+    - 教育经历中第一所学校和专业
     """
     import re
 
-    text = resume_text or ""
+    text = (resume_text or "").replace("\r\n", "\n").replace("\r", "\n")
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
 
     # 手机号
@@ -148,20 +149,53 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
     email_match = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
     email = email_match.group(0) if email_match else ""
 
-    # 姓名（优先匹配“姓名：XXX”）
+    # 姓名：优先“姓名：XXX”或“姓名 XXX”，否则用首行或前几行中“仅 2-4 汉字”的一行
     name = ""
-    name_match = re.search(r"姓名[:：]\s*([^\s，,。]{2,4})", text)
+    name_match = re.search(r"姓名\s*[:：]\s*([^\s，,。、\n]{2,4})", text)
     if name_match:
         name = name_match.group(1).strip()
+    if not name:
+        name_match = re.search(r"姓名\s+([\u4e00-\u9fa5]{2,4})(?:\s|$|[\|，])", text)
+        if name_match:
+            name = name_match.group(1).strip()
+    if not name:
+        for ln in lines[:5]:
+            ln_clean = ln.strip()
+            if re.match(r"^[\u4e00-\u9fa5]{2,4}$", ln_clean) and not re.search(
+                r"手机|邮箱|教育|专业|技能|项目|实习|荣誉|证书|简历|大学|学院", ln_clean
+            ):
+                name = ln_clean
+                break
 
-    # 学校/专业（非常简单的启发式，不保证完全正确，只是为了让前端看到效果）
+    # 出生日期：支持 出生日期：2003/08/15、生日：2003/08/15、含全角/半角
+    birth_date = ""
+    for pattern in [
+        r"出生日期\s*[:：]\s*(\d{4})\s*[/\-]\s*(\d{1,2})\s*[/\-]\s*(\d{1,2})",
+        r"生日\s*[:：]\s*(\d{4})\s*[/\-]\s*(\d{1,2})\s*[/\-]\s*(\d{1,2})",
+        r"出生日期\s*[:：]\s*(\d{4})\s*[/\-]\s*(\d{1,2})",
+    ]:
+        birth_match = re.search(pattern, text)
+        if birth_match:
+            g = birth_match.groups()
+            y, m = g[0], g[1].zfill(2)
+            d = g[2].zfill(2) if len(g) > 2 and g[2] else "01"
+            birth_date = f"{y}-{m}-{d}"
+            break
+
+    # 性别
+    gender = ""
+    gender_match = re.search(r"性别\s*[:：]\s*([男女])", text)
+    if gender_match:
+        gender = gender_match.group(1).strip()
+
+    # 学校/专业
     school = ""
     major = ""
     for ln in lines:
         if not school and ("大学" in ln or "学院" in ln):
             school = ln
         if "专业" in ln:
-            m = re.search(r"专业[:：]\s*([\u4e00-\u9fa5A-Za-z0-9·\s]+)", ln)
+            m = re.search(r"专业\s*[:：]?\s*([\u4e00-\u9fa5A-Za-z0-9·\s]+?)(?:\s|$|学历|毕业)", ln)
             if m:
                 major = m.group(1).strip()
         if school and major:
@@ -169,24 +203,39 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
 
     education = []
     if school or major:
-        education.append(
-            {
-                "school": school,
-                "major": major,
-            }
-        )
+        education.append({"school": school, "major": major})
 
     return {
         "basic_info": {
             "name": name,
+            "nickname": name,
             "phone": phone,
             "email": email,
+            "gender": gender,
+            "birth_date": birth_date,
+            "birthday": birth_date,
         },
         "education": education,
         "skills": [],
         "internships": [],
         "projects": [],
         "awards": [],
+    }
+
+
+def parse_basic_info_from_resume(resume_text: str) -> dict:
+    """
+    仅从简历文本中解析姓名、出生日期、性别（供 Java 等外部调用，走 Python 兜底正则 + 可扩展 LLM）。
+    返回：{ "name", "nickname", "birth_date", "birthday", "gender" }，缺失则为空字符串。
+    """
+    fallback = _fallback_parse_resume_text(resume_text or "")
+    bi = fallback.get("basic_info") or {}
+    return {
+        "name": (bi.get("name") or "").strip(),
+        "nickname": (bi.get("nickname") or bi.get("name") or "").strip(),
+        "birth_date": (bi.get("birth_date") or "").strip(),
+        "birthday": (bi.get("birthday") or bi.get("birth_date") or "").strip(),
+        "gender": (bi.get("gender") or "").strip(),
     }
 
 
@@ -431,6 +480,18 @@ class ProfileService:
             else:
                 parsed = fallback
 
+        # 始终用兜底结果补全 basic_info 中缺失的字段（解决模型未识别姓名、出生日期等问题）
+        fallback = _fallback_parse_resume_text(resume_text)
+        if isinstance(parsed, dict) and fallback.get("basic_info"):
+            bi = parsed.setdefault("basic_info", {})
+            fbi = fallback["basic_info"]
+            for key in ("name", "nickname", "birth_date", "birthday", "gender"):
+                fv = (fbi.get(key) or "").strip()
+                if not fv:
+                    continue
+                if not (bi.get(key) or "").strip():
+                    bi[key] = fv
+
         # 提取 confidence_score 和 suggestions（从模型输出中分离）
         confidence_score = parsed.pop("confidence_score", 0.85)
         suggestions = parsed.pop("suggestions", [])
@@ -483,6 +544,19 @@ class ProfileService:
             "confidence_score": confidence_score,
             "suggestions": suggestions
         }
+
+    def parse_resume_sync(self, resume_text: str) -> Optional[dict]:
+        """
+        同步解析简历文本，供 Java 等外部服务调用。
+        返回：{ "parsed_data": {...}, "confidence_score": 0.xx, "suggestions": [...] } 或 None
+        """
+        if not resume_text or len((resume_text or "").strip()) < 10:
+            return None
+        try:
+            return self._do_parse_resume(resume_text)
+        except Exception as e:
+            logger.warning(f"[ProfileService] parse_resume_sync 失败: {e}", exc_info=True)
+            return None
 
     # ──────────────────────────────────────────────────────
     # 2.4 获取解析结果

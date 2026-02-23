@@ -206,6 +206,10 @@ class CareerPlanningApp {
             this.handleResumeUpload(e.target.files[0]);
         });
 
+        document.getElementById('resumeParseDoneBtn')?.addEventListener('click', () => {
+            this._applyResumeParseResultAndClose();
+        });
+
         // 职业测评相关
         document.getElementById('submitAssessmentBtn')?.addEventListener('click', () => {
             this.submitAssessment();
@@ -215,6 +219,10 @@ class CareerPlanningApp {
             const btn = document.getElementById('viewReportBtn');
             if (btn && btn.disabled) return;
             this.viewAssessmentReport();
+        });
+
+        document.getElementById('btnExitAssessment')?.addEventListener('click', () => {
+            this.exitAssessmentWithoutSubmit();
         });
 
         // 岗位匹配相关 Tab 切换
@@ -1546,16 +1554,218 @@ class CareerPlanningApp {
         if (result.success) {
             statusDiv.textContent = '上传成功，正在解析...';
             statusDiv.style.background = '#dcfce7';
-            
-            // 轮询获取解析结果
-            this.pollResumeParseResult(userId, result.data.task_id);
+            this.showResumeParseModal();
+            this.advanceResumeParseStep(0, '');
+            this._resumeParseStepTimer = setTimeout(() => {
+                this._resumeParsePollSteps(userId, result.data.task_id);
+            }, 0);
         } else {
             statusDiv.textContent = '上传失败: ' + result.msg;
             statusDiv.style.background = '#fee2e2';
         }
     }
 
-    // 轮询简历解析结果
+    // ---------- AI 简历解析加载弹窗（由后端轮询驱动步骤）----------
+    showResumeParseModal() {
+        const overlay = document.getElementById('resumeParseOverlay');
+        const stepsWrap = document.getElementById('resumeParseSteps');
+        const progressWrap = document.getElementById('resumeParseProgressWrap');
+        const doneState = document.getElementById('resumeParseDoneState');
+        if (!overlay) return;
+        for (let i = 0; i <= 5; i++) {
+            const step = document.getElementById('resumeStep' + i);
+            const status = document.getElementById('resumeStatus' + i);
+            const typing = document.getElementById('resumeTyping' + i);
+            if (step) { step.classList.remove('active', 'done'); }
+            if (status) {
+                status.className = 'resume-step-status resume-status-wait';
+                status.textContent = '—';
+                status.innerHTML = '—';
+            }
+            if (typing) typing.textContent = '';
+        }
+        const fill = document.getElementById('resumeParseProgressFill');
+        const num = document.getElementById('resumeParseProgressNum');
+        if (fill) fill.style.width = '0%';
+        if (num) num.textContent = '0%';
+        if (stepsWrap) stepsWrap.style.display = '';
+        if (progressWrap) progressWrap.style.display = '';
+        if (doneState) doneState.style.display = 'none';
+        overlay.classList.add('show');
+    }
+
+    advanceResumeParseStep(idx, typingText) {
+        const step = document.getElementById('resumeStep' + idx);
+        const status = document.getElementById('resumeStatus' + idx);
+        const typing = document.getElementById('resumeTyping' + idx);
+        if (typing && typingText) {
+            typing.textContent = '';
+            let i = 0;
+            const id = setInterval(() => {
+                if (i < typingText.length) {
+                    typing.textContent += typingText[i++];
+                } else {
+                    clearInterval(id);
+                }
+            }, 40);
+        }
+        if (step) step.classList.add('active');
+        if (status) {
+            status.className = 'resume-step-status resume-status-loading';
+            status.innerHTML = '<div class="resume-parse-spin"></div>';
+        }
+        const pct = Math.round(((idx + 1) / 6) * 100);
+        const fill = document.getElementById('resumeParseProgressFill');
+        const num = document.getElementById('resumeParseProgressNum');
+        if (fill) fill.style.width = pct + '%';
+        if (num) num.textContent = pct + '%';
+        setTimeout(() => {
+            if (step) { step.classList.remove('active'); step.classList.add('done'); }
+            if (status) {
+                status.className = 'resume-step-status resume-status-done';
+                status.textContent = '✓';
+                status.innerHTML = '✓';
+            }
+        }, 800);
+    }
+
+    updateResumeParseProgress(pct) {
+        const fill = document.getElementById('resumeParseProgressFill');
+        const num = document.getElementById('resumeParseProgressNum');
+        if (fill) fill.style.width = pct + '%';
+        if (num) num.textContent = pct + '%';
+    }
+
+    showResumeParseDone(filledCount) {
+        const stepsWrap = document.getElementById('resumeParseSteps');
+        const progressWrap = document.getElementById('resumeParseProgressWrap');
+        const doneState = document.getElementById('resumeParseDoneState');
+        const countEl = document.getElementById('resumeParseDoneCount');
+        if (stepsWrap) stepsWrap.style.display = 'none';
+        if (progressWrap) progressWrap.style.display = 'none';
+        if (doneState) doneState.style.display = 'flex';
+        if (countEl) countEl.textContent = String(filledCount);
+    }
+
+    hideResumeParseModal() {
+        if (this._resumeParseStepTimer) {
+            clearInterval(this._resumeParseStepTimer);
+            this._resumeParseStepTimer = null;
+        }
+        const overlay = document.getElementById('resumeParseOverlay');
+        if (overlay) overlay.classList.remove('show');
+    }
+
+    _resumeParsePollSteps(userId, taskId, maxAttempts = 10) {
+        const statusDiv = document.getElementById('uploadStatus');
+        let attempts = 0;
+        let stepIndex = 1;
+        const placeholders = ['', '李明远…', '武汉理工大学…', 'Python / Java…', '项目经历…'];
+        this._resumeParseStepTimer = setInterval(() => {
+            if (stepIndex <= 4) {
+                this.advanceResumeParseStep(stepIndex, placeholders[stepIndex]);
+                stepIndex++;
+            }
+        }, 2000);
+
+        const poll = async () => {
+            if (attempts >= maxAttempts) {
+                if (this._resumeParseStepTimer) clearInterval(this._resumeParseStepTimer);
+                this.hideResumeParseModal();
+                if (statusDiv) {
+                    statusDiv.textContent = '解析超时，请稍后查看';
+                    statusDiv.style.background = '#fef3c7';
+                }
+                return;
+            }
+            const result = await getResumeParseResult(userId, taskId);
+            if (!result.success) {
+                attempts++;
+                setTimeout(poll, 3000);
+                return;
+            }
+            if (result.data.status === 'completed') {
+                if (this._resumeParseStepTimer) clearInterval(this._resumeParseStepTimer);
+                while (stepIndex <= 4) {
+                    this.advanceResumeParseStep(stepIndex, placeholders[stepIndex]);
+                    stepIndex++;
+                }
+                this.advanceResumeParseStep(5, '生成中…');
+                const parsedData = result.data.parsed_data || result.data.profile || null;
+                const filledCount = this._countParsedFields(parsedData);
+                this._resumeParseLastResult = { parsedData, userId };
+                setTimeout(() => this.showResumeParseDone(filledCount), 1000);
+                if (statusDiv) {
+                    statusDiv.textContent = '解析完成！请点击弹窗内按钮查看填充结果';
+                    statusDiv.style.background = '#dcfce7';
+                }
+                return;
+            }
+            if (result.data.status === 'failed') {
+                if (this._resumeParseStepTimer) clearInterval(this._resumeParseStepTimer);
+                this.hideResumeParseModal();
+                if (statusDiv) {
+                    statusDiv.textContent = '解析失败，请重试';
+                    statusDiv.style.background = '#fee2e2';
+                }
+                return;
+            }
+            attempts++;
+            setTimeout(poll, 3000);
+        };
+        poll();
+    }
+
+    _countParsedFields(parsedData) {
+        if (!parsedData || typeof parsedData !== 'object') return 0;
+        let n = 0;
+        if (parsedData.basic_info && typeof parsedData.basic_info === 'object') {
+            for (const k of Object.keys(parsedData.basic_info)) {
+                const v = parsedData.basic_info[k];
+                if (v != null && String(v).trim() !== '') n++;
+            }
+        }
+        if (Array.isArray(parsedData.education)) n += parsedData.education.length;
+        if (Array.isArray(parsedData.skills)) n += parsedData.skills.length;
+        if (Array.isArray(parsedData.internships)) n += parsedData.internships.length;
+        if (Array.isArray(parsedData.projects)) n += parsedData.projects.length;
+        return n;
+    }
+
+    _applyResumeParseResultAndClose() {
+        const r = this._resumeParseLastResult;
+        this._resumeParseLastResult = null;
+        this.hideResumeParseModal();
+        const fileInput = document.getElementById('resumeUpload');
+        if (fileInput) fileInput.value = '';
+        if (!r || !r.parsedData) {
+            this.loadDashboardData();
+            return;
+        }
+        const parsedData = r.parsedData;
+        const userId = r.userId;
+        const hasValidData = this._countParsedFields(parsedData) > 0;
+        if (hasValidData) {
+            try {
+                const profileData = this.transformParsedResumeData(parsedData);
+                this.fillProfileFormFromResume(profileData);
+                this.saveProfile().then(() => {
+                    this.showToast('简历解析完成，档案已保存，正在重新生成能力画像…', 'success');
+                    aiGenerateAbilityProfile(userId, 'profile').then((res) => {
+                        if (res.success) this.showToast('能力画像已更新，岗位匹配将基于新简历', 'success');
+                    }).catch(() => {});
+                }).catch(() => {});
+            } catch (e) {
+                console.error('应用简历解析结果到表单时出错:', e);
+                this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');
+            }
+        } else {
+            this.showToast('简历解析未提取到有效信息，请检查PDF是否为可复制文本型', 'warning');
+        }
+        this.loadDashboardData();
+    }
+
+    // 轮询简历解析结果（无弹窗时使用，如直接调用）
     async pollResumeParseResult(userId, taskId, maxAttempts = 10) {
         let attempts = 0;
         const statusDiv = document.getElementById('uploadStatus');
@@ -1573,21 +1783,20 @@ class CareerPlanningApp {
                     statusDiv.textContent = '解析完成！已自动填充档案信息';
                     statusDiv.style.background = '#dcfce7';
                     
-                    // 如果后端返回了解析后的档案结构，转换后填充表单并自动保存
                     const parsedData = result.data.parsed_data || result.data.profile || null;
-                    const hasValidData = parsedData && typeof parsedData === 'object' &&
-                        ((parsedData.basic_info && Object.keys(parsedData.basic_info).some(k => {
-                            const v = parsedData.basic_info[k];
-                            return v != null && String(v).trim() !== '';
-                        })) ||
-                        (Array.isArray(parsedData.education) && parsedData.education.length > 0) ||
-                        (Array.isArray(parsedData.skills) && parsedData.skills.length > 0));
+                    const hasValidData = parsedData && this._countParsedFields(parsedData) > 0;
 
                     if (hasValidData) {
                         try {
                             const profileData = this.transformParsedResumeData(parsedData);
                             this.fillProfileFormFromResume(profileData);
-                            this.showToast('简历解析完成，已填充表单，请检查后点击「保存档案」保存', 'success');
+                            await this.saveProfile();
+                            this.showToast('简历解析完成，档案已保存，正在重新生成能力画像…', 'success');
+                            aiGenerateAbilityProfile(userId, 'profile').then((res) => {
+                                if (res.success) {
+                                    this.showToast('能力画像已更新，岗位匹配将基于新简历', 'success');
+                                }
+                            }).catch(() => {});
                         } catch (e) {
                             console.error('应用简历解析结果到表单时出错:', e);
                             this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');
@@ -1676,7 +1885,7 @@ class CareerPlanningApp {
         if (savedReportId) this.currentReportId = savedReportId;
 
         if (this.hasHistoryReport() && this.currentReportId) {
-            this.showAssessmentWelcomeWithHistory();
+            await this.showAssessmentWelcomeWithHistory();
             return;
         }
 
@@ -1702,6 +1911,42 @@ class CareerPlanningApp {
         const wrap = document.getElementById('assessmentReportWrap');
         if (q) q.classList.remove('hidden');
         if (wrap) wrap.classList.add('hidden');
+    }
+
+    // 根据测评报告数据计算综合能力得分（满分 100）：仅依据能力详细分析中的各项得分，等权平均
+    computeComprehensiveAbilityScore(data) {
+        if (!data || typeof data !== 'object') return null;
+        const ability = data.ability_analysis || {};
+        const strengths = ability.strengths || [];
+        const areas = ability.areas_to_improve || [];
+        const allAbilitiesRaw = strengths.concat(areas);
+        const uniqueAbilities = [...new Map(allAbilitiesRaw.map(a => [a.ability || a.name || '', a])).values()].filter(a => a.ability || a.name);
+        const scores = [];
+        uniqueAbilities.forEach(a => {
+            if (a && (a.score != null && Number.isFinite(Number(a.score)))) {
+                const v = Number(a.score);
+                scores.push(Math.max(0, Math.min(100, v)));
+            }
+        });
+        if (scores.length === 0) return null;
+        const sum = scores.reduce((a, b) => a + b, 0);
+        return Math.round(sum / scores.length);
+    }
+
+    // 从报告或本地缓存获取「完成题目」数量
+    getCompletedQuestionsCount(reportData) {
+        if (reportData && reportData.total_questions != null && Number.isFinite(Number(reportData.total_questions)))
+            return Number(reportData.total_questions);
+        if (reportData && Array.isArray(reportData.dimensions)) {
+            const n = reportData.dimensions.reduce((acc, d) => acc + (Array.isArray(d.questions) ? d.questions.length : 0), 0);
+            if (n > 0) return n;
+        }
+        const userId = getCurrentUserId();
+        if (userId) {
+            const saved = localStorage.getItem('last_assessment_total_questions_' + userId);
+            if (saved) return parseInt(saved, 10) || null;
+        }
+        return 20;
     }
 
     // 有历史报告时展示的入口（参考 assessment_status 设计：完成题目 20 道、能力详细分析得分等权、三按钮）
@@ -1758,7 +2003,6 @@ class CareerPlanningApp {
             this.viewAssessmentReportHistory();
         });
         document.getElementById('btnRetakeAssessment')?.addEventListener('click', () => {
-            if (!confirm('重新测评将生成新报告，是否继续？')) return;
             this.fetchAndShowQuestionnaire();
         });
     }
@@ -1840,11 +2084,46 @@ class CareerPlanningApp {
         }
     }
 
+    // 不想测评、返回：有历史报告则回到欢迎卡，否则显示退出提示与「开始测评」
+    exitAssessmentWithoutSubmit() {
+        const container = document.getElementById('questionnaireContainer');
+        const actionsEl = document.getElementById('assessmentActions');
+        if (this.hasHistoryReport() && this.currentReportId) {
+            if (actionsEl) actionsEl.classList.add('hidden');
+            this.showAssessmentWelcomeWithHistory();
+            return;
+        }
+        if (actionsEl) actionsEl.classList.add('hidden');
+        const section = document.getElementById('assessmentQuestionnaireSection');
+        const tagEl = section?.querySelector('.job-profile-tag');
+        const titleRowEl = section?.querySelector('.page-title-row');
+        const subtitleEl = section?.querySelector('.page-subtitle');
+        if (tagEl) tagEl.classList.remove('hidden');
+        if (titleRowEl) titleRowEl.classList.remove('hidden');
+        if (subtitleEl) subtitleEl.classList.remove('hidden');
+        container.innerHTML = `
+            <div class="assessment-exit-card">
+                <p class="assessment-exit-text">您已退出问卷，作答未保存。</p>
+                <button type="button" id="btnStartAssessmentAgain" class="btn-primary">开始测评</button>
+            </div>
+        `;
+        document.getElementById('btnStartAssessmentAgain')?.addEventListener('click', () => {
+            this.fetchAndShowQuestionnaire();
+        });
+    }
+
     // 拉取问卷并显示（用于首次进入或点击「重新测评」后）
     async fetchAndShowQuestionnaire() {
         const userId = getCurrentUserId();
         if (!userId) return;
         this.hideAssessmentReportView();
+        const section = document.getElementById('assessmentQuestionnaireSection');
+        const tagEl = section?.querySelector('.job-profile-tag');
+        const titleRowEl = section?.querySelector('.page-title-row');
+        const subtitleEl = section?.querySelector('.page-subtitle');
+        if (tagEl) tagEl.classList.remove('hidden');
+        if (titleRowEl) titleRowEl.classList.remove('hidden');
+        if (subtitleEl) subtitleEl.classList.remove('hidden');
         const assessmentType = 'comprehensive';
         const container = document.getElementById('questionnaireContainer');
         const actionsEl = document.getElementById('assessmentActions');
@@ -1889,8 +2168,13 @@ class CareerPlanningApp {
 
         const dimensions = assessmentData.dimensions;
         const dimensionsList = Array.isArray(dimensions) ? dimensions : [];
+        const totalQuestions = dimensionsList.reduce((acc, d) => acc + (Array.isArray(d.questions) ? d.questions.length : 0), 0) || 20;
 
         try {
+            const totalHint = document.createElement('div');
+            totalHint.className = 'assessment-total-hint';
+            totalHint.textContent = '本问卷共 ' + totalQuestions + ' 题';
+            container.appendChild(totalHint);
             dimensionsList.forEach((dimension, dimIndex) => {
                 if (!dimension || typeof dimension !== 'object') return;
                 const dimensionDiv = document.createElement('div');
@@ -2015,6 +2299,8 @@ class CareerPlanningApp {
             const reportId = result.data.report_id;
             this.currentReportId = reportId;
             this.saveLastAssessmentReportId(reportId);
+            const userIdForSave = getCurrentUserId();
+            if (userIdForSave) localStorage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
             this.showToast('测评提交成功，正在生成报告...', 'success');
             this.setViewReportButtonState('generating');
             
@@ -6191,7 +6477,7 @@ class CareerPlanningApp {
     }
 
     // 渲染报告内容
-    // 格式化时间（支持 created_at / assessment_date，无则显示当前日期）
+    // 格式化时间：只显示到日为止（YYYY-MM-DD），不显示时分秒
     formatDateTime(dateString) {
         if (!dateString) return '未知时间';
         try {
@@ -6199,9 +6485,7 @@ class CareerPlanningApp {
             const y = date.getFullYear();
             const m = String(date.getMonth() + 1).padStart(2, '0');
             const d = String(date.getDate()).padStart(2, '0');
-            const h = String(date.getHours()).padStart(2, '0');
-            const min = String(date.getMinutes()).padStart(2, '0');
-            return `${y}年${m}月${d}日 ${h}:${min}`;
+            return `${y}-${m}-${d}`;
         } catch (e) {
             return dateString;
         }
@@ -6229,6 +6513,8 @@ class CareerPlanningApp {
         const hollandLabels = dist.length ? dist.map(d => d.type) : ['艺术型(A)', '企业型(E)', '研究型(I)', '社会型(S)', '常规型(C)', '实用型(R)'];
         const hollandValues = dist.length ? dist.map(d => d.score) : [35, 25, 20, 10, 6, 4];
         const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
+        // 性格特质展示：最低 20 分，不出现零分或过低分（仅影响展示与进度条）
+        const safeTraitScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(20, Math.min(100, v)) : 20; };
         // 能力分：总分 100，最低 60，避免出现 0 分或超过 100
         const safeAbilityScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(60, Math.min(100, v)) : 60; };
         // 能力柱状图：合并 strengths + areas，按能力名去重（保留首次出现，避免「沟通表达能力」等重复）

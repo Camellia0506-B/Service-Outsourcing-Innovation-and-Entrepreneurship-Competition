@@ -714,13 +714,207 @@ body::before {
     margin-bottom: 32px;
 }
 
-.assessment-welcome-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 40px;
-    text-align: center;
-    box-shadow: var(--shadow);
+/* 职业测评已完成状态页（严格依据 assessment_status 设计） */
+.assessment-status-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
 }
+.assessment-status-bc-tag {
+    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+.assessment-status-bc-sep { color: #aab4cc; font-size: 12px; }
+.assessment-status-bc-cur { color: #5a6a8a; font-size: 12px; }
+
+.assessment-status-header { margin-bottom: 24px; }
+.assessment-status-page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a2340;
+    margin-bottom: 6px;
+}
+.assessment-status-page-desc {
+    font-size: 13px;
+    color: #5a6a8a;
+    line-height: 1.6;
+}
+
+.assessment-welcome-card {
+    background: #ffffff;
+    border: 1px solid rgba(79, 124, 255, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(79, 100, 200, 0.08);
+    overflow: hidden;
+    animation: assessmentFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes assessmentFadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.assessment-welcome-card .assessment-card-top-bar {
+    height: 4px;
+    background: linear-gradient(90deg, #4f7cff, #7c5cff, #a78bff);
+}
+.assessment-welcome-card .assessment-card-body {
+    padding: 48px 40px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.assessment-welcome-card .assessment-illustration {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 28px;
+    position: relative;
+}
+.assessment-welcome-card .assessment-illus-circle {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(79, 124, 255, 0.1), rgba(124, 92, 255, 0.08));
+    border: 2px solid rgba(79, 124, 255, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    position: relative;
+}
+.assessment-welcome-card .assessment-illus-badge {
+    position: absolute;
+    bottom: 4px; right: 4px;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #00b894, #00d9b0);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);
+}
+.assessment-welcome-card .assessment-status-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a2340;
+    margin-bottom: 8px;
+}
+.assessment-welcome-card .assessment-status-desc {
+    font-size: 13px;
+    color: #5a6a8a;
+    line-height: 1.7;
+    max-width: 360px;
+    margin-bottom: 32px;
+}
+.assessment-welcome-card .assessment-report-meta {
+    display: flex;
+    gap: 24px;
+    padding: 16px 24px;
+    background: #f0f4ff;
+    border: 1px solid rgba(79, 124, 255, 0.12);
+    border-radius: 12px;
+    margin-bottom: 32px;
+    width: 100%;
+    max-width: 480px;
+}
+.assessment-welcome-card .assessment-meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+.assessment-welcome-card .assessment-meta-item + .assessment-meta-item {
+    border-left: 1px solid rgba(79, 124, 255, 0.12);
+}
+.assessment-welcome-card .assessment-meta-label { font-size: 11px; color: #aab4cc; margin-bottom: 4px; }
+.assessment-welcome-card .assessment-meta-val { font-size: 14px; font-weight: 600; color: #1a2340; }
+.assessment-welcome-card .assessment-meta-val.green { color: #00b894; }
+.assessment-welcome-card .assessment-meta-val.accent { color: #4f7cff; }
+.assessment-welcome-card .assessment-btn-group {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+}
+.assessment-welcome-card .assessment-btn-group .btn-primary {
+    flex: 1;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 16px rgba(79, 124, 255, 0.3);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.assessment-welcome-card .assessment-btn-group .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(79, 124, 255, 0.38);
+}
+.assessment-welcome-card .assessment-btn-group .btn-ghost {
+    flex: 1;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    background: rgba(79, 124, 255, 0.06);
+    color: #4f7cff;
+    border: 1.5px solid rgba(79, 124, 255, 0.15);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.assessment-welcome-card .assessment-btn-group .btn-ghost:hover {
+    background: rgba(79, 124, 255, 0.1);
+    border-color: rgba(79, 124, 255, 0.3);
+}
+.assessment-welcome-card .assessment-btn-group .btn-secondary {
+    flex: 1;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #fff;
+    color: #5a6a8a;
+    border: 1.5px solid rgba(79, 124, 255, 0.12);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.assessment-welcome-card .assessment-btn-group .btn-secondary:hover {
+    border-color: rgba(79, 124, 255, 0.3);
+    color: #4f7cff;
+    background: rgba(79, 124, 255, 0.04);
+}
+.assessment-welcome-card .assessment-card-footer {
+    padding: 14px 40px;
+    border-top: 1px solid rgba(79, 124, 255, 0.07);
+    background: rgba(242, 245, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.assessment-welcome-card .assessment-footer-icon { font-size: 13px; }
+.assessment-welcome-card .assessment-footer-text { font-size: 12px; color: #aab4cc; }
+.assessment-welcome-card .assessment-footer-text span { color: #4f7cff; font-weight: 500; }
+
 .assessment-welcome-text {
     color: var(--text-secondary);
     margin-bottom: 28px;
@@ -915,6 +1109,41 @@ body::before {
     align-items: center;
     text-align: center;
     margin-top: 32px;
+}
+.assessment-actions .btn-ghost {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+.assessment-actions .btn-ghost:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(45, 91, 227, 0.06);
+}
+.assessment-exit-card {
+    text-align: center;
+    padding: 48px 24px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+.assessment-exit-text {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    font-size: 15px;
+}
+.assessment-total-hint {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
 }
 
 .assessment-report-wrap { margin-top: 0; }
@@ -9227,3 +9456,257 @@ body::before {
         justify-content: flex-start;
     }
 }
+
+/* ========== AI 简历解析加载动画弹窗 ========== */
+.resume-parse-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 30, 60, 0.45);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.resume-parse-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+}
+.resume-parse-dialog {
+    background: #fff;
+    border-radius: 20px;
+    width: 420px;
+    max-width: 92vw;
+    box-shadow: 0 24px 64px rgba(20,30,80,0.18), 0 0 0 1px rgba(79,124,255,0.08);
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.resume-parse-overlay.show .resume-parse-dialog {
+    transform: scale(1) translateY(0);
+}
+.resume-parse-glow {
+    height: 3px;
+    background: linear-gradient(90deg, #4f7cff, #7c5cff, #a78bff, #00b894);
+    background-size: 200% 100%;
+    animation: resumeGlowSlide 2s linear infinite;
+}
+@keyframes resumeGlowSlide {
+    0%   { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+}
+.resume-parse-body { padding: 32px 32px 28px; }
+.resume-parse-ai-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+.resume-parse-ai-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, rgba(79,124,255,0.1), rgba(124,92,255,0.08));
+    border: 2px solid rgba(79,124,255,0.15);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    position: relative;
+    animation: resumeIconPulse 2s ease-in-out infinite;
+}
+.resume-parse-ai-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(79,124,255,0.8), transparent);
+    border-radius: 2px;
+    animation: resumeScanLine 1.8s ease-in-out infinite;
+}
+@keyframes resumeIconPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(79,124,255,0.2); }
+    50%      { box-shadow: 0 0 0 12px rgba(79,124,255,0); }
+}
+@keyframes resumeScanLine {
+    0%   { top: 8px; opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { top: calc(100% - 8px); opacity: 0; }
+}
+.resume-parse-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a2340;
+    text-align: center;
+    margin-bottom: 6px;
+}
+.resume-parse-sub {
+    font-size: 12px;
+    color: #aab4cc;
+    text-align: center;
+    margin-bottom: 28px;
+}
+.resume-parse-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+.resume-parse-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(79,124,255,0.12);
+    background: #fafbff;
+    transition: all 0.3s;
+}
+.resume-parse-step.active {
+    background: rgba(79,124,255,0.05);
+    border-color: rgba(79,124,255,0.25);
+}
+.resume-parse-step.done {
+    background: rgba(0,184,148,0.04);
+    border-color: rgba(0,184,148,0.2);
+}
+.resume-step-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    background: rgba(79,124,255,0.08);
+}
+.resume-parse-step.active .resume-step-icon { background: rgba(79,124,255,0.12); }
+.resume-parse-step.done .resume-step-icon   { background: rgba(0,184,148,0.1); }
+.resume-step-info { flex: 1; }
+.resume-step-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a2340;
+    margin-bottom: 2px;
+}
+.resume-typing {
+    font-size: 11px;
+    font-weight: 400;
+    color: #4f7cff;
+    font-family: 'DM Mono', 'Consolas', monospace;
+}
+.resume-step-desc { font-size: 11px; color: #aab4cc; }
+.resume-step-status {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+}
+.resume-status-wait {
+    background: rgba(79,124,255,0.06);
+    color: #aab4cc;
+    border: 1px solid rgba(79,124,255,0.12);
+}
+.resume-status-loading { background: rgba(79,124,255,0.1); }
+.resume-status-done {
+    background: rgba(0,184,148,0.12);
+    color: #00b894;
+    font-size: 13px;
+}
+.resume-parse-spin {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(79,124,255,0.15);
+    border-top-color: #4f7cff;
+    border-radius: 50%;
+    animation: resumeSpin 0.7s linear infinite;
+}
+@keyframes resumeSpin { to { transform: rotate(360deg); } }
+.resume-parse-progress-wrap { margin-bottom: 8px; }
+.resume-parse-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #aab4cc;
+    margin-bottom: 6px;
+}
+.resume-parse-progress-num {
+    font-family: 'DM Mono', 'Consolas', monospace;
+    font-weight: 600;
+    color: #4f7cff;
+}
+.resume-parse-progress-bg {
+    height: 6px;
+    background: rgba(79,124,255,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.resume-parse-progress-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #4f7cff, #7c5cff);
+    transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+    width: 0%;
+    position: relative;
+}
+.resume-parse-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: resumeShimmer 1.2s ease infinite;
+}
+@keyframes resumeShimmer { to { left: 100%; } }
+.resume-parse-done-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0 4px;
+    animation: resumeFadeIn 0.4s ease;
+}
+@keyframes resumeFadeIn {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.resume-parse-done-check {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #00b894, #00d9b0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(0,184,148,0.3);
+    animation: resumePopIn 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes resumePopIn {
+    from { transform: scale(0.5); opacity:0; }
+    to   { transform: scale(1); opacity:1; }
+}
+.resume-parse-done-title { font-size: 16px; font-weight: 700; color: #1a2340; margin-bottom: 4px; }
+.resume-parse-done-sub   { font-size: 12px; color: #aab4cc; margin-bottom: 16px; }
+.resume-parse-done-btn {
+    padding: 10px 32px;
+    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 14px rgba(79,124,255,0.3);
+    transition: all 0.2s;
+}
+.resume-parse-done-btn:hover { transform: translateY(-2px); }

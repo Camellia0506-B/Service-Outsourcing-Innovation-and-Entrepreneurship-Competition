@@ -562,6 +562,7 @@
                     <div class="assessment-actions hidden" id="assessmentActions">
                         <button id="submitAssessmentBtn" class="btn-primary">提交测评</button>
                         <button id="viewReportBtn" class="btn-secondary hidden">查看测评报告</button>
+                        <button type="button" id="btnExitAssessment" class="btn-ghost">不想测评，返回</button>
                     </div>
                 </div>
                 <!-- 测评报告展示区（Holland + MBTI），完成后直接在此展示 -->
@@ -1270,5 +1271,84 @@
             });
         });
     </script>
+
+    <!-- AI 简历解析加载动画弹窗 -->
+    <div class="resume-parse-overlay" id="resumeParseOverlay">
+        <div class="resume-parse-dialog">
+            <div class="resume-parse-glow"></div>
+            <div class="resume-parse-body">
+                <div class="resume-parse-ai-wrap">
+                    <div class="resume-parse-ai-icon" id="resumeParseAiIcon">🤖</div>
+                </div>
+                <div class="resume-parse-title" id="resumeParseTitle">AI 正在解析您的简历</div>
+                <div class="resume-parse-sub" id="resumeParseSub">请稍候，这通常需要 5–10 秒</div>
+                <div class="resume-parse-steps" id="resumeParseSteps">
+                    <div class="resume-parse-step" id="resumeStep0">
+                        <div class="resume-step-icon">📄</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">读取简历文件</div>
+                            <div class="resume-step-desc">提取 PDF 文本内容</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus0">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep1">
+                        <div class="resume-step-icon">👤</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">解析基本信息 <span class="resume-typing" id="resumeTyping1"></span></div>
+                            <div class="resume-step-desc">姓名、联系方式、出生日期</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus1">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep2">
+                        <div class="resume-step-icon">🎓</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">解析教育背景 <span class="resume-typing" id="resumeTyping2"></span></div>
+                            <div class="resume-step-desc">学校、专业、GPA、年级</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus2">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep3">
+                        <div class="resume-step-icon">💻</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">提取专业技能 <span class="resume-typing" id="resumeTyping3"></span></div>
+                            <div class="resume-step-desc">技术栈、工具、证书</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus3">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep4">
+                        <div class="resume-step-icon">🏢</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">解析项目 & 实习经历 <span class="resume-typing" id="resumeTyping4"></span></div>
+                            <div class="resume-step-desc">项目成果、实习公司、职责</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus4">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep5">
+                        <div class="resume-step-icon">✨</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">AI 能力画像生成 <span class="resume-typing" id="resumeTyping5"></span></div>
+                            <div class="resume-step-desc">综合评估，自动填充档案</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus5">—</div>
+                    </div>
+                </div>
+                <div class="resume-parse-progress-wrap" id="resumeParseProgressWrap">
+                    <div class="resume-parse-progress-header">
+                        <span>总体进度</span>
+                        <span class="resume-parse-progress-num" id="resumeParseProgressNum">0%</span>
+                    </div>
+                    <div class="resume-parse-progress-bg">
+                        <div class="resume-parse-progress-fill" id="resumeParseProgressFill"></div>
+                    </div>
+                </div>
+                <div class="resume-parse-done-state" id="resumeParseDoneState">
+                    <div class="resume-parse-done-check">✓</div>
+                    <div class="resume-parse-done-title">解析完成！</div>
+                    <div class="resume-parse-done-sub">已自动填充 <strong id="resumeParseDoneCount">0</strong> 项档案信息，请核对后提交</div>
+                    <button type="button" class="resume-parse-done-btn" id="resumeParseDoneBtn">查看填充结果 →</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

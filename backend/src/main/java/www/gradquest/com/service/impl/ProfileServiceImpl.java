@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import www.gradquest.com.dto.profile.*;
 import www.gradquest.com.entity.*;
 import www.gradquest.com.mapper.*;
@@ -14,6 +17,7 @@ import www.gradquest.com.service.ProfileService;
 import www.gradquest.com.utils.PDFProcessor;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +34,9 @@ public class ProfileServiceImpl implements ProfileService {
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final long RESUME_MAX_SIZE = 10 * 1024 * 1024; // 10MB
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    @Value("${ai.algorithm.base-url:http://127.0.0.1:5001/api/v1}")
+    private String aiAlgorithmBaseUrl;
 
     private final UserMapper userMapper;
     private final UserProfileMapper userProfileMapper;
@@ -216,19 +223,36 @@ public class ProfileServiceImpl implements ProfileService {
             String text = pdfProcessor.extractText(tmp);
             tmp.delete();
 
-            // 简单抽取：邮箱/手机号/姓名/出生日期/性别
-            String email = extractEmail(text);
-            String phone = extractPhone(text);
-            String name = extractName(text);
-            String birthDateStr = extractBirthDate(text);
-            String gender = extractGender(text);
-
-            // 写回个人档案：user_profiles(phone/email/birthDate/gender) & users.nickname
             UserProfile profile = userProfileMapper.selectById(userId);
             if (profile == null) {
                 profile = new UserProfile();
                 profile.setUserId(userId);
             }
+
+            // 优先调用 Python AI 全量解析；请求失败再走 Java 本地解析
+            Map<String, Object> pythonResult = callPythonParseResume(text);
+            if (pythonResult != null && pythonResult.get("parsed_data") instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> parsedData = (Map<String, Object>) pythonResult.get("parsed_data");
+                if (!parsedData.isEmpty()) {
+                    applyPythonParsedDataToDb(userId, user, profile, parsedData);
+                    task.setStatus("completed");
+                    task.setParsedData(JSON.writeValueAsString(parsedData));
+                    Object conf = pythonResult.get("confidence_score");
+                    task.setConfidenceScore(conf instanceof Number ? java.math.BigDecimal.valueOf(((Number) conf).doubleValue()) : java.math.BigDecimal.valueOf(0.85));
+                    Object sugg = pythonResult.get("suggestions");
+                    task.setSuggestions(sugg instanceof List ? JSON.writeValueAsString(sugg) : "[]");
+                    resumeParseTaskMapper.updateById(task);
+                    return UploadResumeResponse.builder().taskId(taskId).status("processing").build();
+                }
+            }
+
+            // Java 兜底：简单抽取邮箱/手机号/姓名/出生日期/性别
+            String email = extractEmail(text);
+            String phone = extractPhone(text);
+            String name = extractName(text);
+            String birthDateStr = extractBirthDate(text);
+            String gender = extractGender(text);
             if (phone != null && !phone.isBlank()) {
                 profile.setPhone(phone);
             }
@@ -246,46 +270,35 @@ public class ProfileServiceImpl implements ProfileService {
             profile.setUpdatedAt(LocalDateTime.now());
             if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
             else userProfileMapper.updateById(profile);
-
             if (name != null && !name.isBlank()) {
                 user.setNickname(name);
                 userMapper.updateById(user);
             }
 
-            // 按标题切出技能/实习/项目区块；教育信息用全文解析（见 applyEducationFromText）
+            // Java 兜底：本地正则解析（技能/实习/项目等）
             String skillsBlock = findSectionBlock(text, "技能|专业技能|技术技能|个人技能|Skills?");
             String internshipBlock = findSectionBlock(text, "实习(?:经历)?|工作经历|实习经历|Experience");
             String projectBlock = findSectionBlock(text, "项目(?:经历|经验)?|Projects?");
 
-            // 教育信息：用全文做解析（PDF 换行会导致区块截断），内部会做文本归一化以支持跨行匹配
             applyEducationFromText(text, profile);
             userProfileMapper.updateById(profile);
 
-            // 技能：优先技能区块，无则从全文再试一次（兼容不同标题）
             profileSkillMapper.delete(new LambdaQueryWrapper<ProfileSkill>().eq(ProfileSkill::getUserId, userId));
-            List<ProfileSkill> parsedSkills = extractSkillsFromText(skillsBlock != null ? skillsBlock : text);
-            for (ProfileSkill ps : parsedSkills) {
+            for (ProfileSkill ps : extractSkillsFromText(skillsBlock != null ? skillsBlock : text)) {
                 ps.setUserId(userId);
                 profileSkillMapper.insert(ps);
             }
-
-            // 实习：优先实习区块，无则从全文再试
             profileInternshipMapper.delete(new LambdaQueryWrapper<ProfileInternship>().eq(ProfileInternship::getUserId, userId));
-            List<ProfileInternship> parsedInterns = extractInternshipsFromText(internshipBlock != null ? internshipBlock : text);
-            for (ProfileInternship pi : parsedInterns) {
+            for (ProfileInternship pi : extractInternshipsFromText(internshipBlock != null ? internshipBlock : text)) {
                 pi.setUserId(userId);
                 profileInternshipMapper.insert(pi);
             }
-
-            // 项目：优先项目区块，无则从全文再试
             profileProjectMapper.delete(new LambdaQueryWrapper<ProfileProject>().eq(ProfileProject::getUserId, userId));
-            List<ProfileProject> parsedProjs = extractProjectsFromText(projectBlock != null ? projectBlock : text);
-            for (ProfileProject pp : parsedProjs) {
+            for (ProfileProject pp : extractProjectsFromText(projectBlock != null ? projectBlock : text)) {
                 pp.setUserId(userId);
                 profileProjectMapper.insert(pp);
             }
 
-            // 构建 parsed_data 供 resume-parse-result 返回（结构与前端 transformParsedResumeData 兼容）
             Map<String, Object> parsed = new LinkedHashMap<>();
             Map<String, Object> basic = new LinkedHashMap<>();
             basic.put("name", name != null ? name : "");
@@ -293,9 +306,13 @@ public class ProfileServiceImpl implements ProfileService {
             basic.put("phone", phone != null ? phone : "");
             basic.put("email", email != null ? email : "");
             basic.put("birth_date", birthDateStr != null ? birthDateStr : "");
+            basic.put("birthday", birthDateStr != null ? birthDateStr : "");
             basic.put("gender", gender != null ? gender : "");
             parsed.put("basic_info", basic);
             parsed.put("education", List.of(toEducationMap(profile)));
+            List<ProfileSkill> parsedSkills = extractSkillsFromText(skillsBlock != null ? skillsBlock : text);
+            List<ProfileInternship> parsedInterns = extractInternshipsFromText(internshipBlock != null ? internshipBlock : text);
+            List<ProfileProject> parsedProjs = extractProjectsFromText(projectBlock != null ? projectBlock : text);
             parsed.put("skills", parsedSkills.stream().map(s -> Map.<String, Object>of("category", s.getCategory(), "items", parseJsonList(s.getItems()))).collect(Collectors.toList()));
             parsed.put("internships", parsedInterns.stream().map(i -> Map.of("company", nullToEmpty(i.getCompany()), "position", nullToEmpty(i.getPosition()), "start_date", nullToEmpty(i.getStartDate()), "end_date", nullToEmpty(i.getEndDate()), "description", nullToEmpty(i.getDescription()))).collect(Collectors.toList()));
             parsed.put("projects", parsedProjs.stream().map(p -> Map.<String, Object>of("name", nullToEmpty(p.getName()), "role", nullToEmpty(p.getRole()), "start_date", nullToEmpty(p.getStartDate()), "end_date", nullToEmpty(p.getEndDate()), "description", nullToEmpty(p.getDescription()), "tech_stack", parseJsonList(p.getTechStack()))).collect(Collectors.toList()));
@@ -387,6 +404,129 @@ public class ProfileServiceImpl implements ProfileService {
         return s != null && !s.isBlank();
     }
 
+    /**
+     * 调用 Python AI 服务做全量简历解析。失败或超时返回 null，由 Java 兜底。
+     * 返回：{ "parsed_data": {...}, "confidence_score": 0.xx, "suggestions": [...] } 或 null
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> callPythonParseResume(String resumeText) {
+        if (resumeText == null || resumeText.isBlank()) return null;
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("resume_text", resumeText);
+            Map<String, Object> response = WebClient.builder()
+                    .baseUrl(aiAlgorithmBaseUrl)
+                    .defaultHeader("Content-Type", "application/json")
+                    .build()
+                    .post()
+                    .uri("/profile/parse-resume")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(Duration.ofSeconds(60))
+                    .block();
+            if (response != null && Integer.valueOf(200).equals(response.get("code"))) {
+                Object data = response.get("data");
+                if (data instanceof Map) return (Map<String, Object>) data;
+            }
+        } catch (WebClientResponseException e) {
+            // 5001 未启动或返回 4xx/5xx 时静默降级到 Java 兜底
+        } catch (Exception e) {
+            // 超时、网络异常等
+        }
+        return null;
+    }
+
+    /**
+     * 将 Python 返回的 parsed_data 写入 DB：user.nickname、profile、skills、internships、projects
+     */
+    @SuppressWarnings("unchecked")
+    private void applyPythonParsedDataToDb(Long userId, User user, UserProfile profile, Map<String, Object> parsedData) {
+        Map<String, Object> basic = (Map<String, Object>) parsedData.get("basic_info");
+        if (basic != null) {
+            String name = str(basic.get("name"));
+            if (name.isEmpty()) name = str(basic.get("nickname"));
+            if (!name.isEmpty()) { user.setNickname(name); userMapper.updateById(user); }
+            if (has(str(basic.get("phone")))) profile.setPhone(str(basic.get("phone")));
+            if (has(str(basic.get("email")))) profile.setEmail(str(basic.get("email")));
+            if (has(str(basic.get("gender")))) profile.setGender(str(basic.get("gender")));
+            String bd = str(basic.get("birth_date"));
+            if (bd.isEmpty()) bd = str(basic.get("birthday"));
+            if (has(bd)) { try { profile.setBirthDate(LocalDate.parse(bd)); } catch (Exception ignored) {} }
+        }
+        Object eduObj = parsedData.get("education");
+        if (eduObj instanceof List && !((List<?>) eduObj).isEmpty()) {
+            Object first = ((List<?>) eduObj).get(0);
+            if (first instanceof Map) {
+                Map<String, Object> edu = (Map<String, Object>) first;
+                if (has(str(edu.get("school")))) profile.setSchool(str(edu.get("school")));
+                if (has(str(edu.get("major")))) profile.setMajor(str(edu.get("major")));
+                if (has(str(edu.get("degree")))) profile.setDegree(str(edu.get("degree")));
+                if (has(str(edu.get("grade")))) profile.setGrade(str(edu.get("grade")));
+                if (has(str(edu.get("expected_graduation")))) profile.setExpectedGraduation(str(edu.get("expected_graduation")));
+                if (has(str(edu.get("gpa")))) profile.setGpa(str(edu.get("gpa")));
+            }
+        }
+        profile.setUpdatedAt(LocalDateTime.now());
+        if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
+        else userProfileMapper.updateById(profile);
+
+        profileSkillMapper.delete(new LambdaQueryWrapper<ProfileSkill>().eq(ProfileSkill::getUserId, userId));
+        Object skillsObj = parsedData.get("skills");
+        if (skillsObj instanceof List) {
+            for (Object so : (List<?>) skillsObj) {
+                if (!(so instanceof Map)) continue;
+                Map<String, Object> s = (Map<String, Object>) so;
+                ProfileSkill ps = new ProfileSkill();
+                ps.setUserId(userId);
+                ps.setCategory(str(s.get("category")));
+                Object items = s.get("items");
+                try { ps.setItems(items != null ? JSON.writeValueAsString(items) : "[]"); } catch (Exception e) { ps.setItems("[]"); }
+                profileSkillMapper.insert(ps);
+            }
+        }
+
+        profileInternshipMapper.delete(new LambdaQueryWrapper<ProfileInternship>().eq(ProfileInternship::getUserId, userId));
+        Object internObj = parsedData.get("internships");
+        if (internObj instanceof List) {
+            for (Object io : (List<?>) internObj) {
+                if (!(io instanceof Map)) continue;
+                Map<String, Object> i = (Map<String, Object>) io;
+                ProfileInternship pi = new ProfileInternship();
+                pi.setUserId(userId);
+                pi.setCompany(str(i.get("company")));
+                pi.setPosition(str(i.get("position")));
+                pi.setStartDate(str(i.get("start_date")));
+                pi.setEndDate(str(i.get("end_date")));
+                pi.setDescription(str(i.get("description")));
+                profileInternshipMapper.insert(pi);
+            }
+        }
+
+        profileProjectMapper.delete(new LambdaQueryWrapper<ProfileProject>().eq(ProfileProject::getUserId, userId));
+        Object projObj = parsedData.get("projects");
+        if (projObj instanceof List) {
+            for (Object po : (List<?>) projObj) {
+                if (!(po instanceof Map)) continue;
+                Map<String, Object> p = (Map<String, Object>) po;
+                ProfileProject pp = new ProfileProject();
+                pp.setUserId(userId);
+                pp.setName(str(p.get("name")));
+                pp.setRole(str(p.get("role")));
+                pp.setStartDate(str(p.get("start_date")));
+                pp.setEndDate(str(p.get("end_date")));
+                pp.setDescription(str(p.get("description")));
+                Object ts = p.get("tech_stack");
+                try { pp.setTechStack(ts != null ? JSON.writeValueAsString(ts) : "[]"); } catch (Exception e) { pp.setTechStack("[]"); }
+                profileProjectMapper.insert(pp);
+            }
+        }
+    }
+
+    private static String str(Object o) {
+        return o != null ? o.toString().trim() : "";
+    }
+
     private static String extractEmail(String text) {
         if (text == null) return null;
         Pattern p = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
@@ -417,7 +557,6 @@ public class ProfileServiceImpl implements ProfileService {
     private static String extractBirthDate(String text) {
         if (text == null) return null;
         String half = text.replace('／', '/').replace('．', '.');
-        // 出生日期：1999-01 或 1999年1月 或 1999/01/01 或 1999.1.15
         Pattern p = Pattern.compile("(?:出生日期|生日|出生|Birth|DOB|Date of Birth)[:：\\s]*" +
                 "(\\d{4})[-/年.](\\d{1,2})(?:[-/日.](\\d{1,2}))?", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(half);
@@ -429,7 +568,6 @@ public class ProfileServiceImpl implements ProfileService {
             else if (d.length() == 1) d = "0" + d;
             return y + "-" + mo + "-" + d;
         }
-        // 仅年份或 年月
         Pattern p2 = Pattern.compile("(?:出生日期|生日|出生)[:：\\s]*(\\d{4})年?(\\d{1,2})?");
         Matcher m2 = p2.matcher(half);
         if (m2.find()) {
@@ -451,7 +589,6 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
-    /** 奖项/级别等不得作为姓名返回 */
     private static final Set<String> NAME_BLOCKLIST = Set.of(
             "国家级", "省级", "校级", "院级", "一等奖", "二等奖", "三等奖", "优秀奖", "特等奖",
             "金奖", "银奖", "铜奖", "获奖", "等级", "级别", "等级证书");
@@ -478,7 +615,6 @@ public class ProfileServiceImpl implements ProfileService {
                 labelCandidate = v;
             }
         }
-        // 若标签行匹配到的是奖项级别等，则尝试前几行中首个「纯 2～4 个汉字」作为姓名（常见简历首行为姓名）
         if (labelCandidate == null || NAME_BLOCKLIST.contains(labelCandidate)) {
             Pattern chineseName = Pattern.compile("^[\\u4e00-\\u9fa5]{2,4}$");
             for (int i = 0; i < Math.min(lines.length, 8); i++) {
