@@ -843,5 +843,99 @@
       ]
     },
     "error": null
+  },
+  "resume_parse_20260223172524577_1_933801": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-02-23 17:25:24",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "SUN YUTING",
+          "phone": "18061253346",
+          "email": "syt18061253346@qq.com",
+          "gender": "女",
+          "birth_date": null
+        },
+        "education": [
+          {
+            "school": "Wuhan University of Technology",
+            "major": "Computer Science and Technology",
+            "degree": "本科",
+            "grade": "2024级",
+            "start_date": "2024-09",
+            "expected_graduation": "2028-06",
+            "gpa": "3.8/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "人工智能",
+              "RAG架构",
+              "向量数据库",
+              "异步任务处理",
+              "三层架构设计"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "React",
+              "Spring Boot",
+              "Docker",
+              "Qwen-max"
+            ]
+          }
+        ],
+        "certificates": [],
+        "internships": [],
+        "projects": [
+          {
+            "name": "AI Career Planning System",
+            "role": null,
+            "start_date": null,
+            "end_date": null,
+            "description": "17th China College Student Service Outsourcing Innovation Competition\n(cid:127) Developed an intelligent career planning system using AI agents and RAG architecture\n(cid:127) Implemented resume parsing with Qwen-max model and vector database integration\n(cid:127) Built a three-tier architecture: Python AI service, Spring Boot backend, React frontend\n(cid:127) Designed asynchronous task processing for improved system performance",
+            "tech_stack": [
+              "Python",
+              "Java",
+              "JavaScript",
+              "React",
+              "Spring Boot",
+              "Docker",
+              "Qwen-max",
+              "RAG",
+              "向量数据库",
+              "异步任务处理",
+              "三层架构"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "17th China College Student Service Outsourcing Innovation Competition",
+            "level": "国家级",
+            "date": null
+          }
+        ]
+      },
+      "confidence_score": 0.94,
+      "suggestions": [
+        "建议补充出生日期、实习经历等基本信息以提升简历完整性",
+        "项目描述中可补充具体成果指标（如性能提升百分比、用户量等）以增强说服力",
+        "奖项未注明获奖时间，建议补充具体年份"
+      ]
+    },
+    "error": null
   }
 }

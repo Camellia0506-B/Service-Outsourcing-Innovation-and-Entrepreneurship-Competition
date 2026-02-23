@@ -615,6 +615,7 @@ public class ProfileServiceImpl implements ProfileService {
                 labelCandidate = v;
             }
         }
+        // 若标签行匹配到的是奖项级别等，则尝试前几行中首个「纯 2～4 个汉字」作为姓名（常见简历首行为姓名）
         if (labelCandidate == null || NAME_BLOCKLIST.contains(labelCandidate)) {
             Pattern chineseName = Pattern.compile("^[\\u4e00-\\u9fa5]{2,4}$");
             for (int i = 0; i < Math.min(lines.length, 8); i++) {

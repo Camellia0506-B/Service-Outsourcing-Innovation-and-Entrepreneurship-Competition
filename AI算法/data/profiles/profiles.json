@@ -141,5 +141,83 @@
     "user_id": 5,
     "updated_at": "2026-02-23 17:55:26",
     "profile_completeness": 0
+  },
+  "1": {
+    "basic_info": {
+      "name": "SUN YUTING",
+      "phone": "18061253346",
+      "email": "syt18061253346@qq.com",
+      "gender": "女"
+    },
+    "education_info": {
+      "school": "Wuhan University of Technology",
+      "major": "Computer Science and Technology",
+      "degree": "本科",
+      "grade": "2024级",
+      "start_date": "2024-09",
+      "expected_graduation": "2028-06",
+      "gpa": "3.8/4.0"
+    },
+    "skills": [
+      {
+        "category": "专业技能",
+        "items": [
+          "人工智能",
+          "RAG架构",
+          "向量数据库",
+          "异步任务处理",
+          "三层架构设计"
+        ]
+      },
+      {
+        "category": "编程语言",
+        "items": [
+          "Python",
+          "Java",
+          "JavaScript"
+        ]
+      },
+      {
+        "category": "工具与框架",
+        "items": [
+          "React",
+          "Spring Boot",
+          "Docker",
+          "Qwen-max"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "name": "AI Career Planning System",
+        "role": null,
+        "start_date": null,
+        "end_date": null,
+        "description": "17th China College Student Service Outsourcing Innovation Competition\n(cid:127) Developed an intelligent career planning system using AI agents and RAG architecture\n(cid:127) Implemented resume parsing with Qwen-max model and vector database integration\n(cid:127) Built a three-tier architecture: Python AI service, Spring Boot backend, React frontend\n(cid:127) Designed asynchronous task processing for improved system performance",
+        "tech_stack": [
+          "Python",
+          "Java",
+          "JavaScript",
+          "React",
+          "Spring Boot",
+          "Docker",
+          "Qwen-max",
+          "RAG",
+          "向量数据库",
+          "异步任务处理",
+          "三层架构"
+        ]
+      }
+    ],
+    "awards": [
+      {
+        "name": "17th China College Student Service Outsourcing Innovation Competition",
+        "level": "国家级",
+        "date": null
+      }
+    ],
+    "user_id": 1,
+    "updated_at": "2026-02-23 17:25:37",
+    "profile_completeness": 68
   }
 }
