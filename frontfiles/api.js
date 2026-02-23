@@ -4,7 +4,7 @@ const API_CONFIG = {
     assessmentBaseURL: 'http://localhost:5001/api/v1',   // AI 算法服务（职业测评 / 岗位画像 / AI生成），必须为绝对地址，避免打到 8080
     jobProfilesBaseURL: 'http://localhost:5001/api/v1',  // 岗位画像列表 → Flask AI 服务（5001）
     timeout: 30000,
-    mockMode: true   // true=模拟数据，无需 Java 后端(5000)；false=连接真实后端（Java:5000 / AI:5001）
+    mockMode: false  // true=模拟数据（仅用于演示，所有数据为假）；false=连接真实后端（Java:5000 / AI:5001），使用真实数据库和岗位数据
 };
 
 // API工具类

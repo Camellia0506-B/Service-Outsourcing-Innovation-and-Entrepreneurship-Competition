@@ -806,9 +806,20 @@ class CareerPlanningApp {
         if (confirm('确定要退出登录吗？')) {
             const userId = getCurrentUserId();
             await logout(userId);
+            // 清除所有用户相关的localStorage数据，包括历史记录
             clearUserInfo();
+            if (userId) {
+                // 清除该用户的所有历史记录key
+                localStorage.removeItem('report_history_' + userId);
+                localStorage.removeItem('last_assessment_report_id_' + userId);
+            }
             this.currentUser = null;
             document.getElementById('navbar').classList.add('hidden');
+            // 清空登录表单
+            const usernameInput = document.getElementById('loginUsername');
+            const passwordInput = document.getElementById('loginPassword');
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
             this.showPage('loginPage');
             this.showToast('已退出登录', 'success');
         }
@@ -829,8 +840,10 @@ class CareerPlanningApp {
         }
         assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed)
             || !!(this.hasHistoryReport() && this.getLastAssessmentReportId());
-        const matchingResult = await getRecommendedJobs(userId, 10);
+        // 首页和岗位匹配模块使用相同的请求参数，确保数量一致
+        const matchingResult = await getRecommendedJobs(userId, 24);
         if (matchingResult.success && matchingResult.data) {
+            // 优先使用 recommendations 数组长度（与岗位匹配模块一致），其次使用 total_matched
             matchedCount = matchingResult.data.recommendations?.length ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? 0;
         }
 
@@ -839,9 +852,10 @@ class CareerPlanningApp {
         if (cards[0]) {
             const badge = cards[0].querySelector('.status-badge');
             if (badge) {
-                badge.textContent = profileCompleteness >= 80 ? '已完成' : '未完成';
-                badge.classList.toggle('status-done', profileCompleteness >= 80);
-                badge.classList.toggle('status-pending', profileCompleteness < 80);
+                // 完整度100%显示"已完成"，否则显示"待完成"
+                badge.textContent = profileCompleteness === 100 ? '已完成' : '待完成';
+                badge.classList.toggle('status-done', profileCompleteness === 100);
+                badge.classList.toggle('status-pending', profileCompleteness < 100);
             }
         }
         if (cards[1]) {
@@ -1206,21 +1220,23 @@ class CareerPlanningApp {
 
         if (result.success) {
             this.showToast('档案保存成功，正在重新生成能力画像…', 'success');
-            const completeness = result.data.profile_completeness || 0;
+            const completeness = result.data.profile_completeness ?? result.data.profileCompleteness ?? 0;
             const card = document.querySelector('#dashboardPage .main-card[data-action="profile"]');
             if (card) {
                 const badge = card.querySelector('.status-badge');
                 if (badge) {
-                    badge.textContent = completeness >= 80 ? '已完成' : '未完成';
-                    badge.classList.toggle('status-done', completeness >= 80);
-                    badge.classList.toggle('status-pending', completeness < 80);
+                    // 完整度100%显示"已完成"，否则显示"待完成"（与首页loadDashboardData一致）
+                    badge.textContent = completeness === 100 ? '已完成' : '待完成';
+                    badge.classList.toggle('status-done', completeness === 100);
+                    badge.classList.toggle('status-pending', completeness < 100);
                 }
             }
-            
             // 档案更新后重新生成能力画像，确保学生画像随简历和档案变化而更新
             aiGenerateAbilityProfile(userId, 'profile').then((res) => {
                 if (res.success) {
                     this.showToast('能力画像已更新，岗位匹配将基于新档案', 'success');
+                    // 能力画像更新后，推荐岗位数量可能变化，刷新首页数据
+                    this.loadDashboardData();
                 }
             }).catch(() => {});
         } else {
@@ -1420,14 +1436,7 @@ class CareerPlanningApp {
                         try {
                             const profileData = this.transformParsedResumeData(parsedData);
                             this.fillProfileFormFromResume(profileData);
-                            await this.saveProfile();
-                            this.showToast('简历解析完成，档案已保存，正在重新生成能力画像…', 'success');
-                            // 用新档案重新生成能力画像，这样「能力画像」和「岗位匹配」会随新简历更新
-                            aiGenerateAbilityProfile(userId, 'profile').then((res) => {
-                                if (res.success) {
-                                    this.showToast('能力画像已更新，岗位匹配将基于新简历', 'success');
-                                }
-                            }).catch(() => {});
+                            this.showToast('简历解析完成，已填充表单，请检查后点击「保存档案」保存', 'success');
                         } catch (e) {
                             console.error('应用简历解析结果到表单时出错:', e);
                             this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');
@@ -1583,15 +1592,7 @@ class CareerPlanningApp {
             let list = result.success && result.data
                 ? (result.data.list || (Array.isArray(result.data) ? result.data : []))
                 : [];
-            // 兼容：若历史为空但存在“最近一次报告”，将其写入历史并重新拉取
-            const lastId = this.getLastAssessmentReportId();
-            if (list.length === 0 && lastId) {
-                this.appendAssessmentReportHistory(lastId, new Date().toISOString());
-                result = await getReportHistory(userId);
-                list = result.success && result.data
-                    ? (result.data.list || (Array.isArray(result.data) ? result.data : []))
-                    : [];
-            }
+            // 历史记录仅展示后端真实存在的测评报告，不再从本地“最近一次报告”自动造一条历史
             if (list.length > 0) {
                 this.renderAssessmentReportHistory(list);
                 this.showToast('已加载 ' + list.length + ' 条测评历史报告', 'success');
@@ -1894,6 +1895,8 @@ class CareerPlanningApp {
                         });
                     }
                     this.showToast('报告生成完成！', 'success');
+                    // 测评完成后，推荐岗位数量可能变化，刷新首页数据
+                    this.loadDashboardData();
                 } else if (result.data.status === 'failed') {
                     statusDiv.innerHTML = `<p style="color: #dc2626;">报告生成失败: ${result.data.error || '未知错误'}</p>`;
                     this.setViewReportButtonState('ready');

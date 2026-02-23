@@ -349,14 +349,16 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
 
+    /**
+     * 完整度仅按档案页可见字段计算：基本信息(5) + 教育信息(6) + 专业技能(1) = 12 项。
+     * 不包含证书、实习经历、项目经历、荣誉奖项（页面无对应填写入口）。
+     */
     private int computeCompleteness(User user, UserProfile profile, List<ProfileSkill> skills,
                                     List<ProfileCertificate> certs, List<ProfileInternship> interns,
                                     List<ProfileProject> projects, List<ProfileAward> awards) {
         int n = 0;
-        if (user != null) {
-            if (has(user.getNickname())) n++;
-            if (has(user.getAvatar())) n++;
-        }
+        final int total = 12;
+        if (user != null && has(user.getNickname())) n++;
         if (profile != null) {
             if (has(profile.getGender())) n++;
             if (profile.getBirthDate() != null) n++;
@@ -369,12 +371,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (has(profile.getExpectedGraduation())) n++;
             if (has(profile.getGpa())) n++;
         }
-        int total = 12;
-        if (skills != null) { total++; if (!skills.isEmpty()) n++; }
-        if (certs != null) { total++; if (!certs.isEmpty()) n++; }
-        if (interns != null) { total++; if (!interns.isEmpty()) n++; }
-        if (projects != null) { total++; if (!projects.isEmpty()) n++; }
-        if (awards != null) { total++; if (!awards.isEmpty()) n++; }
+        if (skills != null && !skills.isEmpty()) n++;
         return total <= 0 ? 0 : Math.min(100, n * 100 / total);
     }
 

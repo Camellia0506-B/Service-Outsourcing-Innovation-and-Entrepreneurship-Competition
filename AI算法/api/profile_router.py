@@ -161,10 +161,12 @@ def upload_resume():
         save_path = os.path.join(upload_dir, save_name)
         resume_file.save(save_path)
 
-        # 提取文本
+        # 提取文本（放宽有效长度要求，兼容篇幅较短但内容正常的简历）
         resume_text = _extract_text(save_path, ext)
-        if not resume_text or len(resume_text.strip()) < 50:
-            return error_response(400, "无法从文件中提取有效文本，请确认文件内容不为空")
+        cleaned = (resume_text or "").strip()
+        # 原来要求长度 >= 50，现在改为：只要不是空，就允许走解析，极短文本再提示
+        if not cleaned:
+            return error_response(400, "无法从文件中提取有效文本，请确认文件内容不为空或为可复制文本的PDF")
 
         # 生成task_id：毫秒时间戳 + 随机数，确保唯一
         random_num = random.randint(1000, 999999)

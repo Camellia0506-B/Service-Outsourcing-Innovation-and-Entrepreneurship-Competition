@@ -830,20 +830,9 @@ class StudentAbilityProfileService:
                 return None
             return self._adapt_profile_for_generator(raw)
         except Exception as e:
-            logger.warning(f"[AbilityProfile] Profile模块不可用: {e}，使用模拟数据")
-            return {
-                "basic_info": {
-                    "education": "本科",
-                    "major": "计算机科学与技术",
-                    "school": "某大学",
-                    "gpa": "3.5/4.0",
-                    "expected_graduation": ""
-                },
-                "skills": [],
-                "certificates": [],
-                "projects": [],
-                "internships": []
-            }
+            logger.warning(f"[AbilityProfile] Profile模块不可用: {e}，返回None要求用户先完善档案")
+            # 不再返回模拟数据，要求用户必须先完善档案或上传简历
+            return None
     
     def _adapt_profile_for_generator(self, profile: dict) -> dict:
         """将 Profile 模块的档案格式适配为能力画像生成器所需格式"""
