@@ -5,5 +5,173 @@
     "created_at": "2026-02-15 20:30:38",
     "result": null,
     "error": "'resume_parse_prompt_path'"
+  },
+  "resume_parse_20260223172615673_5_409771": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-02-23 17:26:15",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": null,
+          "phone": null,
+          "email": null,
+          "gender": null,
+          "birth_date": null
+        },
+        "education": [],
+        "skills": [],
+        "certificates": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.1,
+      "suggestions": [
+        "简历内容为PDF底层编码和结构数据，未包含可读的文本信息，无法提取有效简历内容。",
+        "建议重新上传一份包含可复制文本的简历文件（如标准PDF或Word文档），而非扫描件或损坏文件。"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260223172644713_5_989421": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-02-23 17:26:44",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": null,
+          "phone": null,
+          "email": null,
+          "gender": null,
+          "birth_date": null
+        },
+        "education": [],
+        "skills": [],
+        "certificates": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.1,
+      "suggestions": [
+        "简历原文为PDF底层编码内容，无法提取有效信息，建议提供可读的简历文本。",
+        "当前内容包含大量乱码和二进制数据，无法识别姓名、教育背景、技能等关键字段。"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260223174525765_5_356335": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-02-23 17:45:25",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": null,
+          "phone": null,
+          "email": null,
+          "gender": null,
+          "birth_date": null
+        },
+        "education": [],
+        "skills": [],
+        "certificates": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.05,
+      "suggestions": [
+        "简历内容为PDF底层编码或乱码，无法提取有效信息，建议重新上传可读的简历文件（如正常显示的PDF或Word文档）。",
+        "当前文件疑似包含损坏或非文本层的PDF内容，导致所有字段均无法识别。"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260223174550393_5_242229": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-02-23 17:45:50",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": null,
+          "phone": null,
+          "email": null,
+          "gender": null,
+          "birth_date": null
+        },
+        "education": [],
+        "skills": [],
+        "certificates": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.1,
+      "suggestions": [
+        "简历内容为PDF底层编码和元数据，未包含可解析的文本信息，无法提取有效简历内容。",
+        "建议上传可读的简历文件（如Word或可复制文本的PDF），以便准确解析。"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260223174752680_5_154034": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-02-23 17:47:52",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": null,
+          "phone": null,
+          "email": null,
+          "gender": null,
+          "birth_date": null
+        },
+        "education": [],
+        "skills": [],
+        "certificates": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.1,
+      "suggestions": [
+        "简历内容为PDF底层编码，无法提取有效信息，建议提供可读的简历文本。",
+        "当前内容包含大量乱码和二进制数据，无法识别姓名、教育背景、技能等关键字段。"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260223175519998_5_836373": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-02-23 17:55:20",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": null,
+          "phone": null,
+          "email": null,
+          "gender": null,
+          "birth_date": null
+        },
+        "education": [],
+        "skills": [],
+        "certificates": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.05,
+      "suggestions": [
+        "简历内容为PDF底层编码和元数据，未包含可解析的结构化文本信息，无法提取有效内容。",
+        "建议重新上传一份可读的简历文件（如正常显示文字的PDF或Word文档）以确保信息准确提取。"
+      ]
+    },
+    "error": null
   }
 }

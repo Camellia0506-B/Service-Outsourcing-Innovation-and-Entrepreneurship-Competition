@@ -1049,9 +1049,9 @@ class CareerPlanningApp {
 
         const profileData = {
             basic_info: {
-                nickname: basic.name || basic.nickname || '',
-                gender: basic.gender || '',
-                birth_date: basic.birth_date || basic.birthday || '',
+                nickname: basic.name || basic.full_name || basic.nickname || '',
+                gender: basic.gender || basic.sex || '',
+                birth_date: basic.birth_date || basic.birthday || basic.date_of_birth || basic.dob || '',
                 phone: basic.phone || '',
                 email: basic.email || ''
             },

@@ -129,10 +129,12 @@ def _extract_json(text: str) -> dict:
 
 def _fallback_parse_resume_text(resume_text: str) -> dict:
     """
-    当大模型未解析出有效结构时，使用正则从原始文本里兜底提取几项关键信息：
+    使用正则从原始简历文本里兜底提取关键信息，用于补全或替代大模型解析结果：
     - 姓名（匹配“姓名：XXX”）
     - 手机号（11位国内手机号）
     - 邮箱
+    - 性别（匹配“性别：男/女”）
+    - 出生日期（匹配“出生日期/生日/出生”后的 YYYY-MM 或 XXXX年X月）
     - 教育经历中第一所学校和专业（尽量猜测，有则填，没有就留空）
     """
     import re
@@ -148,11 +150,53 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
     email_match = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", text)
     email = email_match.group(0) if email_match else ""
 
-    # 姓名（优先匹配“姓名：XXX”）
+    # 姓名（优先匹配“姓名：XXX”；否则从简历首行智能猜测）
     name = ""
     name_match = re.search(r"姓名[:：]\s*([^\s，,。]{2,4})", text)
     if name_match:
         name = name_match.group(1).strip()
+    if not name and lines:
+        first = lines[0]
+        # 形如 “李明远”
+        m = re.match(r"^([\u4e00-\u9fa5·]{2,4})\s*$", first)
+        if m:
+            name = m.group(1).strip()
+        else:
+            # 形如 “李明远 Han Tianxu” → 取中文名部分
+            m = re.match(r"^([\u4e00-\u9fa5·]{2,4})\s+[A-Za-z\u00C0-\u024F\s·.]+$", first)
+            if m:
+                name = m.group(1).strip()
+            else:
+                # 纯英文名在首行（如 “Li Mingyuan”）
+                m = re.match(r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s*$", first)
+                if m:
+                    name = m.group(1).strip()
+
+    # 性别（匹配“性别：男/女”等；兼容 Gender: Male/Female）
+    gender = ""
+    gender_match = re.search(r"性别[:：]\s*([男女])", text)
+    if gender_match:
+        gender = gender_match.group(1).strip()
+    if not gender:
+        en_g = re.search(r"Gender[:：]?\s*(Male|Female)", text, re.IGNORECASE)
+        if en_g:
+            gender = "男" if en_g.group(1).lower().startswith("m") else "女"
+
+    # 出生日期（匹配“出生日期：2003/08/15”等多种格式，只保留到月）
+    birth_date = ""
+    bd_match = re.search(r"(?:出生日期|生日|出生)[:：]?\s*(\d{4})[-/\.年](\d{1,2})?", text)
+    if bd_match:
+        y, m = bd_match.group(1), (bd_match.group(2) or "01").zfill(2)
+        birth_date = f"{y}-{m}"
+    else:
+        # 行内包含“出生/生日”关键字时，再次尝试更宽松的日期匹配
+        for ln in lines:
+            if "出生" in ln or "生日" in ln:
+                m2 = re.search(r"(\d{4})[-/\.年](\d{1,2})", ln)
+                if m2:
+                    y, m = m2.group(1), m2.group(2).zfill(2)
+                    birth_date = f"{y}-{m}"
+                    break
 
     # 学校/专业（非常简单的启发式，不保证完全正确，只是为了让前端看到效果）
     school = ""
@@ -181,6 +225,8 @@ def _fallback_parse_resume_text(resume_text: str) -> dict:
             "name": name,
             "phone": phone,
             "email": email,
+            "gender": gender,
+            "birth_date": birth_date,
         },
         "education": education,
         "skills": [],
@@ -412,24 +458,24 @@ class ProfileService:
         raw_output = chain.invoke({"resume_text": resume_text})
         parsed = _extract_json(raw_output)
 
-        # 如果模型没有解析出有效结构，用本地正则做一次兜底解析
-        try:
-            bi = (parsed.get("basic_info") or {}) if isinstance(parsed, dict) else {}
-            no_basic = not bi or all(
-                not (bi.get(k) or "").strip() for k in ("name", "phone", "email")
-            )
-        except Exception:
-            bi = {}
-            no_basic = True
-
-        if no_basic:
-            fallback = _fallback_parse_resume_text(resume_text)
-            if isinstance(parsed, dict):
-                for k, v in fallback.items():
-                    if k not in parsed or not parsed[k]:
-                        parsed[k] = v
-            else:
-                parsed = fallback
+        # 始终执行兜底解析，用正则结果补全 basic_info 中缺失的字段（姓名、性别、出生日期、手机、邮箱）
+        fallback = _fallback_parse_resume_text(resume_text)
+        if not isinstance(parsed, dict):
+            parsed = fallback
+        else:
+            parsed_bi = parsed.setdefault("basic_info", {})
+            if not isinstance(parsed_bi, dict):
+                parsed_bi = {}
+                parsed["basic_info"] = parsed_bi
+            fb_bi = (fallback.get("basic_info") or {}) if isinstance(fallback.get("basic_info"), dict) else {}
+            for key in ("name", "gender", "birth_date", "phone", "email"):
+                if not (parsed_bi.get(key) or "").strip() and (fb_bi.get(key) or "").strip():
+                    parsed_bi[key] = (fb_bi.get(key) or "").strip()
+            # 若 education/skills 等为空，用兜底结果补全
+            for key in ("education", "skills", "internships", "projects", "awards"):
+                if key not in parsed or not parsed[key]:
+                    if fallback.get(key):
+                        parsed[key] = fallback[key]
 
         # 提取 confidence_score 和 suggestions（从模型输出中分离）
         confidence_score = parsed.pop("confidence_score", 0.85)
