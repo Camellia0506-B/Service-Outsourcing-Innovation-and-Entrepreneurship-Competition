@@ -1,8 +1,223 @@
 {
+  "1": {
+    "basic_info": {
+      "name": "李明远",
+      "phone": "13812345678",
+      "email": "liminyuan2023@whut.edu.cn",
+      "gender": "男",
+      "birth_date": "2003-08",
+      "nickname": "李明远",
+      "birthday": "2003-08-15"
+    },
+    "education_info": {
+      "school": "武汉理工大学",
+      "major": "计算机科学与技术",
+      "degree": "本科",
+      "grade": "2023级",
+      "start_date": "2023-09",
+      "expected_graduation": "2027-06",
+      "gpa": "3.6/4.0"
+    },
+    "skills": [
+      {
+        "category": "专业技能",
+        "items": [
+          "机器学习",
+          "深度学习",
+          "数据结构",
+          "算法",
+          "卷积神经网络",
+          "RAG架构",
+          "向量数据库",
+          "多轮对话系统",
+          "性能优化"
+        ]
+      },
+      {
+        "category": "编程语言",
+        "items": [
+          "Python",
+          "Java",
+          "JavaScript"
+        ]
+      },
+      {
+        "category": "工具与框架",
+        "items": [
+          "MySQL",
+          "Vue.js",
+          "Spring Boot",
+          "Linux",
+          "ChromaDB",
+          "LangChain",
+          "CIFAR-10"
+        ]
+      },
+      {
+        "category": "语言能力",
+        "items": [
+          "英语CET-6",
+          "普通话二级甲等",
+          "计算机二级（Python）"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "name": "基于深度学习的图像识别系统",
+        "role": "独立开发者",
+        "start_date": "2024-03",
+        "end_date": "2024-06",
+        "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+        "tech_stack": [
+          "Python",
+          "深度学习",
+          "卷积神经网络",
+          "CIFAR-10",
+          "Vue.js"
+        ]
+      },
+      {
+        "name": "校园智能问答系统",
+        "role": "开发者",
+        "start_date": "2024-09",
+        "end_date": "2024-12",
+        "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库，集成 LangChain 框架实现多轮对话，日均查询响应时间小于 2 秒。",
+        "tech_stack": [
+          "Python",
+          "RAG架构",
+          "大语言模型",
+          "ChromaDB",
+          "LangChain"
+        ]
+      }
+    ],
+    "awards": [
+      {
+        "name": "全国大学生数学建模竞赛 二等奖",
+        "level": "国家级",
+        "date": "2024-01"
+      },
+      {
+        "name": "武汉理工大学优秀学生奖学金 一等奖",
+        "level": "校级",
+        "date": "2023-01"
+      },
+      {
+        "name": "计算机程序设计竞赛 校级三等奖",
+        "level": "校级",
+        "date": "2024-01"
+      }
+    ],
+    "user_id": 1,
+    "updated_at": "2026-02-23 19:37:47",
+    "profile_completeness": 100,
+    "certificates": [
+      {
+        "name": "英语六级（CET-6）",
+        "issue_date": null
+      },
+      {
+        "name": "计算机二级（Python）",
+        "issue_date": null
+      },
+      {
+        "name": "普通话二级甲等",
+        "issue_date": null
+      }
+    ],
+    "internships": [
+      {
+        "company": "腾讯科技",
+        "position": "后端开发实习生",
+        "start_date": "2024-07",
+        "end_date": "2024-09",
+        "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+      }
+    ]
+  },
   "5": {
     "basic_info": {},
     "user_id": 5,
     "updated_at": "2026-02-23 17:55:26",
     "profile_completeness": 0
+  },
+  "1": {
+    "basic_info": {
+      "name": "SUN YUTING",
+      "phone": "18061253346",
+      "email": "syt18061253346@qq.com",
+      "gender": "女"
+    },
+    "education_info": {
+      "school": "Wuhan University of Technology",
+      "major": "Computer Science and Technology",
+      "degree": "本科",
+      "grade": "2024级",
+      "start_date": "2024-09",
+      "expected_graduation": "2028-06",
+      "gpa": "3.8/4.0"
+    },
+    "skills": [
+      {
+        "category": "专业技能",
+        "items": [
+          "人工智能",
+          "RAG架构",
+          "向量数据库",
+          "异步任务处理",
+          "三层架构设计"
+        ]
+      },
+      {
+        "category": "编程语言",
+        "items": [
+          "Python",
+          "Java",
+          "JavaScript"
+        ]
+      },
+      {
+        "category": "工具与框架",
+        "items": [
+          "React",
+          "Spring Boot",
+          "Docker",
+          "Qwen-max"
+        ]
+      }
+    ],
+    "projects": [
+      {
+        "name": "AI Career Planning System",
+        "role": null,
+        "start_date": null,
+        "end_date": null,
+        "description": "17th China College Student Service Outsourcing Innovation Competition\n(cid:127) Developed an intelligent career planning system using AI agents and RAG architecture\n(cid:127) Implemented resume parsing with Qwen-max model and vector database integration\n(cid:127) Built a three-tier architecture: Python AI service, Spring Boot backend, React frontend\n(cid:127) Designed asynchronous task processing for improved system performance",
+        "tech_stack": [
+          "Python",
+          "Java",
+          "JavaScript",
+          "React",
+          "Spring Boot",
+          "Docker",
+          "Qwen-max",
+          "RAG",
+          "向量数据库",
+          "异步任务处理",
+          "三层架构"
+        ]
+      }
+    ],
+    "awards": [
+      {
+        "name": "17th China College Student Service Outsourcing Innovation Competition",
+        "level": "国家级",
+        "date": null
+      }
+    ],
+    "user_id": 1,
+    "updated_at": "2026-02-23 17:25:37",
+    "profile_completeness": 68
   }
 }

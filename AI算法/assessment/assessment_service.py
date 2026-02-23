@@ -379,16 +379,37 @@ class AssessmentService:
             holland_scores[k] = min(100, int(holland_scores[k] * 5))  # 假设每类型最多20分原始分
         for k in value_scores:
             value_scores[k] = min(100, int(value_scores[k] * 10))
-        # 能力分数：每题 1–5 分×20=20–100，每能力 3 题共 60–300，归一为 60–100（有区分度，避免全 60）
+
+        # 能力分数：非线性加权模型（基础分55，平方拉伸，权重，上限95，整体>80时+3%修正）
+        def calculate_score(similarity: float, weight: float = 1.0) -> int:
+            similarity = max(0.0, min(1.0, float(similarity)))
+            base_score = 55
+            nonlinear = pow(similarity, 1.5)
+            dynamic_score = nonlinear * 40 * weight
+            final_score = base_score + dynamic_score
+            if final_score > 95:
+                final_score = 95
+            return round(final_score)
+
+        ability_weights = {
+            "学习能力": 1.1,
+            "沟通表达能力": 1.0,
+            "创新能力": 1.2,
+            "逻辑分析能力": 1.15,
+            "执行能力": 1.05,
+        }
         raw_ability = dict(ability_scores)
         for k in ability_scores:
-            raw = ability_scores[k]
-            # 映射 0–300 -> 60–100：0->60, 150->80, 300->100
-            if raw <= 0:
-                normalized = 60
-            else:
-                normalized = 60 + (raw / 300.0) * 40
-            ability_scores[k] = max(60, min(100, int(round(normalized))))
+            raw = ability_scores[k]  # 原始 60–300
+            similarity = (raw - 60) / 240.0 if raw > 60 else 0.0
+            similarity = max(0.0, min(1.0, similarity))
+            w = ability_weights.get(k, 1.0)
+            ability_scores[k] = max(55, calculate_score(similarity, w))
+        avg_ability = sum(ability_scores.values()) / 5 if ability_scores else 0
+        if avg_ability > 80:
+            for k in ability_scores:
+                ability_scores[k] = min(98, round(ability_scores[k] * 1.03))
+                ability_scores[k] = max(55, ability_scores[k])
         logger.info("[能力计分] 原始分 raw_ability=%s 归一后 abilities=%s", raw_ability, dict(ability_scores))
 
         return {
@@ -456,14 +477,28 @@ class AssessmentService:
             report["interest_analysis"]["interest_distribution"] = dist
         return report
 
+    def _match_ability_key(self, report_ability: str, keys_from_ai: dict) -> Optional[str]:
+        """根据报告中的能力名从 AI 返回的 key 中匹配（支持简称/全称不一致）"""
+        if not report_ability or not keys_from_ai:
+            return None
+        report_ability = (report_ability or "").strip()
+        if report_ability in keys_from_ai:
+            return report_ability
+        for k in keys_from_ai:
+            if (k or "").strip() == report_ability:
+                return k
+            if report_ability in (k or "") or (k or "") in report_ability:
+                return k
+        return None
+
     def _generate_ability_descriptions(self, report: dict) -> dict:
         """
         用 AI 为能力分析中的优势与待提升项生成简短文字描述，不写死在前后端。
         写入 ability_analysis.strengths[].description 与 areas_to_improve[].suggestions
         """
         aa = report.get("ability_analysis") or {}
-        strengths = aa.get("strengths") or []
-        areas = aa.get("areas_to_improve") or []
+        strengths = list(aa.get("strengths") or [])
+        areas = list(aa.get("areas_to_improve") or [])
         if not strengths and not areas:
             return report
         ability_data = json.dumps(
@@ -486,17 +521,25 @@ class AssessmentService:
             chain = prompt | model | StrOutputParser()
             raw = chain.invoke({"ability_data": ability_data})
             out = _extract_json(raw)
-            desc_by_ability = {x.get("ability"): x.get("description") or "" for x in (out.get("strengths") or [])}
-            sugg_by_ability = {x.get("ability"): x.get("suggestions") or [] for x in (out.get("areas_to_improve") or [])}
+            desc_by_ability = {str(x.get("ability", "")).strip(): (x.get("description") or "").strip() for x in (out.get("strengths") or []) if x.get("ability")}
+            sugg_by_ability = {str(x.get("ability", "")).strip(): (x.get("suggestions") or []) for x in (out.get("areas_to_improve") or []) if x.get("ability")}
             for s in strengths:
-                s["description"] = desc_by_ability.get(s.get("ability")) or s.get("description") or "该项能力表现较好，可在职业发展中持续发挥。"
+                key = self._match_ability_key(s.get("ability"), desc_by_ability)
+                if key and desc_by_ability.get(key):
+                    s["description"] = desc_by_ability[key]
+                elif not s.get("description"):
+                    s["description"] = "该项能力表现较好，可在职业发展中持续发挥。"
             for a in areas:
-                a["suggestions"] = sugg_by_ability.get(a.get("ability")) or a.get("suggestions") or ["可通过练习与项目实践持续提升。"]
+                key = self._match_ability_key(a.get("ability"), sugg_by_ability)
+                if key and sugg_by_ability.get(key):
+                    a["suggestions"] = [str(x).strip() for x in sugg_by_ability[key] if x]
+                elif not a.get("suggestions"):
+                    a["suggestions"] = ["可通过练习与项目实践持续提升。"]
             report["ability_analysis"]["strengths"] = strengths
             report["ability_analysis"]["areas_to_improve"] = areas
-            logger.info("[Assessment] 能力描述 AI 生成完成")
+            logger.info("[Assessment] 能力描述 AI 生成完成，待提升 %s 条已写入", len(areas))
         except Exception as e:
-            logger.warning("[Assessment] 能力描述 AI 生成失败，保留原描述: %s", e)
+            logger.warning("[Assessment] 能力描述 AI 生成失败，保留原描述: %s", e, exc_info=True)
         return report
 
     def _generate_report_with_ai(self, user_id: int, assessment_id: str, answers: List[dict], scores: dict) -> dict:

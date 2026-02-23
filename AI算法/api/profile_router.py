@@ -313,6 +313,58 @@ def _extract_text(file_path: str, ext: str) -> str:
 
 
 # ============================================================
+# 2.3.0 全量简历解析（供 Java 优先调用，失败时 Java 本地兜底）
+# POST /api/v1/profile/parse-resume
+# ============================================================
+@profile_bp.route("/parse-resume", methods=["POST"])
+def parse_resume_full():
+    """
+    从简历原文做全量 AI 解析（basic_info / education / skills / internships / projects 等）。
+    请求体：{ "resume_text": "简历全文..." }
+    返回：{ "parsed_data": {...}, "confidence_score": 0.xx, "suggestions": [...] }，与 2.4 结构一致。
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        resume_text = body.get("resume_text") or ""
+        if not resume_text or len(resume_text.strip()) < 10:
+            return error_response(400, "resume_text 不能为空或过短")
+        service = get_profile_service()
+        result = service.parse_resume_sync(resume_text)
+        if result is None:
+            return error_response(500, "简历解析失败")
+        return success_response(result)
+    except Exception as e:
+        logger.error(f"[API] /profile/parse-resume 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ============================================================
+# 2.3.1 仅解析姓名与出生日期（供 Java 等外部服务调用，走 Python AI/兜底）
+# POST /api/v1/profile/parse-basic-info
+# ============================================================
+@profile_bp.route("/parse-basic-info", methods=["POST"])
+def parse_basic_info():
+    """
+    从简历原文中仅解析姓名、出生日期、性别。
+    请求体：{ "resume_text": "简历全文..." }
+    返回：{ "name", "nickname", "birth_date", "birthday", "gender" }
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        resume_text = body.get("resume_text") or ""
+        if not resume_text or len(resume_text.strip()) < 10:
+            return success_response({
+                "name": "", "nickname": "", "birth_date": "", "birthday": "", "gender": ""
+            })
+        from profile.profile_service import parse_basic_info_from_resume
+        result = parse_basic_info_from_resume(resume_text)
+        return success_response(result)
+    except Exception as e:
+        logger.error(f"[API] /profile/parse-basic-info 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ============================================================
 # 2.4 获取简历解析结果
 # POST /api/v1/profile/resume-parse-result
 # ============================================================

@@ -11,6 +11,12 @@
     <link rel="stylesheet" href="styles.css?v=4">
     <!-- ECharts库 -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- 导出功能所需库 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
 </head>
 <body>
     <div id="app">
@@ -562,13 +568,14 @@
                     <div class="assessment-actions hidden" id="assessmentActions">
                         <button id="submitAssessmentBtn" class="btn-primary">提交测评</button>
                         <button id="viewReportBtn" class="btn-secondary hidden">查看测评报告</button>
+                        <button type="button" id="btnExitAssessment" class="btn-ghost">不想测评，返回</button>
                     </div>
                 </div>
                 <!-- 测评报告展示区（Holland + MBTI），完成后直接在此展示 -->
                 <div id="assessmentReportWrap" class="assessment-report-wrap hidden">
                     <div id="assessmentReportContent" class="assessment-report-content"></div>
                     <div class="assessment-report-footer no-print">
-                        <button type="button" id="btnBackToAssessment" class="btn-secondary">返回测评界面</button>
+                        <button type="button" id="btnBackToAssessment" class="btn-secondary">返回职业测评初始界面</button>
                         <button type="button" id="btnGoToCareerPlan" class="btn-primary">基于测评结果生成职业规划</button>
                     </div>
                 </div>
@@ -674,6 +681,21 @@
                                     <div class="ai-gen-form-title">✨ AI生成岗位画像</div>
                                     <div class="ai-gen-form-sub">输入岗位名称，AI 自动分析技能要求、薪资区间与市场需求</div>
                                 </div>
+
+                                <!-- 🤖 Agent 智能对话生成（表单兜底保留） -->
+                                <div class="ai-agent-card" id="aiAgentCard">
+                                    <div class="ai-agent-title">🤖 智能对话生成</div>
+                                    <div class="ai-agent-desc">请输入你的需求（例如：生成互联网/AI行业应届生算法工程师画像）</div>
+                                    <div class="ai-agent-row">
+                                        <input type="text" id="aiAgentQuery" class="ai-agent-input" placeholder="请输入岗位画像生成需求，回车提交" autocomplete="off">
+                                        <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn" disabled>
+                                            <span class="ai-agent-btn-text">智能生成</span>
+                                            <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="ai-agent-tip">智能体将自动解析并填充下方表单，信息完整时会自动触发「开始生成」</div>
+                                </div>
+
                                 <div class="ai-gen-field">
                                     <label class="ai-gen-label">岗位名称 <span class="required">*</span></label>
                                     <div class="ai-gen-input-wrap">
@@ -752,6 +774,49 @@
                     <button type="button" class="real-data-modal-close" id="realDataModalClose" aria-label="关闭">&times;</button>
                 </div>
                 <div id="realDataModalBody" class="real-data-modal-body"></div>
+            </div>
+        </div>
+
+        <!-- Agent 补充信息弹窗（岗位画像 AI生成） -->
+        <div id="aiAgentSupplementModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width:520px;">
+                <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3 style="margin:0;">补充信息</h3>
+                    <button type="button" id="aiAgentSupplementClose" class="btn-ghost" aria-label="关闭">&times;</button>
+                </div>
+                <p class="hint-text" style="margin:0 0 14px 0;">智能解析缺少部分字段，请补充后继续自动生成。</p>
+                <div class="form-group">
+                    <label>岗位名称</label>
+                    <input type="text" id="aiAgentSupJobName" placeholder="如：算法工程师">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>行业方向</label>
+                        <select id="aiAgentSupIndustry">
+                            <option value="">请选择</option>
+                            <option value="互联网/AI">互联网/AI</option>
+                            <option value="新能源">新能源</option>
+                            <option value="金融">金融</option>
+                            <option value="医疗">医疗</option>
+                            <option value="制造业">制造业</option>
+                            <option value="咨询">咨询</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>经验阶段</label>
+                        <select id="aiAgentSupExperience">
+                            <option value="">请选择</option>
+                            <option value="应届生">应届生</option>
+                            <option value="1-3年">1-3年</option>
+                            <option value="3-5年">3-5年</option>
+                            <option value="5年以上">5年以上</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
+                    <button type="button" id="aiAgentSupplementCancel" class="btn-secondary">取消</button>
+                    <button type="button" id="aiAgentSupplementOk" class="btn-primary">继续生成</button>
+                </div>
             </div>
         </div>
 
@@ -1022,6 +1087,10 @@
                             <span class="toolbar-icon">✨</span>
                             AI 润色
                         </button>
+                        <button id="reportAgentBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">🤖</span>
+                            智能体
+                        </button>
                         <select id="reportExportFormat" class="btn-toolbar-select">
                             <option value="pdf">PDF</option>
                             <option value="docx">Word</option>
@@ -1042,6 +1111,58 @@
                     <button id="reportBackToTop" class="btn-back-to-top hidden" title="回到顶部">↑ 回到顶部</button>
                 </div>
 
+                <!-- 智能体交互弹窗 -->
+                <div id="reportAgentModal" class="modal-overlay hidden">
+                    <div class="modal-content agent-modal">
+                        <div class="modal-header">
+                            <h3>职业规划智能体</h3>
+                            <button type="button" class="modal-close" id="closeAgentModal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="agent-info">
+                                <div class="agent-avatar">🤖</div>
+                                <div class="agent-details">
+                                    <h4>职业规划助手</h4>
+                                    <p>我是你的智能职业规划助手，可以帮你分析报告、提供建议、优化规划方案。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-chat-container">
+                                <div id="agentChatHistory" class="agent-chat-history">
+                                    <div class="agent-message">
+                                        <div class="message-avatar">🤖</div>
+                                        <div class="message-content">
+                                            <p>你好！我是你的职业规划智能助手。我可以帮你：</p>
+                                            <ul>
+                                                <li>分析你的职业规划报告</li>
+                                                <li>提供针对性的改进建议</li>
+                                                <li>优化你的职业发展路径</li>
+                                                <li>回答关于职业规划的问题</li>
+                                            </ul>
+                                            <p>请告诉我你需要什么帮助？</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="agent-chat-input">
+                                    <input type="text" id="agentChatInput" placeholder="输入你的问题或需求...">
+                                    <button id="agentSendBtn" class="btn-primary">发送</button>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-quick-actions">
+                                <h4>快捷操作</h4>
+                                <div class="quick-actions-grid">
+                                    <button class="quick-action-btn" data-action="analyze">分析报告</button>
+                                    <button class="quick-action-btn" data-action="improve">优化建议</button>
+                                    <button class="quick-action-btn" data-action="path">职业路径</button>
+                                    <button class="quick-action-btn" data-action="skills">技能提升</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 完整性检查结果弹窗 -->
                 <div id="reportCompletenessModal" class="modal-overlay hidden">
                     <div class="modal-content report-completeness-modal">
@@ -1061,20 +1182,90 @@
                             <button type="button" class="modal-close" id="closeEditModal">&times;</button>
                         </div>
                         <div class="modal-body">
+                            <!-- 职业目标设置 -->
                             <div class="edit-form-section">
-                                <label>激励寄语</label>
-                                <textarea id="editMotivationalMsg" rows="4" placeholder="修改报告末尾的激励寄语"></textarea>
+                                <h4>职业目标设置</h4>
+                                <div class="edit-form-grid">
+                                    <div class="edit-form-item">
+                                        <label>职业目标类型</label>
+                                        <select id="editCareerGoal">
+                                            <option value="">不修改</option>
+                                            <option value="技术专家">技术专家</option>
+                                            <option value="管理岗位">管理岗位</option>
+                                            <option value="创业">创业</option>
+                                            <option value="专业深耕">专业深耕</option>
+                                        </select>
+                                    </div>
+                                    <div class="edit-form-item">
+                                        <label>期望工作地点</label>
+                                        <input type="text" id="editWorkLocation" placeholder="如：北京、上海、杭州">
+                                    </div>
+                                </div>
+                                <div class="edit-form-grid">
+                                    <div class="edit-form-item">
+                                        <label>薪资预期</label>
+                                        <input type="text" id="editSalaryExpectation" placeholder="如：15k-25k、30k+">
+                                    </div>
+                                    <div class="edit-form-item">
+                                        <label>工作生活平衡</label>
+                                        <select id="editWorkLifeBalance">
+                                            <option value="">不修改</option>
+                                            <option value="高">高</option>
+                                            <option value="中">中</option>
+                                            <option value="低">低</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
+                            
+                            <!-- 目标设置 -->
                             <div class="edit-form-section">
-                                <label>短期目标 - 截止时间（如 2026.07）</label>
-                                <input type="text" id="editShortTermDeadline" placeholder="section_2 第一个目标的 deadline">
+                                <h4>目标设置</h4>
+                                <div class="edit-form-item">
+                                    <label>短期目标（1年内）</label>
+                                    <textarea id="editShortTermGoal" rows="3" placeholder="如：成功入职目标岗位，获得2+ offer"></textarea>
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>短期目标截止时间</label>
+                                    <input type="text" id="editShortTermDeadline" placeholder="如：2026.07">
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>中期目标（3-5年）</label>
+                                    <textarea id="editMidTermGoal" rows="3" placeholder="如：成长为中高级工程师，独立负责核心项目"></textarea>
+                                </div>
                             </div>
+                            
+                            <!-- 行动计划 -->
                             <div class="edit-form-section">
-                                <label>行动计划 - 时间投入（如 每周12小时）</label>
-                                <input type="text" id="editTimeInvestment" placeholder="section_3 第一个任务的时间投入">
+                                <h4>行动计划</h4>
+                                <div class="edit-form-item">
+                                    <label>短期行动计划</label>
+                                    <textarea id="editShortTermPlan" rows="3" placeholder="如：学习核心技术栈，完成2个项目，准备面试"></textarea>
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>每周时间投入</label>
+                                    <input type="text" id="editTimeInvestment" placeholder="如：每周12小时">
+                                </div>
                             </div>
+                            
+                            <!-- 报告内容 -->
+                            <div class="edit-form-section">
+                                <h4>报告内容</h4>
+                                <div class="edit-form-item">
+                                    <label>激励寄语</label>
+                                    <textarea id="editMotivationalMsg" rows="3" placeholder="修改报告末尾的激励寄语"></textarea>
+                                </div>
+                                <div class="edit-form-item">
+                                    <label>关键要点</label>
+                                    <textarea id="editKeyTakeaways" rows="3" placeholder="修改报告中的关键要点"></textarea>
+                                </div>
+                            </div>
+                            
                             <p class="edit-form-hint">仅填写需要修改的字段，留空则不变</p>
-                            <button type="button" id="saveReportEditsBtn" class="btn-primary">保存修改</button>
+                            <div class="edit-form-actions">
+                                <button type="button" id="saveReportEditsBtn" class="btn-primary">保存修改</button>
+                                <button type="button" id="previewReportBtn" class="btn-secondary">预览效果</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1182,9 +1373,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="api.js?v=9&t=20260221"></script>
-    <script src="app.js?v=9&t=20260221"></script>
-    <link rel="stylesheet" href="styles.css?v=8&t=20240219">
+    <script src="api.js?v=10&t=20260223"></script>
+    <script src="app.js?v=10&t=20260223"></script>
+    <link rel="stylesheet" href="styles.css?v=9&t=20260223">
     
     <!-- 粒子效果脚本 -->
     <script>
@@ -1273,5 +1464,84 @@
             });
         });
     </script>
+
+    <!-- AI 简历解析加载动画弹窗 -->
+    <div class="resume-parse-overlay" id="resumeParseOverlay">
+        <div class="resume-parse-dialog">
+            <div class="resume-parse-glow"></div>
+            <div class="resume-parse-body">
+                <div class="resume-parse-ai-wrap">
+                    <div class="resume-parse-ai-icon" id="resumeParseAiIcon">🤖</div>
+                </div>
+                <div class="resume-parse-title" id="resumeParseTitle">AI 正在解析您的简历</div>
+                <div class="resume-parse-sub" id="resumeParseSub">请稍候，这通常需要 5–10 秒</div>
+                <div class="resume-parse-steps" id="resumeParseSteps">
+                    <div class="resume-parse-step" id="resumeStep0">
+                        <div class="resume-step-icon">📄</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">读取简历文件</div>
+                            <div class="resume-step-desc">提取 PDF 文本内容</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus0">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep1">
+                        <div class="resume-step-icon">👤</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">解析基本信息 <span class="resume-typing" id="resumeTyping1"></span></div>
+                            <div class="resume-step-desc">姓名、联系方式、出生日期</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus1">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep2">
+                        <div class="resume-step-icon">🎓</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">解析教育背景 <span class="resume-typing" id="resumeTyping2"></span></div>
+                            <div class="resume-step-desc">学校、专业、GPA、年级</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus2">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep3">
+                        <div class="resume-step-icon">💻</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">提取专业技能 <span class="resume-typing" id="resumeTyping3"></span></div>
+                            <div class="resume-step-desc">技术栈、工具、证书</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus3">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep4">
+                        <div class="resume-step-icon">🏢</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">解析项目 & 实习经历 <span class="resume-typing" id="resumeTyping4"></span></div>
+                            <div class="resume-step-desc">项目成果、实习公司、职责</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus4">—</div>
+                    </div>
+                    <div class="resume-parse-step" id="resumeStep5">
+                        <div class="resume-step-icon">✨</div>
+                        <div class="resume-step-info">
+                            <div class="resume-step-name">AI 能力画像生成 <span class="resume-typing" id="resumeTyping5"></span></div>
+                            <div class="resume-step-desc">综合评估，自动填充档案</div>
+                        </div>
+                        <div class="resume-step-status resume-status-wait" id="resumeStatus5">—</div>
+                    </div>
+                </div>
+                <div class="resume-parse-progress-wrap" id="resumeParseProgressWrap">
+                    <div class="resume-parse-progress-header">
+                        <span>总体进度</span>
+                        <span class="resume-parse-progress-num" id="resumeParseProgressNum">0%</span>
+                    </div>
+                    <div class="resume-parse-progress-bg">
+                        <div class="resume-parse-progress-fill" id="resumeParseProgressFill"></div>
+                    </div>
+                </div>
+                <div class="resume-parse-done-state" id="resumeParseDoneState">
+                    <div class="resume-parse-done-check">✓</div>
+                    <div class="resume-parse-done-title">解析完成！</div>
+                    <div class="resume-parse-done-sub">已自动填充 <strong id="resumeParseDoneCount">0</strong> 项档案信息，请核对后提交</div>
+                    <button type="button" class="resume-parse-done-btn" id="resumeParseDoneBtn">查看填充结果 →</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
