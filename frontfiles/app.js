@@ -302,61 +302,50 @@ class CareerPlanningApp {
         document.getElementById('jobProfileIndustry')?.addEventListener('change', () => this.loadJobProfileList(1));
         document.getElementById('jobProfileLevel')?.addEventListener('change', () => this.loadJobProfileList(1));
 
-        // 加载图谱：事件委托到岗位画像页面，点击按钮或其内部文字都能触发
+        // 加载图谱：严格按 career_graph_v2 + 指令，流式请求晋升/转岗并渲染
         document.getElementById('jobProfilePage')?.addEventListener('click', (e) => {
             if (e.target && e.target.closest && e.target.closest('#jobProfileGraphBtn')) {
                 const keyword = (document.getElementById('graphJobName')?.value || '').trim();
-                console.log('加载图谱被点击', keyword || '(空)');
-                this.loadJobRelationGraphBySearch();
+                if (!keyword) {
+                    this.showToast('请输入岗位名称', 'error');
+                    return;
+                }
+                this.loadCareerGraph(keyword);
             }
         });
 
-        // 关联图谱：按岗位名称搜索，输入时下拉提示
+        // 关联图谱：输入时优先调用 /job/search（CSV 岗位搜索）下拉联想，与 career_graph_v2 指令一致
         const graphJobNameInput = document.getElementById('graphJobName');
         const graphSuggestionsEl = document.getElementById('graphJobSuggestions');
-        if (graphJobNameInput && graphSuggestionsEl) {
-            let graphSuggestDebounce = null;
+        if (graphJobNameInput) {
+            let graphSearchDebounce = null;
             graphJobNameInput.addEventListener('input', () => {
                 this.selectedGraphJobId = null;
                 const keyword = graphJobNameInput.value.trim();
-                clearTimeout(graphSuggestDebounce);
-                if (!keyword) {
-                    graphSuggestionsEl.classList.add('hidden');
-                    graphSuggestionsEl.innerHTML = '';
+                clearTimeout(graphSearchDebounce);
+                if (!keyword || keyword.length < 1) {
+                    document.getElementById('searchDropdown')?.remove();
+                    if (graphSuggestionsEl) { graphSuggestionsEl.classList.add('hidden'); graphSuggestionsEl.innerHTML = ''; }
                     return;
                 }
-                graphSuggestDebounce = setTimeout(async () => {
-                    const result = await getJobProfiles(1, 15, keyword, '', '');
-                    if (result.success && result.data.list && result.data.list.length > 0) {
-                        this._graphJobSuggestions = result.data.list;
-                        graphSuggestionsEl.innerHTML = result.data.list.map(job =>
-                            `<div class="graph-suggestion-item" data-job-id="${(job.job_id || '')}">${(job.job_name || '-').replace(/</g, '&lt;')}</div>`
-                        ).join('');
-                        graphSuggestionsEl.classList.remove('hidden');
-                        graphSuggestionsEl.querySelectorAll('.graph-suggestion-item').forEach(el => {
-                            el.addEventListener('click', () => {
-                                graphJobNameInput.value = el.textContent || '';
-                                this.selectedGraphJobId = el.dataset.jobId || null;
-                                graphSuggestionsEl.classList.add('hidden');
-                            });
-                        });
-                    } else {
-                        this._graphJobSuggestions = [];
-                        const hint = (!result.success && result.msg && result.msg.indexOf('5001') !== -1) ? result.msg : '暂无匹配岗位';
-                        graphSuggestionsEl.innerHTML = '<div class="graph-suggestion-empty">' + (hint.replace(/</g, '&lt;')) + '</div>';
-                        graphSuggestionsEl.classList.remove('hidden');
-                    }
-                }, 300);
+                graphSearchDebounce = setTimeout(() => {
+                    document.getElementById('searchDropdown')?.remove();
+                    if (graphSuggestionsEl) { graphSuggestionsEl.classList.add('hidden'); graphSuggestionsEl.innerHTML = ''; }
+                }, 280);
             });
             graphJobNameInput.addEventListener('blur', () => {
-                setTimeout(() => graphSuggestionsEl.classList.add('hidden'), 200);
+                setTimeout(() => {
+                    document.getElementById('searchDropdown')?.remove();
+                    if (graphSuggestionsEl) graphSuggestionsEl.classList.add('hidden');
+                }, 200);
             });
-            graphJobNameInput.addEventListener('focus', () => {
-                if (this._graphJobSuggestions && this._graphJobSuggestions.length > 0) {
-                    graphSuggestionsEl.classList.remove('hidden');
-                }
-            });
+            graphJobNameInput.addEventListener('focus', () => {});
         }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#searchDropdown') && e.target !== graphJobNameInput) {
+                document.getElementById('searchDropdown')?.remove();
+            }
+        });
 
         document.getElementById('jobDetailModalClose')?.addEventListener('click', () => this.closeJobDetailModal());
         document.getElementById('jobDetailModal')?.addEventListener('click', (e) => {
@@ -1656,7 +1645,7 @@ class CareerPlanningApp {
         if (overlay) overlay.classList.remove('show');
     }
 
-    _resumeParsePollSteps(userId, taskId, maxAttempts = 10) {
+    _resumeParsePollSteps(userId, taskId, maxAttempts = 30) {
         const statusDiv = document.getElementById('uploadStatus');
         let attempts = 0;
         let stepIndex = 1;
@@ -1766,7 +1755,7 @@ class CareerPlanningApp {
     }
 
     // 轮询简历解析结果（无弹窗时使用，如直接调用）
-    async pollResumeParseResult(userId, taskId, maxAttempts = 10) {
+    async pollResumeParseResult(userId, taskId, maxAttempts = 30) {
         let attempts = 0;
         const statusDiv = document.getElementById('uploadStatus');
 
@@ -4361,6 +4350,278 @@ class CareerPlanningApp {
         });
     }
 
+    // 关联图谱：按指令 + career_graph_v2 严格模拟，流式请求 /job/promotion-path、/job/transfer-path
+    async loadCareerGraph(jobName) {
+        const graphContainer = document.getElementById('jobProfileGraph');
+        if (!graphContainer) return;
+        const baseURL = API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5001/api/v1';
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        graphContainer.innerHTML = `
+            <div class="graph-job-header job-header-v2">
+                <div class="jh-title-v2">🎯 ${esc(jobName)}</div>
+                <div class="jh-metas-v2">
+                    <span class="jh-meta-v2">🔥 薪资参考</span>
+                    <span class="jh-meta-v2">📊 需求热度</span>
+                    <span class="jh-meta-v2">📍 行业</span>
+                </div>
+            </div>
+            <div class="graph-tab-bar-v2">
+                <button type="button" class="graph-tab-v2 active" data-graph-panel="promo">📋 晋升路径</button>
+                <button type="button" class="graph-tab-v2" data-graph-panel="transfer">🔄 换岗路径</button>
+            </div>
+            <div class="graph-panel-v2 active" id="panel-promo-v2">
+                <div id="promotionContainer" class="promo-container-v2"></div>
+            </div>
+            <div class="graph-panel-v2" id="panel-transfer-v2">
+                <div class="transfer-container-v2">
+                    <div class="legend-row-v2">
+                        <span class="leg-v2"><span class="leg-line-v2" style="background:#00b894"></span>高匹配（≥80%）</span>
+                        <span class="leg-v2"><span class="leg-line-v2" style="background:#f5a623"></span>中匹配（60-79%）</span>
+                        <span class="leg-v2"><span class="leg-line-v2" style="background:#ff4d6d;border-top:2px dashed #ff4d6d;background:none"></span>低匹配（&lt;60%）</span>
+                    </div>
+                    <div id="transferContainer" class="graph-svg-wrap-v2" style="min-height:880px;position:relative"></div>
+                </div>
+            </div>`;
+        this._graphCurrentJobName = jobName;
+        this._graphTransferLoaded = false;
+        graphContainer.querySelectorAll('.graph-tab-v2').forEach(btn => {
+            btn.addEventListener('click', () => {
+                graphContainer.querySelectorAll('.graph-tab-v2').forEach(b => b.classList.remove('active'));
+                graphContainer.querySelectorAll('.graph-panel-v2').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                const panelId = btn.dataset.graphPanel;
+                const panelEl = document.getElementById('panel-' + panelId + '-v2');
+                if (panelEl) panelEl.classList.add('active');
+                if (panelId === 'transfer' && !this._graphTransferLoaded && this._graphCurrentJobName) {
+                    this._graphTransferLoaded = true;
+                    this.loadTransferPath(this._graphCurrentJobName);
+                }
+            });
+        });
+        this.loadPromotionPath(jobName);
+    }
+
+    async loadPromotionPath(jobName) {
+        const container = document.getElementById('promotionContainer');
+        if (!container) return;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div style="font-size:36px;margin-bottom:12px;animation:spin 1.5s linear infinite;display:inline-block">⚙️</div><div style="font-size:14px;margin-top:8px">加载晋升路径...</div></div>`;
+        try {
+            const result = await getCareerPath(jobName);
+            if (result.code === 200 && result.data && result.data.path && result.data.path.length) {
+                const path = result.data.path;
+                const stages = path.map((p, i) => ({
+                    level: i + 1,
+                    title: p.stage,
+                    years: p.years || '',
+                    salary: p.salary || '面议',
+                    badge: i === 0 ? '入门级' : i === path.length - 1 ? '顶端' : '进阶',
+                    description: '',
+                    skills: p.skills || [],
+                    companies: '',
+                    promotion_hint: ''
+                }));
+                this.renderPromotionPath({ stages }, container);
+            } else {
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的晋升路径数据</div>';
+            }
+        } catch (e) {
+            container.innerHTML = `<div style="color:#ff4d6d;padding:20px;text-align:center">请求失败: ${(e.message||'').replace(/</g,'&lt;')}</div>`;
+        }
+    }
+
+    renderPromotionPath(data, container) {
+        const stages = data.stages || [];
+        if (!stages.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无数据</div>'; return; }
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;'));
+        let html = '<div style="display:flex;flex-direction:column;align-items:center;padding:10px 20px 20px;position:relative">';
+        stages.forEach((stage, idx) => {
+            if (idx > 0 && !stages[idx - 1].forks) {
+                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#4f7cff,#7c5cff)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #7c5cff"></div><div style="position:absolute;left:calc(50% + 16px);top:50%;transform:translateY(-50%);white-space:nowrap;font-size:10px;font-weight:600;color:#5a6a8a;background:#fff;border:1px solid rgba(79,124,255,0.12);padding:2px 8px;border-radius:10px">${esc(stages[idx-1].promotion_hint || '持续积累')}</div></div>`;
+            }
+            if (stage.forks) {
+                html += '<div style="display:flex;gap:14px;width:100%">';
+                (stage.forks || []).forEach(fork => {
+                    const isExpert = (fork.route || '') === '专家路线';
+                    html += `<div style="flex:1;background:#fff;border:1.5px solid ${isExpert?'rgba(124,92,255,0.25)':'rgba(245,166,35,0.25)'};border-radius:14px;padding:16px 18px">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:18px">${isExpert?'🔬':'👔'}</span><span style="font-size:14px;font-weight:700;color:#1a2340">${esc(fork.title)}</span><span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${isExpert?'rgba(124,92,255,0.09)':'rgba(245,166,35,0.1)'};color:${isExpert?'#6644cc':'#c47d00'}">${esc(fork.route)}</span></div>
+                        <div style="font-size:12px;color:#5a6a8a;margin-bottom:8px;line-height:1.6">${esc(fork.description)}</div>
+                        <div style="font-size:12px;font-weight:700;color:#c47d00;margin-bottom:8px">💰 ${esc(stage.salary)}</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${(fork.skills||[]).map(s=>`<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.14)">${esc(s)}</span>`).join('')}</div>
+                        <div style="font-size:11px;color:#aab4cc">${esc(fork.companies)}</div></div>`;
+                });
+                html += '</div>';
+            } else {
+                const cur = !!stage.is_current;
+                const dotIcon = idx === 0 ? '🌱' : cur ? '🤖' : idx === stages.length - 2 ? '⭐' : '🚀';
+                html += `<div style="display:flex;align-items:center;width:100%;gap:16px">
+                    <div style="width:200px;flex-shrink:0;text-align:right;padding-right:8px"><div style="font-size:11px;font-weight:600;color:#aab4cc">${esc(stage.years)}${cur?' ← 当前':''}</div><div style="font-size:13px;font-weight:700;font-family:monospace;color:${cur?'#7c5cff':'#4f7cff'}">${esc(stage.salary)}</div></div>
+                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:48px"><div style="width:44px;height:44px;border-radius:50%;background:${cur?'linear-gradient(135deg,#4f7cff,#7c5cff)':'#fff'};border:3px solid ${cur?'#fff':'#4f7cff'};display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:${cur?'0 4px 18px rgba(79,124,255,0.4)':'0 2px 12px rgba(79,124,255,0.2)'};position:relative;z-index:2">${dotIcon}</div></div>
+                    <div style="flex:1;background:${cur?'linear-gradient(135deg,rgba(79,124,255,0.06),rgba(124,92,255,0.04))':'#fff'};border:1.5px solid ${cur?'rgba(79,124,255,0.3)':idx===0?'rgba(0,184,148,0.2)':'rgba(79,124,255,0.12)'};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden">
+                        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:14px 0 0 14px;background:${cur?'linear-gradient(180deg,#4f7cff,#7c5cff)':idx===0?'#00b894':'#f5a623'}"></div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:14px;font-weight:700;color:#1a2340">${esc(stage.title)}</span><span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:${cur?'rgba(79,124,255,0.1)':idx===0?'rgba(0,184,148,0.1)':'rgba(245,166,35,0.1)'};color:${cur?'#3d65e0':idx===0?'#009e7a':'#c47d00'};border:1px solid ${cur?'rgba(79,124,255,0.2)':idx===0?'rgba(0,184,148,0.2)':'rgba(245,166,35,0.2)'}">${esc(stage.badge)}</span></div>
+                        <div style="font-size:12px;color:#5a6a8a;line-height:1.6;margin-bottom:10px">${esc(stage.description)}</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${(stage.skills||[]).map(s=>`<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.14)">${esc(s)}</span>`).join('')}</div>
+                        <div style="font-size:11px;color:#aab4cc">代表：${esc(stage.companies)}</div></div></div>`;
+            }
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    async loadTransferPath(jobName) {
+        const container = document.getElementById('transferContainer');
+        if (!container) return;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div style="font-size:36px;margin-bottom:12px">🔄</div><div style="font-size:14px;margin-top:8px">加载转岗图谱...</div></div>`;
+        try {
+            const result = await getRelationGraphByJobName(jobName);
+            if (result.code === 200 && result.data && Array.isArray(result.data) && result.data.length) {
+                this.renderTransferGraphECharts(result.data, result.center_job || { job_name: jobName }, container);
+            } else {
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的转岗数据</div>';
+            }
+        } catch (e) {
+            container.innerHTML = `<div style="color:#ff4d6d;padding:20px;text-align:center">请求失败: ${(e.message||'').replace(/</g,'&lt;')}</div>`;
+        }
+    }
+
+    renderTransferGraphECharts(relations, centerJob, container) {
+        if (!relations.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无转岗数据</div>'; return; }
+        const list = relations.slice(0, 6);
+        const centerName = (centerJob && centerJob.job_name) ? centerJob.job_name : '当前岗位';
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        const W = Math.max(container.offsetWidth || 800, 800);
+        const H = 880;
+        container.innerHTML = '';
+        container.className = 'graph-svg-wrap-v2 graph-transfer-canvas';
+        container.style.cssText = 'position:relative;width:100%;height:' + H + 'px;min-height:' + H + 'px;';
+        const cx = W / 2, cy = H * 0.55;
+        const baseRadius = Math.min(W, H) * 0.36;
+        const radius = baseRadius * 1.30;
+        const CARD = { center: { w: 152, h: 120 }, job: { w: 160, h: 240 } };
+        const pos = { center: { x: cx, y: cy } };
+        const offsetPx = 40;
+        list.forEach((rel, i) => {
+            const angle = (2 * Math.PI * i / list.length) - Math.PI / 2;
+            let dx = radius * Math.cos(angle);
+            let dy = radius * Math.sin(angle);
+            if (i === 0) { dx -= offsetPx; }
+            else if (i === 3) { dx += offsetPx; }
+            pos[esc(rel.job)] = { x: cx + dx, y: cy + dy };
+        });
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'graph-transfer-svg');
+        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        const defs = '<defs>' +
+            '<marker id="arrow-green" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#00b894" stroke="#00b894"/></marker>' +
+            '<marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#f5a623" stroke="#f5a623"/></marker>' +
+            '<marker id="arrow-red" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#ff4d6d" stroke="#ff4d6d"/></marker>' +
+            '<marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#7c5cff" stroke="#7c5cff" opacity="0.7"/></marker>' +
+            '</defs>';
+        let pathsHtml = '';
+        const pathLabels = [];
+        const bezierOffset = 72;
+        list.forEach(rel => {
+            const job = (rel.job || '').trim();
+            const match = Number(rel.match) || 0;
+            const diffText = match >= 80 ? '低' : match >= 60 ? '中' : '高';
+            const color = match >= 80 ? '#00b894' : match >= 60 ? '#f5a623' : '#ff4d6d';
+            const arrId = match >= 80 ? 'arrow-green' : match >= 60 ? 'arrow-orange' : 'arrow-red';
+            const dash = match >= 80 ? '' : (match >= 60 ? 'stroke-dasharray="10 6"' : 'stroke-dasharray="7 5"');
+            const dashClass = dash ? ' graph-path-dash' : '';
+            const p1 = pos.center, p2 = pos[esc(job)];
+            if (!p2) return;
+            const len = Math.sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)) || 1;
+            const ux = (p2.x - p1.x) / len, uy = (p2.y - p1.y) / len;
+            const halfW = CARD.job.w / 2, halfH = CARD.job.h / 2;
+            let gap = len;
+            if (Math.abs(ux) > 1e-6 && Math.abs(uy) > 1e-6) gap = Math.min(halfW / Math.abs(ux), halfH / Math.abs(uy));
+            else if (Math.abs(ux) > 1e-6) gap = halfW / Math.abs(ux);
+            else if (Math.abs(uy) > 1e-6) gap = halfH / Math.abs(uy);
+            const p2Edge = { x: p2.x - ux * gap, y: p2.y - uy * gap };
+            const midX = (p1.x + p2Edge.x) / 2, midY = (p1.y + p2Edge.y) / 2;
+            const perpX = (p2Edge.y - p1.y) / (Math.sqrt((p2Edge.x - p1.x) ** 2 + (p2Edge.y - p1.y) ** 2) || 1);
+            const perpY = (p1.x - p2Edge.x) / (Math.sqrt((p2Edge.x - p1.x) ** 2 + (p2Edge.y - p1.y) ** 2) || 1);
+            const cpx = midX + perpX * bezierOffset;
+            const cpy = midY + perpY * bezierOffset;
+            pathsHtml += '<path class="' + dashClass.trim() + '" d="M' + p1.x + ',' + p1.y + ' Q' + cpx + ',' + cpy + ' ' + p2Edge.x + ',' + p2Edge.y + '" fill="none" stroke="' + color + '" stroke-width="2.5" ' + dash + ' opacity="0.9" marker-end="url(#' + arrId + ')"/>';
+            const labelX = p1.x * 0.4 + p2Edge.x * 0.6 + perpX * 12;
+            const labelY = p1.y * 0.4 + p2Edge.y * 0.6 + perpY * 12;
+            pathLabels.push({ x: labelX, y: labelY, text: match + '% · ' + diffText, color: color });
+        });
+        svg.innerHTML = defs + pathsHtml;
+        container.appendChild(svg);
+        pathLabels.forEach(l => {
+            const lbl = document.createElement('div');
+            lbl.className = 'graph-edge-label';
+            lbl.style.cssText = 'left:' + l.x + 'px;top:' + l.y + 'px;color:' + l.color + ';border-color:' + l.color + '40';
+            lbl.textContent = l.text;
+            container.appendChild(lbl);
+        });
+        const centerEl = document.createElement('div');
+        centerEl.className = 'g-node graph-center-node';
+        centerEl.style.cssText = 'position:absolute;left:' + (cx - CARD.center.w / 2) + 'px;top:' + (cy - CARD.center.h / 2) + 'px;z-index:1';
+        centerEl.innerHTML = '<div class="cn-product"><div style="font-size:28px;margin-bottom:8px">🤖</div><div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:6px">' + esc(centerName) + '</div><div style="font-size:10px;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.35);padding:3px 10px;border-radius:10px;display:inline-block">当前岗位</div></div>';
+        container.appendChild(centerEl);
+        list.forEach((rel, i) => {
+            const job = (rel.job || '').trim() || ('岗位' + (i + 1));
+            const match = Number(rel.match) || 0;
+            const sal = rel.salary || '面议';
+            const skills = Array.isArray(rel.skills) ? rel.skills : [];
+            const skillsText = skills.length ? skills.slice(0, 5).join(' · ') : '—';
+            const diffText = match >= 80 ? '低' : match >= 60 ? '中' : '高';
+            const cycleText = match >= 80 ? '3-6月' : match >= 60 ? '6-12月' : '12-24月';
+            const color = match >= 80 ? '#00b894' : match >= 60 ? '#f5a623' : '#ff4d6d';
+            const diffBg = match >= 80 ? 'rgba(0,184,148,0.12)' : match >= 60 ? 'rgba(245,166,35,0.12)' : 'rgba(255,77,109,0.1)';
+            const diffColor = match >= 80 ? '#009e7a' : match >= 60 ? '#c47d00' : '#d03050';
+            const diffBorder = match >= 80 ? 'rgba(0,184,148,0.25)' : match >= 60 ? 'rgba(245,166,35,0.25)' : 'rgba(255,77,109,0.2)';
+            const p = pos[esc(rel.job)];
+            if (!p) return;
+            const card = document.createElement('div');
+            card.className = 'g-node graph-job-node graph-job-node-product';
+            card.style.cssText = 'position:absolute;left:' + (p.x - CARD.job.w / 2) + 'px;top:' + (p.y - CARD.job.h / 2) + 'px;z-index:1;cursor:default';
+            card.style.animationDelay = (i * 0.07) + 's';
+            const barStyle = '--bar-pct:' + match + '%;background:' + color + ';animation-delay:' + (0.25 + i * 0.06) + 's';
+            card.innerHTML = '<div class="jn" style="width:160px;background:#fff;border:1.5px solid ' + color + '50;border-radius:12px;padding:12px 14px;box-shadow:0 2px 12px rgba(79,100,200,0.08)">' +
+                '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><div style="width:32px;height:32px;border-radius:10px;background:' + color + '18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📌</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:#1a2340;line-height:1.35">' + esc(job) + '</div><div style="font-size:10px;color:#aab4cc;margin-top:2px">' + esc(sal) + '</div></div></div>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;color:#aab4cc">匹配度</span><span style="font-size:11px;font-weight:700;color:' + color + '">' + match + '%</span></div>' +
+                '<div class="graph-job-bar-bg"><div class="graph-job-bar-fill" style="' + barStyle + '"></div></div>' +
+                '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">' +
+                '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:' + diffBg + ';color:' + diffColor + ';border:1px solid ' + diffBorder + '">难度' + diffText + '</span>' +
+                '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:rgba(79,124,255,0.08);color:#3d65e0;border:1px solid rgba(79,124,255,0.18)">⏱ ' + cycleText + '</span></div>' +
+                '<div style="font-size:9px;color:#5a6a8a;line-height:1.4;margin-bottom:6px"><span style="color:#4f7cff;font-weight:600">可迁移：</span>' + esc(skillsText) + '</div>' +
+                '<div style="font-size:9px;color:#aab4cc;line-height:1.35">技能重叠度高，转岗成本较低</div></div>';
+            container.appendChild(card);
+        });
+    }
+
+    async _openRecruitmentsModal(jobName) {
+        const list = await getJobRecruitments(jobName);
+        const rows = (list && list.code === 200 && list.data) ? list.data : [];
+        const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
+        const fieldOrder = ['职位编号', '职位名称', '工作地址', '薪资范围', '企业性质', '公司全称', '人员规模', '所属行业', '职位描述', '公司简介'];
+        let contentHtml = '';
+        if (rows.length) {
+            contentHtml = rows.map((r, idx) => {
+                let rowsHtml = fieldOrder.map(key => '<tr><th style="text-align:right;width:100px;padding:8px 12px;font-weight:600;color:#5a6a8a;font-size:12px;border-bottom:1px solid rgba(79,124,255,0.08);vertical-align:top">' + esc(key) + '</th><td style="padding:8px 12px;color:#1a2340;font-size:13px;border-bottom:1px solid rgba(79,124,255,0.08);word-break:break-all">' + esc(r[key]) + '</td></tr>').join('');
+                return '<div class="graph-recruit-vertical-block" style="margin-bottom:20px;border:1px solid rgba(79,124,255,0.12);border-radius:12px;overflow:hidden"><div style="background:rgba(79,124,255,0.06);padding:8px 12px;font-size:12px;font-weight:600;color:#1a2340">第 ' + (idx + 1) + ' 条</div><table style="width:100%;border-collapse:collapse;font-size:13px">' + rowsHtml + '</table></div>';
+            }).join('');
+        } else {
+            contentHtml = '<div style="text-align:center;padding:32px;color:#aab4cc;font-size:14px">暂无该岗位的招聘数据</div>';
+        }
+        const overlay = document.createElement('div');
+        overlay.id = 'graphRecruitModalOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+        const box = document.createElement('div');
+        box.style.cssText = 'background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.15);max-width:720px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column';
+        box.innerHTML = '<div style="padding:16px 20px;border-bottom:1px solid rgba(79,124,255,0.12);display:flex;align-items:center;justify-content:space-between"><h3 style="margin:0;font-size:16px;font-weight:700;color:#1a2340">📋 「' + esc(jobName) + '」招聘信息（来自数据集）</h3><button type="button" class="graph-recruit-close" style="border:none;background:none;font-size:20px;cursor:pointer;color:#5a6a8a;padding:4px">×</button></div>' +
+            '<div style="overflow:auto;flex:1;padding:16px">' + contentHtml + '</div>';
+        overlay.appendChild(box);
+        box.querySelector('.graph-recruit-close').onclick = () => overlay.remove();
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        document.body.appendChild(overlay);
+    }
+
     // 4.3 加载岗位关联图谱：调用 POST /api/v1/job/relation-graph，用返回的 transfer_graph 渲染转岗节点（无硬编码补全）
     async loadJobRelationGraph(jobId) {
         const graphContainer = document.getElementById('jobProfileGraph');
@@ -6527,9 +6788,7 @@ class CareerPlanningApp {
         const sortedByScore = allAbilities.length ? [...allAbilities].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)) : [];
         const topAbility = sortedByScore[0] || null;
         const secondAbility = sortedByScore[1] || null;
-        // 性格特质：展示时最低 20 分，避免旧报告或 AI 返回 0 分
         const TRAIT_MAX_SCORE = 100;
-        const safeTraitScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(20, Math.min(100, v)) : 20; };
         if (traits.length) {
             traits.forEach(t => { console.log('[性格特质]', t.trait_name, 'score=', t.score, '展示不低于 20'); });
         }

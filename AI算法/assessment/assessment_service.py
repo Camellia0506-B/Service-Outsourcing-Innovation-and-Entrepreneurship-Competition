@@ -364,16 +364,37 @@ class AssessmentService:
             holland_scores[k] = min(100, int(holland_scores[k] * 5))  # 假设每类型最多20分原始分
         for k in value_scores:
             value_scores[k] = min(100, int(value_scores[k] * 10))
-        # 能力分数：每题 1–5 分×20=20–100，每能力 3 题共 60–300，归一为 60–100（有区分度，避免全 60）
+
+        # 能力分数：非线性加权模型（基础分55，平方拉伸，权重，上限95，整体>80时+3%修正）
+        def calculate_score(similarity: float, weight: float = 1.0) -> int:
+            similarity = max(0.0, min(1.0, float(similarity)))
+            base_score = 55
+            nonlinear = pow(similarity, 1.5)
+            dynamic_score = nonlinear * 40 * weight
+            final_score = base_score + dynamic_score
+            if final_score > 95:
+                final_score = 95
+            return round(final_score)
+
+        ability_weights = {
+            "学习能力": 1.1,
+            "沟通表达能力": 1.0,
+            "创新能力": 1.2,
+            "逻辑分析能力": 1.15,
+            "执行能力": 1.05,
+        }
         raw_ability = dict(ability_scores)
         for k in ability_scores:
-            raw = ability_scores[k]
-            # 映射 0–300 -> 60–100：0->60, 150->80, 300->100
-            if raw <= 0:
-                normalized = 60
-            else:
-                normalized = 60 + (raw / 300.0) * 40
-            ability_scores[k] = max(60, min(100, int(round(normalized))))
+            raw = ability_scores[k]  # 原始 60–300
+            similarity = (raw - 60) / 240.0 if raw > 60 else 0.0
+            similarity = max(0.0, min(1.0, similarity))
+            w = ability_weights.get(k, 1.0)
+            ability_scores[k] = max(55, calculate_score(similarity, w))
+        avg_ability = sum(ability_scores.values()) / 5 if ability_scores else 0
+        if avg_ability > 80:
+            for k in ability_scores:
+                ability_scores[k] = min(98, round(ability_scores[k] * 1.03))
+                ability_scores[k] = max(55, ability_scores[k])
         logger.info("[能力计分] 原始分 raw_ability=%s 归一后 abilities=%s", raw_ability, dict(ability_scores))
 
         return {

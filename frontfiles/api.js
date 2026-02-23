@@ -1579,10 +1579,16 @@ async function getJobRelationGraph(jobId, graphType = 'all') {
     return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
 }
 
-// 4.3.1 获取岗位晋升路径（jobName 查询；返回 { code, data: { path } }，前端晋升路径卡片可接此或静态数据）
+// 关联图谱：岗位搜索联想（基于 CSV，/api/v1/job/search）
+async function searchJobsGraph(keyword) {
+    return await api.postToAI('/job/search', { keyword });
+}
+
+// 4.3.1 获取岗位晋升路径（GET，基于 job_profiles 表动态数据）
 async function getCareerPath(jobName) {
     const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
-    const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '算法工程师';
+    const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '';
+    if (!effective) return { code: 400, data: { path: [] } };
     const url = `${base}/job/career-path?jobName=${encodeURIComponent(effective)}`;
     try {
         const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
@@ -1591,6 +1597,38 @@ async function getCareerPath(jobName) {
     } catch (e) {
         console.error('getCareerPath:', e);
         return { code: 500, data: { path: [] } };
+    }
+}
+
+// 转岗图谱（GET，基于 job_profiles 表动态匹配度）
+async function getRelationGraphByJobName(jobName) {
+    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '';
+    if (!effective) return { code: 400, data: [], center_job: null };
+    const url = `${base}/job/relation-graph?jobName=${encodeURIComponent(effective)}`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        return json;
+    } catch (e) {
+        console.error('getRelationGraphByJobName:', e);
+        return { code: 500, data: [], center_job: null };
+    }
+}
+
+// 换岗卡片「查看详情」：拉取 3～5 条 CSV 招聘信息
+async function getJobRecruitments(keyword) {
+    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const effective = (keyword != null && String(keyword).trim() !== '') ? String(keyword).trim() : '';
+    if (!effective) return { code: 400, data: [] };
+    const url = `${base}/job/recruitments?keyword=${encodeURIComponent(effective)}`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        return json;
+    } catch (e) {
+        console.error('getJobRecruitments:', e);
+        return { code: 500, data: [] };
     }
 }
 

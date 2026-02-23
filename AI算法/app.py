@@ -2,6 +2,14 @@
 AI职业规划智能体 - 主应用入口
 整合所有模块，启动Flask服务
 """
+import os
+import sys
+
+# 保证无论从何目录执行 python app.py，工作目录均为本文件所在目录（AI算法）
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.getcwd() != _script_dir:
+    os.chdir(_script_dir)
+    sys.path.insert(0, _script_dir)
 
 from flask import Flask, jsonify, request
 from utils.logger_handler import logger
@@ -57,10 +65,12 @@ logger.info("[App] 注册路由: 职业规划报告模块 /api/v1/career/*")
 
 from api.matching_router import matching_bp
 from api.student_ability_router import student_bp
-
+from api.graph_router import graph_bp
 
 app.register_blueprint(matching_bp)
 app.register_blueprint(student_bp)
+app.register_blueprint(graph_bp)
+logger.info("[App] 注册路由: 关联图谱模块 /api/v1/job/search, /api/v1/job/promotion-path, /api/v1/job/transfer-path")
 
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp
