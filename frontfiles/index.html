@@ -24,7 +24,7 @@
         <nav id="navbar" class="navbar hidden">
             <div class="nav-container">
                 <div class="nav-brand">
-                    <span class="nav-brand-icon"></span>
+                    <span class="nav-brand-icon">C</span>
                     <h1>职业规划智能体</h1>
                 </div>
                 <div class="nav-menu">
@@ -279,16 +279,16 @@
 
         <!-- 主页面 -->
         <div id="dashboardPage" class="page hidden dashboard-page">
+            <div class="hero-glow-1"></div>
+            <div class="hero-glow-2"></div>
+            <div class="hero-dots"></div>
             <!-- Hero 区域 -->
             <div class="hero-section">
-                <div class="hero-glow-1"></div>
-                <div class="hero-glow-2"></div>
-                <div class="hero-dots"></div>
                 <div class="hero-content">
                     <div class="hero-left">
                         <div class="hero-badge">职业规划智能体</div>
                         <h1 class="hero-title">
-                            <span id="welcomeName" class="username"></span>，你的职业规划助手已就绪
+                            <span id="welcomeName" class="username"></span><span class="hero-title-suffix">，你的职业规划助手已<span class="hero-title-ready">就绪</span></span>
                         </h1>
                         <p class="hero-subtitle">
                             基于 Holland RIASEC × MBTI 双维度分析，为你量身定制职业发展路径。洞察行业趋势，做出更明智的每一个选择。
@@ -394,7 +394,12 @@
         <!-- 个人档案页面 -->
         <div id="profilePage" class="page hidden">
             <div class="profile-container">
-                <h2>个人档案</h2>
+                <span class="job-profile-tag">职业规划智能体</span>
+                <div class="page-title-row">
+                    <div class="page-title-bar"></div>
+                    <span class="page-title">个人档案</span>
+                </div>
+                <p class="page-subtitle">完善你的个人信息、教育背景和专业技能，为职业规划提供基础数据</p>
                 
                 <div class="profile-sections">
                     <!-- 基本信息 -->
@@ -513,8 +518,12 @@
         <div id="assessmentPage" class="page hidden">
             <div class="assessment-container">
                 <div id="assessmentQuestionnaireSection">
-                    <h2>职业测评问卷</h2>
-                    <p class="assessment-intro">请根据您的真实情况回答以下问题,帮助我们更好地了解您的职业倾向</p>
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">职业测评问卷</span>
+                    </div>
+                    <p class="page-subtitle">请根据您的真实情况回答以下问题,帮助我们更好地了解您的职业倾向</p>
                     <div id="questionnaireContainer">
                         <div class="loading-message">加载问卷中...</div>
                     </div>
@@ -547,7 +556,7 @@
             <div class="job-profile-container">
                 <header class="job-profile-header">
                     <div class="job-profile-header-left">
-                        <span class="job-profile-tag">AI · 职业规划平台</span>
+                        <span class="job-profile-tag">职业规划智能体</span>
                         <div class="job-profile-title-row">
                             <div class="job-profile-title-bar"></div>
                             <span class="job-profile-title">岗位画像</span>
@@ -718,8 +727,12 @@
         <div id="abilityProfilePage" class="page hidden">
             <div class="matching-container">
                 <div class="ability-profile-header">
-                    <h2>学生就业能力画像</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 24px;">查看你的就业能力画像与多维度评分，为岗位匹配提供依据</p>
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">学生就业能力画像</span>
+                    </div>
+                    <p class="page-subtitle">查看你的就业能力画像与多维度评分，为岗位匹配提供依据</p>
                     
                     <div class="ability-profile-actions" style="margin-bottom: 24px;">
                         <button id="generateAbilityProfileBtn" class="btn-primary">🤖 生成能力画像</button>
@@ -737,10 +750,12 @@
         <div id="matchingPage" class="page hidden">
             <div class="matching-container">
                 <div class="page-header">
-                    <div>
-                        <h2>岗位匹配</h2>
-                        <p>基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">岗位匹配</span>
                     </div>
+                    <p class="page-subtitle">基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
                 </div>
 
                 <div class="matching-tabs">
@@ -870,13 +885,16 @@
 
         <!-- 职业规划报告页面 -->
         <div id="reportPage" class="page hidden report-page">
-            <div class="report-title-bar">
-                <h2>职业规划报告</h2>
-            </div>
-            <div class="report-container">
-                <div class="report-page-header">
-                    <p class="report-page-desc">AI 为您生成个性化职业生涯发展规划，含岗位匹配、目标设定、行动计划与动态调整机制</p>
+            <div class="matching-container">
+                <div class="ability-profile-header">
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">职业规划报告</span>
+                    </div>
+                    <p class="page-subtitle">AI 为您生成个性化职业生涯发展规划，含岗位匹配、目标设定、行动计划与动态调整机制</p>
                 </div>
+                <div class="report-container">
 
                 <!-- 生成报告入口区 -->
                 <div id="reportGenerateArea" class="report-generate-area">
@@ -884,8 +902,8 @@
                         <div class="report-generate-icon">📋</div>
                         <h3>生成职业规划报告</h3>
                         <p>基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
-                        <button id="generateReportBtn" class="btn-generate-report">生成新报告</button>
-                        <button id="viewHistoryBtn" class="btn-view-history">查看历史报告</button>
+                        <button id="generateReportBtn" class="btn-primary">生成新报告</button>
+                        <button id="viewHistoryBtn" class="btn-secondary">查看历史报告</button>
                     </div>
 
                     <!-- 生成偏好表单（展开显示） -->
@@ -957,15 +975,30 @@
                 <!-- 报告内容展示区 -->
                 <div id="reportContentArea" class="report-content-area hidden">
                     <div class="report-toolbar">
-                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">完整性检查</button>
-                        <button id="reportEditBtn" class="btn-toolbar">编辑报告</button>
-                        <button id="reportPolishBtn" class="btn-toolbar">AI 润色</button>
+                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">✅</span>
+                            完整性检查
+                        </button>
+                        <button id="reportEditBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">✏️</span>
+                            编辑报告
+                        </button>
+                        <button id="reportPolishBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">✨</span>
+                            AI 润色
+                        </button>
                         <select id="reportExportFormat" class="btn-toolbar-select">
                             <option value="pdf">PDF</option>
                             <option value="docx">Word</option>
                         </select>
-                        <button id="reportExportBtn" class="btn-toolbar btn-export">导出</button>
-                        <button id="reportBackBtn" class="btn-toolbar">返回</button>
+                        <button id="reportExportBtn" class="btn-toolbar btn-export">
+                            <span class="toolbar-icon">📤</span>
+                            导出
+                        </button>
+                        <button id="reportBackBtn" class="btn-toolbar">
+                            <span class="toolbar-icon">⬅️</span>
+                            返回
+                        </button>
                     </div>
                     <div class="report-content-with-toc">
                         <nav id="reportToc" class="report-toc"></nav>
@@ -1018,6 +1051,7 @@
                         <button id="closeHistoryBtn" class="btn-close-history">&times;</button>
                     </div>
                     <div id="historyList" class="report-history-list"></div>
+                </div>
                 </div>
             </div>
         </div>

@@ -523,17 +523,23 @@ class FineGrainedScorer:
         # 简化实现，实际应该有详细的评分规则
         
         if sub_dim == "education_level":
-            edu_map = {"专科": 70, "本科": 85, "硕士": 95, "博士": 100}
+            edu_order = {"专科": 1, "本科": 2, "硕士": 3, "博士": 4}
             student_edu = student.get("basic_info", {}).get("education", "本科")
-            return edu_map.get(student_edu, 75)
+            job_edu = (job.get("requirements", {}).get("basic_requirements", {}).get("education", {}) or {}).get("level", "本科")
+            s_level = edu_order.get(student_edu, 2)
+            j_level = edu_order.get(str(job_edu).replace("及以上", ""), 2)
+            if s_level >= j_level:
+                return min(100, 80 + (s_level - j_level) * 5)
+            return max(50, 90 - (j_level - s_level) * 15)
         
         elif sub_dim == "major_match":
             student_major = student.get("basic_info", {}).get("major", "")
             job_majors = job.get("requirements", {}).get("basic_requirements", {}).get("education", {}).get("preferred_majors", [])
-            
+            if not job_majors:
+                return 85
             if any(m in student_major for m in job_majors):
                 return 100
-            return 80
+            return 75
         
         elif sub_dim == "gpa_score":
             gpa_str = student.get("basic_info", {}).get("gpa", "3.0/4.0")
@@ -604,27 +610,39 @@ class HighPrecisionMatchingEngine:
             student_profile, job_profile
         )
         
-        # 步骤3：计算4大维度分数
+        # 步骤3：计算4大维度分数（发展潜力按岗位层级、职业素养按岗位软技能要求差异化，均用真实岗位数据）
+        job_level = (job_profile.get("basic_info") or {}).get("level", "初级") or "初级"
+        potential_baseline = {"初级": 65, "中级": 72, "高级": 80}.get(job_level, 65)
+        raw_potential = fine_grained_scores["development_potential"]["overall"]
+        potential_score = min(100, int(raw_potential * 100 / potential_baseline))
+        soft_score = self._soft_skills_score_from_job(student_profile, job_profile)
+        job_br = job_profile.get("requirements", {}).get("basic_requirements", {})
+        edu_level = (job_br.get("education") or {}).get("level", "本科")
+        basic_required = {"本科": 85, "硕士": 90, "博士": 95, "专科": 78}.get(str(edu_level).replace("及以上", ""), 85)
         dimension_scores = {
             "basic_requirements": {
                 "score": fine_grained_scores["basic_requirements"]["overall"],
                 "weight": 0.15,
-                "details": fine_grained_scores["basic_requirements"]
+                "details": fine_grained_scores["basic_requirements"],
+                "required_score": basic_required
             },
             "professional_skills": {
                 "score": skills_result["score"],
                 "weight": 0.40,
-                "details": skills_result["details"]
+                "details": skills_result["details"],
+                "required_score": 85
             },
             "soft_skills": {
-                "score": fine_grained_scores["soft_skills"]["overall"],
+                "score": soft_score,
                 "weight": 0.30,
-                "details": fine_grained_scores["soft_skills"]
+                "details": fine_grained_scores["soft_skills"],
+                "required_score": 75
             },
             "development_potential": {
-                "score": fine_grained_scores["development_potential"]["overall"],
+                "score": potential_score,
                 "weight": 0.15,
-                "details": fine_grained_scores["development_potential"]
+                "details": fine_grained_scores["development_potential"],
+                "required_score": potential_baseline
             }
         }
         
@@ -665,6 +683,29 @@ class HighPrecisionMatchingEngine:
             "calibration_applied": abs(final_score - raw_score) > 1
         }
     
+    def _soft_skills_score_from_job(self, student: Dict, job: Dict) -> int:
+        """根据岗位软技能要求与学生能力对比计分，使职业素养维度随岗位真实要求变化（非假数据）。"""
+        job_soft = job.get("requirements", {}).get("soft_skills", {})
+        req_level_to_threshold = {"高": 78, "中": 65, "低": 55}
+        scores = []
+        # 创新
+        raw = student.get("innovation_ability", {}).get("score", 70)
+        th = req_level_to_threshold.get(job_soft.get("innovation", "中"), 65)
+        scores.append(min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9)))
+        # 学习
+        raw = student.get("learning_ability", {}).get("score", 75)
+        th = req_level_to_threshold.get(job_soft.get("learning", "高"), 65)
+        scores.append(min(100, 55 + raw) if raw >= th else max(50, int(raw * 0.85)))
+        # 沟通
+        raw = student.get("communication_ability", {}).get("overall_score", 70)
+        th = req_level_to_threshold.get(job_soft.get("communication", "中"), 65)
+        scores.append(min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9)))
+        # 抗压
+        raw = student.get("pressure_resistance", {}).get("assessment_score", 75)
+        th = req_level_to_threshold.get(job_soft.get("pressure", "中"), 65)
+        scores.append(min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9)))
+        return int(np.mean(scores))
+
     def _match_professional_skills_v2(
         self, 
         student: Dict, 
@@ -740,7 +781,15 @@ class HighPrecisionMatchingEngine:
                     })
         
         match_rate = matched_weight / total_weight if total_weight > 0 else 0
-        
+        # 岗位无技能要求时给基线分，避免专业技能维度恒为 0
+        if total_weight == 0:
+            return {
+                "score": 50,
+                "confidence": 0.70,
+                "details": {"matched_skills": [], "missing_skills": [], "match_rate": 0.0},
+                "gaps": [{"gap": "岗位技能要求待完善", "importance": "重要", "learning_difficulty": "中", "estimated_time": "持续", "suggestion": "根据岗位要求补充专业技能"}]
+            }
+
         # 非线性转换（提升高分区的分数）
         if match_rate >= 0.85:
             score = 85 + (match_rate - 0.85) * 100

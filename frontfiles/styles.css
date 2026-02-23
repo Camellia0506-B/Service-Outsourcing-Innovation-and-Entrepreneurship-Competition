@@ -194,8 +194,15 @@ body::before {
     width: 32px;
     height: 32px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #4f79f6, #3dd6c8);
+    background: #3b5bdb;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: 800;
+    font-family: inherit;
 }
 
 .nav-brand h1 {
@@ -2047,9 +2054,10 @@ body::before {
 }
 
 .ability-profile-header {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto 30px;
-    padding-left: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
 .ability-profile-header h2 {
@@ -4732,38 +4740,37 @@ body::before {
 
 /* ========== 职业规划报告页面（专业/清晰/现代风格） ========== */
 .report-page {
-    background: #e8eaef;
     min-height: 100vh;
 }
 
-/* 顶部标题栏：深蓝背景、白字、底部分隔线 */
 .report-title-bar {
-    background: #1e3a5f;
     padding: 20px 24px;
-    border-bottom: 1px solid #b0b8c4;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .report-title-bar h2 {
-    font-size: 20px;
+    font-size: 32px;
     font-weight: 700;
-    color: #ffffff;
-    margin: 0;
+    margin-bottom: 24px;
+    color: var(--text-primary);
 }
 
 .report-container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 24px 20px 48px;
 }
 
 .report-page-header {
     margin-bottom: 24px;
+    text-align: left;
 }
 
 .report-page-desc {
     font-size: 14px;
     line-height: 1.6;
-    color: #666666;
+    color: var(--text-secondary);
+    text-align: left;
 }
 
 /* 生成报告入口卡片 */
@@ -4772,16 +4779,17 @@ body::before {
 }
 
 .report-generate-card {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 36px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
     transition: box-shadow 0.2s;
 }
 
 .report-generate-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-lg);
 }
 
 .report-generate-icon {
@@ -4792,64 +4800,36 @@ body::before {
 .report-generate-card h3 {
     font-size: 18px;
     font-weight: 700;
-    color: #333333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .report-generate-card p {
     font-size: 14px;
     line-height: 1.6;
-    color: #666666;
+    color: var(--text-secondary);
     margin-bottom: 24px;
 }
 
-.btn-generate-report {
-    padding: 12px 28px;
-    font-size: 14px;
-    font-weight: 600;
-    background: #1e3a5f;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+.report-generate-card .btn-primary {
     margin-right: 12px;
-    transition: background 0.2s;
-}
-
-.btn-generate-report:hover {
-    background: #2a4a75;
-}
-
-.btn-view-history {
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 500;
-    background: #ffffff;
-    color: #1e3a5f;
-    border: 1px solid #1e3a5f;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-view-history:hover {
-    background: #e8ecf2;
 }
 
 /* 生成偏好表单 */
 .report-preferences-form {
     margin-top: 16px;
     padding: 24px;
-    background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
 }
 
 .report-preferences-form h4 {
     font-size: 15px;
     font-weight: 600;
     margin-bottom: 16px;
-    color: #333333;
+    color: var(--text-primary);
 }
 
 .preferences-grid {
@@ -4863,14 +4843,24 @@ body::before {
     display: block;
     font-size: 13px;
     font-weight: 500;
-    color: #666666;
+    color: var(--text-secondary);
     margin-bottom: 6px;
+}
+
+.preferences-grid .form-group select,
+.preferences-grid .form-group input {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--card-bg);
+    color: var(--text-primary);
 }
 
 .form-group-full { grid-column: 1 / -1; }
 .pref-target-jobs { display: flex; flex-direction: column; gap: 6px; }
 .pref-target-jobs select { min-height: 80px; }
-.form-hint { font-size: 12px; color: #666; margin-top: 4px; }
+.form-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
 .report-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .btn-toolbar-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #d0d5dc; font-size: 14px; background: #fff; }
@@ -4947,48 +4937,78 @@ body::before {
 
 .report-content-with-toc {
     display: flex;
-    gap: 24px;
+    gap: 40px;
     align-items: flex-start;
+    max-width: 100%;
 }
 
 .report-toc {
     position: sticky;
     top: 24px;
     flex-shrink: 0;
-    width: 180px;
-    padding: 16px;
-    background: #f5f7fa;
-    border-radius: 10px;
-    border: 1px solid #e0e4e9;
+    width: 260px;
+    padding: 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.1);
+    transition: all 0.3s ease;
+}
+
+.report-toc:hover {
+    box-shadow: 0 10px 32px rgba(37, 99, 235, 0.15);
+    transform: translateY(-2px);
 }
 
 .report-toc-title {
-    font-size: 13px;
+    font-size: 18px;
     font-weight: 700;
     color: #1e3a5f;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #d0d5dc;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(37, 99, 235, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .report-toc-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 0;
-    font-size: 13px;
-    color: #333;
+    gap: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-primary);
     text-decoration: none;
-    border-radius: 6px;
-    transition: background 0.2s, color 0.2s;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    margin-bottom: 6px;
+    font-weight: 500;
 }
 
 .report-toc-item:hover {
-    background: #e8ecf2;
-    color: #1e3a5f;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: var(--primary-color);
+    transform: translateX(6px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
-.report-toc-item .toc-icon { font-size: 14px; }
+.report-toc-item .toc-icon {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.report-toc-item:hover .toc-icon {
+    transform: scale(1.1);
+}
+
+.report-toc-item.active {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.report-toc-item.active .toc-icon {
+    color: #ffffff;
+}
 
 .report-content-with-toc .report-content {
     flex: 1;
@@ -5020,39 +5040,79 @@ body::before {
 
 /* 可折叠五大模块 */
 .career-module {
-    margin-bottom: 16px;
-    border-radius: 10px;
+    margin-bottom: 24px;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.1);
+    transition: all 0.3s ease;
+    background: #ffffff;
 }
 
-.career-module-summary { background: linear-gradient(135deg, #f0f7ff 0%, #fff 100%); border-left: 4px solid #1e3a5f; }
-.career-module-explore { background: #fff; border-left: 4px solid #2e7d32; }
-.career-module-goal { background: #fff; border-left: 4px solid #1565c0; }
-.career-module-action { background: #fff; border-left: 4px solid #f5a623; }
-.career-module-eval { background: #fff; border-left: 4px solid #7b1fa2; }
+.career-module:hover {
+    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.15);
+    transform: translateY(-4px);
+}
+
+.career-module-summary {
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+    border-left: 6px solid var(--primary-color);
+}
+
+.career-module-explore {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+    border-left: 6px solid #2e7d32;
+}
+
+.career-module-goal {
+    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+    border-left: 6px solid #1565c0;
+}
+
+.career-module-action {
+    background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+    border-left: 6px solid #f5a623;
+}
+
+.career-module-eval {
+    background: linear-gradient(135deg, #fdf2f8 0%, #ffffff 100%);
+    border-left: 6px solid #7b1fa2;
+}
+
+.career-module-painpoints {
+    background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+    border-left: 6px solid #f5a623;
+}
+
+.career-module-job-requirements {
+    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+    border-left: 6px solid #1565c0;
+}
 
 .career-module-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 16px 20px;
+    padding: 16px 24px;
     cursor: pointer;
     font-size: 16px;
     font-weight: 700;
-    color: #333;
+    color: var(--text-primary);
     user-select: none;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
-.career-module-header:hover { background: rgba(0,0,0,0.03); }
+.career-module-header:hover {
+    background: rgba(37, 99, 235, 0.04);
+    transform: translateY(-1px);
+}
 
 .career-module .module-icon { font-size: 18px; }
 .career-module .module-title { flex: 1; }
 .career-module .module-arrow { font-size: 12px; color: #666; transition: transform 0.2s; }
 
 .career-module-body {
-    padding: 0 20px 20px;
+    padding: 0 24px 24px;
     overflow: hidden;
     max-height: 3000px;
     transition: max-height 0.3s ease-out, opacity 0.2s;
@@ -5104,13 +5164,18 @@ body::before {
     position: relative;
     padding: 20px;
     margin-bottom: 16px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e0e4e9;
-    transition: all 0.2s;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(37, 99, 235, 0.06);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+    transition: all 0.25s ease;
 }
 
-.rec-career-card-v2:hover { border-color: #1e3a5f; box-shadow: 0 2px 8px rgba(30,58,95,0.08); }
+.rec-career-card-v2:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+}
 
 .rec-score-badge {
     position: absolute;
@@ -5162,51 +5227,186 @@ body::before {
 .report-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    max-width: 100%;
+    justify-content: center;
 }
 
 .btn-toolbar {
-    padding: 10px 16px;
+    padding: 14px 24px;
     font-size: 14px;
     background: #ffffff;
     color: #333333;
-    border: 1px solid #d0d5dc;
-    border-radius: 6px;
+    border: 2px solid var(--light-blue-border);
+    border-radius: 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    letter-spacing: 0.5px;
+    height: 52px;
+    box-sizing: border-box;
 }
 
 .btn-toolbar:hover {
-    background: #e8ecf2;
-    border-color: #1e3a5f;
-    color: #1e3a5f;
+    background: #ffffff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(45, 91, 227, 0.2);
+}
+
+.btn-toolbar:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 16px rgba(45, 91, 227, 0.15);
+}
+
+/* 为不同功能的按钮设置不同的颜色 */
+#reportCheckCompletenessBtn {
+    color: #2e7d32;
+    border-color: #4caf50;
+}
+
+#reportCheckCompletenessBtn:hover {
+    background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
+    border-color: #2e7d32;
+    color: #2e7d32;
+    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.3);
+}
+
+#reportEditBtn {
+    color: #1565c0;
+    border-color: #2196f3;
+}
+
+#reportEditBtn:hover {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: #1565c0;
+    color: #1565c0;
+    box-shadow: 0 8px 24px rgba(33, 150, 243, 0.3);
+}
+
+#reportPolishBtn {
+    color: #7b1fa2;
+    border-color: #9c27b0;
+}
+
+#reportPolishBtn:hover {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    border-color: #7b1fa2;
+    color: #7b1fa2;
+    box-shadow: 0 8px 24px rgba(156, 39, 176, 0.3);
+}
+
+.btn-export {
+    color: #1565c0;
+    border-color: #2196f3;
+    background: #ffffff;
+    font-weight: 600;
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: #1565c0;
+    color: #1565c0;
+    box-shadow: 0 8px 24px rgba(33, 150, 243, 0.3);
+}
+
+#reportBackBtn {
+    color: #666666;
+    border-color: #9e9e9e;
+}
+
+#reportBackBtn:hover {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    border-color: #666666;
+    color: #333333;
+    box-shadow: 0 8px 24px rgba(158, 158, 158, 0.3);
+}
+
+/* 改进下拉选择框样式 */
+.btn-toolbar-select {
+    padding: 14px 24px;
+    font-size: 14px;
+    background: #ffffff;
+    color: #333333;
+    border: 2px solid var(--light-blue-border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    letter-spacing: 0.5px;
+    min-width: 140px;
+    height: 52px;
+    box-sizing: border-box;
+}
+
+.btn-toolbar-select:hover {
+    background: #ffffff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(45, 91, 227, 0.2);
+}
+
+/* 工具栏图标样式 */
+.toolbar-icon {
+    font-size: 16px;
+    line-height: 1;
+    display: inline-block;
+    width: 16px;
+    text-align: center;
 }
 
 .report-content {
     background: #ffffff;
-    border-radius: 10px;
-    padding: 28px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
     min-height: 400px;
+    border: 1px solid rgba(37, 99, 235, 0.06);
+    transition: all 0.25s ease;
 }
 
 .report-page .report-content {
     background: #ffffff !important;
+    border-radius: 18px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08) !important;
+    border: 1px solid rgba(37, 99, 235, 0.06) !important;
+    transition: all 0.25s ease !important;
+}
+
+.report-content:hover {
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.12);
+    transform: translateY(-2px);
 }
 
 /* 历史报告面板 */
 .report-history-panel {
     position: fixed;
-    top: 0;
-    right: 0;
-    width: 360px;
-    max-width: 100%;
-    height: 100vh;
-    background: #ffffff;
-    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.08);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-width: 90%;
+    max-height: 80vh;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-lg);
     z-index: 1000;
     overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
 }
 
 .report-history-header {
@@ -5214,13 +5414,13 @@ body::before {
     justify-content: space-between;
     align-items: center;
     padding: 18px 20px;
-    border-bottom: 1px solid #e0e4e9;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .report-history-header h3 {
     font-size: 16px;
     font-weight: 700;
-    color: #333333;
+    color: var(--text-primary);
 }
 
 .btn-close-history {
@@ -5231,11 +5431,11 @@ body::before {
     background: none;
     border: none;
     cursor: pointer;
-    color: #666666;
+    color: var(--text-secondary);
 }
 
 .btn-close-history:hover {
-    color: #333333;
+    color: var(--text-primary);
 }
 
 .report-history-list {
@@ -5245,21 +5445,21 @@ body::before {
 .career-history-item {
     padding: 16px;
     margin-bottom: 12px;
-    background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #e0e4e9;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .career-history-item:hover {
-    border-color: #1e3a5f;
-    box-shadow: 0 2px 8px rgba(30, 58, 95, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow);
 }
 
 .history-item-main { margin-bottom: 6px; }
-.history-item-title { font-weight: 600; font-size: 14px; color: #333333; }
-.history-item-meta { font-size: 13px; color: #666666; }
+.history-item-title { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+.history-item-meta { font-size: 13px; color: var(--text-secondary); }
 .history-item-score { font-size: 14px; font-weight: 700; color: #2e7d32; }
 
 /* 职业规划报告内容 - 模块标题左侧蓝线 */
@@ -5267,68 +5467,109 @@ body::before {
     padding: 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #333333;
+    color: var(--text-primary);
 }
 
 .career-report-header {
-    text-align: center;
-    padding: 24px 20px;
-    background: #ffffff;
-    border-radius: 10px;
+    text-align: left;
+    padding: 32px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+    border-radius: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
+    border: none;
+    transition: all 0.3s ease;
+    color: #ffffff;
+}
+
+.career-report-header:hover {
+    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+}
+
+.career-report-header h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.career-report-sub {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
     margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.career-report-tag {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.career-report-meta {
+    display: flex;
+    justify-content: flex-start;
+    gap: 24px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .career-report-tag {
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.1em;
-    color: #1e3a5f;
+    color: var(--primary-color);
     margin-bottom: 8px;
 }
 
 .career-report-header h3 {
     font-size: 18px;
     font-weight: 700;
-    color: #333333;
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
 .career-report-sub {
     font-size: 14px;
-    color: #666666;
+    color: var(--text-secondary);
     margin-bottom: 12px;
 }
 
 .career-report-meta {
     display: flex;
-    justify-content: center;
-    gap: 20px;
+    justify-content: flex-start;
+    gap: 24px;
     font-size: 13px;
-    color: #666666;
+    color: var(--text-secondary);
 }
 
 /* 大模块：标题左侧蓝色竖线，卡片白底圆角阴影，间距16px */
 .career-section {
-    margin-bottom: 16px;
-    padding: 20px;
+    margin-bottom: 20px;
+    padding: 24px;
     background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: box-shadow 0.2s;
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
+    transition: all 0.25s ease;
+    border: 1px solid rgba(37, 99, 235, 0.06);
 }
 
 .career-section:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.12);
+    transform: translateY(-2px);
 }
 
 .career-section-title {
     font-size: 16px;
     font-weight: 700;
-    color: #333333;
+    color: var(--text-primary);
     margin-bottom: 16px;
     padding-left: 12px;
-    border-left: 4px solid #1e3a5f;
+    border-left: 4px solid var(--primary-color);
 }
 
 .sec-icon { font-size: 18px; margin-right: 4px; }
@@ -5338,7 +5579,7 @@ body::before {
 .career-advice h5,
 .career-goals h5,
 .career-roadmap h5,
-.industry-trends h5,
+.industry-trends h5, .job-data-analysis h5,
 .career-action-plan h5,
 .learning-path h5,
 .achievement-showcase h5,
@@ -5349,7 +5590,7 @@ body::before {
 .eval-item {
     font-size: 14px;
     font-weight: 600;
-    color: #333333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
@@ -5362,17 +5603,20 @@ body::before {
 
 .self-card {
     padding: 16px;
-    background: #f8f9fb;
-    border-radius: 8px;
-    transition: box-shadow 0.2s;
+    background: #ffffff;
+    border-radius: 12px;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(37, 99, 235, 0.06);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
 }
 
 .self-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
 }
 
-.self-card h6 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #1e3a5f; }
-.self-card ul { margin: 0; padding-left: 18px; font-size: 14px; color: #333333; line-height: 1.6; }
+.self-card h6 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
+.self-card ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--text-primary); line-height: 1.6; }
 
 /* 推荐职业卡片 - 评分右上角绿色粗体 */
 .rec-career-card {
@@ -5381,14 +5625,16 @@ body::before {
     padding-top: 36px;
     margin-bottom: 16px;
     background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #e0e4e9;
-    transition: all 0.2s;
+    border-radius: 12px;
+    border: 1px solid rgba(37, 99, 235, 0.06);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+    transition: all 0.25s ease;
 }
 
 .rec-career-card:hover {
-    border-color: #1e3a5f;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
 }
 
 .rec-career-card .rec-score {
@@ -5401,32 +5647,46 @@ body::before {
 }
 
 .rec-career-header { margin-bottom: 10px; }
-.rec-name { font-weight: 600; font-size: 15px; color: #333333; }
-.rec-why, .rec-market, .rec-gaps {
+.rec-name { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+.rec-why, .rec-market, .rec-gaps, .rec-capability-match {
     font-size: 14px;
-    color: #666666;
+    color: var(--text-secondary);
     margin-top: 8px;
     line-height: 1.6;
 }
 
-.rec-why strong, .rec-gaps strong { color: #333333; }
+.rec-why strong, .rec-gaps strong, .rec-capability-match strong { color: var(--text-primary); }
+
+.rec-capability-match {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.capability-item {
+    margin-top: 6px;
+    margin-left: 12px;
+    font-size: 13px;
+}
 
 .goal-card {
     padding: 18px;
     margin-bottom: 16px;
     background: #f8f9fb;
-    border-radius: 8px;
-    border-left: 4px solid #1e3a5f;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
     transition: box-shadow 0.2s;
+    border: 1px solid var(--border-color);
 }
 
 .goal-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow);
 }
 
-.goal-timeline { font-size: 13px; color: #666666; margin-bottom: 6px; }
-.goal-primary { font-weight: 600; font-size: 14px; margin-bottom: 10px; color: #333333; }
-.goal-card ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #333333; }
+.goal-timeline { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.goal-primary { font-weight: 600; font-size: 14px; margin-bottom: 10px; color: var(--text-primary); }
+.goal-card ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: var(--text-primary); }
 
 .roadmap-stage {
     display: flex;
@@ -5434,12 +5694,13 @@ body::before {
     padding: 14px;
     margin-bottom: 12px;
     background: #f8f9fb;
-    border-radius: 8px;
+    border-radius: 12px;
     transition: box-shadow 0.2s;
+    border: 1px solid var(--border-color);
 }
 
 .roadmap-stage:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow);
 }
 
 .stage-num {
@@ -5449,7 +5710,7 @@ body::before {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: #1e3a5f;
+    background: var(--primary-color);
     color: #fff;
     border-radius: 6px;
     font-weight: 700;
@@ -5460,39 +5721,41 @@ body::before {
     padding: 16px;
     margin-bottom: 16px;
     background: #f8f9fb;
-    border-radius: 8px;
+    border-radius: 12px;
     transition: box-shadow 0.2s;
+    border: 1px solid var(--border-color);
 }
 
 .monthly-plan:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow);
 }
 
 .plan-header { margin-bottom: 10px; }
-.plan-month { font-weight: 600; color: #333333; }
-.plan-focus { margin-left: 10px; font-size: 13px; color: #1e3a5f; }
+.plan-month { font-weight: 600; color: var(--text-primary); }
+.plan-focus { margin-left: 10px; font-size: 13px; color: var(--primary-color); }
 .plan-milestone { font-size: 13px; color: #2e7d32; margin-top: 10px; }
 
 /* 底部高亮区 - 浅黄背景 */
 .motivational-msg {
     padding: 18px 20px;
     background: #fffde7;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
     line-height: 1.6;
-    color: #333333;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .career-report-footer {
     text-align: center;
     padding: 20px;
     font-size: 13px;
-    color: #666666;
+    color: var(--text-secondary);
 }
 
 /* 其他列表样式 */
 .report-page .career-advice,
-.report-page .industry-trends,
+.report-page .industry-trends, .report-page .job-data-analysis,
 .report-page .alt-paths,
 .report-page .evaluation-system,
 .report-page .adjustment-scenarios,
@@ -5501,11 +5764,11 @@ body::before {
 .report-page .next-steps {
     font-size: 14px;
     line-height: 1.6;
-    color: #333333;
+    color: var(--text-primary);
 }
 
 .report-page .career-advice ul,
-.report-page .industry-trends ul,
+.report-page .industry-trends ul, .report-page .job-data-analysis ul,
 .report-page .key-takeaways ul,
 .report-page .next-steps ul {
     margin: 0;
@@ -5517,25 +5780,69 @@ body::before {
     padding: 12px;
     margin-bottom: 10px;
     background: #f8f9fb;
-    border-radius: 6px;
+    border-radius: 12px;
     transition: box-shadow 0.2s;
+    border: 1px solid var(--border-color);
 }
 
 .report-page .adj-card:hover,
 .report-page .eval-item:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow);
 }
 
 .report-page .showcase-item {
     padding: 14px;
     margin-bottom: 12px;
     background: #f8f9fb;
-    border-radius: 8px;
+    border-radius: 12px;
     transition: box-shadow 0.2s;
+    border: 1px solid var(--border-color);
 }
 
 .report-page .showcase-item:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow);
+}
+
+/* 确保职业规划报告头部左对齐 */
+.report-content .career-report-wrap {
+    padding: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.report-content .career-report-header {
+    text-align: left !important;
+    padding: 24px !important;
+    background: var(--card-bg) !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+    box-shadow: var(--shadow) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.report-content .career-report-header h3 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 8px !important;
+    text-align: left !important;
+}
+
+.report-content .career-report-sub {
+    font-size: 14px !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 12px !important;
+    text-align: left !important;
+}
+
+.report-content .career-report-meta {
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 24px !important;
+    font-size: 13px !important;
+    color: var(--text-secondary) !important;
+    text-align: left !important;
 }
 
 .report-history {
@@ -5658,6 +5965,184 @@ body::before {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 16px;
+}
+
+/* 评估指标与调整机制样式 */
+.evaluation-metrics {
+    margin-top: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.evaluation-metrics h5 {
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.evaluation-metrics p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.evaluation-metrics ul {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.evaluation-metrics li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.evaluation-metrics .adjustment-note {
+    margin-top: 12px;
+    font-style: italic;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+}
+
+.report-page .evaluation-metrics {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.report-page .evaluation-metrics ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+/* 痛点解决方案样式 */
+.painpoint-solution {
+    margin-top: 20px;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(37, 99, 235, 0.06);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+    transition: all 0.25s ease;
+}
+
+.painpoint-solution:hover {
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+}
+
+.painpoint-solution h5 {
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.painpoint-solution p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.painpoint-solution ul {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.painpoint-solution li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.report-page .painpoint-solution {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.report-page .painpoint-solution ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.career-module-painpoints {
+    background: #ffffff;
+    border-left: 4px solid #f5a623;
+}
+
+/* 岗位能力要求拆解样式 */
+.job-requirements-section {
+    margin-top: 16px;
+}
+
+.job-requirements-section h5 {
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.job-requirements-section p {
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.job-requirement-card {
+    margin-top: 20px;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(37, 99, 235, 0.06);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+    transition: all 0.25s ease;
+}
+
+.job-requirement-card:hover {
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    transform: translateY(-1px);
+}
+
+.job-requirement-card h6 {
+    margin-bottom: 12px;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.job-requirement-details {
+    margin-top: 16px;
+}
+
+.requirement-category {
+    margin-bottom: 16px;
+}
+
+.requirement-category strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.requirement-category ul {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.requirement-category li {
+    margin-bottom: 6px;
+    line-height: 1.6;
+    font-size: 13px;
+}
+
+.report-page .job-requirement-card {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.report-page .job-requirement-card ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.career-module-job-requirements {
+    background: #ffffff;
+    border-left: 4px solid #1565c0;
 }
 .report-export-bar .btn-export-pdf {
     display: inline-flex;
@@ -7935,17 +8420,26 @@ body::before {
     padding: 40px 24px 60px;
     background: transparent;
     position: relative;
+    overflow: hidden;
+    position: relative;
     z-index: 1;
     max-width: 1400px;
     margin: 0 auto;
 }
 
-/* Hero 装饰光晕与点阵 */
+/* Hero 装饰光晕与点阵 - 覆盖整页，与左侧一致 */
 .hero-glow-1 {
     position: absolute;
+    z-index: 0;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(79,121,246,0.2) 0%, transparent 70%);
+    background: radial-gradient(circle at center,
+        rgba(79,121,246,0.08) 0%,
+        rgba(79,121,246,0.05) 20%,
+        rgba(79,121,246,0.03) 40%,
+        rgba(79,121,246,0.015) 60%,
+        rgba(79,121,246,0.005) 80%,
+        transparent 100%);
     top: -200px;
     right: -50px;
     border-radius: 50%;
@@ -7955,9 +8449,15 @@ body::before {
 
 .hero-glow-2 {
     position: absolute;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(61,214,200,0.18) 0%, transparent 70%);
+    z-index: 0;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle at center,
+        rgba(61,214,200,0.06) 0%,
+        rgba(61,214,200,0.04) 25%,
+        rgba(61,214,200,0.02) 50%,
+        rgba(61,214,200,0.008) 75%,
+        transparent 100%);
     bottom: -50px;
     left: 300px;
     border-radius: 50%;
@@ -7967,11 +8467,12 @@ body::before {
 
 .hero-dots {
     position: absolute;
+    z-index: 0;
     inset: 0;
-    background-image: radial-gradient(circle, rgba(45,91,227,0.15) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(45,91,227,0.06) 1px, transparent 1px);
     background-size: 32px 32px;
     pointer-events: none;
-    mask-image: radial-gradient(ellipse 80% 90% at 50% 50%, black 20%, transparent 100%);
+    mask-image: radial-gradient(ellipse 120% 120% at 50% 40%, black 30%, transparent 100%);
 }
 
 @keyframes heroFloat1 {
@@ -7988,7 +8489,6 @@ body::before {
 .hero-section {
     margin-bottom: 44px;
     position: relative;
-    overflow: hidden;
     z-index: 1;
     animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -8008,33 +8508,41 @@ body::before {
 
 .hero-badge {
     display: inline-block;
-    padding: 8px 18px;
-    background: var(--light-blue-bg);
-    color: var(--medium-blue);
-    border: 1px solid var(--light-blue-border);
-    border-radius: 12px;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.25);
+    color: #3b5bdb;
+    border: 1px solid rgba(199, 215, 255, 0.4);
+    border-radius: 100px;
     font-size: 13px;
     font-weight: 600;
     margin-bottom: 20px;
-    font-family: var(--font-body);
+    backdrop-filter: blur(6px);
 }
 
 .hero-title {
-    font-family: 'Sora', sans-serif;
-    font-size: 52px;
+    font-family: 宋体, SimSun, serif;
+    font-size: 32px;
     font-weight: 700;
     letter-spacing: -0.03em;
-    line-height: 1.15;
-    color: var(--deep-blue);
+    line-height: 1.3;
+    color: #0f172a;
     margin-bottom: 16px;
 }
 
 .username {
-    background: linear-gradient(135deg, #2d5be3, #3dd6c8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-family: 宋体, SimSun, serif;
     font-style: italic;
+    font-weight: 700;
+    font-size: 36px;
+    color: #2952e3;
+    text-decoration: none;
+}
+
+.hero-title-suffix {
+    font-size: 36px;
+    font-weight: 700;
+    font-style: normal;
+    color: #1a1a2e;
 }
 
 .hero-subtitle {
@@ -8092,6 +8600,7 @@ body::before {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
+
 .hero-right .stat-card:hover {
     transform: translateX(-4px);
     box-shadow: 0 8px 24px rgba(45,91,227,0.15);
@@ -8113,11 +8622,11 @@ body::before {
 }
 
 .hero-right .stat-icon-2 {
-    background: rgba(61,214,200,0.12);
+    background: #e6faf8;
 }
 
 .hero-right .stat-icon-3 {
-    background: rgba(139,92,246,0.1);
+    background: #f5f3ff;
 }
 
 .hero-right .stat-body {
@@ -8450,7 +8959,7 @@ body::before {
     }
     
     .hero-title {
-        font-size: 28px;
+        font-size: 32px;
     }
     
     .hero-chips {
