@@ -222,6 +222,7 @@ body::before {
 
 .nav-inner {
     display: flex;
+    flex-direction: row;
     align-items: center;
     background: #f4f5f9;
     border-radius: 10px;
@@ -230,13 +231,15 @@ body::before {
 }
 
 .nav-inner a {
+    display: inline-flex;
+    align-items: center;
     padding: 6px 18px;
     font-size: 14px;
     color: #666;
     text-decoration: none;
     border-radius: 7px;
-    transition: all 0.2s ease;
     white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
 .nav-inner a:hover {
@@ -245,7 +248,7 @@ body::before {
 }
 
 .nav-inner a.active {
-    background: #fff;
+    background: #ffffff;
     color: #3b5bdb;
     font-weight: 600;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
