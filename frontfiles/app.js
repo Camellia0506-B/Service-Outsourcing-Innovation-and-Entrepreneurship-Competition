@@ -839,7 +839,7 @@ class CareerPlanningApp {
         if (cards[0]) {
             const badge = cards[0].querySelector('.status-badge');
             if (badge) {
-                badge.textContent = profileCompleteness >= 80 ? '已完成' : '待完善';
+                badge.textContent = profileCompleteness >= 80 ? '已完成' : '未完成';
                 badge.classList.toggle('status-done', profileCompleteness >= 80);
                 badge.classList.toggle('status-pending', profileCompleteness < 80);
             }
@@ -1211,7 +1211,7 @@ class CareerPlanningApp {
             if (card) {
                 const badge = card.querySelector('.status-badge');
                 if (badge) {
-                    badge.textContent = completeness >= 80 ? '已完成' : '待完善';
+                    badge.textContent = completeness >= 80 ? '已完成' : '未完成';
                     badge.classList.toggle('status-done', completeness >= 80);
                     badge.classList.toggle('status-pending', completeness < 80);
                 }
