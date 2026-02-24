@@ -1316,16 +1316,16 @@ class CareerPlanningApp {
         document.querySelectorAll('.internship-item').forEach(item => {
             const company = item.querySelector('.internship-company').value;
             const position = item.querySelector('.internship-position').value;
-            const startDate = item.querySelector('.internship-start-date').value;
-            const endDate = item.querySelector('.internship-end-date').value;
+            const time = item.querySelector('.internship-time')?.value || '';
             const description = item.querySelector('.internship-description').value;
             
-            if (company || position || startDate || endDate || description) {
+            if (company || position || time || description) {
                 internships.push({
                     company: company.trim(),
                     position: position.trim(),
-                    start_date: startDate.trim(),
-                    end_date: endDate.trim(),
+                    // 为兼容后端结构，时间统一写入 start_date，end_date 置空
+                    start_date: time.trim(),
+                    end_date: '',
                     description: description.trim()
                 });
             }
@@ -1339,17 +1339,16 @@ class CareerPlanningApp {
         document.querySelectorAll('.project-item').forEach(item => {
             const name = item.querySelector('.project-name').value;
             const role = item.querySelector('.project-role').value;
-            const startDate = item.querySelector('.project-start-date').value;
-            const endDate = item.querySelector('.project-end-date').value;
+            const time = item.querySelector('.project-time')?.value || '';
             const description = item.querySelector('.project-description').value;
             const techStack = item.querySelector('.project-tech-stack').value;
             
-            if (name || role || startDate || endDate || description || techStack) {
+            if (name || role || time || description || techStack) {
                 projects.push({
                     name: name.trim(),
                     role: role.trim(),
-                    start_date: startDate.trim(),
-                    end_date: endDate.trim(),
+                    start_date: time.trim(),
+                    end_date: '',
                     description: description.trim(),
                     tech_stack: techStack ? techStack.split(',').map(s => s.trim()).filter(s => s) : []
                 });
@@ -1376,11 +1375,22 @@ class CareerPlanningApp {
         const div = document.createElement('div');
         div.className = 'internship-item';
         div.innerHTML = `
-            <input type="text" placeholder="公司名称" class="internship-company">
-            <input type="text" placeholder="职位" class="internship-position">
-            <input type="text" placeholder="开始日期 (YYYY-MM)" class="internship-start-date">
-            <input type="text" placeholder="结束日期 (YYYY-MM)" class="internship-end-date">
-            <input type="text" placeholder="描述" class="internship-description">
+            <div class="profile-field">
+                <label>公司名称</label>
+                <input type="text" class="internship-company">
+            </div>
+            <div class="profile-field">
+                <label>职位</label>
+                <input type="text" class="internship-position">
+            </div>
+            <div class="profile-field">
+                <label>时间</label>
+                <input type="text" class="internship-time">
+            </div>
+            <div class="profile-field profile-field-full">
+                <label>描述</label>
+                <input type="text" class="internship-description">
+            </div>
         `;
         container.appendChild(div);
     }
@@ -1391,12 +1401,26 @@ class CareerPlanningApp {
         const div = document.createElement('div');
         div.className = 'project-item';
         div.innerHTML = `
-            <input type="text" placeholder="项目名称" class="project-name">
-            <input type="text" placeholder="角色" class="project-role">
-            <input type="text" placeholder="开始日期 (YYYY-MM)" class="project-start-date">
-            <input type="text" placeholder="结束日期 (YYYY-MM)" class="project-end-date">
-            <input type="text" placeholder="描述" class="project-description">
-            <input type="text" placeholder="技术栈 (用逗号分隔)" class="project-tech-stack">
+            <div class="profile-field">
+                <label>项目名称</label>
+                <input type="text" class="project-name">
+            </div>
+            <div class="profile-field">
+                <label>角色</label>
+                <input type="text" class="project-role">
+            </div>
+            <div class="profile-field">
+                <label>时间</label>
+                <input type="text" class="project-time">
+            </div>
+            <div class="profile-field profile-field-full">
+                <label>描述</label>
+                <input type="text" class="project-description">
+            </div>
+            <div class="profile-field">
+                <label>技术栈 (用逗号分隔)</label>
+                <input type="text" class="project-tech-stack">
+            </div>
         `;
         container.appendChild(div);
     }

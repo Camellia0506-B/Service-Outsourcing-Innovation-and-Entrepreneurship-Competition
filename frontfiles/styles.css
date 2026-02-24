@@ -669,6 +669,37 @@ body::before {
     margin-bottom: 12px;
 }
 
+/* 个人档案 - 实习 / 项目经历字段布局 */
+.internship-item,
+.project-item {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.project-item {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.profile-field.profile-field-full {
+    grid-column: 1 / -1;
+}
+.profile-field label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.profile-field input {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
 .skill-category-input,
 .skill-items-input {
     padding: 10px 12px;

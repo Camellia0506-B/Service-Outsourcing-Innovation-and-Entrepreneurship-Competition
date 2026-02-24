@@ -33,5 +33,12 @@
     "created_at": "2026-02-24 15:40:04",
     "result": null,
     "error": "'request'"
+  },
+  "resume_parse_20260224165149338_3_181331": {
+    "status": "failed",
+    "user_id": 3,
+    "created_at": "2026-02-24 16:51:49",
+    "result": null,
+    "error": "'request'"
   }
 }
