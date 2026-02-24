@@ -154,6 +154,7 @@ body { font-family:'Noto Sans SC',sans-serif; background:var(--bg); padding:20px
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   animation: fadeUp 0.4s ease both;
+  cursor: pointer;
 }
 .stage-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,100,200,0.1); }
 .stage-card::before {
@@ -598,6 +599,352 @@ function buildGraph() {
     wrap.appendChild(el);
   });
 }
+<!-- 弹窗组件 -->
+<div id="jobDetailModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>岗位详情</h2>
+      <span class="close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div id="jobDetailLoading" style="text-align:center; padding:20px;">
+        <div class="loading-spinner"></div>
+        <p>加载中...</p>
+      </div>
+      <div id="jobDetailContent" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <span style="font-weight:bold;">岗位名称:</span> <span id="modalJobName"></span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <span style="font-weight:bold;">查询结果:</span> <span id="modalJobCount"></span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="jobDetailTable" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background-color:#f2f5ff;">
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">职位编号</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">职位名称</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">工作地址</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">薪资范围</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">企业性质</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">公司全称</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">人员规模</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">所属行业</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">职位描述</th>
+                <th style="border:1px solid #ddd; padding:8px; text-align:left;">公司简介</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 表格内容将通过JavaScript动态生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* 弹窗样式 */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(26, 35, 64, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: var(--white);
+  margin: 5% auto;
+  padding: 24px;
+  border: 1px solid var(--border);
+  width: 90%;
+  max-width: 1200px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(79, 124, 255, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.close {
+  color: var(--muted);
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+}
+
+.close:hover,
+.close:focus {
+  color: var(--accent);
+  background: rgba(79, 124, 255, 0.08);
+}
+
+/* 加载动画 */
+.loading-spinner {
+  border: 4px solid rgba(79, 124, 255, 0.15);
+  border-radius: 50%;
+  border-top: 4px solid var(--accent);
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 表格样式 */
+table {
+  font-family: 'Noto Sans SC', sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 16px;
+}
+
+table th {
+  background-color: rgba(79, 124, 255, 0.06);
+  border: 1px solid var(--border);
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+}
+
+table td {
+  border: 1px solid var(--border);
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+table tr:nth-child(even) {
+  background-color: rgba(79, 124, 255, 0.02);
+}
+
+table tr:hover {
+  background-color: rgba(79, 124, 255, 0.04);
+  transition: background-color 0.2s;
+}
+
+/* 模态框内容样式 */
+#jobDetailContent {
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+#jobDetailContent > div {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+#jobDetailContent > div span:first-child {
+  font-weight: 600;
+  color: var(--text);
+  margin-right: 8px;
+}
+
+#jobDetailContent > div span:last-child {
+  color: var(--dim);
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 12px;
+  }
+  
+  .modal-header h2 {
+    font-size: 18px;
+  }
+  
+  table th,
+  table td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 滚动条样式 */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(79, 124, 255, 0.05);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(79, 124, 255, 0.3);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 124, 255, 0.5);
+}
+</style>
+
+<script>
+/* 点击事件处理 */
+function initEventHandlers() {
+  // 为晋升路径卡片添加点击事件
+  document.querySelectorAll('.stage-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const jobName = this.querySelector('.sc-name').textContent.trim();
+      showJobDetailModal(jobName);
+    });
+  });
+  
+  // 为换岗路径卡片添加点击事件
+  document.querySelectorAll('.jn').forEach(card => {
+    const jobName = card.querySelector('.jn-name').textContent.trim();
+    card.addEventListener('click', function() {
+      showJobDetailModal(jobName);
+    });
+    
+    // 为查看详情按钮添加点击事件
+    const btn = card.querySelector('.jn-btn');
+    if (btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation(); // 阻止冒泡
+        showJobDetailModal(jobName);
+      });
+    }
+  });
+  
+  // 为弹窗关闭按钮添加点击事件
+  const closeBtn = document.querySelector('.close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      document.getElementById('jobDetailModal').style.display = 'none';
+    });
+  }
+  
+  // 点击弹窗外部关闭弹窗
+  window.addEventListener('click', function(event) {
+    const modal = document.getElementById('jobDetailModal');
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  });
+}
+
+/* 显示岗位详情弹窗 */
+function showJobDetailModal(jobName) {
+  const modal = document.getElementById('jobDetailModal');
+  const loading = document.getElementById('jobDetailLoading');
+  const content = document.getElementById('jobDetailContent');
+  const jobNameElement = document.getElementById('modalJobName');
+  const jobCountElement = document.getElementById('modalJobCount');
+  const tableBody = document.querySelector('#jobDetailTable tbody');
+  
+  // 显示弹窗和加载状态
+  modal.style.display = 'block';
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  jobNameElement.textContent = jobName;
+  
+  // 清空表格内容
+  tableBody.innerHTML = '';
+  
+  // 调用API查询岗位详情
+  fetch('/api/v1/job/detail/query', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      job_name: jobName,
+      limit: 5
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    // 隐藏加载状态，显示内容
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    
+    if (data.code === 200 && data.data) {
+      const jobs = data.data.list || [];
+      jobCountElement.textContent = `共 ${data.data.total} 条，显示前 ${jobs.length} 条`;
+      
+      // 填充表格
+      jobs.forEach(job => {
+        const row = tableBody.insertRow();
+        row.insertCell(0).textContent = job['职位编号'] || '';
+        row.insertCell(1).textContent = job['职位名称'] || '';
+        row.insertCell(2).textContent = job['工作地址'] || '';
+        row.insertCell(3).textContent = job['薪资范围'] || '';
+        row.insertCell(4).textContent = job['企业性质'] || '';
+        row.insertCell(5).textContent = job['公司全称'] || '';
+        row.insertCell(6).textContent = job['人员规模'] || '';
+        row.insertCell(7).textContent = job['所属行业'] || '';
+        row.insertCell(8).textContent = job['职位描述'] || '';
+        row.insertCell(9).textContent = job['公司简介'] || '';
+      });
+    } else {
+      jobCountElement.textContent = '查询失败';
+      const row = tableBody.insertRow();
+      const cell = row.insertCell(0);
+      cell.colSpan = 10;
+      cell.textContent = '查询失败，请稍后重试';
+      cell.style.textAlign = 'center';
+    }
+  })
+  .catch(error => {
+    console.error('查询岗位详情失败:', error);
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    jobCountElement.textContent = '网络错误';
+    const row = tableBody.insertRow();
+    const cell = row.insertCell(0);
+    cell.colSpan = 10;
+    cell.textContent = '网络错误，请稍后重试';
+    cell.style.textAlign = 'center';
+  });
+}
+
+// 页面加载完成后初始化事件处理
+window.addEventListener('load', initEventHandlers);
 </script>
 </body>
 </html>
