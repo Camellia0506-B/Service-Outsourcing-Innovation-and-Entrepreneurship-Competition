@@ -82,281 +82,6 @@ function getPromotionPathForDisplay(jobName) {
     }));
 }
 
-// ══ 换岗路径 — 血缘图谱（来自 graph_template.html）════
-// 布局坐标（百分比，相对画布宽高）
-const layout = {
-    center: { rx: 0.5, ry: 0.5 },
-    pm: { rx: 0.5, ry: 0.1 },
-    ds: { rx: 0.82, ry: 0.22 },
-    mle: { rx: 0.82, ry: 0.72 },
-    quant: { rx: 0.5, ry: 0.88 },
-    res: { rx: 0.18, ry: 0.72 },
-    arch: { rx: 0.18, ry: 0.22 },
-};
-// 卡片尺寸
-const CARD = { center: { w: 136, h: 108 }, job: { w: 150, h: 172 } };
-
-function buildGraph(dynamicNodes) {
-    const wrap = document.getElementById('graphWrap');
-    if (!wrap) return;
-    const W = wrap.offsetWidth, H = wrap.offsetHeight;
-    wrap.querySelectorAll('.g-node,.edge-lbl').forEach(e => e.remove());
-
-    const pos = {};
-    Object.keys(layout).forEach(id => {
-        pos[id] = { x: layout[id].rx * W, y: layout[id].ry * H };
-    });
-
-    const svg = document.getElementById('svgLayer');
-    if (!svg) return;
-    let defs = `<defs>
-  <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#00b894"/>
-  </marker>
-  <marker id="arr-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#f5a623"/>
-  </marker>
-  <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#ff4d6d"/>
-  </marker>
-  <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#7c5cff" opacity="0.6"/>
-  </marker>
-  <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#4f7cff"/>
-  </marker>
-</defs>`;
-    let paths = '';
-
-    // 中心到各节点的连线（带箭头，终点缩短到卡片边缘）
-    Object.keys(dynamicNodes).forEach(id => {
-        if (id === 'center') return;
-        const n = dynamicNodes[id];
-        const p1 = pos['center'];
-        const p2 = pos[id];
-        if (!p1 || !p2) return;
-
-        const color = n.match >= 80 ? '#00b894' : n.match >= 60 ? '#f5a623' : '#ff4d6d';
-        const arrId = n.match >= 80 ? 'arr-green' : n.match >= 60 ? 'arr-gold' : 'arr-red';
-        const dash = n.match < 60 ? 'stroke-dasharray="7 4"'
-            : n.match < 80 ? 'stroke-dasharray="10 3"'
-            : '';
-
-        // 把终点从卡片中心缩短到卡片边缘
-        const dx = p1.x - p2.x;
-        const dy = p1.y - p2.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const ux = dx / dist;
-        const uy = dy / dist;
-
-        const cardHalfW = 75;
-        const cardHalfH = 86;
-        const tW = Math.abs(ux) > 0.001 ? cardHalfW / Math.abs(ux) : Infinity;
-        const tH = Math.abs(uy) > 0.001 ? cardHalfH / Math.abs(uy) : Infinity;
-        const t = Math.min(tW, tH) + 6;
-
-        const ex = p2.x + ux * t;
-        const ey = p2.y + uy * t;
-
-        const centerOffset = 68;
-        const sx = p1.x - ux * centerOffset;
-        const sy = p1.y - uy * centerOffset;
-
-        const cpx = (sx + ex) / 2 + (ey - sy) * 0.15;
-        const cpy = (sy + ey) / 2 - (ex - sx) * 0.15;
-
-        paths += `<path
-    d="M${sx},${sy} Q${cpx},${cpy} ${ex},${ey}"
-    fill="none"
-    stroke="${color}"
-    stroke-width="2"
-    ${dash}
-    opacity="0.85"
-    marker-end="url(#${arrId})"
-  />`;
-
-        const lx = sx * 0.45 + ex * 0.55 + (ey - sy) * 0.08;
-        const ly = sy * 0.45 + ey * 0.55 - (ex - sx) * 0.08;
-        const lblEl = document.createElement('div');
-        lblEl.className = 'edge-lbl';
-        lblEl.textContent = `${n.match}% · ${n.diff}`;
-        lblEl.style.cssText = `left:${lx}px; top:${ly}px; color:${color}; border-color:${color}30;`;
-        wrap.appendChild(lblEl);
-    });
-
-    const drawn = new Set();
-    Object.keys(dynamicNodes).forEach(fromId => {
-        if (fromId === 'center') return;
-        const n = dynamicNodes[fromId];
-        (n.transfers || []).forEach(toId => {
-            const key = [fromId, toId].sort().join('-');
-            if (drawn.has(key)) return;
-            drawn.add(key);
-            const p1 = pos[fromId], p2 = pos[toId];
-            if (!p1 || !p2) return;
-            const cpx = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.2;
-            const cpy = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.2;
-            paths += `<path d="M${p1.x},${p1.y} Q${cpx},${cpy} ${p2.x},${p2.y}"
-        fill="none" stroke="#7c5cff" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.5"
-        marker-end="url(#arr-blue)"/>`;
-        });
-    });
-
-    svg.innerHTML = defs + `<style>@keyframes dashFlow{to{stroke-dashoffset:-20}}</style>` + paths;
-
-    let delay = 0;
-    Object.keys(dynamicNodes).forEach(id => {
-        const n = dynamicNodes[id];
-        const p = pos[id];
-        if (!p) return;
-        const el = document.createElement('div');
-        el.className = 'g-node';
-        el.style.animationDelay = (delay += 0.07) + 's';
-
-        if (n.isCenter) {
-            el.style.cssText = `left:${p.x - CARD.center.w / 2}px;top:${p.y - CARD.center.h / 2}px;animation-delay:0s`;
-            el.innerHTML = `<div class="cn"><div class="cn-ico">${n.icon || '🤖'}</div><div class="cn-name">${(n.name || '当前岗位').replace(/</g, '&lt;')}</div><div class="cn-badge">当前岗位</div></div>`;
-        } else {
-            const diff_color = n.match >= 80 ? '#009e7a' : n.match >= 60 ? '#c47d00' : '#d03050';
-            const diff_bg = n.match >= 80 ? 'rgba(0,184,148,0.1)' : n.match >= 60 ? 'rgba(245,166,35,0.1)' : 'rgba(255,77,109,0.08)';
-            const diff_bd = n.match >= 80 ? 'rgba(0,184,148,0.2)' : n.match >= 60 ? 'rgba(245,166,35,0.2)' : 'rgba(255,77,109,0.18)';
-            el.style.cssText = `left:${p.x - CARD.job.w / 2}px;top:${p.y - CARD.job.h / 2}px;animation-delay:${delay}s;opacity:0`;
-            const nameEsc = (n.name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-            const descEsc = (n.desc || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-            const skillsEsc = (n.skills || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-            el.innerHTML = `
-        <div class="jn" style="border-color:${n.color}40">
-          <div class="jn-top">
-            <div class="jn-ico" style="background:${n.color}15">${n.icon || '💼'}</div>
-            <div><div class="jn-name">${nameEsc}</div><div class="jn-sal">${(n.sal || '面议').replace(/</g, '&lt;')}</div></div>
-          </div>
-          <div class="jn-mr"><span class="jn-ml">匹配度</span><span class="jn-mv" style="color:${n.color}">${n.match}%</span></div>
-          <div class="jn-bar-bg"><div class="jn-bar" style="width:${n.match}%;background:${n.color}"></div></div>
-          <div class="jn-tags">
-            <span class="jn-tag" style="background:${diff_bg};color:${diff_color};border:1px solid ${diff_bd}">难度${n.diff}</span>
-            <span class="jn-tag" style="background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.15)">⏱ ${(n.time || '').replace(/</g, '&lt;')}</span>
-          </div>
-          <div class="jn-skills"><em>可迁移：</em>${skillsEsc}</div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${descEsc}</div>
-        </div>`;
-        }
-        wrap.appendChild(el);
-    });
-}
-
-function convertToGraphNodes(centerJobName, transferNodes) {
-    const nodes = {
-        center: { name: centerJobName, icon: '🤖', isCenter: true }
-    };
-    const layoutKeys = ['pm', 'ds', 'mle', 'quant', 'res', 'arch'];
-    (transferNodes || []).forEach((node, index) => {
-        const color = node.match_score >= 80 ? '#00b894' : node.match_score >= 60 ? '#f5a623' : '#ff4d6d';
-        const key = layoutKeys[index] || node.id || `node${index}`;
-        nodes[key] = {
-            name: node.name,
-            icon: node.icon || '💼',
-            sal: node.salary || '面议',
-            match: node.match_score || 0,
-            color: color,
-            desc: node.description || '',
-            diff: node.difficulty || '中',
-            time: node.transition_months || '',
-            skills: node.transferable_skills || '',
-            transfers: (node.kinship_edges || []).map((id) => layoutKeys[transferNodes.findIndex(n => n.id === id)] || id),
-        };
-    });
-    (transferNodes || []).forEach((node, index) => {
-        if (index >= 6) {
-            const angle = (2 * Math.PI * index / (transferNodes.length || 1)) - Math.PI / 2;
-            layout[`node_extra_${index}`] = {
-                rx: 0.5 + 0.35 * Math.cos(angle),
-                ry: 0.5 + 0.35 * Math.sin(angle)
-            };
-        }
-    });
-    return nodes;
-}
-
-function showGraphError(wrap, msg) {
-    const el = document.createElement('div');
-    el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#ff4d6d';
-    el.innerHTML = `<div>${msg}</div><div style="font-size:11px;color:#aab4cc">请检查 AI 服务是否启动，或查看 Console</div>`;
-    wrap.appendChild(el);
-}
-
-async function loadTransferGraph(jobName) {
-    const wrap = document.getElementById('graphWrap');
-    if (!wrap) {
-        console.error('找不到 #graphWrap，请检查 HTML 是否有 <div id="graphWrap">');
-        return;
-    }
-    wrap.querySelectorAll('.g-node, .edge-lbl').forEach(e => e.remove());
-    const svg = document.getElementById('svgLayer');
-    if (svg) svg.innerHTML = '';
-
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = '_graphLoading';
-    loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#aab4cc';
-    loadingDiv.innerHTML = '<div class="graph-loading-spinner" style="margin:0 auto"></div><div style="font-size:14px">Agent 正在生成晋升图谱，请稍候...</div>';
-    if (!document.getElementById('_spinStyle')) {
-        const s = document.createElement('style');
-        s.id = '_spinStyle';
-        s.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-        document.head.appendChild(s);
-    }
-    wrap.appendChild(loadingDiv);
-
-    let buffer = '';
-    try {
-        const baseURL = (typeof API_CONFIG !== 'undefined')
-            ? (API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5001/api/v1')
-            : 'http://localhost:5001/api/v1';
-        const url = baseURL.replace(/\/$/, '') + '/job/transfer-path';
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ job_name: jobName })
-        });
-        if (!res.ok) throw new Error(`接口返回 HTTP ${res.status}`);
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            for (const line of decoder.decode(value).split('\n')) {
-                if (!line.startsWith('data: ')) continue;
-                const payload = line.slice(6).trim();
-                if (payload === '[DONE]') {
-                    document.getElementById('_graphLoading')?.remove();
-                    const clean = buffer.replace(/```json|```/g, '').trim();
-                    const start = clean.indexOf('{');
-                    const end = clean.lastIndexOf('}');
-                    if (start === -1 || end === -1) {
-                        showGraphError(wrap, '返回数据格式异常，请重试');
-                        return;
-                    }
-                    try {
-                        const data = JSON.parse(clean.slice(start, end + 1));
-                        const graphNodes = convertToGraphNodes(data.center_job || jobName, data.transfer_nodes || []);
-                        window._cachedGraphNodes = graphNodes;
-                        setTimeout(() => buildGraph(graphNodes), 50);
-                    } catch (e) {
-                        console.error('JSON 解析失败，原始内容：', clean);
-                        showGraphError(wrap, `JSON 解析失败: ${e.message}`);
-                    }
-                    return;
-                }
-                try { buffer += JSON.parse(payload).text; } catch (e) { /* 忽略非JSON行 */ }
-            }
-        }
-    } catch (e) {
-        document.getElementById('_graphLoading')?.remove();
-        console.error('图谱请求失败:', e);
-        showGraphError(wrap, `请求失败: ${e.message}`);
-    }
-}
-
 // 精选岗位列表（前端写死，搜索框为空时始终展示，不走接口）
 const featuredJobs = [
     { jobId: 'job_001', jobName: '算法工程师', industry: '互联网/AI', level: '中级', salaryRange: '20k-35k', skills: ['人工智能', '机器学习'], techSkills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'], demandScore: 92, trend: '上升' },
@@ -571,7 +296,6 @@ class CareerPlanningApp {
         document.getElementById('closeCompletenessModal')?.addEventListener('click', () => document.getElementById('reportCompletenessModal')?.classList.add('hidden'));
         document.getElementById('closeEditModal')?.addEventListener('click', () => document.getElementById('reportEditModal')?.classList.add('hidden'));
         document.getElementById('saveReportEditsBtn')?.addEventListener('click', () => this.saveReportEdits());
-        document.getElementById('previewReportBtn')?.addEventListener('click', () => this.previewReportEdits());
 
         // 岗位画像相关：搜索防抖 300ms，清空按钮，返回精选
         let jobProfileSearchDebounce = null;
@@ -596,21 +320,12 @@ class CareerPlanningApp {
         // 加载图谱：严格按 career_graph_v2 + 指令，流式请求晋升/转岗并渲染
         document.getElementById('jobProfilePage')?.addEventListener('click', (e) => {
             if (e.target && e.target.closest && e.target.closest('#jobProfileGraphBtn')) {
-                const jobName = (document.getElementById('graphJobName')?.value || '').trim();
-                if (!jobName) {
+                const keyword = (document.getElementById('graphJobName')?.value || '').trim();
+                if (!keyword) {
                     this.showToast('请输入岗位名称', 'error');
                     return;
                 }
-                const graphContainer = document.getElementById('jobProfileGraph');
-                const isTransferActive = graphContainer && (
-                    graphContainer.querySelector('.graph-tab-v2[data-graph-panel="transfer"].active') ||
-                    graphContainer.querySelector('#panel-transfer-v2.active')
-                );
-                if (isTransferActive) {
-                    loadTransferGraph(jobName);
-                } else {
-                    this.loadCareerGraph(jobName);
-                }
+                this.loadCareerGraph(keyword);
             }
         });
 
@@ -4059,7 +3774,7 @@ class CareerPlanningApp {
         modal.classList.remove('hidden');
         self._renderStreamingSkeleton(contentEl, jobName);
 
-        const streamUrl = typeof getJobProfileStreamURL === 'function' ? getJobProfileStreamURL() : (window.API_CONFIG && (window.API_CONFIG.jobProfilesBaseURL || window.API_CONFIG.assessmentBaseURL) ? (window.API_CONFIG.jobProfilesBaseURL || window.API_CONFIG.assessmentBaseURL) + '/job/generate-profile-stream' : 'http://localhost:5001/api/v1/job/generate-profile-stream');
+        const streamUrl = typeof getJobProfileStreamURL === 'function' ? getJobProfileStreamURL() : (window.API_CONFIG && (window.API_CONFIG.jobProfilesBaseURL || window.API_CONFIG.assessmentBaseURL) ? (window.API_CONFIG.jobProfilesBaseURL || window.API_CONFIG.assessmentBaseURL) + '/job/generate-profile-stream' : 'http://localhost:5002/api/v1/job/generate-profile-stream');
         let buffer = '';
 
         fetch(streamUrl, {
@@ -4126,7 +3841,7 @@ class CareerPlanningApp {
             readNext();
         }).catch(err => {
             const msg = (err && err.message) ? err.message : '无法连接';
-            if (contentEl) contentEl.innerHTML = '<div class="hint-text">无法连接 AI 服务，请确认已启动 (http://localhost:5001)。' + String(msg).replace(/</g, '&lt;') + '</div>';
+            if (contentEl) contentEl.innerHTML = '<div class="hint-text">无法连接 AI 服务，请确认已启动 (http://localhost:5002)。' + String(msg).replace(/</g, '&lt;') + '</div>';
         });
     }
 
@@ -4654,8 +4369,7 @@ class CareerPlanningApp {
     async loadCareerGraph(jobName) {
         const graphContainer = document.getElementById('jobProfileGraph');
         if (!graphContainer) return;
-        window._cachedGraphNodes = null;
-        const baseURL = API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5001/api/v1';
+        const baseURL = API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5002/api/v1';
         const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
         graphContainer.innerHTML = `
             <div class="graph-job-header job-header-v2">
@@ -4668,24 +4382,19 @@ class CareerPlanningApp {
             </div>
             <div class="graph-tab-bar-v2">
                 <button type="button" class="graph-tab-v2 active" data-graph-panel="promo">📋 晋升路径</button>
-                <button type="button" class="graph-tab-v2" data-graph-panel="transfer">🔄 转岗路径</button>
+                <button type="button" class="graph-tab-v2" data-graph-panel="transfer">🔄 换岗路径</button>
             </div>
             <div class="graph-panel-v2 active" id="panel-promo-v2">
                 <div id="promotionContainer" class="promo-container-v2"></div>
             </div>
             <div class="graph-panel-v2" id="panel-transfer-v2">
-                <div class="transfer-container">
-                    <div class="legend-row">
-                        <span style="font-size:12px;color:var(--dim);font-weight:600">图例：</span>
-                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--green));height:2px"></span>高匹配（≥80%）</span>
-                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--gold));height:2px"></span>中匹配（60-79%）</span>
-                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--red));height:2px;border-top:2px dashed var(--red);background:none"></span>低匹配（&lt;60%）</span>
-                        <span class="leg"><span style="font-size:14px">→</span>晋升方向</span>
-                        <span style="margin-left:auto;font-size:11px;color:var(--muted)">实线=技能高度迁移 · 虚线=需较大跨度学习</span>
+                <div class="transfer-container-v2">
+                    <div class="legend-row-v2">
+                        <span class="leg-v2"><span class="leg-line-v2" style="background:#00b894"></span>高匹配（≥80%）</span>
+                        <span class="leg-v2"><span class="leg-line-v2" style="background:#f5a623"></span>中匹配（60-79%）</span>
+                        <span class="leg-v2"><span class="leg-line-v2" style="background:#ff4d6d;border-top:2px dashed #ff4d6d;background:none"></span>低匹配（&lt;60%）</span>
                     </div>
-                    <div class="graph-svg-wrap" id="graphWrap">
-                        <svg class="graph-svg" id="svgLayer"></svg>
-                    </div>
+                    <div id="transferContainer" class="graph-svg-wrap-v2" style="min-height:880px;position:relative"></div>
                 </div>
             </div>`;
         this._graphCurrentJobName = jobName;
@@ -4698,13 +4407,9 @@ class CareerPlanningApp {
                 const panelId = btn.dataset.graphPanel;
                 const panelEl = document.getElementById('panel-' + panelId + '-v2');
                 if (panelEl) panelEl.classList.add('active');
-                if (panelId === 'transfer') {
-                    if (window._cachedGraphNodes) {
-                        setTimeout(() => buildGraph(window._cachedGraphNodes), 100);
-                    } else if (!this._graphTransferLoaded && this._graphCurrentJobName) {
-                        this._graphTransferLoaded = true;
-                        loadTransferGraph(this._graphCurrentJobName);
-                    }
+                if (panelId === 'transfer' && !this._graphTransferLoaded && this._graphCurrentJobName) {
+                    this._graphTransferLoaded = true;
+                    this.loadTransferPath(this._graphCurrentJobName);
                 }
             });
         });
@@ -4714,7 +4419,7 @@ class CareerPlanningApp {
     async loadPromotionPath(jobName) {
         const container = document.getElementById('promotionContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">加载晋升路径...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div style="font-size:36px;margin-bottom:12px;animation:spin 1.5s linear infinite;display:inline-block">⚙️</div><div style="font-size:14px;margin-top:8px">加载晋升路径...</div></div>`;
         try {
             const result = await getCareerPath(jobName);
             if (result.code === 200 && result.data && result.data.path && result.data.path.length) {
@@ -4746,7 +4451,7 @@ class CareerPlanningApp {
         let html = '<div style="display:flex;flex-direction:column;align-items:center;padding:10px 20px 20px;position:relative">';
         stages.forEach((stage, idx) => {
             if (idx > 0 && !stages[idx - 1].forks) {
-                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#4f7cff,#7c5cff)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #7c5cff"></div></div>`;
+                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#4f7cff,#7c5cff)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #7c5cff"></div><div style="position:absolute;left:calc(50% + 16px);top:50%;transform:translateY(-50%);white-space:nowrap;font-size:10px;font-weight:600;color:#5a6a8a;background:#fff;border:1px solid rgba(79,124,255,0.12);padding:2px 8px;border-radius:10px">${esc(stages[idx-1].promotion_hint || '持续积累')}</div></div>`;
             }
             if (stage.forks) {
                 html += '<div style="display:flex;gap:14px;width:100%">';
@@ -4771,7 +4476,7 @@ class CareerPlanningApp {
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:14px;font-weight:700;color:#1a2340">${esc(stage.title)}</span><span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:${cur?'rgba(79,124,255,0.1)':idx===0?'rgba(0,184,148,0.1)':'rgba(245,166,35,0.1)'};color:${cur?'#3d65e0':idx===0?'#009e7a':'#c47d00'};border:1px solid ${cur?'rgba(79,124,255,0.2)':idx===0?'rgba(0,184,148,0.2)':'rgba(245,166,35,0.2)'}">${esc(stage.badge)}</span></div>
                         <div style="font-size:12px;color:#5a6a8a;line-height:1.6;margin-bottom:10px">${esc(stage.description)}</div>
                         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${(stage.skills||[]).map(s=>`<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.14)">${esc(s)}</span>`).join('')}</div>
-                        <div style="font-size:11px;color:#aab4cc">${esc(stage.companies)}</div></div></div>`;
+                        <div style="font-size:11px;color:#aab4cc">代表：${esc(stage.companies)}</div></div></div>`;
             }
         });
         html += '</div>';
@@ -4781,13 +4486,13 @@ class CareerPlanningApp {
     async loadTransferPath(jobName) {
         const container = document.getElementById('transferContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">加载晋升图谱...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div style="font-size:36px;margin-bottom:12px">🔄</div><div style="font-size:14px;margin-top:8px">加载转岗图谱...</div></div>`;
         try {
             const result = await getRelationGraphByJobName(jobName);
             if (result.code === 200 && result.data && Array.isArray(result.data) && result.data.length) {
                 this.renderTransferGraphECharts(result.data, result.center_job || { job_name: jobName }, container);
             } else {
-                container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的晋升数据</div>';
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的转岗数据</div>';
             }
         } catch (e) {
             container.innerHTML = `<div style="color:#ff4d6d;padding:20px;text-align:center">请求失败: ${(e.message||'').replace(/</g,'&lt;')}</div>`;
@@ -4795,7 +4500,7 @@ class CareerPlanningApp {
     }
 
     renderTransferGraphECharts(relations, centerJob, container) {
-        if (!relations.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无晋升数据</div>'; return; }
+        if (!relations.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无转岗数据</div>'; return; }
         const list = relations.slice(0, 6);
         const centerName = (centerJob && centerJob.job_name) ? centerJob.job_name : '当前岗位';
         const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
@@ -4900,7 +4605,7 @@ class CareerPlanningApp {
                 '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:' + diffBg + ';color:' + diffColor + ';border:1px solid ' + diffBorder + '">难度' + diffText + '</span>' +
                 '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:rgba(79,124,255,0.08);color:#3d65e0;border:1px solid rgba(79,124,255,0.18)">⏱ ' + cycleText + '</span></div>' +
                 '<div style="font-size:9px;color:#5a6a8a;line-height:1.4;margin-bottom:6px"><span style="color:#4f7cff;font-weight:600">可迁移：</span>' + esc(skillsText) + '</div>' +
-                '<div style="font-size:9px;color:#aab4cc;line-height:1.35">技能重叠度高，晋升成本较低</div></div>';
+                '<div style="font-size:9px;color:#aab4cc;line-height:1.35">技能重叠度高，转岗成本较低</div></div>';
             container.appendChild(card);
         });
     }
@@ -4953,14 +4658,14 @@ class CareerPlanningApp {
             if (result.success && result.data) {
                 this.renderJobRelationGraph(result.data, graphContainer);
             } else {
-                graphContainer.innerHTML = '<div class="hint-text">图谱数据加载失败，请确认 AI 服务 (http://localhost:5001) 已启动</div>';
+                graphContainer.innerHTML = '<div class="hint-text">图谱数据加载失败，请确认 AI 服务 (http://localhost:5002) 已启动</div>';
             }
         } catch (e) {
             console.error('loadJobRelationGraph:', e);
             const isTimeout = e && e.message === '请求超时';
             const msg = isTimeout
-                ? '请求超时，请检查网络或确认 AI 服务 (http://localhost:5001) 已启动'
-                : '图谱数据加载失败，请确认 AI 服务 (http://localhost:5001) 已启动';
+                ? '请求超时，请检查网络或确认 AI 服务 (http://localhost:5002) 已启动'
+                : '图谱数据加载失败，请确认 AI 服务 (http://localhost:5002) 已启动';
             graphContainer.innerHTML = '<div class="hint-text">' + msg + '</div>';
         }
     }
@@ -5129,7 +4834,7 @@ class CareerPlanningApp {
 
         if (transferNodes.length === 0) {
             html += `
-                <div class="graph-transfer-empty">暂无该岗位的晋升推荐，请确认已加载关联图谱接口数据。</div>`;
+                <div class="graph-transfer-empty">暂无该岗位的转岗推荐，请确认已加载关联图谱接口数据。</div>`;
         } else {
             transferNodes.forEach((node, i) => {
                 const score = node.match != null ? node.match : 75;
@@ -5806,7 +5511,7 @@ class CareerPlanningApp {
         setTimeout(() => this._setAIGenSteps(3), 4500);
 
         try {
-            console.log('[AI生成] 请求触发生成，岗位:', jobName, '| 将请求 http://localhost:5001/api/v1/job/ai-generate-profile');
+            console.log('[AI生成] 请求触发生成，岗位:', jobName, '| 将请求 http://localhost:5002/api/v1/job/ai-generate-profile');
             const result = await aiGenerateJobProfile(jobName, jobDescriptions, 30, industry, experience);
             if (!result.success) {
                 this._hideAIGenProgress();
@@ -5963,7 +5668,7 @@ class CareerPlanningApp {
         if (!jobId) {
             const result = await getJobProfiles(1, 20, keyword, '', '');
             if (!result.success) {
-                const msg = (result.msg || '').indexOf('5001') !== -1 ? result.msg : '未找到匹配的岗位，请检查名称或从下拉中选择';
+                const msg = (result.msg || '').indexOf('5002') !== -1 ? result.msg : '未找到匹配的岗位，请检查名称或从下拉中选择';
                 this.showToast(msg, 'error');
                 const graphContainer = document.getElementById('jobProfileGraph');
                 if (graphContainer && !graphContainer.querySelector('.graph-job-title-card')) {
@@ -6060,11 +5765,6 @@ class CareerPlanningApp {
         const dimScores = data.dimension_scores || {};
         const highlights = data.highlights || [];
         const gaps = data.gaps || [];
-        const matchedSkills = data.matched_skills || [];
-        const skillGaps = data.skill_gaps || [];
-        const improvementPlan = data.improvement_plan || {};
-        const promotionPath = data.promotion_path || [];
-        const transitionPaths = data.transition_paths || [];
         const jobInfo = data.job_info || {};
         const jobName = data.job_name || '岗位';
 
@@ -6146,8 +5846,7 @@ class CareerPlanningApp {
             `<button type="button" class="dim-tab ${i === 0 ? 'active' : ''}" data-dim-tab="${key}">${['📐', '💡', '🌟', '🚀'][i]} ${dimLabels[key]}</button>`
         ).join('');
         const youItems = highlights.slice(0, 4).map(h => `<div class="cmp-item"><span class="cmp-ico">✅</span><div><div class="cmp-name">${h}</div></div><span class="lvl lvl-have">✓ 符合</span></div>`).join('');
-        const gapSource = (skillGaps && skillGaps.length) ? skillGaps : gaps;
-        const gapRowsHtml = gapSource.slice(0, 5).map((g, i) =>
+        const gapRowsHtml = gaps.slice(0, 5).map((g, i) =>
             `<div class="gap-row"><div class="gap-n">${i + 1}</div><div><strong>${g.gap || ''}：</strong>${g.suggestion || ''}</div></div>`
         ).join('');
         const dimContentHtml = dimKeys.map((key, i) => {
@@ -6163,28 +5862,16 @@ class CareerPlanningApp {
                         <div class="cmp-item"><span class="cmp-ico">${s >= req ? '✅' : '⚡'}</span><div><div class="cmp-name">当前 ${s} 分</div><div class="cmp-note">${s >= req ? '已达标' : '需提升'}</div></div><span class="lvl ${s >= req ? 'lvl-have' : 'lvl-part'}">${s >= req ? '✓ 符合' : '需提升'}</span></div>
                     </div>
                 </div>
-                ${i === 1 && gapRowsHtml ? `<div class="gap-box">
-                    <div class="ai-hint-label">🤖 智能体通过能力差距分析识别影响匹配度的关键短板，并生成个性化提升建议。</div>
-                    <div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}
-                </div>` : ''}
+                ${i === 1 && gapRowsHtml ? `<div class="gap-box"><div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}</div>` : ''}
             </div>`;
         }).join('');
 
-        // 行动计划：优先使用 CareerAgent 返回的 improvement_plan；若为空再回退到 gaps 生成
+        // 行动计划：从 gaps 生成；若 gaps 为空则根据低分维度生成兜底建议
         const dimSuggestions = { basic_requirements: '补充学历/专业/GPA等基础条件', professional_skills: '通过项目或课程提升岗位所需技能', soft_skills: '加强沟通协作、学习能力等软技能', development_potential: '积累项目经验、参与竞赛或实习' };
         let planItems = [];
-        const shortPlan = (improvementPlan.short_term || []).slice(0, 3);
-        const midPlan = (improvementPlan.mid_term || []).slice(0, 3);
-        if (shortPlan.length || midPlan.length) {
-            planItems = [
-                ...shortPlan.map((t, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i] || '🎯', title: t, desc: '', tag: 't-urgent' })),
-                ...midPlan.map((t, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i] || '☁️', title: t, desc: '', tag: 't-mid' }))
-            ];
-        } else if (gapSource.length > 0) {
-            planItems = [
-                ...gapSource.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', desc: g.suggestion || '', tag: 't-urgent' })),
-                ...gapSource.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', desc: g.suggestion || '', tag: 't-mid' }))
-            ];
+        if (gaps.length > 0) {
+            planItems = [...gaps.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', desc: g.suggestion || '', tag: 't-urgent' })),
+                ...gaps.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', desc: g.suggestion || '', tag: 't-mid' }))];
         } else {
             const lowDims = dimKeys.filter(k => (dimScores[k]?.score ?? 0) < 70).slice(0, 3);
             planItems = lowDims.map((k, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: `提升${dimLabels[k]}`, desc: dimSuggestions[k] || '根据岗位要求针对性提升', tag: 't-urgent' }));
@@ -6225,23 +5912,6 @@ class CareerPlanningApp {
                 ${dimContentHtml}
             </div>
             <div class="sec">
-                <div class="sec-title" style="margin-bottom:10px">✅ 已匹配核心技能</div>
-                ${matchedSkills.length ? `
-                <table class="ca-skill-table">
-                    <thead><tr><th>岗位技能</th><th>你的技能</th><th>匹配分</th><th>语义相似</th></tr></thead>
-                    <tbody>
-                        ${matchedSkills.slice(0, 6).map(ms => `
-                            <tr>
-                                <td>${ms.skill || '-'}</td>
-                                <td>${ms.student_skill || '-'}</td>
-                                <td>${ms.match_score ?? 0}</td>
-                                <td>${(ms.similarity != null ? Math.round(ms.similarity * 100) : 0)}%</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>` : '<p class="hint-text">暂无可展示的匹配技能。</p>'}
-            </div>
-            <div class="sec">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                     <div class="sec-title" style="margin-bottom:0">个性化提升行动计划</div>
                     <div class="plan-tabs">
@@ -6253,10 +5923,7 @@ class CareerPlanningApp {
             </div>
             <div class="sec">
                 <div class="sec-title" style="margin-bottom:16px">📈 职业发展路径</div>
-                <div class="ai-hint ai-hint-purple">
-                    🤖 智能体决策说明：系统基于技能相似度、行业发展趋势与薪资成长潜力进行综合评估，优先推荐最具长期发展价值的职业路径。
-                </div>
-                <div class="sec-sub" style="margin-top:4px;margin-bottom:12px">结合岗位画像与个人擅长方向，构建本职业清晰的发展路径</div>
+                <div class="sec-sub" style="margin-top:-8px;margin-bottom:12px">结合岗位画像与个人擅长方向，构建本职业清晰的发展路径</div>
                 <div id="reportCareerPathContainer"></div>
             </div>
         `;
@@ -6629,9 +6296,9 @@ class CareerPlanningApp {
     }
 
     // 渲染职业规划报告内容（5 大模块、可折叠、左侧目录、无 7.x 数字）
-    renderCareerReportContent(data, container) {
-        const contentDiv = container || document.getElementById('reportContent');
-        const tocDiv = container ? null : document.getElementById('reportToc');
+    renderCareerReportContent(data) {
+        const contentDiv = document.getElementById('reportContent');
+        const tocDiv = document.getElementById('reportToc');
         const san = (t) => this.sanitizeCareerText(t || '');
         const genTime = this.formatDateTime(data.generated_at || data.created_at);
         const meta = data.metadata || {};
@@ -6941,7 +6608,7 @@ class CareerPlanningApp {
                         <div class="roadmap-stages">${(rm.stages || []).map((s, i) => `
                             <div class="roadmap-stage"><span class="stage-num">${i + 1}</span><div><strong>${s.stage}</strong>（${s.period || ''}）<ul>${(s.key_responsibilities || []).map(r => `<li>${san(r)}</li>`).join('')}</ul></div></div>
                         `).join('')}</div>
-                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>晋升备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
+                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>转岗备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
                     </div>` : ''}
                     ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${san(trends.current_status || '')}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${san(t.trend)}</strong>：${san(t.impact)}；机会：${san(t.opportunity)}</li>`).join('')}</ul><p class="outlook">${san(trends['5_year_outlook'] || '')}</p></div>` : ''}
                     ${s2.job_data_analysis ? `<div class="job-data-analysis"><h5>企业岗位数据关联性分析</h5><p>${san(s2.job_data_analysis.overview || '')}</p><ul>${(s2.job_data_analysis.associations || []).map(a => `<li><strong>${san(a.job_title)}</strong>：${san(a.relevance)}；能力迁移：${san(a.skill_transferability || '')}</li>`).join('')}</ul></div>` : ''}
@@ -7217,7 +6884,7 @@ class CareerPlanningApp {
         const keyTakeaways = document.getElementById('editKeyTakeaways')?.value?.trim();
         
         // 映射到报告结构
-        if (careerGoal) edits['section_1_job_matching.career_choice_advice.primary_recommendation'] = careerGoal;
+        if (careerGoal) edits['career_choice_advice.primary_recommendation'] = careerGoal;
         if (workLocation) edits['preferences.work_location'] = workLocation;
         if (salaryExpectation) edits['preferences.salary_expectation'] = salaryExpectation;
         if (workLifeBalance) edits['preferences.work_life_balance'] = workLifeBalance;
@@ -7241,129 +6908,6 @@ class CareerPlanningApp {
         } else {
             this.showToast(result.msg || '保存失败', 'error');
         }
-    }
-    
-    // 7.5 预览效果
-    previewReportEdits() {
-        const id = this.currentReportId;
-        if (!id) return this.showToast('暂无报告', 'error');
-        
-        // 职业目标设置
-        const careerGoal = document.getElementById('editCareerGoal')?.value?.trim();
-        const workLocation = document.getElementById('editWorkLocation')?.value?.trim();
-        const salaryExpectation = document.getElementById('editSalaryExpectation')?.value?.trim();
-        const workLifeBalance = document.getElementById('editWorkLifeBalance')?.value?.trim();
-        
-        // 目标设置
-        const shortTermGoal = document.getElementById('editShortTermGoal')?.value?.trim();
-        const shortTermDeadline = document.getElementById('editShortTermDeadline')?.value?.trim();
-        const midTermGoal = document.getElementById('editMidTermGoal')?.value?.trim();
-        
-        // 行动计划
-        const shortTermPlan = document.getElementById('editShortTermPlan')?.value?.trim();
-        const timeInvestment = document.getElementById('editTimeInvestment')?.value?.trim();
-        
-        // 报告内容
-        const motivationalMsg = document.getElementById('editMotivationalMsg')?.value?.trim();
-        const keyTakeaways = document.getElementById('editKeyTakeaways')?.value?.trim();
-        
-        // 创建报告数据的副本
-        const previewReport = JSON.parse(JSON.stringify(this.currentReportData || {}));
-        
-        // 应用修改
-        if (careerGoal) {
-            previewReport.section_1_job_matching = previewReport.section_1_job_matching || {};
-            previewReport.section_1_job_matching.career_choice_advice = previewReport.section_1_job_matching.career_choice_advice || {};
-            previewReport.section_1_job_matching.career_choice_advice.primary_recommendation = careerGoal;
-        }
-        if (workLocation) {
-            previewReport.preferences = previewReport.preferences || {};
-            previewReport.preferences.work_location = workLocation;
-        }
-        if (salaryExpectation) {
-            previewReport.preferences = previewReport.preferences || {};
-            previewReport.preferences.salary_expectation = salaryExpectation;
-        }
-        if (workLifeBalance) {
-            previewReport.preferences = previewReport.preferences || {};
-            previewReport.preferences.work_life_balance = workLifeBalance;
-        }
-        
-        if (shortTermGoal) {
-            previewReport.section_2_career_path = previewReport.section_2_career_path || {};
-            previewReport.section_2_career_path.short_term_goal = previewReport.section_2_career_path.short_term_goal || {};
-            previewReport.section_2_career_path.short_term_goal.primary_goal = shortTermGoal;
-        }
-        if (shortTermDeadline) {
-            previewReport.section_2_career_path = previewReport.section_2_career_path || {};
-            previewReport.section_2_career_path.short_term_goal = previewReport.section_2_career_path.short_term_goal || {};
-            previewReport.section_2_career_path.short_term_goal.specific_targets = previewReport.section_2_career_path.short_term_goal.specific_targets || [{}];
-            previewReport.section_2_career_path.short_term_goal.specific_targets[0].deadline = shortTermDeadline;
-        }
-        if (midTermGoal) {
-            previewReport.section_2_career_path = previewReport.section_2_career_path || {};
-            previewReport.section_2_career_path.mid_term_goal = previewReport.section_2_career_path.mid_term_goal || {};
-            previewReport.section_2_career_path.mid_term_goal.primary_goal = midTermGoal;
-        }
-        
-        if (shortTermPlan) {
-            previewReport.section_3_action_plan = previewReport.section_3_action_plan || {};
-            previewReport.section_3_action_plan.short_term_plan = previewReport.section_3_action_plan.short_term_plan || {};
-            previewReport.section_3_action_plan.short_term_plan.goal = shortTermPlan;
-        }
-        if (timeInvestment) {
-            previewReport.section_3_action_plan = previewReport.section_3_action_plan || {};
-            previewReport.section_3_action_plan.short_term_plan = previewReport.section_3_action_plan.short_term_plan || {};
-            previewReport.section_3_action_plan.short_term_plan.monthly_plans = previewReport.section_3_action_plan.short_term_plan.monthly_plans || [{}];
-            previewReport.section_3_action_plan.short_term_plan.monthly_plans[0].tasks = previewReport.section_3_action_plan.short_term_plan.monthly_plans[0].tasks || [{}];
-            previewReport.section_3_action_plan.short_term_plan.monthly_plans[0].tasks[0]['时间投入'] = timeInvestment;
-        }
-        
-        if (motivationalMsg) {
-            previewReport.summary = previewReport.summary || {};
-            previewReport.summary.motivational_message = motivationalMsg;
-        }
-        if (keyTakeaways) {
-            previewReport.summary = previewReport.summary || {};
-            previewReport.summary.key_takeaways = keyTakeaways.split('\n');
-        }
-        
-        // 创建预览弹窗
-        const previewModal = document.createElement('div');
-        previewModal.id = 'previewModal';
-        previewModal.className = 'modal';
-        previewModal.style.display = 'block';
-        previewModal.innerHTML = `
-            <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <h2>预览效果</h2>
-                    <button type="button" class="modal-close" id="closePreviewModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div id="previewContent" class="career-report-wrap"></div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(previewModal);
-        
-        // 渲染预览内容
-        const previewContent = document.getElementById('previewContent');
-        if (previewContent) {
-            this.renderCareerReportContent(previewReport, previewContent);
-        }
-        
-        // 关闭预览弹窗
-        document.getElementById('closePreviewModal')?.addEventListener('click', () => {
-            previewModal.remove();
-        });
-        
-        // 点击弹窗外部关闭
-        previewModal.addEventListener('click', (e) => {
-            if (e.target === previewModal) {
-                previewModal.remove();
-            }
-        });
     }
 
     // 7.4 AI 润色 - 提交后轮询刷新报告
@@ -7422,7 +6966,7 @@ class CareerPlanningApp {
         const messageDiv = document.createElement('div');
         messageDiv.className = sender === 'user' ? 'user-message' : 'agent-message';
         
-        const avatar = sender === 'user' ? '👤' : '🎯';
+        const avatar = sender === 'user' ? '👤' : '🤖';
         
         messageDiv.innerHTML = `
             <div class="message-avatar">${avatar}</div>
@@ -7437,49 +6981,13 @@ class CareerPlanningApp {
     
     // 格式化消息内容
     formatMessageContent(content) {
-        // 处理字符串内容，确保正确编码
         if (typeof content === 'string') {
-            // 对特殊字符进行HTML编码，防止乱码
-            const encodedContent = this.htmlEncode(content);
-            return `<p>${encodedContent}</p>`;
-        } 
-        // 处理数组内容
-        else if (Array.isArray(content)) {
-            return `<ul>${content.map(item => {
-                const encodedItem = this.htmlEncode(String(item));
-                return `<li>${encodedItem}</li>`;
-            }).join('')}</ul>`;
-        } 
-        // 处理对象内容
-        else if (typeof content === 'object' && content !== null) {
-            // 如果对象有content字段，使用其值
-            if (content.content) {
-                if (Array.isArray(content.content)) {
-                    return `<ul>${content.content.map(item => {
-                        const encodedItem = this.htmlEncode(String(item));
-                        return `<li>${encodedItem}</li>`;
-                    }).join('')}</ul>`;
-                } else {
-                    const encodedContent = this.htmlEncode(String(content.content));
-                    return `<p>${encodedContent}</p>`;
-                }
-            } else {
-                const encodedContent = this.htmlEncode(JSON.stringify(content));
-                return `<p>${encodedContent}</p>`;
-            }
-        } 
-        // 处理其他类型
-        else {
-            const encodedContent = this.htmlEncode(String(content));
-            return `<p>${encodedContent}</p>`;
+            return `<p>${content}</p>`;
+        } else if (Array.isArray(content)) {
+            return `<ul>${content.map(item => `<li>${item}</li>`).join('')}</ul>`;
+        } else {
+            return `<p>${JSON.stringify(content)}</p>`;
         }
-    }
-    
-    // HTML编码函数，防止乱码
-    htmlEncode(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     }
     
     // 显示正在输入状态
@@ -7489,13 +6997,9 @@ class CareerPlanningApp {
         typingDiv.id = 'typingIndicator';
         typingDiv.className = 'agent-message';
         typingDiv.innerHTML = `
-            <div class="message-avatar">🎯</div>
+            <div class="message-avatar">🤖</div>
             <div class="message-content">
-                <div class="typing-indicator">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
+                <p>正在输入...</p>
             </div>
         `;
         chatHistory.appendChild(typingDiv);

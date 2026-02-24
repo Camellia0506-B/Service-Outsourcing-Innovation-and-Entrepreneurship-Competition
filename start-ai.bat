@@ -21,7 +21,7 @@ cd "AI算法"
 where python >nul 2>&1
 if %errorlevel% equ 0 (
     echo 使用: python app.py
-    echo 启动成功后，服务地址: http://127.0.0.1:5001
+    echo 启动成功后，服务地址: http://127.0.0.1:5002
     echo 按 Ctrl+C 可停止服务
     echo ========================================
     python app.py
@@ -29,7 +29,7 @@ if %errorlevel% equ 0 (
     where py >nul 2>&1
     if %errorlevel% equ 0 (
         echo 使用: py app.py
-        echo 启动成功后，服务地址: http://127.0.0.1:5001
+        echo 启动成功后，服务地址: http://127.0.0.1:5002
         echo 按 Ctrl+C 可停止服务
         echo ========================================
         py app.py

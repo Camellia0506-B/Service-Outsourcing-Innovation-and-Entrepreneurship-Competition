@@ -118,5 +118,7 @@ def server_error(e):
 
 if __name__ == "__main__":
     logger.info("启动 AI职业规划智能体 服务...")
-    # 使用 5001 端口，避免与前端静态服务(常占 8080) 冲突
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    # 默认 5002：Windows 常保留 5000-5001，导致“以一种访问权限不允许的方式做了一个访问套接字的尝试”
+    port = int(os.environ.get("AI_SERVICE_PORT", "5002"))
+    logger.info("AI 服务端口: %s（可通过环境变量 AI_SERVICE_PORT 修改）", port)
+    app.run(host="0.0.0.0", port=port, debug=True)

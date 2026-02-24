@@ -1,10 +1,10 @@
 // API配置
 const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、档案更新等）
-    assessmentBaseURL: 'http://localhost:5001/api/v1', // Python AI 服务（职业测评/岗位画像/简历AI解析等），须先启动 AI算法 服务
-    jobProfilesBaseURL: 'http://localhost:5001/api/v1', // 岗位画像 → Flask AI（5001）
+    assessmentBaseURL: 'http://localhost:5002/api/v1', // Python AI 服务（默认 5002，避免 Windows 保留 5000-5001）
+    jobProfilesBaseURL: 'http://localhost:5002/api/v1', // 岗位画像 → Flask AI
     timeout: 30000,
-    mockMode: false  // true=模拟数据（仅用于演示，所有数据为假）；false=连接真实后端（Java:5000 / AI:5001），使用真实数据库和岗位数据
+    mockMode: false  // true=模拟数据；false=连接真实后端（Java:5000 / AI:5002）
 };
 
 // ==================== 大模型解析（Agent核心：自然语言 → JSON，走本地AI服务） ====================
@@ -31,7 +31,7 @@ async function agentParseJobProfileRequirement(userText) {
         console.error('[Agent] 智能解析接口异常:', e);
         return {
             success: false,
-            msg: '智能解析失败，请确认 AI 服务 (http://localhost:5001) 已启动',
+            msg: '智能解析失败，请确认 AI 服务 (http://localhost:5002) 已启动',
             error: e
         };
     }
@@ -73,7 +73,7 @@ class API {
         } catch (error) {
             console.error('API请求错误(AI):', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch'))
-                ? '无法连接 AI 服务 (http://localhost:5001)，请确认已启动'
+                ? '无法连接 AI 服务 (http://localhost:5002)，请确认已启动'
                 : (error.message || '网络错误');
             return { success: false, msg };
         }
@@ -83,7 +83,7 @@ class API {
         return this.requestToAI(endpoint, { method: 'POST', body: data });
     }
 
-    // 通用请求方法（职业测评、职业规划报告走 AI 服务 5001，其余走 Java 5000）
+    // 通用请求方法（职业测评、职业规划报告走 AI 服务 5002，其余走 Java 5000）
     async request(endpoint, options = {}) {
         const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/');
         const base = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
@@ -120,8 +120,8 @@ class API {
                 // 服务返回了 HTML 或非 JSON（如 501 错误页），给出明确提示
                 const isAssessment = endpoint.startsWith('/assessment/');
                 const hint = response.status === 501
-                    ? '当前地址不支持 POST，请确认已启动 AI 测评服务 (http://localhost:5001)'
-                    : (isAssessment ? '请确认 AI 测评服务已运行 (http://localhost:5001)' : '请确认后端服务已运行');
+                    ? '当前地址不支持 POST，请确认已启动 AI 测评服务 (http://localhost:5002)'
+                    : (isAssessment ? '请确认已启动 AI 测评服务 (http://localhost:5002)' : '请确认后端服务已运行');
                 return { success: false, msg: `服务返回异常 (${response.status}): ${hint}` };
             }
             // 根据code判断是否成功
@@ -138,7 +138,7 @@ class API {
         } catch (error) {
             console.error('API请求错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch')) 
-                ? '无法连接后端，请确认已启动对应服务 (Java:5000 / 测评:5001)' 
+                ? '无法连接后端，请确认已启动对应服务 (Java:5000 / AI:5002)' 
                 : (error.message || '网络错误，请稍后重试');
             return { success: false, msg };
         }
@@ -218,7 +218,7 @@ class API {
         } catch (error) {
             console.error('AI 服务上传错误:', error);
             const msg = (error.message && error.message.toLowerCase().includes('fetch'))
-                ? '无法连接 AI 服务 (http://localhost:5001)，请确认已启动 Python AI 算法服务'
+                ? '无法连接 AI 服务 (http://localhost:5002)，请确认已启动 Python AI 算法服务'
                 : (error.message || '上传失败');
             return { success: false, msg };
         }
@@ -1486,7 +1486,7 @@ async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', 
         }
         if (!text || text.trim().startsWith('<')) {
             console.warn('岗位列表接口返回非 JSON:', url);
-            return { success: false, msg: '服务暂不可用，请确认 AI 服务已启动（5001）', data: null };
+            return { success: false, msg: '服务暂不可用，请确认 AI 服务已启动（5002）', data: null };
         }
         let result;
         try {
@@ -1537,7 +1537,7 @@ async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', 
     } catch (err) {
         console.error('岗位列表接口请求错误:', err);
         const isRefused = (err && (err.message || '').toLowerCase().includes('fetch')) || (err && (err.message || '').includes('CONNECTION_REFUSED'));
-        const msg = isRefused ? '请先启动 AI 服务 (http://localhost:5001)' : (err && err.message ? err.message : '网络错误或服务未启动');
+        const msg = isRefused ? '请先启动 AI 服务 (http://localhost:5002)' : (err && err.message ? err.message : '网络错误或服务未启动');
         return { success: false, msg, data: null };
     }
 }
@@ -1563,7 +1563,7 @@ async function getJobIndustries() {
     return { success: false, data: { industries: [] } };
 }
 
-// 真实招聘数据：GET http://localhost:5001/api/v1/job/real-data?jobName=xxx&size=5
+// 真实招聘数据：GET http://localhost:5002/api/v1/job/real-data?jobName=xxx&size=5
 async function getJobRealData(jobName, size = 5) {
     const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
     const url = `${base}/job/real-data?jobName=${encodeURIComponent(jobName || '')}&size=${Math.max(1, Math.min(20, size))}`;
@@ -1600,7 +1600,7 @@ async function getJobProfileDetail(jobIdOrName, byName = false) {
 
 // 岗位画像流式生成接口 URL（供 app.js 使用 fetch + ReadableStream）
 function getJobProfileStreamURL() {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || 'http://localhost:5001/api/v1';
+    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || 'http://localhost:5002/api/v1';
     return base + '/job/generate-profile-stream';
 }
 
