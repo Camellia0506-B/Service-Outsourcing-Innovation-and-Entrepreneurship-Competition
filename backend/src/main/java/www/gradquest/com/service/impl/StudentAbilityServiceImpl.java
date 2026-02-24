@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * 学生能力画像服务实现
- * 调用 AI 算法服务（Flask，端口 5001）
+ * 调用 AI 算法服务（Flask，端口 5002）
  */
 @Slf4j
 @Service
@@ -30,7 +30,7 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    @Value("${ai.algorithm.base-url:http://127.0.0.1:5001/api/v1}")
+    @Value("${ai.algorithm.base-url:http://127.0.0.1:5002/api/v1}")
     private String aiAlgorithmBaseUrl;
 
     private final ProfileService profileService;

@@ -20,14 +20,14 @@ import java.util.Map;
 
 /**
  * 人岗匹配服务实现
- * 调用 AI 算法服务（Flask，端口 5001）
+ * 调用 AI 算法服务（Flask，端口 5002）
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchingServiceImpl implements MatchingService {
 
-    @Value("${ai.algorithm.base-url:http://127.0.0.1:5001/api/v1}")
+    @Value("${ai.algorithm.base-url:http://127.0.0.1:5002/api/v1}")
     private String aiAlgorithmBaseUrl;
 
     private final StudentAbilityService studentAbilityService;

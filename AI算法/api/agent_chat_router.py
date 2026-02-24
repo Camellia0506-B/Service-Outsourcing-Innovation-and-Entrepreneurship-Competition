@@ -20,6 +20,25 @@ INTENT_PATTERNS = [
     {"keywords": ["岗位画像", "岗位详情", "岗位信息", "某个岗位"], "intent": "get_job_profile"},
 ]
 
+INTENT_ACTIONS = {
+    "get_assessment": [
+        {"label": "职业测评", "fn": "assessment"},
+    ],
+    "get_matching": [
+        {"label": "查看岗位匹配", "fn": "matching"},
+        {"label": "浏览岗位画像", "fn": "job-profile"},
+    ],
+    "get_career_report": [
+        {"label": "查看职业规划报告", "fn": "career-report"},
+    ],
+    "get_ability": [
+        {"label": "查看能力画像", "fn": "ability"},
+    ],
+    "get_profile": [
+        {"label": "完善个人档案", "fn": "profile"},
+    ],
+}
+
 
 def detect_intent(message: str) -> str:
     for p in INTENT_PATTERNS:
@@ -29,9 +48,12 @@ def detect_intent(message: str) -> str:
 
 
 def call_platform_api(intent: str, user_id: int, token: str) -> dict:
-    """调用平台已有接口获取数据（与 API 文档 2~7 章一致）"""
+    """调用平台已有接口获取数据（与 API 文档 2~7 章一致）。base 与前端 baseURL 一致（Java 5000）"""
     import requests
-    base = "http://127.0.0.1:5001/api/v1"
+    import os
+    base = os.environ.get("PLATFORM_API_BASE", "http://127.0.0.1:5000/api/v1")
+    if not base.endswith("/api/v1"):
+        base = base.rstrip("/") + "/api/v1"
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -99,13 +121,41 @@ def agent_chat():
 
     intent = detect_intent(message)
     platform_data = {}
+    profile_snapshot = data.get("profile_snapshot")
+    ability_snapshot = data.get("ability_snapshot")
+    if isinstance(profile_snapshot, dict) and profile_snapshot:
+        platform_data["profile"] = profile_snapshot
+    if isinstance(ability_snapshot, dict) and ability_snapshot:
+        platform_data["ability_profile"] = ability_snapshot
+
     if intent != "general_chat":
-        platform_data = call_platform_api(intent, user_id, token)
+        intent_data = call_platform_api(intent, user_id, token)
+        if intent_data and "error" not in intent_data:
+            platform_data["data"] = intent_data
+        elif not platform_data:
+            platform_data = intent_data or {}
+    else:
+        # 一般对话：未有快照时再拉取档案与能力画像（与前端 baseURL 5000 一致）
+        if user_id and not (platform_data.get("profile") or platform_data.get("ability_profile")):
+            profile_data = call_platform_api("get_profile", user_id, token)
+            ability_data = call_platform_api("get_ability", user_id, token)
+            if profile_data and "error" not in profile_data:
+                platform_data["profile"] = profile_data
+            if (
+                ability_data
+                and isinstance(ability_data, dict)
+                and "error" not in ability_data
+                and "hint" not in ability_data
+                and (ability_data.get("basic_info") or ability_data.get("professional_skills"))
+            ):
+                platform_data["ability_profile"] = ability_data
 
     system_prompt = """你是基于AI的职业规划平台的智能体小智。
 你能帮助用户了解他们的测评结果、岗位匹配情况、职业规划报告、个人档案、能力画像等信息。
 回答要简洁、友好、专业，适当使用emoji，不超过300字。
 如果有平台数据，优先基于真实数据回答，不要编造。
+若 [平台数据参考] 中已有 profile 或 ability_profile，说明用户已完善档案或能力画像，不要再说「暂未检测到个人档案」；可基于现有数据给出转岗路径、匹配建议等。
+禁止输出「目前系统显示你尚未完成…」「暂无报告和匹配建议」等消极提示句；若某项功能暂无数据，只简短说明可进行的操作并引导用户（如：完成测评/生成报告后即可查看，点击下方【职业测评】即可开始～），不重复强调未完成。
 你具备主动分析、规划建议、跨模块联动的能力。"""
 
     # 组装为 dict 列表，在 generate() 内转为 LangChain 消息后 stream
@@ -118,7 +168,7 @@ def agent_chat():
         messages.append({"role": "assistant" if role == "assistant" else "user", "content": content})
     user_content = message
     if platform_data and "error" not in platform_data:
-        user_content += "\n\n[平台数据参考]:\n" + json.dumps(platform_data, ensure_ascii=False, indent=2)[:2000]
+        user_content += "\n\n[平台数据参考]:\n" + json.dumps(platform_data, ensure_ascii=False, indent=2)[:3000]
     messages.append({"role": "user", "content": user_content})
 
     def generate():
@@ -161,6 +211,10 @@ def agent_chat():
             }):
                 if chunk:
                     yield f"data: {json.dumps({'text': chunk}, ensure_ascii=False)}\n\n"
+
+            actions = INTENT_ACTIONS.get(intent)
+            if actions:
+                yield f"data: {json.dumps({'actions': actions}, ensure_ascii=False)}\n\n"
 
         except Exception as e:
             print(f"[ERROR] generate失败: {e}")

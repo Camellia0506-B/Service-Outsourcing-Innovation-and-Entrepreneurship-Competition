@@ -35,7 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
     private static final long RESUME_MAX_SIZE = 10 * 1024 * 1024; // 10MB
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    @Value("${ai.algorithm.base-url:http://127.0.0.1:5001/api/v1}")
+    @Value("${ai.algorithm.base-url:http://127.0.0.1:5002/api/v1}")
     private String aiAlgorithmBaseUrl;
 
     private final UserMapper userMapper;
@@ -430,7 +430,7 @@ public class ProfileServiceImpl implements ProfileService {
                 if (data instanceof Map) return (Map<String, Object>) data;
             }
         } catch (WebClientResponseException e) {
-            // 5001 未启动或返回 4xx/5xx 时静默降级到 Java 兜底
+            // AI 服务(5002) 未启动或返回 4xx/5xx 时静默降级到 Java 兜底
         } catch (Exception e) {
             // 超时、网络异常等
         }

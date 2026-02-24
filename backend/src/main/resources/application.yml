@@ -41,10 +41,10 @@ doubao:
   base:
     url: https://ark.cn-beijing.volces.com/api/v3
 
-# AI 算法服务配置（Flask，端口 5001）
+# AI 算法服务配置（Flask，端口 5002；Windows 下 5000-5001 常被占用，故使用 5002）
 ai:
   algorithm:
-    base-url: http://127.0.0.1:5001/api/v1
+    base-url: http://127.0.0.1:5002/api/v1
 
 logging:
   level:
