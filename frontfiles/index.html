@@ -507,11 +507,22 @@
                         <h3>实习经历</h3>
                         <div id="internshipsContainer">
                             <div class="internship-item">
-                                <input type="text" placeholder="公司名称" class="internship-company">
-                                <input type="text" placeholder="职位" class="internship-position">
-                                <input type="text" placeholder="开始日期 (YYYY-MM)" class="internship-start-date">
-                                <input type="text" placeholder="结束日期 (YYYY-MM)" class="internship-end-date">
-                                <input type="text" placeholder="描述" class="internship-description">
+                                <div class="profile-field">
+                                    <label>公司名称</label>
+                                    <input type="text" class="internship-company">
+                                </div>
+                                <div class="profile-field">
+                                    <label>职位</label>
+                                    <input type="text" class="internship-position">
+                                </div>
+                                <div class="profile-field">
+                                    <label>时间</label>
+                                    <input type="text" class="internship-time">
+                                </div>
+                                <div class="profile-field profile-field-full">
+                                    <label>描述</label>
+                                    <input type="text" class="internship-description">
+                                </div>
                             </div>
                         </div>
                         <button type="button" id="addInternship" class="btn-secondary">添加实习经历</button>
@@ -522,12 +533,26 @@
                         <h3>项目经历</h3>
                         <div id="projectsContainer">
                             <div class="project-item">
-                                <input type="text" placeholder="项目名称" class="project-name">
-                                <input type="text" placeholder="角色" class="project-role">
-                                <input type="text" placeholder="开始日期 (YYYY-MM)" class="project-start-date">
-                                <input type="text" placeholder="结束日期 (YYYY-MM)" class="project-end-date">
-                                <input type="text" placeholder="描述" class="project-description">
-                                <input type="text" placeholder="技术栈 (用逗号分隔)" class="project-tech-stack">
+                                <div class="profile-field">
+                                    <label>项目名称</label>
+                                    <input type="text" class="project-name">
+                                </div>
+                                <div class="profile-field">
+                                    <label>角色</label>
+                                    <input type="text" class="project-role">
+                                </div>
+                                <div class="profile-field">
+                                    <label>时间</label>
+                                    <input type="text" class="project-time">
+                                </div>
+                                <div class="profile-field profile-field-full">
+                                    <label>描述</label>
+                                    <input type="text" class="project-description">
+                                </div>
+                                <div class="profile-field">
+                                    <label>技术栈 (用逗号分隔)</label>
+                                    <input type="text" class="project-tech-stack">
+                                </div>
                             </div>
                         </div>
                         <button type="button" id="addProject" class="btn-secondary">添加项目经历</button>
@@ -678,22 +703,81 @@
                         <div class="ai-gen-main">
                             <div class="ai-gen-form-card">
                                 <div class="ai-gen-form-head">
-                                    <div class="ai-gen-form-title">✨ AI生成岗位画像</div>
-                                    <div class="ai-gen-form-sub">输入岗位名称，AI 自动分析技能要求、薪资区间与市场需求</div>
+                                    <div class="ai-gen-form-title">✨ 岗位画像智能体</div>
+                                    <div class="ai-gen-form-sub">输入岗位名称，智能体自动分析技能要求、薪资区间与市场需求</div>
                                 </div>
 
-                                <!-- 🤖 Agent 智能对话生成（表单兜底保留） -->
+                                <!-- 🤖 岗位画像智能体卡片（单层卡片布局） -->
                                 <div class="ai-agent-card" id="aiAgentCard">
-                                    <div class="ai-agent-title">🤖 智能对话生成</div>
-                                    <div class="ai-agent-desc">请输入你的需求（例如：生成互联网/AI行业应届生算法工程师画像）</div>
-                                    <div class="ai-agent-row">
-                                        <input type="text" id="aiAgentQuery" class="ai-agent-input" placeholder="请输入岗位画像生成需求，回车提交" autocomplete="off">
-                                        <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn" disabled>
-                                            <span class="ai-agent-btn-text">智能生成</span>
-                                            <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
-                                        </button>
+                                    <!-- 顶部：图标 + 标题 + 一句话简介 -->
+                                    <div class="ai-agent-card-header ai-agent-fade-1">
+                                        <div class="ai-agent-card-icon">🎯</div>
+                                        <div class="ai-agent-card-header-text">
+                                            <div class="ai-agent-card-title">岗位画像智能体</div>
+                                            <div class="ai-agent-card-subtitle">用自然语言描述岗位需求，一键生成结构化岗位画像，并联动晋升/换岗路径。</div>
+                                        </div>
                                     </div>
-                                    <div class="ai-agent-tip">智能体将自动解析并填充下方表单，信息完整时会自动触发「开始生成」</div>
+
+                                    <!-- 功能特性标签 -->
+                                    <div class="ai-agent-card-tags ai-agent-fade-2">
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">🧠</span>
+                                            <span>技能要求分析</span>
+                                        </div>
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">💰</span>
+                                            <span>薪资区间参考</span>
+                                        </div>
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">📊</span>
+                                            <span>市场需求洞察</span>
+                                        </div>
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">📄</span>
+                                            <span>结构化画像输出</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="ai-agent-card-divider"></div>
+
+                                    <!-- 步骤说明：1 → 2 → 3 → 4 -->
+                                    <div class="ai-agent-card-steps ai-agent-fade-3">
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">1</div>
+                                            <div class="ai-agent-step-label">输入岗位需求</div>
+                                        </div>
+                                        <div class="ai-agent-step-line"></div>
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">2</div>
+                                            <div class="ai-agent-step-label">智能体理解意图</div>
+                                        </div>
+                                        <div class="ai-agent-step-line"></div>
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">3</div>
+                                            <div class="ai-agent-step-label">生成岗位画像</div>
+                                        </div>
+                                        <div class="ai-agent-step-line"></div>
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">4</div>
+                                            <div class="ai-agent-step-label">联动晋升/换岗</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 底部 CTA：按钮 + 说明文字（保留原有按钮/隐藏输入 ID 供 JS 使用） -->
+                                    <div class="ai-agent-card-cta ai-agent-fade-4">
+                                        <div class="ai-agent-cta-left">
+                                            <!-- 隐藏的真实输入，用于 Agent 代码内部透传文本 -->
+                                            <input type="hidden" id="aiAgentQuery" value="">
+                                            <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn">
+                                                <span class="ai-agent-btn-text">打开智能体</span>
+                                                <span class="ai-agent-btn-arrow">→</span>
+                                                <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="ai-agent-cta-text">
+                                            在弹窗中用一段话描述岗位名称、行业方向和经验阶段，智能体会自动生成岗位画像并展示晋升/换岗路径。
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="ai-gen-field">
@@ -1091,13 +1175,9 @@
                             <span class="toolbar-icon">🤖</span>
                             智能体
                         </button>
-                        <select id="reportExportFormat" class="btn-toolbar-select">
-                            <option value="pdf">PDF</option>
-                            <option value="docx">Word</option>
-                        </select>
                         <button id="reportExportBtn" class="btn-toolbar btn-export">
                             <span class="toolbar-icon">📤</span>
-                            导出
+                            导出 PDF
                         </button>
                         <button id="reportBackBtn" class="btn-toolbar">
                             <span class="toolbar-icon">⬅️</span>
@@ -1115,17 +1195,16 @@
                 <div id="reportAgentModal" class="modal-overlay hidden">
                     <div class="modal-content agent-modal">
                         <div class="modal-header">
-                            <h3>职业规划智能体</h3>
+                            <div class="agent-header-info">
+                                <div class="agent-avatar-small">🎯</div>
+                                <div class="agent-header-details">
+                                    <h4>职业规划助手</h4>
+                                    <p>智能职业规划助手</p>
+                                </div>
+                            </div>
                             <button type="button" class="modal-close" id="closeAgentModal">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <div class="agent-info">
-                                <div class="agent-avatar">🎯</div>
-                                <div class="agent-details">
-                                    <h4>职业规划助手</h4>
-                                    <p>我是你的智能职业规划助手，可以帮你分析报告、提供建议、优化规划方案。</p>
-                                </div>
-                            </div>
                             
                             <div class="agent-chat-container">
                                 <div id="agentChatHistory" class="agent-chat-history">
