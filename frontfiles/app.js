@@ -1273,6 +1273,13 @@ class CareerPlanningApp {
                     // 能力画像更新后，推荐岗位数量可能变化，刷新首页数据
                     this.loadDashboardData();
                     
+                    // 检查当前是否正在显示能力画像页面，如果是，则重新加载能力画像内容
+                    const abilityProfilePage = document.getElementById('abilityProfilePage');
+                    if (abilityProfilePage && !abilityProfilePage.classList.contains('hidden')) {
+                        // 重新加载能力画像内容
+                        this.loadAbilityProfile();
+                    }
+                    
                     // 提示用户是否需要更新职业规划报告
                     setTimeout(() => {
                         if (confirm('您的个人信息已更新，能力画像也已重新生成。\n\n是否需要更新您的职业规划报告，使其与最新信息保持一致？')) {
@@ -2495,6 +2502,18 @@ class CareerPlanningApp {
         const exp = data.practical_experience || {};
         const overall = data.overall_assessment || {};
 
+        // 提取各项能力得分，与雷达图逻辑一致
+        const professionalSkillsScore = ps.overall_score || ps.score || 60;
+        const innovationScore = innovation.score || 50;
+        const learningScore = learning.score || 70;
+        const pressureScore = pressure.assessment_score || pressure.score || 65;
+        const communicationScore = comm.overall_score || comm.score || 65;
+        const experienceScore = exp.overall_score || exp.score || 55;
+        
+        // 计算综合竞争力评分（平均值）
+        const totalScore = Math.round((professionalSkillsScore + innovationScore + learningScore + pressureScore + communicationScore + experienceScore) / 6);
+        const percentile = overall.percentile || 50; // 设置默认值50
+
         let html = `
             <div class="ability-profile-new-layout">
                 <!-- 第一行：综合竞争力评分 + 能力六维雷达图 -->
@@ -2508,13 +2527,13 @@ class CareerPlanningApp {
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                                 <div style="text-align: center; margin-bottom: 12px;">
-                                    <div style="font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 2px;">${overall.competitiveness || '-'}</div>
+                                    <div style="font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 2px;">${totalScore}</div>
                                     <div style="font-size: 14px; color: var(--text-secondary);">综合竞争力评分</div>
                                 </div>
                                 <div id="competitivenessGauge" style="width: 160px; height: 160px; margin: 0 auto;"></div>
                                 <div style="display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 2px;">
                                     <div style="background-color: #e6f7ff; padding: 10px 20px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
-                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${overall.percentile || '-'}${overall.percentile ? '%' : ''}</div>
+                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${percentile}%</div>
                                         <div style="font-size: 13px; color: var(--text-secondary);">同专业学生中的百分位排名</div>
                                     </div>
                                     <div style="background-color: #f5f5f5; padding: 14px; border-radius: 8px; width: 100%; max-width: 280px;">
@@ -3055,8 +3074,24 @@ class CareerPlanningApp {
         
         const myChart = echarts.init(chartDom);
         
-        const overall = data.overall_assessment || {};
-        const score = overall.total_score || 0;
+        // 提取各项能力得分，与雷达图逻辑一致
+        const ps = data.professional_skills || {};
+        const innovation = data.innovation_ability || {};
+        const learning = data.learning_ability || {};
+        const pressure = data.pressure_resistance || {};
+        const comm = data.communication_ability || {};
+        const exp = data.practical_experience || {};
+        
+        // 提取各项能力得分，与雷达图逻辑一致
+        const professionalSkillsScore = ps.overall_score || ps.score || 60;
+        const innovationScore = innovation.score || 50;
+        const learningScore = learning.score || 70;
+        const pressureScore = pressure.assessment_score || pressure.score || 65;
+        const communicationScore = comm.overall_score || comm.score || 65;
+        const experienceScore = exp.overall_score || exp.score || 55;
+        
+        // 计算综合竞争力评分（平均值）
+        const score = Math.round((professionalSkillsScore + innovationScore + learningScore + pressureScore + communicationScore + experienceScore) / 6);
         
         const option = {
             tooltip: {
@@ -3181,12 +3216,64 @@ class CareerPlanningApp {
     
     // 渲染经验时间轴
     renderExperienceTimeline(experiences, type) {
-        if (!experiences || experiences.length === 0) {
-            return '<div style="padding: 20px 0; text-align: center; color: var(--text-secondary);">暂无相关经历</div>';
+        // 尝试从用户简历中获取相关经历
+        const userInfo = getUserInfo();
+        let resumeExperiences = [];
+        
+        if (userInfo) {
+            if (type === 'internship' && userInfo.internships) {
+                resumeExperiences = userInfo.internships;
+            } else if (type === 'project' && userInfo.projects) {
+                resumeExperiences = userInfo.projects;
+            }
+        }
+        
+        // 优先使用简历中的经历，如果没有则使用传入的经历
+        const combinedExperiences = resumeExperiences.length > 0 ? resumeExperiences : (experiences || []);
+        
+        if (combinedExperiences.length === 0) {
+            // 如果没有相关经历，给出鼓励语句和实习建议
+            let adviceContent = '';
+            if (type === 'internship') {
+                adviceContent = `
+                    <div style="padding: 20px; background-color: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: center;">🌟 开始你的实习之旅</h4>
+                        <p style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5; text-align: center;">实习是积累经验的重要途径，不要担心没有经验，每个人都是从无到有的！</p>
+                        <div style="margin-top: 16px;">
+                            <h5 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: var(--text-primary);">💡 实习建议：</h5>
+                            <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                <li>从基础岗位做起，积累实际工作经验</li>
+                                <li>主动学习，多问多做，展现你的学习能力</li>
+                                <li>利用校园招聘和实习平台寻找机会</li>
+                                <li>准备一份简洁明了的简历，突出你的技能和潜力</li>
+                                <li>关注行业动态，了解目标公司的业务和文化</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else {
+                adviceContent = `
+                    <div style="padding: 20px; background-color: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: center;">🌟 开始你的项目之旅</h4>
+                        <p style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5; text-align: center;">项目经验是展示你能力的最佳方式，即使是小项目也能体现你的技能和潜力！</p>
+                        <div style="margin-top: 16px;">
+                            <h5 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: var(--text-primary);">💡 项目建议：</h5>
+                            <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
+                                <li>从个人项目开始，解决实际问题</li>
+                                <li>参与开源项目，学习团队协作</li>
+                                <li>参加编程竞赛和黑客马拉松</li>
+                                <li>利用课程作业，扩展成完整项目</li>
+                                <li>在GitHub上展示你的项目，建立个人品牌</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            return adviceContent;
         }
         
         let html = '<div style="position: relative; padding-left: 32px;">';
-        experiences.forEach((exp, index) => {
+        combinedExperiences.forEach((exp, index) => {
             const title = type === 'internship' ? exp.position : exp.name;
             const company = exp.company || '';
             const role = exp.role || '';
@@ -3223,7 +3310,7 @@ class CareerPlanningApp {
                 achievementsHtml += '</div>';
             }
             
-            const isLast = index === experiences.length - 1;
+            const isLast = index === combinedExperiences.length - 1;
             const itemId = `exp-item-${index}`;
             
             html += `<div id="${itemId}" style="margin-bottom: ${isLast ? '0' : '24px'};">
