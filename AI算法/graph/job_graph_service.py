@@ -4,18 +4,14 @@ import re
 import os
 from functools import lru_cache
 
-# 使用绝对路径确保正确加载
-CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', '求职岗位信息数据.csv')
+CSV_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', '求职岗位信息数据.csv')
 
 
 @lru_cache(maxsize=1)
 def load_jobs():
     """启动时加载一次，缓存内存，不要每次请求都读文件"""
-    # 清除缓存以确保加载新数据
-    load_jobs.cache_clear()
-    df = pd.read_csv(CSV_PATH, encoding='utf-8')
+    df = pd.read_csv(CSV_PATH, encoding='utf-8-sig')
     df = df.fillna('')
-    print(f"加载岗位数据成功，共 {len(df)} 条记录")
     return df
 
 
