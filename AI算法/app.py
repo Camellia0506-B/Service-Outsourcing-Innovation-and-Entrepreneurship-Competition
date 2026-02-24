@@ -78,6 +78,11 @@ logger.info("[App] 注册路由: 关联图谱模块 /api/v1/job/search, /api/v1/
 logger.info("[App] 注册路由: 智能体对话模块 /api/v1/agent/chat")
 logger.info("[App] 注册路由: Career Tracking 模块 /api/v1/tracking/*")
 
+# 岗位详情模块
+from api.job_detail_api import job_detail_bp
+app.register_blueprint(job_detail_bp)
+logger.info("[App] 注册路由: 岗位详情模块 /api/v1/job/detail/*")
+
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp
 # app.register_blueprint(auth_bp)
