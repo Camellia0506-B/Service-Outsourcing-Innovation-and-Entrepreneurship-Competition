@@ -7,7 +7,7 @@ from typing import List, Dict, Optional
 from openai import OpenAI
 # LangChain 相关导入（可选，当前主要使用 OpenAI 客户端）
 # from langchain_openai import ChatOpenAI
-# from langchain.schema import HumanMessage, AIMessage, SystemMessage
+# from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 # from langchain.memory import ConversationBufferMemory
 from PIL import Image
 import base64

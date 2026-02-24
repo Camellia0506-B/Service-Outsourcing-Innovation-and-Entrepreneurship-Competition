@@ -10,9 +10,9 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_community.chat_models import ChatTongyi
-from langchain.schema import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser
 
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path

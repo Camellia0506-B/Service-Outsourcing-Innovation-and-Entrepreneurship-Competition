@@ -82,6 +82,281 @@ function getPromotionPathForDisplay(jobName) {
     }));
 }
 
+// ══ 换岗路径 — 血缘图谱（来自 graph_template.html）════
+// 布局坐标（百分比，相对画布宽高）
+const layout = {
+    center: { rx: 0.5, ry: 0.5 },
+    pm: { rx: 0.5, ry: 0.1 },
+    ds: { rx: 0.82, ry: 0.22 },
+    mle: { rx: 0.82, ry: 0.72 },
+    quant: { rx: 0.5, ry: 0.88 },
+    res: { rx: 0.18, ry: 0.72 },
+    arch: { rx: 0.18, ry: 0.22 },
+};
+// 卡片尺寸
+const CARD = { center: { w: 136, h: 108 }, job: { w: 150, h: 172 } };
+
+function buildGraph(dynamicNodes) {
+    const wrap = document.getElementById('graphWrap');
+    if (!wrap) return;
+    const W = wrap.offsetWidth, H = wrap.offsetHeight;
+    wrap.querySelectorAll('.g-node,.edge-lbl').forEach(e => e.remove());
+
+    const pos = {};
+    Object.keys(layout).forEach(id => {
+        pos[id] = { x: layout[id].rx * W, y: layout[id].ry * H };
+    });
+
+    const svg = document.getElementById('svgLayer');
+    if (!svg) return;
+    let defs = `<defs>
+  <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 Z" fill="#00b894"/>
+  </marker>
+  <marker id="arr-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 Z" fill="#f5a623"/>
+  </marker>
+  <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 Z" fill="#ff4d6d"/>
+  </marker>
+  <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 Z" fill="#7c5cff" opacity="0.6"/>
+  </marker>
+  <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 Z" fill="#4f7cff"/>
+  </marker>
+</defs>`;
+    let paths = '';
+
+    // 中心到各节点的连线（带箭头，终点缩短到卡片边缘）
+    Object.keys(dynamicNodes).forEach(id => {
+        if (id === 'center') return;
+        const n = dynamicNodes[id];
+        const p1 = pos['center'];
+        const p2 = pos[id];
+        if (!p1 || !p2) return;
+
+        const color = n.match >= 80 ? '#00b894' : n.match >= 60 ? '#f5a623' : '#ff4d6d';
+        const arrId = n.match >= 80 ? 'arr-green' : n.match >= 60 ? 'arr-gold' : 'arr-red';
+        const dash = n.match < 60 ? 'stroke-dasharray="7 4"'
+            : n.match < 80 ? 'stroke-dasharray="10 3"'
+            : '';
+
+        // 把终点从卡片中心缩短到卡片边缘
+        const dx = p1.x - p2.x;
+        const dy = p1.y - p2.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const ux = dx / dist;
+        const uy = dy / dist;
+
+        const cardHalfW = 75;
+        const cardHalfH = 86;
+        const tW = Math.abs(ux) > 0.001 ? cardHalfW / Math.abs(ux) : Infinity;
+        const tH = Math.abs(uy) > 0.001 ? cardHalfH / Math.abs(uy) : Infinity;
+        const t = Math.min(tW, tH) + 6;
+
+        const ex = p2.x + ux * t;
+        const ey = p2.y + uy * t;
+
+        const centerOffset = 68;
+        const sx = p1.x - ux * centerOffset;
+        const sy = p1.y - uy * centerOffset;
+
+        const cpx = (sx + ex) / 2 + (ey - sy) * 0.15;
+        const cpy = (sy + ey) / 2 - (ex - sx) * 0.15;
+
+        paths += `<path
+    d="M${sx},${sy} Q${cpx},${cpy} ${ex},${ey}"
+    fill="none"
+    stroke="${color}"
+    stroke-width="2"
+    ${dash}
+    opacity="0.85"
+    marker-end="url(#${arrId})"
+  />`;
+
+        const lx = sx * 0.45 + ex * 0.55 + (ey - sy) * 0.08;
+        const ly = sy * 0.45 + ey * 0.55 - (ex - sx) * 0.08;
+        const lblEl = document.createElement('div');
+        lblEl.className = 'edge-lbl';
+        lblEl.textContent = `${n.match}% · ${n.diff}`;
+        lblEl.style.cssText = `left:${lx}px; top:${ly}px; color:${color}; border-color:${color}30;`;
+        wrap.appendChild(lblEl);
+    });
+
+    const drawn = new Set();
+    Object.keys(dynamicNodes).forEach(fromId => {
+        if (fromId === 'center') return;
+        const n = dynamicNodes[fromId];
+        (n.transfers || []).forEach(toId => {
+            const key = [fromId, toId].sort().join('-');
+            if (drawn.has(key)) return;
+            drawn.add(key);
+            const p1 = pos[fromId], p2 = pos[toId];
+            if (!p1 || !p2) return;
+            const cpx = (p1.x + p2.x) / 2 + (p2.y - p1.y) * 0.2;
+            const cpy = (p1.y + p2.y) / 2 - (p2.x - p1.x) * 0.2;
+            paths += `<path d="M${p1.x},${p1.y} Q${cpx},${cpy} ${p2.x},${p2.y}"
+        fill="none" stroke="#7c5cff" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.5"
+        marker-end="url(#arr-blue)"/>`;
+        });
+    });
+
+    svg.innerHTML = defs + `<style>@keyframes dashFlow{to{stroke-dashoffset:-20}}</style>` + paths;
+
+    let delay = 0;
+    Object.keys(dynamicNodes).forEach(id => {
+        const n = dynamicNodes[id];
+        const p = pos[id];
+        if (!p) return;
+        const el = document.createElement('div');
+        el.className = 'g-node';
+        el.style.animationDelay = (delay += 0.07) + 's';
+
+        if (n.isCenter) {
+            el.style.cssText = `left:${p.x - CARD.center.w / 2}px;top:${p.y - CARD.center.h / 2}px;animation-delay:0s`;
+            el.innerHTML = `<div class="cn"><div class="cn-ico">${n.icon || '🤖'}</div><div class="cn-name">${(n.name || '当前岗位').replace(/</g, '&lt;')}</div><div class="cn-badge">当前岗位</div></div>`;
+        } else {
+            const diff_color = n.match >= 80 ? '#009e7a' : n.match >= 60 ? '#c47d00' : '#d03050';
+            const diff_bg = n.match >= 80 ? 'rgba(0,184,148,0.1)' : n.match >= 60 ? 'rgba(245,166,35,0.1)' : 'rgba(255,77,109,0.08)';
+            const diff_bd = n.match >= 80 ? 'rgba(0,184,148,0.2)' : n.match >= 60 ? 'rgba(245,166,35,0.2)' : 'rgba(255,77,109,0.18)';
+            el.style.cssText = `left:${p.x - CARD.job.w / 2}px;top:${p.y - CARD.job.h / 2}px;animation-delay:${delay}s;opacity:0`;
+            const nameEsc = (n.name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            const descEsc = (n.desc || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            const skillsEsc = (n.skills || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            el.innerHTML = `
+        <div class="jn" style="border-color:${n.color}40">
+          <div class="jn-top">
+            <div class="jn-ico" style="background:${n.color}15">${n.icon || '💼'}</div>
+            <div><div class="jn-name">${nameEsc}</div><div class="jn-sal">${(n.sal || '面议').replace(/</g, '&lt;')}</div></div>
+          </div>
+          <div class="jn-mr"><span class="jn-ml">匹配度</span><span class="jn-mv" style="color:${n.color}">${n.match}%</span></div>
+          <div class="jn-bar-bg"><div class="jn-bar" style="width:${n.match}%;background:${n.color}"></div></div>
+          <div class="jn-tags">
+            <span class="jn-tag" style="background:${diff_bg};color:${diff_color};border:1px solid ${diff_bd}">难度${n.diff}</span>
+            <span class="jn-tag" style="background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.15)">⏱ ${(n.time || '').replace(/</g, '&lt;')}</span>
+          </div>
+          <div class="jn-skills"><em>可迁移：</em>${skillsEsc}</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${descEsc}</div>
+        </div>`;
+        }
+        wrap.appendChild(el);
+    });
+}
+
+function convertToGraphNodes(centerJobName, transferNodes) {
+    const nodes = {
+        center: { name: centerJobName, icon: '🤖', isCenter: true }
+    };
+    const layoutKeys = ['pm', 'ds', 'mle', 'quant', 'res', 'arch'];
+    (transferNodes || []).forEach((node, index) => {
+        const color = node.match_score >= 80 ? '#00b894' : node.match_score >= 60 ? '#f5a623' : '#ff4d6d';
+        const key = layoutKeys[index] || node.id || `node${index}`;
+        nodes[key] = {
+            name: node.name,
+            icon: node.icon || '💼',
+            sal: node.salary || '面议',
+            match: node.match_score || 0,
+            color: color,
+            desc: node.description || '',
+            diff: node.difficulty || '中',
+            time: node.transition_months || '',
+            skills: node.transferable_skills || '',
+            transfers: (node.kinship_edges || []).map((id) => layoutKeys[transferNodes.findIndex(n => n.id === id)] || id),
+        };
+    });
+    (transferNodes || []).forEach((node, index) => {
+        if (index >= 6) {
+            const angle = (2 * Math.PI * index / (transferNodes.length || 1)) - Math.PI / 2;
+            layout[`node_extra_${index}`] = {
+                rx: 0.5 + 0.35 * Math.cos(angle),
+                ry: 0.5 + 0.35 * Math.sin(angle)
+            };
+        }
+    });
+    return nodes;
+}
+
+function showGraphError(wrap, msg) {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#ff4d6d';
+    el.innerHTML = `<div>${msg}</div><div style="font-size:11px;color:#aab4cc">请检查 AI 服务是否启动，或查看 Console</div>`;
+    wrap.appendChild(el);
+}
+
+async function loadTransferGraph(jobName) {
+    const wrap = document.getElementById('graphWrap');
+    if (!wrap) {
+        console.error('找不到 #graphWrap，请检查 HTML 是否有 <div id="graphWrap">');
+        return;
+    }
+    wrap.querySelectorAll('.g-node, .edge-lbl').forEach(e => e.remove());
+    const svg = document.getElementById('svgLayer');
+    if (svg) svg.innerHTML = '';
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = '_graphLoading';
+    loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#aab4cc';
+    loadingDiv.innerHTML = '<div class="graph-loading-spinner" style="margin:0 auto"></div><div style="font-size:14px">Agent 正在生成晋升图谱，请稍候...</div>';
+    if (!document.getElementById('_spinStyle')) {
+        const s = document.createElement('style');
+        s.id = '_spinStyle';
+        s.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+        document.head.appendChild(s);
+    }
+    wrap.appendChild(loadingDiv);
+
+    let buffer = '';
+    try {
+        const baseURL = (typeof API_CONFIG !== 'undefined')
+            ? (API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5001/api/v1')
+            : 'http://localhost:5001/api/v1';
+        const url = baseURL.replace(/\/$/, '') + '/job/transfer-path';
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_name: jobName })
+        });
+        if (!res.ok) throw new Error(`接口返回 HTTP ${res.status}`);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            for (const line of decoder.decode(value).split('\n')) {
+                if (!line.startsWith('data: ')) continue;
+                const payload = line.slice(6).trim();
+                if (payload === '[DONE]') {
+                    document.getElementById('_graphLoading')?.remove();
+                    const clean = buffer.replace(/```json|```/g, '').trim();
+                    const start = clean.indexOf('{');
+                    const end = clean.lastIndexOf('}');
+                    if (start === -1 || end === -1) {
+                        showGraphError(wrap, '返回数据格式异常，请重试');
+                        return;
+                    }
+                    try {
+                        const data = JSON.parse(clean.slice(start, end + 1));
+                        const graphNodes = convertToGraphNodes(data.center_job || jobName, data.transfer_nodes || []);
+                        window._cachedGraphNodes = graphNodes;
+                        setTimeout(() => buildGraph(graphNodes), 50);
+                    } catch (e) {
+                        console.error('JSON 解析失败，原始内容：', clean);
+                        showGraphError(wrap, `JSON 解析失败: ${e.message}`);
+                    }
+                    return;
+                }
+                try { buffer += JSON.parse(payload).text; } catch (e) { /* 忽略非JSON行 */ }
+            }
+        }
+    } catch (e) {
+        document.getElementById('_graphLoading')?.remove();
+        console.error('图谱请求失败:', e);
+        showGraphError(wrap, `请求失败: ${e.message}`);
+    }
+}
+
 // 精选岗位列表（前端写死，搜索框为空时始终展示，不走接口）
 const featuredJobs = [
     { jobId: 'job_001', jobName: '算法工程师', industry: '互联网/AI', level: '中级', salaryRange: '20k-35k', skills: ['人工智能', '机器学习'], techSkills: ['Python', 'TensorFlow', 'PyTorch', '机器学习算法'], demandScore: 92, trend: '上升' },
@@ -321,12 +596,21 @@ class CareerPlanningApp {
         // 加载图谱：严格按 career_graph_v2 + 指令，流式请求晋升/转岗并渲染
         document.getElementById('jobProfilePage')?.addEventListener('click', (e) => {
             if (e.target && e.target.closest && e.target.closest('#jobProfileGraphBtn')) {
-                const keyword = (document.getElementById('graphJobName')?.value || '').trim();
-                if (!keyword) {
+                const jobName = (document.getElementById('graphJobName')?.value || '').trim();
+                if (!jobName) {
                     this.showToast('请输入岗位名称', 'error');
                     return;
                 }
-                this.loadCareerGraph(keyword);
+                const graphContainer = document.getElementById('jobProfileGraph');
+                const isTransferActive = graphContainer && (
+                    graphContainer.querySelector('.graph-tab-v2[data-graph-panel="transfer"].active') ||
+                    graphContainer.querySelector('#panel-transfer-v2.active')
+                );
+                if (isTransferActive) {
+                    loadTransferGraph(jobName);
+                } else {
+                    this.loadCareerGraph(jobName);
+                }
             }
         });
 
@@ -4370,6 +4654,7 @@ class CareerPlanningApp {
     async loadCareerGraph(jobName) {
         const graphContainer = document.getElementById('jobProfileGraph');
         if (!graphContainer) return;
+        window._cachedGraphNodes = null;
         const baseURL = API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5001/api/v1';
         const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
         graphContainer.innerHTML = `
@@ -4383,19 +4668,24 @@ class CareerPlanningApp {
             </div>
             <div class="graph-tab-bar-v2">
                 <button type="button" class="graph-tab-v2 active" data-graph-panel="promo">📋 晋升路径</button>
-                <button type="button" class="graph-tab-v2" data-graph-panel="transfer">🔄 换岗路径</button>
+                <button type="button" class="graph-tab-v2" data-graph-panel="transfer">🔄 转岗路径</button>
             </div>
             <div class="graph-panel-v2 active" id="panel-promo-v2">
                 <div id="promotionContainer" class="promo-container-v2"></div>
             </div>
             <div class="graph-panel-v2" id="panel-transfer-v2">
-                <div class="transfer-container-v2">
-                    <div class="legend-row-v2">
-                        <span class="leg-v2"><span class="leg-line-v2" style="background:#00b894"></span>高匹配（≥80%）</span>
-                        <span class="leg-v2"><span class="leg-line-v2" style="background:#f5a623"></span>中匹配（60-79%）</span>
-                        <span class="leg-v2"><span class="leg-line-v2" style="background:#ff4d6d;border-top:2px dashed #ff4d6d;background:none"></span>低匹配（&lt;60%）</span>
+                <div class="transfer-container">
+                    <div class="legend-row">
+                        <span style="font-size:12px;color:var(--dim);font-weight:600">图例：</span>
+                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--green));height:2px"></span>高匹配（≥80%）</span>
+                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--gold));height:2px"></span>中匹配（60-79%）</span>
+                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--red));height:2px;border-top:2px dashed var(--red);background:none"></span>低匹配（&lt;60%）</span>
+                        <span class="leg"><span style="font-size:14px">→</span>晋升方向</span>
+                        <span style="margin-left:auto;font-size:11px;color:var(--muted)">实线=技能高度迁移 · 虚线=需较大跨度学习</span>
                     </div>
-                    <div id="transferContainer" class="graph-svg-wrap-v2" style="min-height:880px;position:relative"></div>
+                    <div class="graph-svg-wrap" id="graphWrap">
+                        <svg class="graph-svg" id="svgLayer"></svg>
+                    </div>
                 </div>
             </div>`;
         this._graphCurrentJobName = jobName;
@@ -4408,9 +4698,13 @@ class CareerPlanningApp {
                 const panelId = btn.dataset.graphPanel;
                 const panelEl = document.getElementById('panel-' + panelId + '-v2');
                 if (panelEl) panelEl.classList.add('active');
-                if (panelId === 'transfer' && !this._graphTransferLoaded && this._graphCurrentJobName) {
-                    this._graphTransferLoaded = true;
-                    this.loadTransferPath(this._graphCurrentJobName);
+                if (panelId === 'transfer') {
+                    if (window._cachedGraphNodes) {
+                        setTimeout(() => buildGraph(window._cachedGraphNodes), 100);
+                    } else if (!this._graphTransferLoaded && this._graphCurrentJobName) {
+                        this._graphTransferLoaded = true;
+                        loadTransferGraph(this._graphCurrentJobName);
+                    }
                 }
             });
         });
@@ -4420,7 +4714,7 @@ class CareerPlanningApp {
     async loadPromotionPath(jobName) {
         const container = document.getElementById('promotionContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div style="font-size:36px;margin-bottom:12px;animation:spin 1.5s linear infinite;display:inline-block">⚙️</div><div style="font-size:14px;margin-top:8px">加载晋升路径...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">加载晋升路径...</div></div>`;
         try {
             const result = await getCareerPath(jobName);
             if (result.code === 200 && result.data && result.data.path && result.data.path.length) {
@@ -4452,7 +4746,7 @@ class CareerPlanningApp {
         let html = '<div style="display:flex;flex-direction:column;align-items:center;padding:10px 20px 20px;position:relative">';
         stages.forEach((stage, idx) => {
             if (idx > 0 && !stages[idx - 1].forks) {
-                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#4f7cff,#7c5cff)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #7c5cff"></div><div style="position:absolute;left:calc(50% + 16px);top:50%;transform:translateY(-50%);white-space:nowrap;font-size:10px;font-weight:600;color:#5a6a8a;background:#fff;border:1px solid rgba(79,124,255,0.12);padding:2px 8px;border-radius:10px">${esc(stages[idx-1].promotion_hint || '持续积累')}</div></div>`;
+                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#4f7cff,#7c5cff)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #7c5cff"></div></div>`;
             }
             if (stage.forks) {
                 html += '<div style="display:flex;gap:14px;width:100%">';
@@ -4477,7 +4771,7 @@ class CareerPlanningApp {
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:14px;font-weight:700;color:#1a2340">${esc(stage.title)}</span><span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:${cur?'rgba(79,124,255,0.1)':idx===0?'rgba(0,184,148,0.1)':'rgba(245,166,35,0.1)'};color:${cur?'#3d65e0':idx===0?'#009e7a':'#c47d00'};border:1px solid ${cur?'rgba(79,124,255,0.2)':idx===0?'rgba(0,184,148,0.2)':'rgba(245,166,35,0.2)'}">${esc(stage.badge)}</span></div>
                         <div style="font-size:12px;color:#5a6a8a;line-height:1.6;margin-bottom:10px">${esc(stage.description)}</div>
                         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${(stage.skills||[]).map(s=>`<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.14)">${esc(s)}</span>`).join('')}</div>
-                        <div style="font-size:11px;color:#aab4cc">代表：${esc(stage.companies)}</div></div></div>`;
+                        <div style="font-size:11px;color:#aab4cc">${esc(stage.companies)}</div></div></div>`;
             }
         });
         html += '</div>';
@@ -4487,13 +4781,13 @@ class CareerPlanningApp {
     async loadTransferPath(jobName) {
         const container = document.getElementById('transferContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div style="font-size:36px;margin-bottom:12px">🔄</div><div style="font-size:14px;margin-top:8px">加载转岗图谱...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">加载晋升图谱...</div></div>`;
         try {
             const result = await getRelationGraphByJobName(jobName);
             if (result.code === 200 && result.data && Array.isArray(result.data) && result.data.length) {
                 this.renderTransferGraphECharts(result.data, result.center_job || { job_name: jobName }, container);
             } else {
-                container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的转岗数据</div>';
+                container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的晋升数据</div>';
             }
         } catch (e) {
             container.innerHTML = `<div style="color:#ff4d6d;padding:20px;text-align:center">请求失败: ${(e.message||'').replace(/</g,'&lt;')}</div>`;
@@ -4501,7 +4795,7 @@ class CareerPlanningApp {
     }
 
     renderTransferGraphECharts(relations, centerJob, container) {
-        if (!relations.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无转岗数据</div>'; return; }
+        if (!relations.length) { container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无晋升数据</div>'; return; }
         const list = relations.slice(0, 6);
         const centerName = (centerJob && centerJob.job_name) ? centerJob.job_name : '当前岗位';
         const esc = (s) => (s == null ? '' : String(s).replace(/</g, '&lt;').replace(/"/g, '&quot;'));
@@ -4606,7 +4900,7 @@ class CareerPlanningApp {
                 '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:' + diffBg + ';color:' + diffColor + ';border:1px solid ' + diffBorder + '">难度' + diffText + '</span>' +
                 '<span style="font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;background:rgba(79,124,255,0.08);color:#3d65e0;border:1px solid rgba(79,124,255,0.18)">⏱ ' + cycleText + '</span></div>' +
                 '<div style="font-size:9px;color:#5a6a8a;line-height:1.4;margin-bottom:6px"><span style="color:#4f7cff;font-weight:600">可迁移：</span>' + esc(skillsText) + '</div>' +
-                '<div style="font-size:9px;color:#aab4cc;line-height:1.35">技能重叠度高，转岗成本较低</div></div>';
+                '<div style="font-size:9px;color:#aab4cc;line-height:1.35">技能重叠度高，晋升成本较低</div></div>';
             container.appendChild(card);
         });
     }
@@ -4835,7 +5129,7 @@ class CareerPlanningApp {
 
         if (transferNodes.length === 0) {
             html += `
-                <div class="graph-transfer-empty">暂无该岗位的转岗推荐，请确认已加载关联图谱接口数据。</div>`;
+                <div class="graph-transfer-empty">暂无该岗位的晋升推荐，请确认已加载关联图谱接口数据。</div>`;
         } else {
             transferNodes.forEach((node, i) => {
                 const score = node.match != null ? node.match : 75;
@@ -6647,7 +6941,7 @@ class CareerPlanningApp {
                         <div class="roadmap-stages">${(rm.stages || []).map((s, i) => `
                             <div class="roadmap-stage"><span class="stage-num">${i + 1}</span><div><strong>${s.stage}</strong>（${s.period || ''}）<ul>${(s.key_responsibilities || []).map(r => `<li>${san(r)}</li>`).join('')}</ul></div></div>
                         `).join('')}</div>
-                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>转岗备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
+                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>晋升备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
                     </div>` : ''}
                     ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${san(trends.current_status || '')}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${san(t.trend)}</strong>：${san(t.impact)}；机会：${san(t.opportunity)}</li>`).join('')}</ul><p class="outlook">${san(trends['5_year_outlook'] || '')}</p></div>` : ''}
                     ${s2.job_data_analysis ? `<div class="job-data-analysis"><h5>企业岗位数据关联性分析</h5><p>${san(s2.job_data_analysis.overview || '')}</p><ul>${(s2.job_data_analysis.associations || []).map(a => `<li><strong>${san(a.job_title)}</strong>：${san(a.relevance)}；能力迁移：${san(a.skill_transferability || '')}</li>`).join('')}</ul></div>` : ''}

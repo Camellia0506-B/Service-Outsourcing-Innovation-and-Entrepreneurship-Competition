@@ -28,8 +28,8 @@ from utils.config_handler import rag_conf
 
 # 大模型（与其它模块保持一致：通义千问 DashScope / ChatTongyi）
 from langchain_community.chat_models.tongyi import ChatTongyi
-from langchain.prompts import PromptTemplate
-from langchain.schema import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 # 创建Blueprint
 job_bp = Blueprint("job", __name__, url_prefix="/api/v1/job")

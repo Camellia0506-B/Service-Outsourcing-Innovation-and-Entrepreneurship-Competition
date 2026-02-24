@@ -844,11 +844,157 @@
     },
     "error": null
   },
+<<<<<<< Updated upstream
   "resume_parse_20260223215042629_5_215629": {
     "status": "failed",
     "user_id": 5,
     "created_at": "2026-02-23 21:50:42",
     "result": null,
     "error": "'request'"
+=======
+  "resume_parse_20260224101252747_1_448588": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-02-24 10:12:52",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "李明远",
+          "phone": "13812345678",
+          "email": "liminyuan2023@whut.edu.cn",
+          "gender": "男",
+          "birth_date": "2003-08",
+          "nickname": "李明远",
+          "birthday": "2003-08-15"
+        },
+        "education": [
+          {
+            "school": "武汉理工大学",
+            "major": "计算机科学与技术",
+            "degree": "本科",
+            "grade": "2023级",
+            "start_date": "2023-09",
+            "expected_graduation": "2027-06",
+            "gpa": "3.6/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "机器学习",
+              "深度学习",
+              "数据结构",
+              "算法",
+              "人工智能/机器学习"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "MySQL",
+              "Vue.js",
+              "Spring Boot",
+              "Linux",
+              "ChromaDB",
+              "LangChain",
+              "CNN"
+            ]
+          },
+          {
+            "category": "语言能力",
+            "items": [
+              "英语CET-6",
+              "普通话二级甲等",
+              "计算机二级（Python）"
+            ]
+          }
+        ],
+        "certificates": [
+          {
+            "name": "英语六级（CET-6）",
+            "issue_date": null
+          },
+          {
+            "name": "计算机二级（Python）",
+            "issue_date": null
+          },
+          {
+            "name": "普通话二级甲等",
+            "issue_date": null
+          }
+        ],
+        "internships": [
+          {
+            "company": "腾讯科技",
+            "position": "后端开发实习生",
+            "start_date": "2024-07",
+            "end_date": "2024-09",
+            "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+          }
+        ],
+        "projects": [
+          {
+            "name": "基于深度学习的图像识别系统",
+            "role": "独立开发者",
+            "start_date": "2024-03",
+            "end_date": "2024-06",
+            "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+            "tech_stack": [
+              "CNN",
+              "深度学习",
+              "Python",
+              "Vue.js"
+            ]
+          },
+          {
+            "name": "校园智能问答系统",
+            "role": "开发者",
+            "start_date": "2024-09",
+            "end_date": "2024-12",
+            "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库，集成 LangChain 框架实现多轮对话，日均查询响应时间小于 2 秒。",
+            "tech_stack": [
+              "RAG",
+              "大语言模型",
+              "ChromaDB",
+              "LangChain",
+              "Python"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "全国大学生数学建模竞赛 二等奖",
+            "level": "国家级",
+            "date": "2024-01"
+          },
+          {
+            "name": "武汉理工大学优秀学生奖学金 一等奖",
+            "level": "校级",
+            "date": "2023-01"
+          },
+          {
+            "name": "计算机程序设计竞赛 校级三等奖",
+            "level": "校级",
+            "date": "2024-01"
+          }
+        ]
+      },
+      "confidence_score": 0.96,
+      "suggestions": [
+        "建议在教育背景中补充入学时间（如2023年9月），便于HR评估在校时长",
+        "项目经历中的技术栈可进一步细化（如具体使用的深度学习框架），提升技术匹配度"
+      ]
+    },
+    "error": null
+>>>>>>> Stashed changes
   }
 }
