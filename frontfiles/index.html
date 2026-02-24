@@ -507,11 +507,22 @@
                         <h3>实习经历</h3>
                         <div id="internshipsContainer">
                             <div class="internship-item">
-                                <input type="text" placeholder="公司名称" class="internship-company">
-                                <input type="text" placeholder="职位" class="internship-position">
-                                <input type="text" placeholder="开始日期 (YYYY-MM)" class="internship-start-date">
-                                <input type="text" placeholder="结束日期 (YYYY-MM)" class="internship-end-date">
-                                <input type="text" placeholder="描述" class="internship-description">
+                                <div class="profile-field">
+                                    <label>公司名称</label>
+                                    <input type="text" class="internship-company">
+                                </div>
+                                <div class="profile-field">
+                                    <label>职位</label>
+                                    <input type="text" class="internship-position">
+                                </div>
+                                <div class="profile-field">
+                                    <label>时间</label>
+                                    <input type="text" class="internship-time">
+                                </div>
+                                <div class="profile-field profile-field-full">
+                                    <label>描述</label>
+                                    <input type="text" class="internship-description">
+                                </div>
                             </div>
                         </div>
                         <button type="button" id="addInternship" class="btn-secondary">添加实习经历</button>
@@ -522,12 +533,26 @@
                         <h3>项目经历</h3>
                         <div id="projectsContainer">
                             <div class="project-item">
-                                <input type="text" placeholder="项目名称" class="project-name">
-                                <input type="text" placeholder="角色" class="project-role">
-                                <input type="text" placeholder="开始日期 (YYYY-MM)" class="project-start-date">
-                                <input type="text" placeholder="结束日期 (YYYY-MM)" class="project-end-date">
-                                <input type="text" placeholder="描述" class="project-description">
-                                <input type="text" placeholder="技术栈 (用逗号分隔)" class="project-tech-stack">
+                                <div class="profile-field">
+                                    <label>项目名称</label>
+                                    <input type="text" class="project-name">
+                                </div>
+                                <div class="profile-field">
+                                    <label>角色</label>
+                                    <input type="text" class="project-role">
+                                </div>
+                                <div class="profile-field">
+                                    <label>时间</label>
+                                    <input type="text" class="project-time">
+                                </div>
+                                <div class="profile-field profile-field-full">
+                                    <label>描述</label>
+                                    <input type="text" class="project-description">
+                                </div>
+                                <div class="profile-field">
+                                    <label>技术栈 (用逗号分隔)</label>
+                                    <input type="text" class="project-tech-stack">
+                                </div>
                             </div>
                         </div>
                         <button type="button" id="addProject" class="btn-secondary">添加项目经历</button>
@@ -1172,13 +1197,9 @@
                             <span class="toolbar-icon">🤖</span>
                             智能体
                         </button>
-                        <select id="reportExportFormat" class="btn-toolbar-select">
-                            <option value="pdf">PDF</option>
-                            <option value="docx">Word</option>
-                        </select>
                         <button id="reportExportBtn" class="btn-toolbar btn-export">
                             <span class="toolbar-icon">📤</span>
-                            导出
+                            导出 PDF
                         </button>
                         <button id="reportBackBtn" class="btn-toolbar">
                             <span class="toolbar-icon">⬅️</span>
@@ -1196,17 +1217,16 @@
                 <div id="reportAgentModal" class="modal-overlay hidden">
                     <div class="modal-content agent-modal">
                         <div class="modal-header">
-                            <h3>职业规划智能体</h3>
+                            <div class="agent-header-info">
+                                <div class="agent-avatar-small">🎯</div>
+                                <div class="agent-header-details">
+                                    <h4>职业规划助手</h4>
+                                    <p>智能职业规划助手</p>
+                                </div>
+                            </div>
                             <button type="button" class="modal-close" id="closeAgentModal">&times;</button>
                         </div>
                         <div class="modal-body">
-                            <div class="agent-info">
-                                <div class="agent-avatar">🎯</div>
-                                <div class="agent-details">
-                                    <h4>职业规划助手</h4>
-                                    <p>我是你的智能职业规划助手，可以帮你分析报告、提供建议、优化规划方案。</p>
-                                </div>
-                            </div>
                             
                             <div class="agent-chat-container">
                                 <div id="agentChatHistory" class="agent-chat-history">
