@@ -679,22 +679,80 @@
                             <div class="ai-gen-form-card">
                                 <div class="ai-gen-form-head">
                                     <div class="ai-gen-form-title">✨ 岗位画像智能体</div>
-                                    <div class="ai-gen-form-sub">输入岗位名称，AI 自动分析技能要求、薪资区间与市场需求</div>
+                                    <div class="ai-gen-form-sub">输入岗位名称，智能体自动分析技能要求、薪资区间与市场需求</div>
                                 </div>
 
-                                <!-- 🤖 Agent 智能体启动入口（表单为兜底/可视化调参） -->
+                                <!-- 🤖 岗位画像智能体卡片（单层卡片布局） -->
                                 <div class="ai-agent-card" id="aiAgentCard">
-                                    <div class="ai-agent-title">🤖 岗位画像智能体</div>
-                                    <div class="ai-agent-desc">不需要逐项填表，点击按钮用自然语言描述岗位需求，智能体会帮你生成岗位画像并联动下方结果。</div>
-                                    <div class="ai-agent-row">
-                                        <!-- 隐藏的真实输入，用于 Agent 代码内部透传文本 -->
-                                        <input type="hidden" id="aiAgentQuery" value="">
-                                        <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn">
-                                            <span class="ai-agent-btn-text">打开智能体</span>
-                                            <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
-                                        </button>
+                                    <!-- 顶部：图标 + 标题 + 一句话简介 -->
+                                    <div class="ai-agent-card-header ai-agent-fade-1">
+                                        <div class="ai-agent-card-icon">🎯</div>
+                                        <div class="ai-agent-card-header-text">
+                                            <div class="ai-agent-card-title">岗位画像智能体</div>
+                                            <div class="ai-agent-card-subtitle">用自然语言描述岗位需求，一键生成结构化岗位画像，并联动晋升/换岗路径。</div>
+                                        </div>
                                     </div>
-                                    <div class="ai-agent-tip">点击「打开智能体」按钮，在弹窗中输入岗位需求，智能体会解析意图并直接生成岗位画像。</div>
+
+                                    <!-- 功能特性标签 -->
+                                    <div class="ai-agent-card-tags ai-agent-fade-2">
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">🧠</span>
+                                            <span>技能要求分析</span>
+                                        </div>
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">💰</span>
+                                            <span>薪资区间参考</span>
+                                        </div>
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">📊</span>
+                                            <span>市场需求洞察</span>
+                                        </div>
+                                        <div class="ai-agent-tag">
+                                            <span class="ai-agent-tag-icon">📄</span>
+                                            <span>结构化画像输出</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="ai-agent-card-divider"></div>
+
+                                    <!-- 步骤说明：1 → 2 → 3 → 4 -->
+                                    <div class="ai-agent-card-steps ai-agent-fade-3">
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">1</div>
+                                            <div class="ai-agent-step-label">输入岗位需求</div>
+                                        </div>
+                                        <div class="ai-agent-step-line"></div>
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">2</div>
+                                            <div class="ai-agent-step-label">智能体理解意图</div>
+                                        </div>
+                                        <div class="ai-agent-step-line"></div>
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">3</div>
+                                            <div class="ai-agent-step-label">生成岗位画像</div>
+                                        </div>
+                                        <div class="ai-agent-step-line"></div>
+                                        <div class="ai-agent-step">
+                                            <div class="ai-agent-step-circle">4</div>
+                                            <div class="ai-agent-step-label">联动晋升/换岗</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 底部 CTA：按钮 + 说明文字（保留原有按钮/隐藏输入 ID 供 JS 使用） -->
+                                    <div class="ai-agent-card-cta ai-agent-fade-4">
+                                        <div class="ai-agent-cta-left">
+                                            <!-- 隐藏的真实输入，用于 Agent 代码内部透传文本 -->
+                                            <input type="hidden" id="aiAgentQuery" value="">
+                                            <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn">
+                                                <span class="ai-agent-btn-text">打开智能体</span>
+                                                <span class="ai-agent-btn-arrow">→</span>
+                                                <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="ai-agent-cta-text">
+                                            在弹窗中用一段话描述岗位名称、行业方向和经验阶段，智能体会自动生成岗位画像并展示晋升/换岗路径。
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- 原表单区域（岗位名称/描述/行业/经验/开始生成）已由智能体接管，保留下方进度与结果展示 -->
