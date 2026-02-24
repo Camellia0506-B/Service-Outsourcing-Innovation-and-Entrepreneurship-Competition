@@ -14,7 +14,7 @@ def get_yaml_config(path: str | None = None):
             from utils.config_handler import rag_conf
         except Exception:
             # 兜底：如果全局配置也不可用，返回一个内置默认模型名
-            rag_conf = {"chat_model_name": "qwen3-max"}
+            rag_conf = {"chat_model_name": "qwen3.5-plus"}
         return {"rag": rag_conf}
 
     # 传入路径时，按给定 YAML 加载
