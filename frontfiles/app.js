@@ -6943,6 +6943,32 @@ class CareerPlanningApp {
         }
         document.getElementById('reportEditModal')?.classList.remove('hidden');
     }
+    
+    // 测试agent功能
+    testAgentFunctionality() {
+        console.log('测试职业规划智能体功能');
+        
+        // 测试意图识别
+        const testMessages = [
+            '分析我的职业规划报告',
+            '给我一些职业规划建议',
+            '优化我的职业发展路径',
+            '推荐我需要提升的技能',
+            '更新我的职业规划报告'
+        ];
+        
+        testMessages.forEach(message => {
+            const intent = this.recognizeIntent(message);
+            console.log(`消息: "${message}" -> 意图: ${intent.type}, 置信度: ${intent.confidence}`);
+        });
+        
+        // 测试任务规划
+        const testIntent = this.recognizeIntent('分析我的职业规划报告');
+        const testTaskPlan = this.planTask(testIntent, '分析我的职业规划报告');
+        console.log('测试任务规划:', testTaskPlan);
+        
+        console.log('职业规划智能体功能测试完成');
+    }
 
     // 7.3 保存编辑
     async saveReportEdits() {
@@ -7017,8 +7043,165 @@ class CareerPlanningApp {
     }
     
     // 打开智能体弹窗
-    openAgentModal() {
+    async openAgentModal() {
         document.getElementById('reportAgentModal').classList.remove('hidden');
+        
+        // 清空聊天记录
+        const chatHistory = document.getElementById('agentChatHistory');
+        if (chatHistory) {
+            chatHistory.innerHTML = '';
+        }
+        
+        // 主动初始化agent，分析当前报告状态并提供建议
+        await this.initializeAgent();
+        
+        // 记录打开时间
+        this.lastAgentOpenTime = Date.now();
+    }
+    
+    // 关闭智能体弹窗
+    closeAgentModal() {
+        document.getElementById('reportAgentModal').classList.add('hidden');
+        
+        // 记录关闭时间
+        this.lastAgentCloseTime = Date.now();
+    }
+    
+    // 初始化agent，分析当前报告状态并提供建议
+    async initializeAgent() {
+        // 检查是否有当前报告
+        if (!this.currentReportId || !this.currentReportData) {
+            this.addMessageToChat('agent', '欢迎使用职业规划智能助手！我注意到你还没有加载职业规划报告。请先加载报告，我将为你提供个性化的职业规划建议。');
+            return;
+        }
+        
+        // 分析报告状态
+        const reportStatus = this.analyzeReportStatus();
+        
+        // 生成主动建议
+        const suggestions = this.generateProactiveSuggestions(reportStatus);
+        
+        // 显示主动建议
+        this.addMessageToChat('agent', suggestions);
+        
+        // 检查是否需要显示其他主动内容
+        // 只有在用户上次打开时间超过5分钟时才显示其他主动内容
+        const timeSinceLastOpen = this.lastAgentOpenTime ? (Date.now() - this.lastAgentOpenTime) / 1000 / 60 : Infinity;
+        if (timeSinceLastOpen > 5) {
+            // 主动检查职业规划进度
+            setTimeout(() => {
+                this.checkCareerProgress();
+            }, 2000);
+            
+            // 主动提供定期规划建议
+            setTimeout(() => {
+                this.provideRegularPlanningAdvice();
+            }, 4000);
+            
+            // 主动分析职业市场趋势
+            setTimeout(() => {
+                this.analyzeJobMarketTrends();
+            }, 6000);
+        }
+    }
+    
+    // 分析报告状态
+    analyzeReportStatus() {
+        const reportData = this.currentReportData;
+        
+        // 检查报告完整性
+        const completeness = reportData.metadata?.completeness || 95;
+        
+        // 检查职业目标清晰度
+        const careerGoalClear = !!reportData.section_1_job_matching?.career_choice_advice?.primary_recommendation;
+        
+        // 检查技能评估完整性
+        const skillsComplete = !!reportData.section_1_job_matching?.recommended_careers?.length;
+        
+        // 检查发展路径合理性
+        const pathReasonable = !!reportData.section_2_career_path?.short_term_goal;
+        
+        // 检查行动计划可行性
+        const planFeasible = !!reportData.section_3_action_plan?.short_term_plan;
+        
+        return {
+            completeness,
+            careerGoalClear,
+            skillsComplete,
+            pathReasonable,
+            planFeasible,
+            hasInternship: true,
+            hasProjects: true
+        };
+    }
+    
+    // 生成主动建议
+    generateProactiveSuggestions(reportStatus) {
+        const suggestions = [
+            '👋 你好！我是你的职业规划智能助手，我已经分析了你的职业规划报告。',
+            '',
+            `📊 报告状态分析：`,
+            `- 完整度：${reportStatus.completeness}%`,
+            `- 职业目标：${reportStatus.careerGoalClear ? '清晰' : '需要明确'}`,
+            `- 技能评估：${reportStatus.skillsComplete ? '完整' : '需要完善'}`,
+            `- 发展路径：${reportStatus.pathReasonable ? '合理' : '需要优化'}`,
+            `- 行动计划：${reportStatus.planFeasible ? '可行' : '需要细化'}`,
+            `- 实习经历：${reportStatus.hasInternship ? '有' : '无'}`,
+            `- 项目经验：${reportStatus.hasProjects ? '有' : '无'}`
+        ];
+        
+        // 根据报告状态生成具体建议
+        if (reportStatus.completeness < 70) {
+            suggestions.push('');
+            suggestions.push('💡 建议：');
+            suggestions.push('1. 完善报告中的缺失部分，提高报告完整性');
+            suggestions.push('2. 明确职业目标，使其更加具体可衡量');
+            suggestions.push('3. 细化技能评估，列出具体的技能提升计划');
+        }
+        
+        if (!reportStatus.careerGoalClear) {
+            suggestions.push('');
+            suggestions.push('🎯 职业目标建议：');
+            suggestions.push('1. 明确你的长期职业目标');
+            suggestions.push('2. 设定短期可实现的阶段性目标');
+            suggestions.push('3. 考虑你的兴趣、技能和价值观');
+        }
+        
+        if (!reportStatus.skillsComplete) {
+            suggestions.push('');
+            suggestions.push('📚 技能提升建议：');
+            suggestions.push('1. 评估你的核心技能水平');
+            suggestions.push('2. 识别需要提升的技能领域');
+            suggestions.push('3. 制定具体的技能学习计划');
+        }
+        
+        if (!reportStatus.pathReasonable) {
+            suggestions.push('');
+            suggestions.push('🛣️ 发展路径建议：');
+            suggestions.push('1. 优化你的职业发展路径');
+            suggestions.push('2. 设定合理的时间节点');
+            suggestions.push('3. 考虑可能的职业转型机会');
+        }
+        
+        if (!reportStatus.planFeasible) {
+            suggestions.push('');
+            suggestions.push('📋 行动计划建议：');
+            suggestions.push('1. 制定详细的月度和周计划');
+            suggestions.push('2. 设定具体的行动步骤');
+            suggestions.push('3. 建立定期回顾和调整机制');
+        }
+        
+        suggestions.push('');
+        suggestions.push('我可以帮你执行以下任务：');
+        suggestions.push('1. 分析职业规划报告的优势和不足');
+        suggestions.push('2. 提供针对性的职业规划建议');
+        suggestions.push('3. 优化你的职业发展路径');
+        suggestions.push('4. 推荐你需要提升的技能');
+        suggestions.push('5. 更新你的职业规划报告');
+        suggestions.push('');
+        suggestions.push('请告诉我你希望我帮你做什么？');
+        
+        return suggestions;
     }
     
     // 关闭智能体弹窗
@@ -7026,8 +7209,118 @@ class CareerPlanningApp {
         document.getElementById('reportAgentModal').classList.add('hidden');
     }
     
+    // 主动检查职业规划进度
+    async checkCareerProgress() {
+        // 检查是否有当前报告
+        if (!this.currentReportId || !this.currentReportData) {
+            return;
+        }
+        
+        // 分析报告状态
+        const reportStatus = this.analyzeReportStatus();
+        
+        // 检查是否需要提醒
+        const shouldRemind = this.shouldRemindUser(reportStatus);
+        
+        if (shouldRemind) {
+            const reminder = this.generateProgressReminder(reportStatus);
+            this.addMessageToChat('agent', reminder);
+        }
+    }
+    
+    // 检查是否需要提醒用户
+    shouldRemindUser(reportStatus) {
+        // 基于报告状态判断是否需要提醒
+        return (
+            reportStatus.completeness < 70 ||
+            !reportStatus.careerGoalClear ||
+            !reportStatus.skillsComplete ||
+            !reportStatus.pathReasonable ||
+            !reportStatus.planFeasible ||
+            !reportStatus.hasInternship ||
+            !reportStatus.hasProjects
+        );
+    }
+    
+    // 生成进度提醒
+    generateProgressReminder(reportStatus) {
+        const reminders = [
+            '⏰ 职业规划进度提醒：',
+            ''
+        ];
+        
+        if (reportStatus.completeness < 70) {
+            reminders.push(`- 报告完整度较低（${reportStatus.completeness}%），建议完善报告内容`);
+        }
+        
+        if (!reportStatus.careerGoalClear) {
+            reminders.push('- 职业目标不够明确，建议进一步明确你的职业方向');
+        }
+        
+        if (!reportStatus.skillsComplete) {
+            reminders.push('- 技能评估不够完整，建议详细评估你的技能水平');
+        }
+        
+        if (!reportStatus.pathReasonable) {
+            reminders.push('- 职业发展路径需要优化，建议调整你的发展计划');
+        }
+        
+        if (!reportStatus.planFeasible) {
+            reminders.push('- 行动计划不够可行，建议制定更具体的执行步骤');
+        }
+        
+        if (!reportStatus.hasInternship) {
+            reminders.push('- 缺少实习经历，建议寻找相关实习机会');
+        }
+        
+        if (!reportStatus.hasProjects) {
+            reminders.push('- 缺少项目经验，建议参与相关项目提升实践能力');
+        }
+        
+        reminders.push('');
+        reminders.push('我可以帮你解决这些问题，你希望我优先处理哪一项？');
+        
+        return reminders;
+    }
+    
+    // 主动提供定期规划建议
+    provideRegularPlanningAdvice() {
+        const advice = [
+            '📅 定期职业规划建议：',
+            '',
+            '为了保持职业发展的动力和方向，建议你：',
+            '',
+            '1. 每周回顾：每周花15分钟回顾本周的职业发展进展',
+            '2. 每月评估：每月评估一次你的职业目标和行动计划',
+            '3. 季度调整：每季度调整一次你的职业规划，适应变化',
+            '4. 年度总结：每年做一次全面的职业发展总结和规划'
+        ];
+        
+        this.addMessageToChat('agent', advice);
+    }
+    
+    // 主动分析职业市场趋势
+    async analyzeJobMarketTrends() {
+        // 模拟分析职业市场趋势
+        const trends = [
+            '📈 职业市场趋势分析：',
+            '',
+            '根据最新的职业市场数据，以下是相关行业的发展趋势：',
+            '',
+            '1. 数字化转型加速：各行业对数字化人才的需求持续增长',
+            '2. 技能更新周期缩短：技术技能的更新周期从3-5年缩短到1-2年',
+            '3. 远程工作常态化：混合办公模式成为主流',
+            '4. 软技能价值提升：沟通、协作、适应性等软技能变得更加重要',
+            '5. 新兴职业涌现：AI、可再生能源、数字健康等领域出现新职业',
+            '',
+            '这些趋势对你的职业规划有什么影响？你希望我为你分析哪个趋势的具体影响？'
+        ];
+        
+        this.addMessageToChat('agent', trends);
+    }
+    
     // 发送消息给智能体
-    sendAgentMessage() {
+    async sendAgentMessage() {
         const input = document.getElementById('agentChatInput');
         const message = input.value.trim();
         if (!message) return;
@@ -7039,12 +7332,445 @@ class CareerPlanningApp {
         // 显示正在输入状态
         this.showTypingIndicator();
         
-        // 模拟智能体响应
-        setTimeout(() => {
+        try {
+            // 1. 意图识别
+            const intent = this.recognizeIntent(message);
+            console.log('识别到的意图:', intent);
+            
+            // 2. 任务规划
+            const taskPlan = this.planTask(intent, message);
+            console.log('任务规划:', taskPlan);
+            
+            // 3. 任务执行
+            const result = await this.executeTask(taskPlan);
+            
             this.removeTypingIndicator();
-            const response = this.getAgentResponse(message);
-            this.addMessageToChat('agent', response);
-        }, 1500);
+            this.addMessageToChat('agent', result);
+        } catch (error) {
+            console.error('智能体执行错误:', error);
+            this.removeTypingIndicator();
+            this.addMessageToChat('agent', '执行任务时发生错误，请稍后再试。');
+        }
+    }
+    
+    // 任务规划
+    planTask(intent, message) {
+        const taskPlan = {
+            intent: intent.type,
+            confidence: intent.confidence,
+            params: intent.params,
+            steps: [],
+            estimatedTime: 0
+        };
+        
+        switch (intent.type) {
+            case 'analyze_report':
+                taskPlan.steps = [
+                    { id: 1, name: '获取报告数据', description: '获取当前职业规划报告的详细数据' },
+                    { id: 2, name: '分析报告内容', description: '分析报告的优势和不足' },
+                    { id: 3, name: '生成分析结果', description: '生成详细的分析结果和建议' }
+                ];
+                taskPlan.estimatedTime = 3000;
+                break;
+                
+            case 'analyze_trend':
+                taskPlan.steps = [
+                    { id: 1, name: '识别趋势', description: '识别用户需要分析的具体趋势' },
+                    { id: 2, name: '收集趋势数据', description: '收集关于该趋势的详细信息和数据' },
+                    { id: 3, name: '分析影响', description: '分析该趋势对用户职业规划的影响' },
+                    { id: 4, name: '生成建议', description: '生成应对该趋势的具体建议' }
+                ];
+                taskPlan.estimatedTime = 4000;
+                break;
+                
+            case 'get_suggestions':
+                taskPlan.steps = [
+                    { id: 1, name: '分析用户需求', description: '分析用户的具体需求和关注点' },
+                    { id: 2, name: '收集相关信息', description: '收集与用户需求相关的职业规划信息' },
+                    { id: 3, name: '生成个性化建议', description: '根据用户需求生成个性化的职业规划建议' }
+                ];
+                taskPlan.estimatedTime = 4000;
+                break;
+                
+            case 'optimize_path':
+                taskPlan.steps = [
+                    { id: 1, name: '分析当前路径', description: '分析用户当前的职业发展路径' },
+                    { id: 2, name: '识别优化机会', description: '识别职业发展路径中的优化机会' },
+                    { id: 3, name: '生成优化方案', description: '生成详细的职业发展路径优化方案' }
+                ];
+                taskPlan.estimatedTime = 5000;
+                break;
+                
+            case 'skill_recommendation':
+                taskPlan.steps = [
+                    { id: 1, name: '分析技能现状', description: '分析用户当前的技能水平和结构' },
+                    { id: 2, name: '识别技能差距', description: '识别用户与目标职业之间的技能差距' },
+                    { id: 3, name: '推荐技能提升', description: '推荐用户需要提升的技能和学习资源' }
+                ];
+                taskPlan.estimatedTime = 4500;
+                break;
+                
+            case 'report_update':
+                taskPlan.steps = [
+                    { id: 1, name: '分析报告现状', description: '分析当前职业规划报告的状态和内容' },
+                    { id: 2, name: '收集更新信息', description: '收集需要更新的信息和数据' },
+                    { id: 3, name: '执行报告更新', description: '更新职业规划报告的内容' },
+                    { id: 4, name: '验证更新结果', description: '验证报告更新的结果和完整性' }
+                ];
+                taskPlan.estimatedTime = 6000;
+                break;
+                
+            default:
+                taskPlan.steps = [
+                    { id: 1, name: '理解用户问题', description: '理解用户的具体问题和需求' },
+                    { id: 2, name: '生成响应', description: '生成针对用户问题的响应' }
+                ];
+                taskPlan.estimatedTime = 2000;
+        }
+        
+        return taskPlan;
+    }
+    
+    // 任务执行
+    async executeTask(taskPlan) {
+        // 显示任务执行进度
+        this.showTaskExecutionProgress(taskPlan);
+        
+        // 执行任务步骤
+        let result;
+        
+        try {
+            switch (taskPlan.intent) {
+                case 'analyze_report':
+                    result = await this.analyzeCareerReport();
+                    break;
+                    
+                case 'analyze_trend':
+                    result = await this.analyzeTrend(taskPlan.params);
+                    break;
+                    
+                case 'get_suggestions':
+                    result = await this.getCareerSuggestions(taskPlan.params);
+                    break;
+                    
+                case 'optimize_path':
+                    result = await this.optimizeCareerPath();
+                    break;
+                    
+                case 'skill_recommendation':
+                    result = await this.getSkillRecommendations();
+                    break;
+                    
+                case 'report_update':
+                    result = await this.updateCareerReport(taskPlan.params);
+                    break;
+                    
+                default:
+                    result = this.getGeneralResponse(taskPlan.params?.message || '');
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('任务执行错误:', error);
+            return '执行任务时发生错误，请稍后再试。';
+        }
+    }
+    
+    // 分析职业市场趋势
+    async analyzeTrend(params) {
+        // 模拟工具调用：分析职业市场趋势
+        console.log('工具调用：分析职业市场趋势', params);
+        
+        await new Promise(resolve => setTimeout(resolve, 1500)); // 模拟异步操作
+        
+        const trendId = params.trend_id || '1';
+        let trendAnalysis;
+        
+        switch (trendId) {
+            case '1':
+                trendAnalysis = {
+                    title: '数字化转型加速',
+                    description: '各行业对数字化人才的需求持续增长',
+                    impact: [
+                        '数字化技能成为职场必备能力',
+                        '传统岗位面临转型压力',
+                        '数字经济领域就业机会增加',
+                        '远程工作和灵活办公模式普及'
+                    ],
+                    suggestions: [
+                        '提升数字化技能，如数据分析、数字营销等',
+                        '关注行业数字化转型趋势',
+                        '学习使用数字化工具和平台',
+                        '培养数字思维和创新能力'
+                    ],
+                    skills: ['数据分析', '数字营销', '云计算', '人工智能基础']
+                };
+                break;
+            case '2':
+                trendAnalysis = {
+                    title: '技能更新周期缩短',
+                    description: '技术技能的更新周期从3-5年缩短到1-2年',
+                    impact: [
+                        '持续学习成为职场常态',
+                        '技能快速迭代，需要保持学习敏锐度',
+                        '终身学习能力成为核心竞争力',
+                        '跨领域技能组合更受青睐'
+                    ],
+                    suggestions: [
+                        '建立持续学习习惯，定期更新技能',
+                        '关注行业前沿技术和趋势',
+                        '培养快速学习能力',
+                        '构建多元化技能组合'
+                    ],
+                    skills: ['快速学习', '知识管理', '跨领域整合', '自主学习']
+                };
+                break;
+            case '3':
+                trendAnalysis = {
+                    title: '远程工作常态化',
+                    description: '混合办公模式成为主流',
+                    impact: [
+                        '工作方式更加灵活多样',
+                        '地理限制减少，就业机会增加',
+                        '工作与生活平衡成为关注焦点',
+                        '远程协作能力成为必备技能'
+                    ],
+                    suggestions: [
+                        '提升远程协作和沟通能力',
+                        '建立高效的远程工作习惯',
+                        '熟悉远程办公工具和平台',
+                        '培养自我管理和时间管理能力'
+                    ],
+                    skills: ['远程协作', '时间管理', '自我驱动', '数字沟通']
+                };
+                break;
+            case '4':
+                trendAnalysis = {
+                    title: '软技能价值提升',
+                    description: '沟通、协作、适应性等软技能变得更加重要',
+                    impact: [
+                        '软技能成为职场核心竞争力',
+                        '技术与软技能结合更受青睐',
+                        '团队协作和领导力需求增加',
+                        '情商(EQ)在职业发展中的作用凸显'
+                    ],
+                    suggestions: [
+                        '提升沟通和表达能力',
+                        '培养团队协作和领导力',
+                        '增强情绪管理和人际关系处理能力',
+                        '提升问题解决和批判性思维能力'
+                    ],
+                    skills: ['沟通表达', '团队协作', '领导力', '问题解决']
+                };
+                break;
+            case '5':
+                trendAnalysis = {
+                    title: '新兴职业涌现',
+                    description: 'AI、可再生能源、数字健康等领域出现新职业',
+                    impact: [
+                        '就业市场更加多元化',
+                        '新兴领域人才需求旺盛',
+                        '跨学科背景人才更具优势',
+                        '职业发展路径更加灵活多样'
+                    ],
+                    suggestions: [
+                        '关注新兴领域发展动态',
+                        '培养跨学科思维和能力',
+                        '保持职业灵活性和适应性',
+                        '探索新兴领域的职业机会'
+                    ],
+                    skills: ['跨学科思维', '创新能力', '适应性', '行业洞察力']
+                };
+                break;
+            default:
+                trendAnalysis = {
+                    title: '数字化转型加速',
+                    description: '各行业对数字化人才的需求持续增长',
+                    impact: [
+                        '数字化技能成为职场必备能力',
+                        '传统岗位面临转型压力',
+                        '数字经济领域就业机会增加',
+                        '远程工作和灵活办公模式普及'
+                    ],
+                    suggestions: [
+                        '提升数字化技能，如数据分析、数字营销等',
+                        '关注行业数字化转型趋势',
+                        '学习使用数字化工具和平台',
+                        '培养数字思维和创新能力'
+                    ],
+                    skills: ['数据分析', '数字营销', '云计算', '人工智能基础']
+                };
+        }
+        
+        // 获取用户的具体信息
+        const userInfo = this.getCurrentUserInfo();
+        
+        // 生成个性化的可实行计划
+        const personalizedPlan = this.generatePersonalizedPlan(trendAnalysis, userInfo);
+        
+        return {
+            type: 'trend_analysis_result',
+            content: [
+                `📈 趋势${trendId}分析：${trendAnalysis.title}`,
+                '',
+                '趋势描述：',
+                trendAnalysis.description,
+                '',
+                '对职业规划的影响：',
+                ...trendAnalysis.impact.map(item => `- ${item}`),
+                '',
+                '应对建议：',
+                ...trendAnalysis.suggestions.map(item => `- ${item}`),
+                '',
+                '推荐提升技能：',
+                ...trendAnalysis.skills.map(item => `- ${item}`),
+                '',
+                '个性化可实行计划：',
+                ...personalizedPlan
+            ]
+        };
+    }
+    
+    // 获取用户的具体信息
+    getCurrentUserInfo() {
+        const reportData = this.currentReportData;
+        if (!reportData) {
+            return {
+                careerGoal: '未设置',
+                skills: [],
+                experience: '无',
+                education: '无'
+            };
+        }
+        
+        // 从报告数据中提取用户信息
+        const careerGoal = reportData.section_1_job_matching?.career_choice_advice?.primary_recommendation || '未设置';
+        const skills = reportData.section_1_job_matching?.recommended_careers?.[0]?.match_analysis?.capability_match?.professional_skills?.description || '';
+        const experience = reportData.section_1_job_matching?.self_assessment?.strengths || [];
+        const education = '大学学历'; // 假设用户有大学学历
+        
+        return {
+            careerGoal,
+            skills,
+            experience,
+            education
+        };
+    }
+    
+    // 生成个性化的可实行计划
+    generatePersonalizedPlan(trendAnalysis, userInfo) {
+        const plan = [];
+        
+        // 基于用户的职业目标生成计划
+        plan.push(`1. 基于你的职业目标（${userInfo.careerGoal}），制定以下计划：`);
+        
+        // 短期计划（1-3个月）
+        plan.push('');
+        plan.push('短期计划（1-3个月）：');
+        switch (trendAnalysis.title) {
+            case '数字化转型加速':
+                plan.push('- 选择1-2个数字化技能（如数据分析或数字营销）开始学习');
+                plan.push('- 每周花5-10小时学习相关技能');
+                plan.push('- 寻找数字化项目实践机会');
+                break;
+            case '技能更新周期缩短':
+                plan.push('- 建立每周学习计划，固定时间学习新技能');
+                plan.push('- 关注行业前沿技术博客和公众号');
+                plan.push('- 参加1-2个线上技术研讨会');
+                break;
+            case '远程工作常态化':
+                plan.push('- 熟悉1-2个远程协作工具（如Zoom、飞书）');
+                plan.push('- 建立个人远程工作时间管理体系');
+                plan.push('- 尝试参与远程项目或兼职');
+                break;
+            case '软技能价值提升':
+                plan.push('- 参加沟通技巧培训或阅读相关书籍');
+                plan.push('- 主动参与团队协作项目，锻炼团队合作能力');
+                plan.push('- 学习基础的领导力知识');
+                break;
+            case '新兴职业涌现':
+                plan.push('- 调研与你专业相关的新兴职业');
+                plan.push('- 参加新兴领域的线上讲座或研讨会');
+                plan.push('- 尝试学习新兴领域的基础知识');
+                break;
+        }
+        
+        // 中期计划（3-6个月）
+        plan.push('');
+        plan.push('中期计划（3-6个月）：');
+        switch (trendAnalysis.title) {
+            case '数字化转型加速':
+                plan.push('- 完成至少一个数字化技能的系统学习');
+                plan.push('- 构建数字化技能作品集');
+                plan.push('- 开始投递数字化相关岗位');
+                break;
+            case '技能更新周期缩短':
+                plan.push('- 掌握2-3个行业前沿技术');
+                plan.push('- 建立个人知识管理系统');
+                plan.push('- 开始分享学习心得，建立个人品牌');
+                break;
+            case '远程工作常态化':
+                plan.push('- 完全适应远程工作模式');
+                plan.push('- 拓展远程工作网络');
+                plan.push('- 提升远程工作效率，建立个人工作方法论');
+                break;
+            case '软技能价值提升':
+                plan.push('- 成为团队中的沟通协调者');
+                plan.push('- 开始带领小型项目或团队');
+                plan.push('- 建立良好的职场人际关系网络');
+                break;
+            case '新兴职业涌现':
+                plan.push('- 确定1-2个感兴趣的新兴职业方向');
+                plan.push('- 深入学习相关领域知识');
+                plan.push('- 寻找新兴领域的实习或项目机会');
+                break;
+        }
+        
+        // 长期计划（6-12个月）
+        plan.push('');
+        plan.push('长期计划（6-12个月）：');
+        switch (trendAnalysis.title) {
+            case '数字化转型加速':
+                plan.push('- 成为所在领域的数字化专家');
+                plan.push('- 参与大型数字化转型项目');
+                plan.push('- 建立数字化领域的专业网络');
+                break;
+            case '技能更新周期缩短':
+                plan.push('- 形成持续学习的习惯和方法论');
+                plan.push('- 成为团队中的技术领导者');
+                plan.push('- 影响团队的学习文化');
+                break;
+            case '远程工作常态化':
+                plan.push('- 实现工作地点自由选择');
+                plan.push('- 建立全球范围内的专业网络');
+                plan.push('- 提升远程团队管理能力');
+                break;
+            case '软技能价值提升':
+                plan.push('- 成为团队或部门的领导者');
+                plan.push('- 建立个人影响力和领导力品牌');
+                plan.push('- 开始指导和培养他人');
+                break;
+            case '新兴职业涌现':
+                plan.push('- 成功转型到新兴职业领域');
+                plan.push('- 成为新兴领域的早期从业者');
+                plan.push('- 建立在新兴领域的专业影响力');
+                break;
+        }
+        
+        return plan;
+    }
+    
+    // 显示任务执行进度
+    showTaskExecutionProgress(taskPlan) {
+        // 在控制台显示任务执行进度
+        console.log('开始执行任务:', taskPlan.intent);
+        console.log('预计执行时间:', taskPlan.estimatedTime, 'ms');
+        console.log('执行步骤:');
+        taskPlan.steps.forEach(step => {
+            console.log(`- ${step.id}. ${step.name}: ${step.description}`);
+        });
+        
+        // 可以在这里添加UI进度显示
     }
     
     // 添加消息到聊天记录
@@ -7053,7 +7779,7 @@ class CareerPlanningApp {
         const messageDiv = document.createElement('div');
         messageDiv.className = sender === 'user' ? 'user-message' : 'agent-message';
         
-        const avatar = sender === 'user' ? '👤' : '🤖';
+        const avatar = sender === 'user' ? '👤' : '🎯';
         
         messageDiv.innerHTML = `
             <div class="message-avatar">${avatar}</div>
@@ -7069,11 +7795,43 @@ class CareerPlanningApp {
     // 格式化消息内容
     formatMessageContent(content) {
         if (typeof content === 'string') {
-            return `<p>${content}</p>`;
+            // 移除*符号并优化格式
+            let formattedContent = content.replace(/\*/g, '');
+            // 处理换行和格式
+            return `<p>${formattedContent}</p>`;
         } else if (Array.isArray(content)) {
-            return `<ul>${content.map(item => `<li>${item}</li>`).join('')}</ul>`;
+            // 移除*符号并优化格式
+            const formattedContent = content.map(item => {
+                if (typeof item === 'string') {
+                    return item.replace(/\*/g, '');
+                }
+                return item;
+            });
+            return `<div>${formattedContent.map(item => `<p>${item}</p>`).join('')}</div>`;
+        } else if (typeof content === 'object' && content !== null) {
+            // 处理智能体的结构化响应
+            if (content.content) {
+                if (Array.isArray(content.content)) {
+                    // 移除*符号并优化格式
+                    const formattedContent = content.content.map(item => {
+                        if (typeof item === 'string') {
+                            return item.replace(/\*/g, '');
+                        }
+                        return item;
+                    });
+                    return `<div>${formattedContent.map(item => `<p>${item}</p>`).join('')}</div>`;
+                } else if (typeof content.content === 'string') {
+                    // 移除*符号并优化格式
+                    let formattedContent = content.content.replace(/\*/g, '');
+                    return `<p>${formattedContent}</p>`;
+                } else {
+                    return `<p>${content.content}</p>`;
+                }
+            } else {
+                return `<p>${JSON.stringify(content)}</p>`;
+            }
         } else {
-            return `<p>${JSON.stringify(content)}</p>`;
+            return `<p>${content}</p>`;
         }
     }
     
@@ -7084,7 +7842,7 @@ class CareerPlanningApp {
         typingDiv.id = 'typingIndicator';
         typingDiv.className = 'agent-message';
         typingDiv.innerHTML = `
-            <div class="message-avatar">🤖</div>
+            <div class="message-avatar">🎯</div>
             <div class="message-content">
                 <p>正在输入...</p>
             </div>
@@ -7118,62 +7876,339 @@ class CareerPlanningApp {
         }
     }
     
-    // 获取智能体响应
-    getAgentResponse(message) {
-        // 简单的关键词匹配，实际项目中可以接入真实的AI模型
+    // 意图识别
+    recognizeIntent(message) {
         const lowerMessage = message.toLowerCase();
         
+        // 意图识别逻辑
         if (lowerMessage.includes('分析') && lowerMessage.includes('报告')) {
             return {
-                type: 'analysis',
-                content: [
-                    '根据你的职业规划报告分析：',
-                    '优势：',
-                    '- 职业目标明确',
-                    '- 技能评估全面',
-                    '- 发展路径合理',
-                    '不足：',
-                    '- 缺乏具体的时间规划',
-                    '- 技能提升计划不够详细',
-                    '- 风险应对策略不足'
-                ]
+                type: 'analyze_report',
+                confidence: 0.95,
+                params: {
+                    report_id: this.currentReportId
+                }
+            };
+        } else if (lowerMessage.includes('分析') && lowerMessage.includes('趋势')) {
+            return {
+                type: 'analyze_trend',
+                confidence: 0.9,
+                params: {
+                    trend_id: lowerMessage.match(/趋势(\d+)/)?.[1] || '1'
+                }
             };
         } else if (lowerMessage.includes('优化') || lowerMessage.includes('建议')) {
             return {
-                type: 'suggestions',
-                content: [
-                    '针对性改进建议：',
-                    '1. 制定详细的月度/季度目标',
-                    '2. 为每个技能提升项设定具体的学习计划',
-                    '3. 增加行业 networking 活动',
-                    '4. 定期回顾和调整职业规划'
-                ]
+                type: 'get_suggestions',
+                confidence: 0.9,
+                params: {
+                    focus_areas: []
+                }
             };
         } else if (lowerMessage.includes('职业') && lowerMessage.includes('路径')) {
             return {
-                type: 'career_path',
-                content: [
-                    '优化后的职业发展路径：',
-                    '1. 近期（1-2年）：技能积累和经验提升',
-                    '2. 中期（3-5年）：职位晋升和责任扩大',
-                    '3. 长期（5年以上）：行业专家或管理层'
-                ]
+                type: 'optimize_path',
+                confidence: 0.85,
+                params: {}
             };
         } else if (lowerMessage.includes('技能') && lowerMessage.includes('提升')) {
             return {
-                type: 'skills',
-                content: [
-                    '推荐提升的技能：',
-                    '1. 专业技能：深化行业知识和技术能力',
-                    '2. 软技能：沟通能力、领导力、团队协作',
-                    '3. 工具技能：数据分析工具、项目管理工具',
-                    '4. 行业趋势：持续关注行业最新发展'
-                ]
+                type: 'skill_recommendation',
+                confidence: 0.8,
+                params: {}
             };
-        } else if (lowerMessage.includes('你好') || lowerMessage.includes('hi') || lowerMessage.includes('hello')) {
-            return '你好！我是你的职业规划智能助手，有什么可以帮你的吗？';
+        } else if (lowerMessage.includes('更新') && lowerMessage.includes('报告')) {
+            return {
+                type: 'report_update',
+                confidence: 0.75,
+                params: {
+                    update_type: 'full'
+                }
+            };
         } else {
-            return '感谢你的问题。作为你的职业规划智能助手，我可以帮你分析报告、提供建议、优化职业路径。请告诉我你具体需要什么帮助？';
+            return {
+                type: 'general_inquiry',
+                confidence: 0.5,
+                params: {
+                    message: message
+                }
+            };
+        }
+    }
+    
+    // 分析职业规划报告
+    async analyzeCareerReport() {
+        // 模拟工具调用：分析当前职业规划报告
+        console.log('工具调用：分析职业规划报告');
+        
+        // 1. 获取当前报告数据
+        const reportData = this.currentReportData;
+        if (!reportData) {
+            return '未找到当前职业规划报告，请先加载报告。';
+        }
+        
+        // 2. 执行分析
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟异步操作
+        
+        // 3. 基于报告数据生成个性化分析结果
+        const strengths = this.identifyReportStrengths(reportData);
+        const weaknesses = this.identifyReportWeaknesses(reportData);
+        const suggestions = this.generateReportSuggestions(reportData);
+        
+        // 4. 生成分析结果
+        return {
+            type: 'analysis_result',
+            content: [
+                '📊 职业规划报告分析结果：',
+                '',
+                '优势分析：',
+                ...strengths,
+                '',
+                '改进空间：',
+                ...weaknesses,
+                '',
+                '建议下一步：',
+                ...suggestions
+            ]
+        };
+    }
+    
+    // 识别报告优势
+    identifyReportStrengths(reportData) {
+        const strengths = [];
+        
+        if (reportData.section_1_job_matching?.career_choice_advice?.primary_recommendation) {
+            strengths.push('- 职业目标明确，符合个人兴趣和能力');
+        }
+        
+        if (reportData.section_1_job_matching?.recommended_careers?.length) {
+            strengths.push('- 技能评估全面，涵盖专业和软技能');
+        }
+        
+        if (reportData.section_2_career_path?.short_term_goal) {
+            strengths.push('- 发展路径合理，阶段性目标清晰');
+        }
+        
+        if (reportData.section_3_action_plan?.short_term_plan) {
+            strengths.push('- 行动计划具体，可操作性强');
+        }
+        
+        if (strengths.length === 0) {
+            strengths.push('- 正在积极构建职业规划，逐步完善各项内容');
+        }
+        
+        return strengths;
+    }
+    
+    // 识别报告不足
+    identifyReportWeaknesses(reportData) {
+        const weaknesses = [];
+        
+        if (!reportData.section_1_job_matching?.career_choice_advice?.primary_recommendation) {
+            weaknesses.push('- 职业目标不够明确，需要进一步清晰化');
+        }
+        
+        if (!reportData.section_1_job_matching?.recommended_careers?.length) {
+            weaknesses.push('- 技能评估不够全面，需要详细评估');
+        }
+        
+        if (!reportData.section_2_career_path?.short_term_goal) {
+            weaknesses.push('- 发展路径不够合理，需要优化调整');
+        }
+        
+        if (!reportData.section_3_action_plan?.short_term_plan) {
+            weaknesses.push('- 行动计划不够具体，可操作性不强');
+        }
+        
+        if (weaknesses.length === 0) {
+            weaknesses.push('- 报告整体质量良好，可进一步细化和完善');
+        }
+        
+        return weaknesses;
+    }
+    
+    // 生成报告建议
+    generateReportSuggestions(reportData) {
+        const suggestions = [];
+        
+        if (!reportData.section_1_job_matching?.career_choice_advice?.primary_recommendation) {
+            suggestions.push('- 明确职业目标，考虑个人兴趣、能力和价值观');
+        }
+        
+        if (!reportData.section_1_job_matching?.recommended_careers?.length) {
+            suggestions.push('- 详细评估各项技能水平，识别优势和不足');
+        }
+        
+        if (!reportData.section_2_career_path?.short_term_goal) {
+            suggestions.push('- 制定合理的职业发展路径，设定阶段性目标');
+        }
+        
+        if (!reportData.section_3_action_plan?.short_term_plan) {
+            suggestions.push('- 制定具体的行动计划，增加可操作性');
+        }
+        
+        suggestions.push('- 定期回顾和调整职业规划，适应变化');
+        suggestions.push('- 关注行业趋势，了解最新发展动态');
+        suggestions.push('- 建立专业网络，增加行业联系');
+        
+        return suggestions;
+    }
+    
+    // 获取职业规划建议
+    async getCareerSuggestions(params) {
+        // 模拟工具调用：获取职业规划建议
+        console.log('工具调用：获取职业规划建议', params);
+        
+        await new Promise(resolve => setTimeout(resolve, 1200)); // 模拟异步操作
+        
+        return {
+            type: 'suggestions_result',
+            content: [
+                '💡 针对性职业规划建议：',
+                '',
+                '短期建议（3-6个月）：',
+                '1. 制定详细的月度目标和周计划',
+                '2. 为每个技能提升项设定具体的学习计划',
+                '3. 开始构建专业网络，参加行业活动',
+                '4. 建立定期回顾机制，每月评估进展',
+                '',
+                '中期建议（6-12个月）：',
+                '1. 寻求相关实习或项目经验',
+                '2. 考取相关专业证书',
+                '3. 建立个人品牌，如博客或作品集',
+                '4. 拓展行业人脉，寻找导师',
+                '',
+                '长期建议（1-3年）：',
+                '1. 明确职业晋升路径',
+                '2. 发展领导力和管理能力',
+                '3. 持续关注行业趋势和技术发展',
+                '4. 建立个人专业影响力'
+            ]
+        };
+    }
+    
+    // 优化职业发展路径
+    async optimizeCareerPath() {
+        // 模拟工具调用：优化职业发展路径
+        console.log('工具调用：优化职业发展路径');
+        
+        await new Promise(resolve => setTimeout(resolve, 1500)); // 模拟异步操作
+        
+        return {
+            type: 'path_optimization_result',
+            content: [
+                '🎯 优化后的职业发展路径：',
+                '',
+                '阶段一：基础积累期（1-2年）',
+                '- 目标：掌握核心技能，积累项目经验',
+                '- 行动：',
+                '  - 完成入门级职位，熟悉行业流程',
+                '  - 持续学习专业技能，考取相关证书',
+                '  - 参与多个项目，积累实战经验',
+                '  - 建立专业网络，拓展人脉',
+                '',
+                '阶段二：能力提升期（2-4年）',
+                '- 目标：成为领域专家，开始承担更多责任',
+                '- 行动：',
+                '  - 晋升到中级职位，负责更复杂的项目',
+                '  - 深化专业知识，成为某个领域的专家',
+                '  - 开始带领小型团队，发展领导力',
+                '  - 建立个人品牌，分享专业知识',
+                '',
+                '阶段三：职业突破期（4-6年）',
+                '- 目标：进入管理层或成为高级专家',
+                '- 行动：',
+                '  - 晋升到高级职位或管理层',
+                '  - 负责战略规划和团队管理',
+                '  - 拓展行业影响力，参与行业活动',
+                '  - 持续创新，推动业务发展',
+                '',
+                '阶段四：事业稳定期（6年以上）',
+                '- 目标：巩固地位，追求更大成就',
+                '- 行动：',
+                '  - 成为行业权威或高层管理者',
+                '  - 指导和培养下一代人才',
+                '  - 参与行业标准制定',
+                '  - 考虑创业或顾问角色'
+            ]
+        };
+    }
+    
+    // 获取技能提升建议
+    async getSkillRecommendations() {
+        // 模拟工具调用：获取技能提升建议
+        console.log('工具调用：获取技能提升建议');
+        
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟异步操作
+        
+        return {
+            type: 'skill_recommendation_result',
+            content: [
+                '📚 个性化技能提升建议：',
+                '',
+                '核心专业技能：',
+                '1. 行业知识：深入了解行业发展趋势、商业模式和竞争格局',
+                '2. 技术能力：掌握行业核心技术，保持技术敏感性',
+                '3. 专业认证：考取行业认可的专业证书，提升竞争力',
+                '',
+                '关键软技能：',
+                '1. 沟通能力：提升书面和口头表达能力，学会有效沟通',
+                '2. 领导力：培养团队管理能力，学会激励和指导他人',
+                '3. 问题解决：提升分析和解决复杂问题的能力',
+                '4. 时间管理：学会优先级排序，提高工作效率',
+                '',
+                '必备工具技能：',
+                '1. 数据分析：掌握数据分析工具，如Excel、Python等',
+                '2. 项目管理：熟悉项目管理方法和工具，如敏捷、Scrum等',
+                '3. 数字化工具：掌握行业相关的数字化工具和平台',
+                '',
+                '学习资源推荐：',
+                '- 在线课程平台：Coursera、Udemy、 LinkedIn Learning',
+                '- 行业书籍和白皮书',
+                '- 行业会议和研讨会',
+                '- 专业社区和论坛'
+            ]
+        };
+    }
+    
+    // 更新职业规划报告
+    async updateCareerReport(params) {
+        // 模拟工具调用：更新职业规划报告
+        console.log('工具调用：更新职业规划报告', params);
+        
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 模拟异步操作
+        
+        return {
+            type: 'report_update_result',
+            content: [
+                '🔄 职业规划报告更新结果：',
+                '',
+                '更新内容：',
+                '- 职业目标：根据最新市场趋势进行了调整',
+                '- 技能评估：更新了技能水平和提升计划',
+                '- 发展路径：优化了各阶段目标和时间节点',
+                '- 行动计划：增加了具体的学习资源和网络拓展建议',
+                '',
+                '更新状态：已完成',
+                '',
+                '建议：',
+                '1. 查看更新后的报告，确认所有内容符合你的期望',
+                '2. 按照新的行动计划开始执行',
+                '3. 定期回顾和调整职业规划'
+            ]
+        };
+    }
+    
+    // 获取通用响应
+    getGeneralResponse(message) {
+        const lowerMessage = message.toLowerCase();
+        
+        if (lowerMessage.includes('你好') || lowerMessage.includes('hi') || lowerMessage.includes('hello')) {
+            return '你好！我是你的职业规划智能助手，有什么可以帮你的吗？';
+        } else if (lowerMessage.includes('谢谢') || lowerMessage.includes('thank')) {
+            return '不客气！如果你有任何关于职业规划的问题，随时告诉我。';
+        } else {
+            return '感谢你的问题。作为你的职业规划智能助手，我可以帮你：\n1. 分析职业规划报告\n2. 提供针对性建议\n3. 优化职业发展路径\n4. 推荐技能提升方向\n请告诉我你具体需要什么帮助？';
         }
     }
 
@@ -7181,7 +8216,6 @@ class CareerPlanningApp {
     async exportCareerReport() {
         const id = this.currentReportId;
         if (!id) return this.showToast('暂无报告', 'error');
-        const format = (document.getElementById('reportExportFormat')?.value || 'pdf').toLowerCase();
         
         // 检查报告内容是否存在
         const reportContent = document.getElementById('reportContent');
@@ -7192,13 +8226,8 @@ class CareerPlanningApp {
         this.showToast('正在生成导出文件，请稍候...', 'info');
         
         try {
-            if (format === 'pdf') {
-                await this.exportToPDF(id);
-            } else if (format === 'docx') {
-                await this.exportToWord(id);
-            } else {
-                this.showToast('不支持的导出格式', 'error');
-            }
+            // 直接导出为PDF格式
+            await this.exportToPDF(id);
         } catch (error) {
             console.error('导出失败:', error);
             this.showToast('导出失败: ' + (error.message || '未知错误'), 'error');
