@@ -5,5 +5,33 @@
     "created_at": "2026-02-24 13:07:12",
     "result": null,
     "error": "'request'"
+  },
+  "resume_parse_20260224130842396_5_186567": {
+    "status": "failed",
+    "user_id": 5,
+    "created_at": "2026-02-24 13:08:42",
+    "result": null,
+    "error": "'request'"
+  },
+  "resume_parse_20260224131337293_5_718933": {
+    "status": "failed",
+    "user_id": 5,
+    "created_at": "2026-02-24 13:13:37",
+    "result": null,
+    "error": "'request'"
+  },
+  "resume_parse_20260224134814497_5_680228": {
+    "status": "failed",
+    "user_id": 5,
+    "created_at": "2026-02-24 13:48:14",
+    "result": null,
+    "error": "'request'"
+  },
+  "resume_parse_20260224154004486_3_511315": {
+    "status": "failed",
+    "user_id": 3,
+    "created_at": "2026-02-24 15:40:04",
+    "result": null,
+    "error": "'request'"
   }
 }

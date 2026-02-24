@@ -621,7 +621,7 @@
                 <div class="job-profile-tabs">
                     <button class="tab-btn active" data-tab="list"><span class="tab-btn-icon">📋</span><span>岗位列表</span></button>
                     <button class="tab-btn" data-tab="graph"><span class="tab-btn-icon">🔗</span><span>关联图谱</span></button>
-                    <button class="tab-btn" data-tab="ai"><span class="tab-btn-icon">✨</span><span>AI生成</span></button>
+                    <button class="tab-btn" data-tab="ai"><span class="tab-btn-icon">✨</span><span>岗位画像智能体</span></button>
                 </div>
 
                 <!-- 岗位列表 Tab -->
@@ -672,64 +672,32 @@
                     </div>
                 </div>
 
-                <!-- AI生成 Tab -->
+                <!-- 岗位画像智能体 Tab -->
                 <div class="tab-content" id="aiTab">
                     <div class="ai-gen-wrap">
                         <div class="ai-gen-main">
                             <div class="ai-gen-form-card">
                                 <div class="ai-gen-form-head">
-                                    <div class="ai-gen-form-title">✨ AI生成岗位画像</div>
+                                    <div class="ai-gen-form-title">✨ 岗位画像智能体</div>
                                     <div class="ai-gen-form-sub">输入岗位名称，AI 自动分析技能要求、薪资区间与市场需求</div>
                                 </div>
 
-                                <!-- 🤖 Agent 智能对话生成（表单兜底保留） -->
+                                <!-- 🤖 Agent 智能体启动入口（表单为兜底/可视化调参） -->
                                 <div class="ai-agent-card" id="aiAgentCard">
-                                    <div class="ai-agent-title">🤖 智能对话生成</div>
-                                    <div class="ai-agent-desc">请输入你的需求（例如：生成互联网/AI行业应届生算法工程师画像）</div>
+                                    <div class="ai-agent-title">🤖 岗位画像智能体</div>
+                                    <div class="ai-agent-desc">不需要逐项填表，点击按钮用自然语言描述岗位需求，智能体会帮你生成岗位画像并联动下方结果。</div>
                                     <div class="ai-agent-row">
-                                        <input type="text" id="aiAgentQuery" class="ai-agent-input" placeholder="请输入岗位画像生成需求，回车提交" autocomplete="off">
-                                        <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn" disabled>
-                                            <span class="ai-agent-btn-text">智能生成</span>
+                                        <!-- 隐藏的真实输入，用于 Agent 代码内部透传文本 -->
+                                        <input type="hidden" id="aiAgentQuery" value="">
+                                        <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn">
+                                            <span class="ai-agent-btn-text">打开智能体</span>
                                             <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
                                         </button>
                                     </div>
-                                    <div class="ai-agent-tip">智能体将自动解析并填充下方表单，信息完整时会自动触发「开始生成」</div>
+                                    <div class="ai-agent-tip">点击「打开智能体」按钮，在弹窗中输入岗位需求，智能体会解析意图并直接生成岗位画像。</div>
                                 </div>
 
-                                <div class="ai-gen-field">
-                                    <label class="ai-gen-label">岗位名称 <span class="required">*</span></label>
-                                    <div class="ai-gen-input-wrap">
-                                        <input type="text" id="aiJobName" class="ai-gen-input" placeholder="如：算法工程师" autocomplete="off">
-                                        <div id="aiJobSuggestList" class="ai-gen-suggest-list hidden"></div>
-                                    </div>
-                                </div>
-                                <div class="ai-gen-field">
-                                    <label class="ai-gen-label">岗位描述 <span class="ai-gen-label-opt">（可选，每行一个JD）</span></label>
-                                    <textarea id="aiJobDescriptions" class="ai-gen-textarea" rows="4" placeholder="可从招聘网站复制多个岗位描述，每行一个，AI 将综合分析..."></textarea>
-                                </div>
-                                <div class="ai-gen-field">
-                                    <label class="ai-gen-label">行业方向</label>
-                                    <div class="ai-gen-pill-group" id="aiIndustryGroup">
-                                        <button type="button" class="ai-gen-pill active" data-value="互联网/AI">互联网/AI</button>
-                                        <button type="button" class="ai-gen-pill" data-value="新能源">新能源</button>
-                                        <button type="button" class="ai-gen-pill" data-value="金融">金融</button>
-                                        <button type="button" class="ai-gen-pill" data-value="医疗">医疗</button>
-                                        <button type="button" class="ai-gen-pill" data-value="制造业">制造业</button>
-                                        <button type="button" class="ai-gen-pill" data-value="咨询">咨询</button>
-                                    </div>
-                                </div>
-                                <div class="ai-gen-field">
-                                    <label class="ai-gen-label">经验阶段</label>
-                                    <div class="ai-gen-pill-group" id="aiExperienceGroup">
-                                        <button type="button" class="ai-gen-pill active" data-value="应届生">应届生</button>
-                                        <button type="button" class="ai-gen-pill" data-value="1-3年">1-3年</button>
-                                        <button type="button" class="ai-gen-pill" data-value="3-5年">3-5年</button>
-                                        <button type="button" class="ai-gen-pill" data-value="5年以上">5年以上</button>
-                                    </div>
-                                </div>
-                                <div class="ai-gen-actions">
-                                    <button type="button" id="aiGenerateJobBtn" class="ai-gen-btn">✨ 开始生成</button>
-                                </div>
+                                <!-- 原表单区域（岗位名称/描述/行业/经验/开始生成）已由智能体接管，保留下方进度与结果展示 -->
                                 <div id="aiProgressWrap" class="ai-gen-progress-wrap hidden">
                                     <div class="ai-gen-progress-step" id="aiStep1"><span class="ai-gen-step-dot"></span><span class="ai-gen-step-text">🔍 正在分析岗位需求...</span></div>
                                     <div class="ai-gen-progress-step" id="aiStep2"><span class="ai-gen-step-dot"></span><span class="ai-gen-step-text">🧠 正在匹配技能要求...</span></div>
@@ -816,6 +784,61 @@
                 <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
                     <button type="button" id="aiAgentSupplementCancel" class="btn-secondary">取消</button>
                     <button type="button" id="aiAgentSupplementOk" class="btn-primary">继续生成</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 岗位画像智能体对话弹窗（仿截图的聊天样式） -->
+        <div id="aiAgentDialogModal" class="modal-overlay hidden">
+            <div class="modal-content agent-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>岗位画像智能体</h3>
+                    <button type="button" class="modal-close" id="aiAgentDialogClose" aria-label="关闭">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="agent-info">
+                        <div class="agent-avatar">🎯</div>
+                        <div class="agent-details">
+                            <h4>岗位画像智能体</h4>
+                            <p>用一句话描述岗位需求，我会为你生成完整岗位画像，并结合真实数据给出分析。</p>
+                        </div>
+                    </div>
+
+                    <div class="agent-chat-container">
+                        <div id="aiAgentDialogHistory" class="agent-chat-history">
+                            <div class="agent-message">
+                                <div class="message-avatar">🎯</div>
+                                <div class="message-content">
+                                    <p>你好！我是岗位画像智能体，可以帮你：</p>
+                                    <ul>
+                                        <li>生成指定岗位的详细画像（技能要求、薪资区间、发展路径等）</li>
+                                        <li>结合你关心的行业方向和经验阶段给出更精准的分析</li>
+                                    </ul>
+                                    <p>你可以这样和我说：</p>
+                                    <ul>
+                                        <li>“生成互联网/AI 行业的前端开发工程师岗位画像，3-5 年经验。”</li>
+                                        <li>“帮我生成应届算法工程师岗位画像，偏推荐系统方向。”</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="agent-chat-input">
+                            <textarea id="aiAgentDialogInput" rows="1"
+                                      placeholder="用一段话描述你想生成的岗位，例如：生成互联网/AI 行业的前端开发工程师岗位画像，3-5 年经验，主要负责后台管理系统与可视化大屏开发..."></textarea>
+                            <button type="button" id="aiAgentDialogOk" class="btn-primary">发送</button>
+                        </div>
+                    </div>
+
+                    <div class="agent-quick-actions">
+                        <h4>快捷示例</h4>
+                        <div class="quick-actions-grid">
+                            <button type="button" class="quick-action-btn" data-ai-query="生成互联网/AI 行业的前端开发工程师岗位画像，3-5 年经验，主要负责后台管理系统与可视化大屏开发。">前端开发工程师</button>
+                            <button type="button" class="quick-action-btn" data-ai-query="生成互联网/AI 行业的应届算法工程师岗位画像，偏推荐系统方向，需要熟悉 Python 与深度学习。">算法工程师（应届）</button>
+                            <button type="button" class="quick-action-btn" data-ai-query="生成金融行业的数据分析师岗位画像，1-3 年经验，负责业务数据分析与可视化报表。">数据分析师</button>
+                            <button type="button" class="quick-action-btn" data-ai-query="生成新能源行业的嵌入式开发工程师岗位画像，3-5 年经验。">嵌入式开发工程师</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1374,7 +1397,7 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="api.js?v=10&t=20260223"></script>
-    <script src="app.js?v=10&t=20260223"></script>
+    <script src="app.js?v=11&t=20260224"></script>
     <link rel="stylesheet" href="styles.css?v=9&t=20260223">
     
     <!-- 粒子效果脚本 -->
