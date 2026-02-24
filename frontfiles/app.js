@@ -8145,3 +8145,181 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 200);
     }
 });
+
+// ══════════════════════════════════════
+// 智能体小智（模块8 智能体对话）
+// ══════════════════════════════════════
+let _agentHistory = [];
+let _agentOpen = false;
+let _agentLoading = false;
+
+function toggleAgent() {
+    _agentOpen = !_agentOpen;
+    var w = document.getElementById('agentWindow');
+    if (w) w.classList.toggle('open', _agentOpen);
+    if (_agentOpen) {
+        var dot = document.getElementById('agentFabDot');
+        if (dot) dot.classList.remove('show');
+        setTimeout(function() {
+            var inp = document.getElementById('agentInput');
+            if (inp) inp.focus();
+        }, 200);
+    }
+}
+
+function agentAutoResize(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function sendAgentQuick(text) {
+    var inp = document.getElementById('agentInput');
+    if (inp) inp.value = text;
+    sendAgentMessage();
+}
+
+async function sendAgentMessage() {
+    if (_agentLoading) return;
+    var input = document.getElementById('agentInput');
+    var text = input ? input.value.trim() : '';
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    var quick = document.getElementById('agentQuick');
+    if (quick) quick.style.display = 'none';
+
+    appendAgentMessage('user', text);
+    _agentHistory.push({ role: 'user', content: text });
+    if (_agentHistory.length > 20) _agentHistory = _agentHistory.slice(-20);
+
+    var typingId = appendAgentTyping();
+    _agentLoading = true;
+    var sendBtn = document.getElementById('agentSendBtn');
+    if (sendBtn) sendBtn.disabled = true;
+    var statusEl = document.getElementById('agentStatus');
+    if (statusEl) statusEl.textContent = '● 正在思考...';
+
+    var botText = '';
+    try {
+        var token = localStorage.getItem('token') || '';
+        var userInfoStr = localStorage.getItem('userInfo') || '{}';
+        var userId = 0;
+        try { userId = (JSON.parse(userInfoStr)).id || 0; } catch (e) {}
+        var baseURL = (typeof API_CONFIG !== 'undefined')
+            ? (API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL || 'http://localhost:5001/api/v1')
+            : 'http://localhost:5001/api/v1';
+        if (baseURL.endsWith('/api/v1') === false) baseURL = baseURL.replace(/\/?$/, '') + '/api/v1';
+
+        var res = await fetch(baseURL + '/agent/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                message: text,
+                history: _agentHistory.slice(-20),
+                user_id: userId
+            })
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        removeAgentTyping(typingId);
+        var bubbleEl = appendAgentMessage('bot', '');
+
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+
+        while (true) {
+            var chunk = await reader.read();
+            if (chunk.done) break;
+            var lines = decoder.decode(chunk.value).split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (!line.startsWith('data: ')) continue;
+                var payload = line.slice(6).trim();
+                if (payload === '[DONE]') break;
+                try {
+                    var obj = JSON.parse(payload);
+                    var chunk = obj.text;
+                    if (chunk) {
+                        botText += chunk;
+                        bubbleEl.innerHTML = agentFormatText(botText);
+                        agentScrollToBottom();
+                    }
+                    if (obj.error) {
+                        botText += obj.error;
+                        bubbleEl.innerHTML = agentFormatText(botText);
+                        agentScrollToBottom();
+                    }
+                } catch (e) {}
+            }
+        }
+
+        _agentHistory.push({ role: 'assistant', content: botText });
+        if (_agentHistory.length > 20) _agentHistory = _agentHistory.slice(-20);
+
+        if (!_agentOpen) {
+            var dot = document.getElementById('agentFabDot');
+            if (dot) dot.classList.add('show');
+        }
+    } catch (e) {
+        removeAgentTyping(typingId);
+        appendAgentMessage('bot', '抱歉，遇到了点问题：' + (e && e.message ? e.message : String(e)) + '。请检查智能体服务是否启动（AI算法 python app.py）。');
+    } finally {
+        _agentLoading = false;
+        if (sendBtn) sendBtn.disabled = false;
+        if (statusEl) statusEl.textContent = '● 在线';
+    }
+}
+
+function appendAgentMessage(role, text) {
+    var msgs = document.getElementById('agentMessages');
+    if (!msgs) return null;
+    var div = document.createElement('div');
+    div.className = 'agent-msg agent-msg-' + (role === 'user' ? 'user' : 'bot');
+    var bubble = document.createElement('div');
+    bubble.className = 'agent-msg-bubble';
+    bubble.innerHTML = role === 'user' ? agentEscapeHtml(text) : agentFormatText(text);
+    div.appendChild(bubble);
+    msgs.appendChild(div);
+    agentScrollToBottom();
+    return bubble;
+}
+
+function appendAgentTyping() {
+    var msgs = document.getElementById('agentMessages');
+    if (!msgs) return '';
+    var id = 'agentTyping_' + Date.now();
+    var div = document.createElement('div');
+    div.className = 'agent-msg agent-msg-bot';
+    div.id = id;
+    div.innerHTML = '<div class="agent-msg-bubble agent-typing"><span></span><span></span><span></span></div>';
+    msgs.appendChild(div);
+    agentScrollToBottom();
+    return id;
+}
+
+function removeAgentTyping(id) {
+    var el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function agentScrollToBottom() {
+    var msgs = document.getElementById('agentMessages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+function agentEscapeHtml(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function agentFormatText(text) {
+    return String(text)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+}

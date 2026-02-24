@@ -66,11 +66,14 @@ logger.info("[App] 注册路由: 职业规划报告模块 /api/v1/career/*")
 from api.matching_router import matching_bp
 from api.student_ability_router import student_bp
 from api.graph_router import graph_bp
+from api.agent_chat_router import agent_chat_bp
 
 app.register_blueprint(matching_bp)
 app.register_blueprint(student_bp)
 app.register_blueprint(graph_bp)
+app.register_blueprint(agent_chat_bp)
 logger.info("[App] 注册路由: 关联图谱模块 /api/v1/job/search, /api/v1/job/promotion-path, /api/v1/job/transfer-path")
+logger.info("[App] 注册路由: 智能体对话模块 /api/v1/agent/chat")
 
 # TODO: 后续功能模块按需注册
 # from api.auth_router import auth_bp

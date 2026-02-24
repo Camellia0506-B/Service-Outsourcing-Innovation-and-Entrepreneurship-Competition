@@ -1566,5 +1566,53 @@
             </div>
         </div>
     </div>
+
+    <!-- ══ 智能体悬浮窗（模块8 智能体对话）══ -->
+    <div id="agentAssistant">
+        <div class="agent-fab" id="agentFab" onclick="toggleAgent()" title="智能体小智">
+            <span class="agent-fab-icon">🤖</span>
+            <span class="agent-fab-dot" id="agentFabDot"></span>
+        </div>
+        <div class="agent-window" id="agentWindow">
+            <div class="agent-header">
+                <div class="agent-header-left">
+                    <div class="agent-avatar">🤖</div>
+                    <div>
+                        <div class="agent-name">智能体小智</div>
+                        <div class="agent-status" id="agentStatus">● 在线</div>
+                    </div>
+                </div>
+                <button type="button" class="agent-close" onclick="toggleAgent()" aria-label="关闭">✕</button>
+            </div>
+            <div class="agent-messages" id="agentMessages">
+                <div class="agent-msg agent-msg-bot">
+                    <div class="agent-msg-bubble">
+                        👋 你好！我是小智，你的职业规划智能体。<br>
+                        你可以问我：<br>
+                        · 我的测评结果怎么样？<br>
+                        · 推荐适合我的岗位<br>
+                        · 帮我分析职业规划<br>
+                        · 我的能力画像分析
+                    </div>
+                </div>
+            </div>
+            <div class="agent-quick" id="agentQuick">
+                <button type="button" class="agent-quick-btn" onclick="sendAgentQuick('我的测评结果怎么样？')">测评结果</button>
+                <button type="button" class="agent-quick-btn" onclick="sendAgentQuick('推荐适合我的岗位')">岗位推荐</button>
+                <button type="button" class="agent-quick-btn" onclick="sendAgentQuick('帮我分析职业规划')">职业规划</button>
+                <button type="button" class="agent-quick-btn" onclick="sendAgentQuick('我的能力画像分析')">能力画像</button>
+            </div>
+            <div class="agent-input-wrap">
+                <textarea class="agent-input" id="agentInput" placeholder="问我任何职业规划问题..." rows="1"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAgentMessage()}"
+                    oninput="agentAutoResize(this)"></textarea>
+                <button type="button" class="agent-send" id="agentSendBtn" onclick="sendAgentMessage()" title="发送">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
