@@ -345,8 +345,15 @@ class AIAbilityProfileGenerator:
             return ability_profile
         
         except Exception as e:
-            logger.error(f"[AbilityProfile] 生成失败: {e}")
-            raise
+            # 大模型出现异常（例如 API Key 配置问题）时，降级为规则画像，避免前端一直 404 看不到任何内容
+            logger.error(f"[AbilityProfile] 生成失败，切换为规则画像降级模式: {e}")
+            ability_profile = self._build_rule_based_profile(user_id, profile_data)
+            logger.info(
+                "[AbilityProfile] 用户%s规则画像生成成功（降级），总分：%s",
+                user_id,
+                ability_profile.get("overall_assessment", {}).get("total_score", 0),
+            )
+            return ability_profile
     
     def generate_from_resume_text(self, user_id: int, resume_text: str) -> dict:
         """
@@ -425,28 +432,28 @@ class AIAbilityProfileGenerator:
     def _build_generation_prompt(self, profile_data: dict) -> str:
         """构造生成Prompt"""
         return f"""你是一位资深的HR和职业规划顾问。请根据以下学生档案，生成**学生就业能力画像**。
-
+        
 【学生档案数据】
 基本信息：
 - 学历：{profile_data.get('basic_info', {}).get('education', '未填写')}
 - 专业：{profile_data.get('basic_info', {}).get('major', '未填写')}
 - 学校：{profile_data.get('basic_info', {}).get('school', '未填写')}
 - GPA：{profile_data.get('basic_info', {}).get('gpa', '未填写')}
-
+        
 技能：
 {json.dumps(profile_data.get('skills', []), ensure_ascii=False, indent=2)}
-
+        
 证书：
 {json.dumps(profile_data.get('certificates', []), ensure_ascii=False, indent=2)}
-
+        
 项目经历：
 {json.dumps(profile_data.get('projects', []), ensure_ascii=False, indent=2)}
-
+        
 实习经历：
 {json.dumps(profile_data.get('internships', []), ensure_ascii=False, indent=2)}
-
+        
 请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
-
+        
 {{
   "basic_info": {{
     "education": "本科/硕士/博士",
@@ -532,13 +539,84 @@ class AIAbilityProfileGenerator:
     ]
   }}
 }}
-
+        
 注意事项：
 1. 如果档案某个字段为空，不要编造，标记为"待补充"
 2. 证据必须来自档案中的真实信息
 3. 技能等级要客观评估（有项目 = 熟悉，多次使用 = 熟练，深度应用 = 精通）
 4. 创新点要具体，不要泛泛而谈
 """
+
+    def _build_rule_based_profile(self, user_id: int, profile_data: dict) -> dict:
+        """
+        当大模型调用失败时，基于档案做一个规则画像兜底，至少让前端能看到一份能力画像。
+        这里不依赖 LLM，只用已有档案信息和 AbilityScorer 做简单打分。
+        """
+        basic = profile_data.get("basic_info", {}) or {}
+        gpa_raw = basic.get("gpa", "") or ""
+        gpa_val = 0.0
+        try:
+            if isinstance(gpa_raw, (int, float)):
+                gpa_val = float(gpa_raw)
+            elif isinstance(gpa_raw, str) and gpa_raw:
+                # 形如 "3.5/4.0" 或 "3.5"
+                gpa_val = float(gpa_raw.split("/")[0])
+        except Exception:
+            gpa_val = 0.0
+
+        # 学习能力指标（只用 GPA 做一个基础评分）
+        learning_indicators = []
+        if gpa_val > 0:
+            learning_indicators.append(
+                {"indicator": "GPA", "value": gpa_val, "percentile": 80}
+            )
+
+        profile = {
+            "basic_info": {
+                "education": basic.get("education", "待补充"),
+                "major": basic.get("major", "待补充"),
+                "school": basic.get("school", "待补充"),
+                "gpa": gpa_raw or "待补充",
+                "expected_graduation": basic.get("expected_graduation", "待补充"),
+            },
+            "professional_skills": {
+                # 规则兜底模式下不给具体评分，只占位，评分由 AbilityScorer 决定（可能为 0）
+                "programming_languages": [],
+                "frameworks_tools": [],
+                "domain_knowledge": [],
+            },
+            "certificates": {
+                "items": [],
+            },
+            "innovation_ability": {
+                "projects": [],
+                "competitions": [],
+            },
+            "learning_ability": {
+                "indicators": learning_indicators,
+            },
+            "pressure_resistance": {
+                # 默认一个中等偏上的抗压能力，由 _score_profile 进一步标注
+                "evidence": [],
+            },
+            "communication_ability": {
+                "teamwork": {"evidence": []},
+                "presentation": {"evidence": []},
+            },
+            "practical_experience": {
+                "internships": [],
+                "projects": [],
+            },
+        }
+
+        # 让打分器补齐各维度分数和 overall_assessment
+        profile = self._score_profile(profile)
+        profile["user_id"] = user_id
+        profile["profile_id"] = f"profile_{user_id}"
+        profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        profile["generation_mode"] = "rule_fallback"
+
+        return profile
     
     def _parse_llm_response(self, response_text: str) -> dict:
         """解析LLM返回的JSON"""
