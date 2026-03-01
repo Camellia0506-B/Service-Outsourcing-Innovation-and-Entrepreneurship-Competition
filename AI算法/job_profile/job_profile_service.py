@@ -443,10 +443,10 @@ def _normalize_job_profile(profile: dict) -> dict:
     }
     for key in ("innovation", "learning", "pressure", "communication", "internship"):
         if key not in soft or not (soft[key] and str(soft[key]).strip()):
-            soft[key] = (soft.get(key) and str(soft[key]).strip()) or _default_soft.get(key) or "暂无描述"
+            soft[key] = (soft.get(key) and str(soft[key]).strip()) or _default_soft.get(key) or "AI生成的建议"
     core["soft_skills"] = soft
     profile["core_skills"] = core
-    # reality_check
+    # reality_check：真实职场洞察，缺失时给出可用的建议文案，避免「暂无」
     rc = profile.get("reality_check")
     if not isinstance(rc, dict):
         rc = {}
@@ -454,9 +454,14 @@ def _normalize_job_profile(profile: dict) -> dict:
         rc["pros"] = []
     if not isinstance(rc.get("cons"), list):
         rc["cons"] = []
-    for key in ("misconceptions", "suitable_for", "not_suitable_for"):
-        if key not in rc or not (rc[key] and str(rc[key]).strip()):
-            rc[key] = rc.get(key) or "暂无"
+    job_name = str(profile.get("job_name") or "该岗位")
+    industry = str(profile.get("basic_info", {}).get("industry") or "").strip()
+    if "suitable_for" not in rc or not (rc["suitable_for"] and str(rc["suitable_for"]).strip()):
+        rc["suitable_for"] = f"对{industry or job_name}方向有兴趣，愿意持续学习新技术，能接受一定强度项目节奏的同学。"
+    if "not_suitable_for" not in rc or not (rc["not_suitable_for"] and str(rc["not_suitable_for"]).strip()):
+        rc["not_suitable_for"] = f"不太愿意长期投入在{job_name}相关工作、抗压能力较弱或排斥团队协作的同学。"
+    if "misconceptions" not in rc or not (rc["misconceptions"] and str(rc["misconceptions"]).strip()):
+        rc["misconceptions"] = f"常见误解是认为{job_name}只需要掌握某几门技术即可，其实还需要扎实的计算机基础、良好沟通协作与持续学习能力。"
     profile["reality_check"] = rc
     # entry_path
     ep = profile.get("entry_path")
@@ -611,10 +616,10 @@ def _old_profile_to_new(profile: dict) -> dict:
     if isinstance(soft_raw, dict) and any(k in soft_raw for k in ("innovation", "learning", "pressure", "communication", "internship")):
         for key in ("innovation", "learning", "pressure", "communication", "internship"):
             v = soft_raw.get(key)
-            soft_skills[key] = (v if isinstance(v, str) and v.strip() else None) or "暂无描述"
-        soft_skills["internship"] = soft_skills.get("internship") or (basic_req.get("experience") or career.get("experience")) or "暂无描述"
+            soft_skills[key] = (v if isinstance(v, str) and v.strip() else None) or ""
+        soft_skills["internship"] = soft_skills.get("internship") or (basic_req.get("experience") or career.get("experience")) or ""
         if isinstance(soft_skills["internship"], dict):
-            soft_skills["internship"] = str(soft_skills["internship"]) or "暂无描述"
+            soft_skills["internship"] = str(soft_skills["internship"]) or "AI生成的建议"
     else:
         soft_list = soft_raw if isinstance(soft_raw, list) else []
         str_list = []
@@ -631,8 +636,8 @@ def _old_profile_to_new(profile: dict) -> dict:
             for o in obj_list:
                 name = (o.get("name") or o.get("label") or o.get("ability") or "").strip()
                 if any(kw in name for kw in keywords):
-                    return (o.get("description") or o.get("desc") or o.get("text") or "").strip() or "暂无描述"
-            return "暂无描述"
+                    return (o.get("description") or o.get("desc") or o.get("text") or "").strip() or ""
+            return ""
         soft_skills = {
             "innovation": _find_soft(["创新"]),
             "learning": _find_soft(["学习"]),
@@ -641,7 +646,20 @@ def _old_profile_to_new(profile: dict) -> dict:
             "internship": (basic_req.get("experience") or career.get("experience") or _find_soft(["实习", "实践", "经验"])),
         }
         if isinstance(soft_skills["internship"], dict):
-            soft_skills["internship"] = str(soft_skills["internship"]) or "暂无描述"
+            soft_skills["internship"] = str(soft_skills["internship"]) or ""
+
+    # 若仍有为空的软技能描述，用规则给出可读的建议文案，避免「暂无」
+    _soft_defaults = {
+        "innovation": "具备一定创新意识，能够主动提出优化和改进方案，并敢于尝试新技术。",
+        "learning": "保持持续学习的习惯，能够在项目中快速上手新工具和新框架。",
+        "pressure": "在需求变更或上线节点临近时，依然可以保持稳定输出与良好心态。",
+        "communication": "重视跨团队沟通，能够把复杂问题讲清楚，并与产品、设计、测试高效协作。",
+        "internship": "有相关项目或实习经历更佳，有助于更快理解业务场景并进入岗位角色。",
+    }
+    for k, default_text in _soft_defaults.items():
+        v = soft_skills.get(k)
+        if not (isinstance(v, str) and v.strip()):
+            soft_skills[k] = default_text
 
     profile["industry"] = basic.get("industry") or profile.get("industry") or ""
     profile["salary_range"] = basic.get("avg_salary") or profile.get("salary_range") or ""
@@ -655,19 +673,40 @@ def _old_profile_to_new(profile: dict) -> dict:
         "certificates": certs,
         "soft_skills": soft_skills,
     }
+    # 真实职场洞察：若配置或模型未给出，使用规则生成可读建议，替代「暂无」
+    _pros = list(career.get("advantages") or [])
+    _cons = list(career.get("challenges") or [])
+    job_name = profile.get("job_name") or profile.get("name") or "该岗位"
+    industry = basic.get("industry") or profile.get("industry") or ""
+    if not _pros:
+        _pros = [f"{job_name}在{industry or '本方向'}整体发展前景良好，只要技术与项目经验持续积累，成长空间比较可观。"]
+    if not _cons:
+        _cons = [f"{job_name}往往需要面对一定的加班和迭代压力，对自我驱动和抗压能力有较高要求。"]
+
+    suitable_for = profile.get("suitable_for") or career.get("suitable_for")
+    not_suitable_for = profile.get("not_suitable_for") or career.get("not_suitable_for")
+    misconceptions = profile.get("misconceptions")
+    if not (isinstance(suitable_for, str) and suitable_for.strip()):
+        suitable_for = f"适合对{industry or job_name}方向感兴趣、喜欢解决实际问题，并愿意投入时间打磨技术与项目的同学。"
+    if not (isinstance(not_suitable_for, str) and not_suitable_for.strip()):
+        not_suitable_for = f"不太适合抗压能力较弱、对长期编码或数据工作缺乏耐心，或者不愿意持续学习新技术的同学。"
+    if not (isinstance(misconceptions, str) and misconceptions.strip()):
+        misconceptions = f"常见误解是认为只要会几门编程语言就能胜任{job_name}，其实还需要扎实基础、良好沟通以及对业务的深入理解。"
+
     profile["reality_check"] = {
-        "pros": list(career.get("advantages") or []),
-        "cons": list(career.get("challenges") or []),
-        "suitable_for": profile.get("suitable_for") or career.get("suitable_for") or "暂无",
-        "not_suitable_for": profile.get("not_suitable_for") or career.get("not_suitable_for") or "暂无",
-        "misconceptions": profile.get("misconceptions") or "暂无",
+        "pros": _pros,
+        "cons": _cons,
+        "suitable_for": suitable_for,
+        "not_suitable_for": not_suitable_for,
+        "misconceptions": misconceptions,
     }
     profile["entry_path"] = {
         "fresh_grad": career.get("entry_advice") or profile.get("entry_advice") or "",
         "key_projects": list(career.get("key_projects") or []),
         "timeline": career.get("timeline") or "",
     }
-    profile["ai_summary"] = (profile.get("description") or profile.get("ai_summary") or profile.get("summary") or "").strip() or "AI已根据岗位数据生成画像摘要。"
+    profile["ai_summary"] = (profile.get("description") or profile.get("ai_summary") or profile.get("summary") or "").strip() or \
+        f"本画像基于真实招聘数据与岗位画像知识库，由职业规划智能体综合「{job_name}」的岗位要求、发展路径和行业趋势自动生成，仅供学习与求职决策参考。"
     return profile
 
 

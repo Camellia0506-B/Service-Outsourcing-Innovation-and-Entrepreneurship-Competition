@@ -5499,6 +5499,9 @@ class CareerPlanningApp {
         const pros = Array.isArray(reality.pros) ? reality.pros : [];
         const cons = Array.isArray(reality.cons) ? reality.cons : [];
 
+        // 提前计算趋势标签，供后面的 AI 综合分析与头部标签复用
+        const trendLabel = summary.trend || '';
+
         const abilitiesOrder = [
             { icon: '🔬', label: '创新能力', key: 'innovation' },
             { icon: '📚', label: '学习能力', key: 'learning' },
@@ -5516,9 +5519,61 @@ class CareerPlanningApp {
         const prosHtml = pros.map(p => `<li>${escape(p)}</li>`).join('');
         const consHtml = cons.map(c => `<li>${escape(c)}</li>`).join('');
 
+        // 基于上方已展示的信息，生成一段更具体的 AI 综合分析 + 建议（带少量表情），每一行单独一条
+        const aiSummaryHtml = (() => {
+            const name = summary.job_name || '该岗位';
+            const industry = summary.industry || '相关行业';
+            const demandScore = summary.demand_score ?? undefined;
+            const trend = trendLabel || '';
+            const suitable = (reality && reality.suitable_for && String(reality.suitable_for).trim()) || '';
+            const consOne = cons[0] ? String(cons[0]).trim() : '';
+            const entryAdvice = (entryPath && entryPath.fresh_grad && String(entryPath.fresh_grad).trim()) || '';
+            const mainSkills = (professional || []).slice(0, 2).join('、');
+            const mainTools = (tools || []).slice(0, 2).join('、');
+
+            const parts = [];
+            // 总体判断
+            if (demandScore !== undefined || trend) {
+                const trendText = trend || '整体发展稳中向上';
+                const demandText = demandScore !== undefined ? `需求热度约为 ${demandScore} 分` : '需求相对稳定';
+                parts.push(`🧭 综合来看，「${name}」在${industry}方向${demandText}，${trendText}。`);
+            } else {
+                parts.push(`🧭 综合来看，「${name}」在当前行业具备一定的发展空间和成长潜力。`);
+            }
+            // 优势 / 挑战
+            if (pros.length) {
+                const prosFirst = String(pros[0]).trim();
+                const prosExtra = pros[1] ? `；同时还体现出：${String(pros[1]).trim()}` : '';
+                parts.push(`✅ 优势侧重：${prosFirst}${prosExtra}`);
+            }
+            if (consOne) {
+                parts.push(`⚠️ 需要注意：${consOne}，建议提前评估自己的节奏控制和抗压能力。`);
+            }
+            // 适合人群
+            if (suitable) {
+                parts.push(`🎯 更适合：${suitable}，如果你在校期间已经有相关项目 / 实习经历，会更有优势。`);
+            }
+            // 入行建议
+            if (entryAdvice) {
+                parts.push(`🚀 入行建议：${entryAdvice}`);
+            } else {
+                parts.push('🚀 入行建议：建议结合校内项目 / 实习经历，尽早参与真实业务场景，形成一个「基础知识 + 项目实践 + 简历作品」的完整闭环。');
+            }
+
+            // 学习与成长重点
+            if (mainSkills || mainTools) {
+                const skillPart = mainSkills ? `核心能力建议重点夯实：${mainSkills}` : '';
+                const toolPart = mainTools ? `常用技术栈可以从：${mainTools} 入手。` : '';
+                parts.push(`📚 学习重点：${skillPart}${skillPart && toolPart ? '；' : ''}${toolPart} 日常可以多做小项目 / Demo，把知识尽量变成「可展示的作品」。`);
+            }
+
+            // 每个小段落单独成行，用 <br> 换行，并对内容逐条转义
+            return parts.map(line => escape(line)).join('<br>');
+        })();
+
         const abilitiesHtml = abilitiesOrder.map(cfg => {
             const v = softSkills[cfg.key];
-            const text = (v != null && String(v).trim() !== '') ? String(v).trim() : '暂无描述';
+            const text = (v != null && String(v).trim() !== '') ? String(v).trim() : 'AI生成的意见';
             return `
                 <div class="job-ability-card">
                     <div class="job-ability-icon">${cfg.icon}</div>
@@ -5527,8 +5582,6 @@ class CareerPlanningApp {
                 </div>
             `;
         }).join('');
-
-        const trendLabel = summary.trend || '';
 
         const div = document.createElement('div');
         div.className = 'agent-message';
@@ -5596,29 +5649,29 @@ class CareerPlanningApp {
                                 <div class="job-reality-top">
                                     <div class="job-reality-box job-reality-pros">
                                         <div class="job-reality-title">✅ 真实优势</div>
-                                        <ul>${prosHtml || '<li>暂无明显优势描述</li>'}</ul>
+                                        <ul>${prosHtml || '<li>AI生成的意见</li>'}</ul>
                                     </div>
                                     <div class="job-reality-box job-reality-cons">
                                         <div class="job-reality-title">⚠️ 真实挑战</div>
-                                        <ul>${consHtml || '<li>暂无典型挑战描述</li>'}</ul>
+                                        <ul>${consHtml || '<li>AI生成的意见</li>'}</ul>
                                     </div>
                                 </div>
                                 <div class="job-reality-bottom">
                                     <div class="job-reality-box job-reality-suit">
                                         <div class="job-reality-fit">
                                             <span class="job-reality-fit-label">✓ 适合：</span>
-                                            <span>${escape(reality.suitable_for || '暂无说明')}</span>
+                                            <span>${escape(reality.suitable_for || 'AI生成的意见')}</span>
                                         </div>
                                     </div>
                                     <div class="job-reality-box job-reality-unsuit">
                                         <div class="job-reality-fit">
                                             <span class="job-reality-fit-label">✗ 不适合：</span>
-                                            <span>${escape(reality.not_suitable_for || '暂无说明')}</span>
+                                            <span>${escape(reality.not_suitable_for || 'AI生成的意见')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="job-reality-misc">
-                                    💡 常见误解：${escape(reality.misconceptions || '暂无')}
+                                    💡 常见误解：${escape(reality.misconceptions || 'AI生成的意见')}
                                 </div>
                             </div>
                         </section>
@@ -5647,7 +5700,7 @@ class CareerPlanningApp {
                             </header>
                             <div class="job-section-content">
                                 <p class="job-ai-summary">
-                                    ${escape(summary.ai_summary || '本画像基于样本岗位数据与岗位画像数据库，由智能体自动聚合生成，仅供职业规划参考。')}
+                                    ${aiSummaryHtml}
                                 </p>
                             </div>
                         </section>
@@ -5848,7 +5901,7 @@ class CareerPlanningApp {
         const abilitiesArr = raw.abilities || raw.requirements?.abilities || [];
         const findSoft = (keywords) => {
             const s = softArr.find(s => keywords.some(k => String(s).includes(k)));
-            return (s != null && String(s).trim()) ? s : '暂无描述';
+            return (s != null && String(s).trim()) ? s : 'AI生成的意见';
         };
         const desc = (v) => (v != null && String(v).trim() !== '') ? String(v).trim() : '';
         // 优先使用后端新格式：core_skills.soft_skills 对象 { innovation, learning, pressure, communication, internship }
@@ -5885,11 +5938,11 @@ class CareerPlanningApp {
                 tools: (raw.requirements?.core_skills?.tools || raw.core_skills?.tools || []).map(s => typeof s === 'string' ? s : (s && s.skill) || String(s)),
                 certificates: (raw.requirements?.basic_requirements?.certifications || raw.core_skills?.certificates || []).map(c => typeof c === 'string' ? c : String(c)),
                 soft_skills: {
-                    innovation: innovation || '暂无描述',
-                    learning: learning || '暂无描述',
-                    pressure: pressure || '暂无描述',
-                    communication: communication || '暂无描述',
-                    internship: internship || '暂无描述',
+                    innovation: innovation || 'AI生成的意见',
+                    learning: learning || 'AI生成的意见',
+                    pressure: pressure || 'AI生成的意见',
+                    communication: communication || 'AI生成的意见',
+                    internship: internship || 'AI生成的意见',
                 },
             },
             reality_check: {
@@ -5897,7 +5950,7 @@ class CareerPlanningApp {
                 cons: raw.career_development?.challenges || raw.market_info?.challenges || raw.reality_check?.cons || [],
                 suitable_for: raw.suitable_for || raw.career_development?.suitable_personality || raw.reality_check?.suitable_for || '-',
                 not_suitable_for: raw.not_suitable_for || raw.reality_check?.not_suitable_for || '-',
-                misconceptions: raw.misconceptions || raw.career_development?.common_misconceptions || raw.reality_check?.misconceptions || '暂无',
+                misconceptions: raw.misconceptions || raw.career_development?.common_misconceptions || raw.reality_check?.misconceptions || 'AI生成的意见',
             },
             entry_path: {
                 fresh_grad: raw.career_development?.entry_path || (promotion0 ? `初级阶段（${promotion0.years_required || ''}）需要：${(promotion0.key_requirements || []).join('、')}` : (raw.entry_path?.fresh_grad || '')),

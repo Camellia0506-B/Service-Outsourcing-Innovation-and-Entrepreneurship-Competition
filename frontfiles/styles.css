@@ -4985,6 +4985,7 @@ body::before {
     font-size: 12px;
     line-height: 1.7;
     color: #9095a8;
+    white-space: pre-line; /* 支持 \n 换行，便于多行分析展示 */
 }
 
 .agent-message .job-profile-footer {
