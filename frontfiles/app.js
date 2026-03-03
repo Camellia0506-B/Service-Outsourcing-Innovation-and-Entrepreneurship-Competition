@@ -2493,8 +2493,12 @@ class CareerPlanningApp {
 
     // 拉取问卷并显示（用于首次进入或点击「重新测评」后）
     async fetchAndShowQuestionnaire() {
+        const container = document.getElementById('questionnaireContainer');
         const userId = getCurrentUserId();
-        if (!userId) return;
+        if (!userId) {
+            if (container) container.innerHTML = '<div class="hint-text">请先登录后再加载问卷</div>';
+            return;
+        }
         this.hideAssessmentReportView();
         const section = document.getElementById('assessmentQuestionnaireSection');
         const tagEl = section?.querySelector('.job-profile-tag');
@@ -2504,13 +2508,17 @@ class CareerPlanningApp {
         if (titleRowEl) titleRowEl.classList.remove('hidden');
         if (subtitleEl) subtitleEl.classList.remove('hidden');
         const assessmentType = 'comprehensive';
-        const container = document.getElementById('questionnaireContainer');
         const actionsEl = document.getElementById('assessmentActions');
-        container.innerHTML = '<div class="loading-message">加载问卷中...</div>';
+        if (container) container.innerHTML = '<div class="loading-message">加载问卷中...</div>';
         if (actionsEl) actionsEl.classList.add('hidden');
 
         this.showLoading();
-        const result = await getQuestionnaire(userId, assessmentType);
+        let result;
+        try {
+            result = await getQuestionnaire(userId, assessmentType);
+        } catch (e) {
+            result = { success: false, msg: (e && e.message) || '网络异常，请确认 AI 测评服务 (http://localhost:5002) 已启动' };
+        }
         this.hideLoading();
 
         if (result.success) {
@@ -2526,7 +2534,7 @@ class CareerPlanningApp {
                 viewBtn.classList.remove('view-report-generating');
             }
         } else {
-            container.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '') + '</div>';
+            if (container) container.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '请稍后重试') + '</div>';
         }
     }
 
@@ -4129,7 +4137,10 @@ class CareerPlanningApp {
             this.bindRecStatTiles();
             this.bindRecCardClicks();
         } else {
-            container.innerHTML = '<div class="hint-text">暂无推荐岗位，请先完善能力画像</div>';
+            const hint = !result.success && (result.msg || '').includes('能力画像')
+                ? '暂无推荐岗位，请先完善个人档案并生成能力画像'
+                : '暂无推荐岗位。请先完善能力画像；若已完善，请确认已加载岗位数据（系统管理 → 生成岗位画像 或 配置 CSV）';
+            container.innerHTML = '<div class="hint-text">' + hint + '</div>';
             this.updateRecStats([]);
         }
     }

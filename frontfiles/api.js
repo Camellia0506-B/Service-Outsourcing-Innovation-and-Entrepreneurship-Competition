@@ -60,13 +60,16 @@ class API {
         this.aiBaseURL = API_CONFIG.assessmentBaseURL || this.baseURL;
     }
 
-    // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }
+    // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }，带超时避免一直加载
     async requestToAI(endpoint, options = {}) {
         const url = `${this.aiBaseURL}${endpoint}`;
         const token = _storage.getItem('token');
         if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, options);
         }
+        const timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         const config = {
             method: options.method || 'POST',
             headers: {
@@ -74,6 +77,7 @@ class API {
                 ...(token && { 'Authorization': `Bearer ${token}` }),
                 ...options.headers
             },
+            signal: controller.signal,
             ...options
         };
         if (options.body && !(options.body instanceof FormData)) {
@@ -81,16 +85,20 @@ class API {
         }
         try {
             const response = await fetch(url, config);
+            clearTimeout(timeoutId);
             const result = await response.json();
             if (result.code === 200) {
                 return { success: true, data: result.data, msg: result.msg };
             }
             return { success: false, msg: result.msg, code: result.code };
         } catch (error) {
+            clearTimeout(timeoutId);
             console.error('API请求错误(AI):', error);
-            const msg = (error.message && error.message.toLowerCase().includes('fetch'))
-                ? '无法连接 AI 服务 (http://localhost:5002)，请确认已启动'
-                : (error.message || '网络错误');
+            const msg = error.name === 'AbortError'
+                ? '请求超时，请确认 AI 服务 (http://localhost:5002) 已启动且网络正常'
+                : (error.message && error.message.toLowerCase().includes('fetch'))
+                    ? '无法连接 AI 服务 (http://localhost:5002)，请确认已启动'
+                    : (error.message || '网络错误');
             return { success: false, msg };
         }
     }
@@ -99,9 +107,9 @@ class API {
         return this.requestToAI(endpoint, { method: 'POST', body: data });
     }
 
-    // 通用请求方法（职业测评、职业规划报告走 AI 服务 5002，其余走 Java 5000）
+    // 通用请求方法（测评、职业规划报告、人岗匹配走 AI 服务 5002，其余走 Java 5000）
     async request(endpoint, options = {}) {
-        const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/');
+        const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/') || endpoint.startsWith('/matching/');
         const base = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
         const url = `${base}${endpoint}`;
         const token = _storage.getItem('token');
