@@ -297,7 +297,7 @@ async function loadTransferGraph(jobName) {
     const loadingDiv = document.createElement('div');
     loadingDiv.id = '_graphLoading';
     loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#aab4cc';
-    loadingDiv.innerHTML = '<div class="graph-loading-spinner" style="margin:0 auto"></div><div style="font-size:14px">Agent 正在生成晋升图谱，请稍候...</div>';
+    loadingDiv.innerHTML = '<div class="graph-loading-spinner" style="margin:0 auto"></div><div style="font-size:14px">Agent正在生成换岗路径图谱，请稍后...</div>';
     if (!document.getElementById('_spinStyle')) {
         const s = document.createElement('style');
         s.id = '_spinStyle';
@@ -4738,7 +4738,7 @@ class CareerPlanningApp {
     async loadPromotionPath(jobName) {
         const container = document.getElementById('promotionContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">加载晋升路径...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">Agent正在生成垂直岗位图谱，请稍后...</div></div>`;
         try {
             const result = await getCareerPath(jobName);
             if (result.code === 200 && result.data && result.data.path && result.data.path.length) {
@@ -4805,7 +4805,7 @@ class CareerPlanningApp {
     async loadTransferPath(jobName) {
         const container = document.getElementById('transferContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">加载晋升图谱...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">Agent正在生成换岗路径图谱，请稍后...</div></div>`;
         try {
             const result = await getRelationGraphByJobName(jobName);
             if (result.code === 200 && result.data && Array.isArray(result.data) && result.data.length) {
