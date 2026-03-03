@@ -1973,7 +1973,8 @@ class CareerPlanningApp {
         const statusDiv = document.getElementById('uploadStatus');
         let attempts = 0;
         let stepIndex = 1;
-        const placeholders = ['', '李明远…', '武汉理工大学…', 'Python / Java…', '项目经历…'];
+        // 解析进度步骤的占位文案，避免展示具体姓名/学校示例
+        const placeholders = ['', '解析中…', '解析中…', '解析中…', '解析中…'];
         this._resumeParseStepTimer = setInterval(() => {
             if (stepIndex <= 4) {
                 this.advanceResumeParseStep(stepIndex, placeholders[stepIndex]);

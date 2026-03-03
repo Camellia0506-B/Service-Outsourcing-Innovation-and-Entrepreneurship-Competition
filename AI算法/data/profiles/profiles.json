@@ -132,9 +132,15 @@
     ]
   },
   "5": {
-    "basic_info": {},
     "user_id": 5,
-    "updated_at": "2026-02-23 17:55:26",
+    "basic_info": {},
+    "education_info": {},
+    "skills": [],
+    "certificates": [],
+    "internships": [],
+    "projects": [],
+    "awards": [],
+    "updated_at": "2026-03-03 11:59:01",
     "profile_completeness": 0
   }
 }

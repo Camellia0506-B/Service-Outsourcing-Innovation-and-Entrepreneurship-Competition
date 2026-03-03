@@ -389,48 +389,12 @@ class ProfileService:
                 self.task_store[task_id]["result"] = result
                 logger.info(f"[ProfileService] 简历解析完成 task_id={task_id}")
 
-                # ── 解析成功后自动回填档案（无需前端再调 2.2 接口）──
+                # ── 解析成功后自动回填档案 ──
+                # 需求：每次上传新简历，都以“最新简历”为准，覆盖旧档案信息
                 try:
-                    parsed = result.get("parsed_data", {})
-                    # 打印解析结果，方便排查字段映射问题
-                    logger.info(f"[ProfileService] 解析结果parsed_data keys={list(parsed.keys())}")
-                    logger.info(f"[ProfileService] basic_info={parsed.get('basic_info')}")
-                    logger.info(f"[ProfileService] education={parsed.get('education')}")
-                    logger.info(f"[ProfileService] skills={parsed.get('skills')}")
-                    auto_updates = {}
-
-                    # basic_info：只取简历里有值的字段，不覆盖用户已填的
-                    bi = parsed.get("basic_info") or {}
-                    if bi:
-                        auto_updates["basic_info"] = {
-                            k: v for k, v in bi.items() if v not in (None, "")
-                        }
-
-                    # education：模型返回字段名是 "education"，映射到档案的 "education_info"
-                    # 同时兼容模型直接返回 "education_info" 的情况
-                    edu_list = parsed.get("education") or parsed.get("education_info") or []
-                    # 也兼容模型直接返回dict而不是list的情况
-                    if isinstance(edu_list, dict):
-                        edu_list = [edu_list]
-                    if edu_list:
-                        first_edu = edu_list[0]
-                        edu_mapped = {k: v for k, v in first_edu.items() if v not in (None, "")}
-                        if edu_mapped:
-                            auto_updates["education_info"] = edu_mapped
-                            logger.info(f"[ProfileService] education_info回填={edu_mapped}")
-
-                    # 列表型字段：有内容才覆盖
-                    for field in ("skills", "certificates", "internships", "projects", "awards"):
-                        val = parsed.get(field)
-                        if val:
-                            auto_updates[field] = val
-
-                    logger.info(f"[ProfileService] 准备回填字段={list(auto_updates.keys())}")
-                    if auto_updates:
-                        self.update_profile(user_id, auto_updates)
-                        logger.info(f"[ProfileService] 简历解析结果已自动回填档案 user_id={user_id}")
-                    else:
-                        logger.warning(f"[ProfileService] auto_updates为空，没有任何字段被回填")
+                    parsed = result.get("parsed_data", {}) or {}
+                    self._overwrite_profile_from_parsed(user_id, parsed)
+                    logger.info(f"[ProfileService] 简历解析结果已覆盖更新档案 user_id={user_id}")
                 except Exception as fill_err:
                     # 回填失败不影响解析任务本身的状态
                     logger.warning(f"[ProfileService] 自动回填档案失败: {fill_err}", exc_info=True)
@@ -462,6 +426,15 @@ class ProfileService:
             from utils.config_handler import rag_conf
             model = ChatTongyi(model=rag_conf["chat_model_name"])
 
+        # 为避免阿里云 DashScope 的长度限制错误
+        # "<400> InternalError.Algo.InvalidParameter: Range of input length should be [1, 30720]"
+        # 这里对简历文本做长度裁剪，预留部分空间给 prompt 本身。
+        clean_text = (resume_text or "").strip()
+        max_chars = 25000  # 留出空间给系统提示和模板
+        if len(clean_text) > max_chars:
+            logger.info(f"[ProfileService] 简历文本过长({len(clean_text)} chars)，裁剪到前 {max_chars} 字符以满足模型输入上限")
+            clean_text = clean_text[:max_chars]
+
         # 加载prompt模板
         prompt_template = _load_prompt("resume_parse_prompt_path")
         prompt = PromptTemplate(
@@ -471,8 +444,16 @@ class ProfileService:
         chain = prompt | model | StrOutputParser()
 
         # 调用模型
-        raw_output = chain.invoke({"resume_text": resume_text})
-        parsed = _extract_json(raw_output)
+        raw_output = chain.invoke({"resume_text": clean_text})
+
+        # 解析模型输出为 JSON。
+        # 若模型未按约定返回 JSON（如直接输出自然语言或空字符串），
+        # 捕获异常并退回到本地正则兜底解析，避免任务整体失败。
+        try:
+            parsed = _extract_json(raw_output)
+        except Exception as e:
+            logger.warning(f"[ProfileService] 模型输出非 JSON，使用兜底解析。raw_output_preview={str(raw_output)[:200]} err={e}")
+            parsed = _fallback_parse_resume_text(resume_text)
 
         # 始终执行兜底解析，用正则结果补全 basic_info 中缺失的字段（姓名、性别、出生日期、手机、邮箱）
         fallback = _fallback_parse_resume_text(resume_text)
@@ -593,6 +574,59 @@ class ProfileService:
         elif task["status"] == "failed":
             response["error"] = task.get("error", "解析失败")
         return response
+
+    # ──────────────────────────────────────────────────────
+    # 2.x 根据简历解析结果“重置并覆盖”档案
+    # ──────────────────────────────────────────────────────
+    def _overwrite_profile_from_parsed(self, user_id: int, parsed: dict):
+        """
+        使用本次简历解析结果完全重置档案：
+        - basic_info / education_info / skills / certificates / internships / projects / awards
+          都以 parsed 为准，旧值不再保留。
+        - 仅在 parsed 中有的字段才会写入；没有解析出的字段会被清空。
+        """
+        uid = str(user_id)
+
+        # basic_info
+        bi = parsed.get("basic_info") or {}
+        if not isinstance(bi, dict):
+            bi = {}
+        basic_info = {k: v for k, v in bi.items() if v not in (None, "")}
+
+        # education -> education_info（只取第一条）
+        edu_list = parsed.get("education") or parsed.get("education_info") or []
+        if isinstance(edu_list, dict):
+            edu_list = [edu_list]
+        education_info = {}
+        if isinstance(edu_list, list) and edu_list:
+            first_edu = edu_list[0] or {}
+            if isinstance(first_edu, dict):
+                education_info = {k: v for k, v in first_edu.items() if v not in (None, "")}
+
+        # 列表型字段：直接覆盖
+        def _safe_list(key: str):
+            val = parsed.get(key)
+            return val if isinstance(val, list) else []
+
+        new_profile = {
+            "user_id": user_id,
+            "basic_info": basic_info,
+            "education_info": education_info,
+            "skills": _safe_list("skills"),
+            "certificates": _safe_list("certificates"),
+            "internships": _safe_list("internships"),
+            "projects": _safe_list("projects"),
+            "awards": _safe_list("awards"),
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
+        # 计算完整度并保存
+        completeness = _calc_completeness(new_profile)
+        new_profile["profile_completeness"] = completeness
+
+        self.profile_store[uid] = new_profile
+        _save_profile_store(self.profile_store)
+        logger.info(f"[ProfileService] overwrite profile user_id={user_id}, completeness={completeness}%")
 
 
 # ========== 单例获取 ==========
