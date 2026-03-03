@@ -105,8 +105,20 @@ def get_skills_for_job(job_name: str) -> List[str]:
     return list(SKILLS_BY_STANDARD_JOB.get(std, []))
 
 
+def _csv_cell(row, *keys: str, default: str = "") -> str:
+    """从 DataFrame 行中按多列名取第一个非空值，兼容 职位名称/岗位名称、职位描述/岗位详情。"""
+    for k in keys:
+        try:
+            v = row.get(k)
+            if v is not None and str(v).strip():
+                return str(v).strip()
+        except Exception:
+            pass
+    return default
+
+
 def populate_from_csv(csv_path: str, limit: int = 5000) -> int:
-    """从 CSV 填充 job_profiles。CSV 列：职位名称, 薪资范围, 所属行业, 职位描述 等"""
+    """从 CSV 填充 job_profiles。兼容列名：职位名称/岗位名称、职位描述/岗位详情、薪资范围、所属行业。"""
     import pandas as pd
     if not os.path.isfile(csv_path):
         logger.warning("[job_profiles_db] CSV 不存在: %s", csv_path)
@@ -121,15 +133,15 @@ def populate_from_csv(csv_path: str, limit: int = 5000) -> int:
         for _, row in df.iterrows():
             if n >= limit:
                 break
-            name = str(row.get("职位名称", "")).strip()
+            name = _csv_cell(row, "职位名称", "岗位名称")
             if not name or name in seen:
                 continue
             seen.add(name)
-            salary_str = str(row.get("薪资范围", ""))
+            salary_str = _csv_cell(row, "薪资范围")
             avg = _parse_salary_to_avg(salary_str)
-            desc = str(row.get("职位描述", ""))
+            desc = _csv_cell(row, "职位描述", "岗位详情")
             exp = _extract_experience_years(desc)
-            industry = str(row.get("所属行业", ""))[:100]
+            industry = _csv_cell(row, "所属行业")[:100]
             std = normalize_job_for_skills(name)
             skills = SKILLS_BY_STANDARD_JOB.get(std, [])
             skills_json = json.dumps(skills, ensure_ascii=False)

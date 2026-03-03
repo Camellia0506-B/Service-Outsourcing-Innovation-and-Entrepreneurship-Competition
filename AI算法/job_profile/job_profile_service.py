@@ -73,7 +73,7 @@ def _ensure_store_dir() -> str:
     return store_path
 
 
-# 常见技术技能关键词（用于从职位描述中提取，供岗位匹配使用）
+# 常见技能关键词（用于从职位描述中提取，供岗位匹配使用；覆盖技术/法律/人力/销售/审核/化工等）
 _SKILL_KEYWORDS = {
     "programming_languages": [
         "Python", "Java", "JavaScript", "TypeScript", "C++", "C#", "Go", "Golang", "PHP", "Ruby",
@@ -86,13 +86,23 @@ _SKILL_KEYWORDS = {
         "Docker", "Kubernetes", "K8s", "Jenkins", "Git", "Maven", "Gradle", "Redis", "MongoDB",
         "MySQL", "PostgreSQL", "Oracle", "Elasticsearch", "Kafka", "Spark", "Hadoop", "Flink",
         "Hive", "Tableau", "Power BI", "FineReport", "ERP", "SAP", "NC", "金蝶", "用友",
-        "Linux", "Windows", "Office", "PMP", "ITIL", "RPA", "BI", "ETL",
+        "Linux", "Windows", "Office", "Word", "Excel", "PPT", "arcgis", "CASS", "CAD", "CAXA",
+        "PMP", "ITIL", "RPA", "BI", "ETL", "Origin",
     ],
     "domain_knowledge": [
         "机器学习", "深度学习", "人工智能", "AI", "NLP", "计算机视觉", "CV", "大数据",
         "云计算", "云原生", "微服务", "分布式", "信息化", "运维", "DevOps", "测试",
         "前端开发", "后端开发", "全栈", "算法", "数据分析", "数据挖掘", "项目管理",
         "财务系统", "ERP", "MES", "WMS", "智能制造", "智慧城市", "智慧校园",
+        "法律", "法律检索", "文书写作", "诉讼", "律所", "法学",
+        "招聘", "人力资源", "面试", "人才评估", "猎头",
+        "销售", "客户沟通", "市场分析", "商务谈判", "客户开发",
+        "内容审核", "风险识别", "客服", "客户服务",
+        "风电", "风机", "运维检修", "电工", "高低压", "登高作业",
+        "化工", "催化剂", "环保", "石油", "石化", "实验", "HPLC", "NGS", "分子生物学",
+        "测绘", "地理信息", "建库", "数据建库",
+        "建筑", "施工", "预制构件", "混凝土", "研发", "课题",
+        "农", "林", "牧", "渔", "植物保护", "生物农药",
     ],
 }
 
@@ -104,8 +114,18 @@ def _extract_skills_from_description(desc: str) -> dict:
     """
     if not desc or not isinstance(desc, str):
         return {"programming_languages": [], "frameworks_tools": [], "domain_knowledge": []}
-    # 只扫描前 3000 字，加快处理
-    text = desc[:3000].lower()
+    # 只扫描前 3000 字，加快处理；同时保留原文用于判断“精通/熟练/了解”等程度词
+    raw_text = desc[:3000]
+    # 针对 JD：优先聚焦「任职要求/岗位要求」段，减少职责/福利噪音，增强岗位差异化
+    req_markers = ["任职要求", "岗位要求", "任职资格", "职位要求", "资格要求", "任职条件", "我们希望", "你需要"]
+    marker_positions = [raw_text.find(m) for m in req_markers if raw_text.find(m) != -1]
+    if marker_positions:
+        idx = max(marker_positions)  # 通常要求段在后半段，取最后一个命中
+        focused = raw_text[idx:]
+        # 若截取过短（例如只剩标题），回退到原文
+        raw_text = focused if len(focused) >= 200 else raw_text
+
+    text = raw_text.lower()
     result = {"programming_languages": [], "frameworks_tools": [], "domain_knowledge": []}
     seen = set()
 
@@ -114,19 +134,56 @@ def _extract_skills_from_description(desc: str) -> dict:
             kw_lower = kw.lower()
             if kw_lower in seen:
                 continue
-            if kw_lower in text:
+            pos = text.find(kw_lower)
+            if pos != -1:
                 seen.add(kw_lower)
+                # 默认要求
+                level = "熟悉"
+                importance = "重要"
+                weight = 0.05
+                # 若 JD 中出现「精通/熟练掌握/熟练使用 + 技能」，提升为核心技能，权重更高
+                high_patterns = [
+                    f"精通{kw}", f"{kw}精通",
+                    f"熟练掌握{kw}", f"{kw}熟练掌握",
+                    f"熟练使用{kw}", f"{kw}熟练使用",
+                ]
+                # 若只要求「了解/基础 + 技能」，视为一般要求，权重略低
+                low_patterns = [
+                    f"了解{kw}", f"{kw}了解",
+                    f"基础{kw}", f"{kw}基础",
+                ]
+                if any(p in raw_text for p in high_patterns):
+                    level = "精通"
+                    importance = "核心"
+                    weight = 0.1
+                elif any(p in raw_text for p in low_patterns):
+                    level = "了解"
+                    importance = "一般"
+                    weight = 0.03
+
+                # 结合上下文词（必须/优先）进一步拉开权重差异
+                ctx = raw_text[max(0, pos - 25): pos + len(kw) + 25]
+                ctx_lower = ctx.lower()
+                must_markers = ["必须", "必备", "硬性", "强制", "要求", "需要", "掌握", "熟练掌握", "精通"]
+                prefer_markers = ["优先", "加分", "最好", "优先考虑", "熟悉者优先", "有经验者优先"]
+                if any(m in ctx for m in must_markers) or any(m.lower() in ctx_lower for m in must_markers if isinstance(m, str)):
+                    importance = "核心" if importance != "一般" else importance
+                    weight = min(0.12, weight + 0.02)
+                if any(m in ctx for m in prefer_markers) or any(m.lower() in ctx_lower for m in prefer_markers if isinstance(m, str)):
+                    # “优先/加分”一般是非硬性要求，略降权
+                    importance = "一般" if importance == "重要" else importance
+                    weight = max(0.02, weight - 0.01)
                 result[skill_type].append({
                     "skill": kw,
-                    "level": "熟悉",
-                    "importance": "重要",
-                    "weight": 0.05,
+                    "level": level,
+                    "importance": importance,
+                    "weight": weight,
                 })
         result[skill_type] = result[skill_type][:10]
     return result
 
 
-# 岗位名称关键词 → (技能类别, 技能名) 列表（当职位描述未提取到技能时兜底，避免专业技能维度为 0）
+# 岗位名称关键词 → (技能类别, 技能名) 列表（当职位描述未提取到技能时兜底）
 _JOB_NAME_SKILL_MAP = [
     (["算法", "机器学习", "深度学习", "AI", "NLP", "计算机视觉"], [("programming_languages", "Python"), ("domain_knowledge", "机器学习"), ("domain_knowledge", "算法")]),
     (["Java", "java"], [("programming_languages", "Java"), ("frameworks_tools", "Spring"), ("frameworks_tools", "MySQL")]),
@@ -143,6 +200,26 @@ _JOB_NAME_SKILL_MAP = [
     (["安全", "网络安全", "渗透"], [("domain_knowledge", "网络安全"), ("domain_knowledge", "信息安全")]),
     (["架构", "架构师"], [("domain_knowledge", "微服务"), ("domain_knowledge", "分布式"), ("frameworks_tools", "Docker")]),
     (["全栈", "fullstack"], [("programming_languages", "JavaScript"), ("programming_languages", "Java"), ("frameworks_tools", "Vue"), ("frameworks_tools", "Spring")]),
+    # 法律类
+    (["律师", "法务", "法律顾问", "合规"], [("domain_knowledge", "法律"), ("domain_knowledge", "法律检索"), ("domain_knowledge", "文书写作")]),
+    # 人力/招聘类
+    (["招聘", "HR", "人力资源", "人事", "猎头", "人才"], [("domain_knowledge", "招聘"), ("domain_knowledge", "人力资源"), ("domain_knowledge", "面试")]),
+    # 销售/市场类
+    (["销售", "客户经理", "商务", "市场", "BD"], [("domain_knowledge", "销售"), ("domain_knowledge", "客户沟通"), ("domain_knowledge", "市场分析")]),
+    # 审核/客服/运营类
+    (["审核", "内容审核", "风控", "客服", "运营"], [("domain_knowledge", "内容审核"), ("domain_knowledge", "客户服务"), ("domain_knowledge", "风险识别")]),
+    # 风电/电气/检修类
+    (["风电", "风机", "检修", "电气", "登高", "运维检修"], [("domain_knowledge", "风电"), ("domain_knowledge", "运维检修"), ("domain_knowledge", "电工")]),
+    # 化工/环保/研发类
+    (["化工", "催化剂", "环保", "石油", "石化", "研发工程师", "实验"], [("domain_knowledge", "化工"), ("domain_knowledge", "实验"), ("domain_knowledge", "环保")]),
+    # 测绘/地理信息类
+    (["测绘", "地理信息", "建库", "数据建库", "ArcGIS", "CASS"], [("frameworks_tools", "CAD"), ("domain_knowledge", "测绘"), ("domain_knowledge", "地理信息")]),
+    # 建筑/施工类
+    (["建筑", "施工", "预制", "混凝土", "土木"], [("domain_knowledge", "建筑"), ("domain_knowledge", "施工"), ("domain_knowledge", "项目管理")]),
+    # 生物/农/科研类
+    (["生物", "分子", "NGS", "农", "林", "牧", "渔", "植物保护", "科研"], [("domain_knowledge", "实验"), ("domain_knowledge", "数据分析"), ("domain_knowledge", "研发")]),
+    # 行政/文员/助理类
+    (["行政", "文员", "助理", "秘书", "文秘"], [("frameworks_tools", "Office"), ("domain_knowledge", "文书处理"), ("domain_knowledge", "沟通协作")]),
 ]
 
 
@@ -172,9 +249,9 @@ def _skills_from_job_name(job_name: str) -> dict:
                 add_skill(cat, skill)
             break
 
-    # 若仍未命中，按“岗位”给通用技能，确保 total_weight > 0
+    # 若仍未命中：不再统一给「编程」，只给通用软技能，避免非技术岗被误判为需要编程
     if not seen:
-        for s in ["编程", "沟通协作", "学习能力"]:
+        for s in ["沟通协作", "学习能力"]:
             add_skill("domain_knowledge", s)
     return result
 
@@ -260,11 +337,11 @@ def _basic_requirements_from_job_name(job_name: str) -> dict:
 
 
 def _soft_skills_requirements_from_job_name(job_name: str) -> dict:
-    """按岗位名称返回软技能要求兜底。"""
+    """按岗位名称返回软技能要求兜底，使不同岗位软技能维度差异化。"""
     if not job_name or not isinstance(job_name, str):
         return {"innovation": "中", "learning": "高", "communication": "中", "pressure": "中"}
     name = job_name.lower().strip()
-    if any(k in job_name or k in name for k in ["算法", "研究", "大模型", "AI"]):
+    if any(k in job_name or k in name for k in ["算法", "研究", "大模型", "AI", "科研"]):
         return {"innovation": "高", "learning": "高", "communication": "中", "pressure": "中"}
     if any(k in job_name or k in name for k in ["产品", "项目", "PM", "总监", "管理"]):
         return {"innovation": "中", "learning": "高", "communication": "高", "pressure": "高"}
@@ -272,11 +349,34 @@ def _soft_skills_requirements_from_job_name(job_name: str) -> dict:
         return {"innovation": "中", "learning": "高", "communication": "中", "pressure": "高"}
     if any(k in job_name or k in name for k in ["设计", "UI", "UX"]):
         return {"innovation": "高", "learning": "高", "communication": "高", "pressure": "中"}
+    if any(k in job_name or k in name for k in ["律师", "法务", "法律", "合规"]):
+        return {"innovation": "中", "learning": "高", "communication": "高", "pressure": "高"}
+    if any(k in job_name or k in name for k in ["销售", "客户经理", "商务", "市场", "BD"]):
+        return {"innovation": "中", "learning": "中", "communication": "高", "pressure": "高"}
+    if any(k in job_name or k in name for k in ["招聘", "HR", "人力资源", "人事", "猎头"]):
+        return {"innovation": "中", "learning": "高", "communication": "高", "pressure": "中"}
+    if any(k in job_name or k in name for k in ["审核", "风控", "客服", "内容"]):
+        return {"innovation": "低", "learning": "中", "communication": "高", "pressure": "高"}
+    if any(k in job_name or k in name for k in ["行政", "文员", "助理", "秘书"]):
+        return {"innovation": "低", "learning": "中", "communication": "高", "pressure": "中"}
+    if any(k in job_name or k in name for k in ["风电", "检修", "电气", "施工", "建筑"]):
+        return {"innovation": "低", "learning": "高", "communication": "中", "pressure": "高"}
+    if any(k in job_name or k in name for k in ["化工", "环保", "实验", "研发工程师"]):
+        return {"innovation": "中", "learning": "高", "communication": "中", "pressure": "中"}
     return {"innovation": "中", "learning": "高", "communication": "中", "pressure": "中"}
 
 
+def _row(row: dict, *keys: str, default: str = "") -> str:
+    """从 row 中按多个列名依次取值，兼容不同 CSV 表头（如 职位名称/岗位名称）。"""
+    for k in keys:
+        v = row.get(k)
+        if v is not None and str(v).strip():
+            return str(v).strip()
+    return default
+
+
 def _load_profiles_store() -> dict:
-    """岗位匹配严格从 data/求职岗位信息数据.csv 加载岗位，不读 profiles.json。"""
+    """岗位匹配从 job_data_path 指定 CSV 加载岗位；兼容表头 职位名称/岗位名称、工作地址/地址、职位描述/岗位详情 等。"""
     try:
         csv_path = get_abs_path(job_profile_conf.get("job_data_path", "data/求职岗位信息数据.csv"))
         if not os.path.exists(csv_path):
@@ -289,18 +389,19 @@ def _load_profiles_store() -> dict:
             for i, row in enumerate(reader):
                 if max_rows > 0 and i >= max_rows:
                     break
-                job_id = row.get("职位编号") or f"job_{i+1:04d}"
-                job_name = row.get("职位名称", "").strip() or f"岗位_{i+1}"
-                location = (row.get("工作地址", "") or "").strip()
-                salary = (row.get("薪资范围", "") or "").strip()
-                desc = row.get("职位描述", "") or ""
+                job_id = _row(row, "职位编号", "岗位编码", default=f"job_{i+1:04d}")
+                job_name = _row(row, "职位名称", "岗位名称", default=f"岗位_{i+1}")
+                location = _row(row, "工作地址", "地址")
+                salary = _row(row, "薪资范围")
+                desc = _row(row, "职位描述", "岗位详情")
                 pro_skills = _extract_skills_from_description(desc)
                 # 当 JD 未提取到任何技能时，按岗位名称兜底，避免匹配时专业技能维度为 0
                 if not any(pro_skills.get(k) for k in ("programming_languages", "frameworks_tools", "domain_knowledge")):
                     name_skills = _skills_from_job_name(job_name)
                     pro_skills = _merge_professional_skills(pro_skills, name_skills)
                 # 优先从真实职位描述、所属行业推断要求，无描述时再用岗位名称兜底（不做假数据）
-                edu_from_jd, level_from_jd, soft_from_jd = _infer_requirements_from_description(desc, row.get("所属行业", ""))
+                industry = _row(row, "所属行业")
+                edu_from_jd, level_from_jd, soft_from_jd = _infer_requirements_from_description(desc, industry)
                 basic_req = _basic_requirements_from_job_name(job_name)
                 basic_req["education"] = basic_req.get("education") or {}
                 basic_req["education"]["level"] = edu_from_jd
@@ -308,20 +409,24 @@ def _load_profiles_store() -> dict:
                     basic_req["gpa"] = {"min_requirement": "3.0/4.0", "preferred": "3.5/4.0以上", "weight": 0.05}
                 soft_req = soft_from_jd if (desc and desc.strip()) else _soft_skills_requirements_from_job_name(job_name)
                 level = level_from_jd if (desc and desc.strip()) else ("高级" if any(k in job_name for k in ["架构", "专家", "总监"]) else ("中级" if any(k in job_name for k in ["经理", "主管", "组长"]) else "初级"))
+                company = _row(row, "公司全称", "公司名称")
+                scale = _row(row, "人员规模", "公司规模")
+                company_type = _row(row, "企业性质", "公司类型")
+                company_intro = _row(row, "公司简介", "公司详情")
                 profiles[job_id] = {
                     "job_id": job_id,
                     "job_name": job_name,
                     "basic_info": {
-                        "industry": row.get("所属行业", ""),
+                        "industry": industry,
                         "level": level,
                         "level_range": [level],
                         "salary_range": salary,
                         "avg_salary": salary,
                         "location": location,
                         "work_locations": [location] if location else [],
-                        "company": row.get("公司全称", ""),
-                        "company_scale": row.get("人员规模", ""),
-                        "company_type": row.get("企业性质", ""),
+                        "company": company,
+                        "company_scale": scale,
+                        "company_type": company_type,
                     },
                     "requirements": {
                         "professional_skills": pro_skills,
@@ -329,7 +434,7 @@ def _load_profiles_store() -> dict:
                         "soft_skills": soft_req,
                     },
                     "description": desc,
-                    "company_intro": row.get("公司简介", ""),
+                    "company_intro": company_intro,
                     "market_analysis": {"demand_score": 75, "growth_trend": "稳定"},
                 }
         logger.info(f"[ProfileStore] 岗位匹配已从 CSV 加载 {len(profiles)} 条: {csv_path}")
@@ -723,7 +828,7 @@ class CsvDataExtractor:
       - 无数据 → 标记为"无匹配数据"，交由模型知识生成（模型兜底）
     """
 
-    # CSV各字段名（与实际文件保持一致）
+    # CSV 列名（兼容两种表头：求职岗位信息数据 / a13 JD采样数据）
     FIELD_NAME      = "职位名称"
     FIELD_ADDRESS   = "工作地址"
     FIELD_SALARY    = "薪资范围"
@@ -732,6 +837,15 @@ class CsvDataExtractor:
     FIELD_SCALE     = "人员规模"
     FIELD_INDUSTRY  = "所属行业"
     FIELD_JD        = "职位描述"
+
+    @staticmethod
+    def _cell(row: dict, *keys: str, default: str = "") -> str:
+        """兼容多列名：如 职位名称/岗位名称、职位描述/岗位详情。"""
+        for k in keys:
+            v = row.get(k)
+            if v is not None and str(v).strip():
+                return str(v).strip()
+        return default
 
     def __init__(self):
         self.data_path = get_abs_path(job_profile_conf["job_data_path"])
@@ -761,7 +875,7 @@ class CsvDataExtractor:
         keywords_lower = [kw.lower() for kw in keywords]
         matched = []
         for row in all_rows:
-            name = row.get(self.FIELD_NAME, "").lower()
+            name = self._cell(row, self.FIELD_NAME, "岗位名称").lower()
             if any(kw in name for kw in keywords_lower):
                 matched.append(row)
             if len(matched) >= max_count:
@@ -771,23 +885,26 @@ class CsvDataExtractor:
     def build_jd_block(self, matched_rows: list[dict]) -> str:
         """
         将匹配到的职位数据组装成结构化文本块，供提示词注入。
-        每条数据包含：职位名称 + 薪资 + 行业 + 职位描述(完整)
+        每条数据包含：职位名称 + 薪资 + 行业 + 职位描述(完整)；兼容列名 岗位名称/岗位详情。
         """
         if not matched_rows:
-            return ""  # 调用方检查空字符串决定走哪条分支
+            return ""
 
         blocks = []
         for i, row in enumerate(matched_rows, 1):
-            jd_text = row.get(self.FIELD_JD, "").strip()
-            # 截断过长的JD（防止prompt过大），保留前1500字
+            jd_text = self._cell(row, self.FIELD_JD, "岗位详情")
             if len(jd_text) > 1500:
                 jd_text = jd_text[:1500] + "……（截断）"
+            name = self._cell(row, self.FIELD_NAME, "岗位名称")
+            salary = self._cell(row, self.FIELD_SALARY, default="未知")
+            industry = self._cell(row, self.FIELD_INDUSTRY, default="未知")
+            scale = self._cell(row, self.FIELD_SCALE, "公司规模", default="未知")
             block = (
                 f"【样本{i}】\n"
-                f"  职位名称：{row.get(self.FIELD_NAME, '')}\n"
-                f"  薪资范围：{row.get(self.FIELD_SALARY, '未知')}\n"
-                f"  所属行业：{row.get(self.FIELD_INDUSTRY, '未知')}\n"
-                f"  企业规模：{row.get(self.FIELD_SCALE, '未知')}\n"
+                f"  职位名称：{name}\n"
+                f"  薪资范围：{salary}\n"
+                f"  所属行业：{industry}\n"
+                f"  企业规模：{scale}\n"
                 f"  职位描述：\n{jd_text}"
             )
             blocks.append(block)
@@ -795,14 +912,31 @@ class CsvDataExtractor:
         return "\n\n".join(blocks)
 
     def get_market_meta(self, matched_rows: list[dict]) -> dict:
-        """提取结构化市场元数据（薪资/城市/公司），用于画像的market_analysis字段"""
+        """提取结构化市场元数据（薪资/城市/公司），用于画像的market_analysis字段；兼容 地址/公司名称。"""
         if not matched_rows:
             return {"salaries": [], "cities": [], "companies": [], "industries": []}
+        salaries = []
+        cities = []
+        companies = []
+        industries = []
+        for r in matched_rows:
+            s = self._cell(r, self.FIELD_SALARY)
+            if s:
+                salaries.append(s)
+            addr = self._cell(r, self.FIELD_ADDRESS, "地址")
+            if addr:
+                cities.append(addr.split("·")[0].split("-")[0].strip())
+            c = self._cell(r, self.FIELD_COMPANY, "公司名称")
+            if c:
+                companies.append(c)
+            ind = self._cell(r, self.FIELD_INDUSTRY)
+            if ind:
+                industries.append(ind)
         return {
-            "salaries":   list({r.get(self.FIELD_SALARY, "") for r in matched_rows if r.get(self.FIELD_SALARY)}),
-            "cities":     list({r.get(self.FIELD_ADDRESS, "").split("·")[0] for r in matched_rows if r.get(self.FIELD_ADDRESS)}),
-            "companies":  list({r.get(self.FIELD_COMPANY, "") for r in matched_rows if r.get(self.FIELD_COMPANY)})[:5],
-            "industries": list({r.get(self.FIELD_INDUSTRY, "") for r in matched_rows if r.get(self.FIELD_INDUSTRY)}),
+            "salaries":   list(dict.fromkeys(salaries)),
+            "cities":     list(dict.fromkeys(cities)),
+            "companies":  companies[:5],
+            "industries": list(dict.fromkeys(industries)),
         }
 
 
