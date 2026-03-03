@@ -1851,6 +1851,34 @@ async function getReportHistory(userId) {
     return await api.get('/assessment/report-history', { user_id: userId });
 }
 
+// ==================== 规划落地性跟踪模块 (Career Tracking 9.x) ====================
+
+// 9.1 创建求职跟踪记录
+async function createTrackingRecord(userId, payload) {
+    return await api.post('/tracking/record/create', {
+        user_id: userId,
+        ...payload
+    });
+}
+
+// 9.2 更新求职进展
+async function updateTrackingRecord(recordId, payload) {
+    return await api.request(`/tracking/record/${encodeURIComponent(recordId)}/update`, {
+        method: 'PUT',
+        body: payload
+    });
+}
+
+// 9.4 获取求职跟踪总览
+async function getTrackingOverview(userId) {
+    return await api.get('/tracking/overview', { user_id: userId });
+}
+
+// 9.5 获取反馈优化报告列表
+async function getFailureReports(userId, page = 1, size = 10) {
+    return await api.get('/tracking/failure-reports', { user_id: userId, page, size });
+}
+
 // ==================== 知识库模块 ====================
 
 // 查询知识库

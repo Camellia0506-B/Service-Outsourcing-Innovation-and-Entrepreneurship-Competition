@@ -397,6 +397,9 @@ class CareerPlanningApp {
         this.currentAssessmentId = null;  // 3.1 返回，提交测评时使用
         this.currentReportId = null;       // 职业规划报告 ID
         this.currentReportData = null;     // 职业规划报告完整数据（用于编辑）
+        this.trackingRecordsCache = {};    // 规划落地性跟踪：记录缓存
+        this.trackingFailureRecord = null; // 当前正在复盘的记录
+        this.trackingFunnelChart = null;   // 求职漏斗图表实例
         this.init();
     }
 
@@ -678,6 +681,49 @@ class CareerPlanningApp {
         });
         this._initAIGenTab();
 
+        // 求职跟踪 Tab 切换
+        document.querySelectorAll('#trackingPage .tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tab = (e.currentTarget && e.currentTarget.dataset.tab) || e.target.dataset.tab;
+                if (tab) this.switchTrackingTab(tab);
+            });
+        });
+
+        // 求职跟踪：新建记录按钮与弹窗
+        document.getElementById('trackingCreateBtn')?.addEventListener('click', () => this.openTrackingCreateModal());
+        document.getElementById('trackingCreateClose')?.addEventListener('click', () => this.closeTrackingCreateModal());
+        document.getElementById('trackingCreateCancel')?.addEventListener('click', () => this.closeTrackingCreateModal());
+        document.getElementById('trackingCreateConfirm')?.addEventListener('click', () => this.handleCreateTrackingRecord());
+
+        // 求职跟踪：更新进展弹窗
+        document.getElementById('trackingUpdateClose')?.addEventListener('click', () => this.closeTrackingUpdateModal());
+        document.getElementById('trackingUpdateCancel')?.addEventListener('click', () => this.closeTrackingUpdateModal());
+        document.getElementById('trackingUpdateConfirm')?.addEventListener('click', () => this.handleUpdateTrackingRecord());
+
+        // 求职跟踪：列表内按钮（事件委托）
+        const trackingRecordsList = document.getElementById('trackingRecordsList');
+        if (trackingRecordsList) {
+            trackingRecordsList.addEventListener('click', (e) => {
+                const updateBtn = e.target.closest?.('.tracking-update-btn');
+                if (updateBtn) {
+                    const recordId = updateBtn.dataset.recordId;
+                    const record = this.trackingRecordsCache?.[recordId];
+                    this.openTrackingUpdateModal(record || { record_id: recordId });
+                    return;
+                }
+                const failureBtn = e.target.closest?.('.tracking-failure-btn');
+                if (failureBtn) {
+                    const recordId = failureBtn.dataset.recordId;
+                    const record = this.trackingRecordsCache?.[recordId];
+                    this.openTrackingFailureModal(record || { record_id: recordId });
+                }
+            });
+        }
+
+        // 求职失败复盘弹窗
+        document.getElementById('trackingFailureClose')?.addEventListener('click', () => this.closeTrackingFailureModal());
+        document.getElementById('trackingFailureStartBtn')?.addEventListener('click', () => this.startFailureAnalysisForCurrentRecord());
+
         // 档案详情模态框关闭
         document.getElementById('closeProfileModal')?.addEventListener('click', () => {
             const modal = document.getElementById('profileModal');
@@ -780,6 +826,9 @@ class CareerPlanningApp {
                 break;
             case 'jobProfile':
                 await this.loadJobProfileData();
+                break;
+            case 'tracking':
+                await this.loadTrackingData();
                 break;
             case 'report':
                 this.showReportGenerateArea();
@@ -2749,6 +2798,46 @@ class CareerPlanningApp {
         await this.loadJobList();
     }
 
+    // 加载规划落地性跟踪数据（求职进展 + 失败反馈）
+    async loadTrackingData() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+        const recordsContainer = document.getElementById('trackingRecordsList');
+        if (recordsContainer) {
+            recordsContainer.innerHTML = '<div class="loading-message">正在加载求职记录...</div>';
+        }
+        const reportsContainer = document.getElementById('trackingReportsList');
+        if (reportsContainer) {
+            reportsContainer.innerHTML = '<div class="loading-message">正在加载反馈报告...</div>';
+        }
+
+        const [overviewRes, reportsRes] = await Promise.all([
+            getTrackingOverview(userId),
+            getFailureReports(userId, 1, 20)
+        ]);
+
+        if (overviewRes && overviewRes.success && overviewRes.data) {
+            this.renderTrackingOverview(overviewRes.data);
+        } else if (recordsContainer) {
+            const msg = (overviewRes && overviewRes.msg) || '暂无求职记录';
+            recordsContainer.innerHTML = `<div class="hint-text">${msg}</div>`;
+            const summaryEls = ['trackingTotalApplied','trackingWrittenRate','trackingInterviewRate','trackingOfferCount','trackingRejectedCount','trackingInProgressCount'];
+            summaryEls.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = id.includes('Rate') ? '0%' : '0';
+            });
+        }
+
+        if (reportsRes && reportsRes.success && reportsRes.data) {
+            this.renderTrackingReports(reportsRes.data);
+        } else if (reportsContainer) {
+            reportsContainer.innerHTML = '<div class="hint-text">暂无反馈优化报告</div>';
+        }
+    }
+
     // 加载学生能力画像
     async loadAbilityProfile() {
         const userId = getCurrentUserId();
@@ -2763,6 +2852,198 @@ class CareerPlanningApp {
         } else {
             container.innerHTML = '<div class="hint-text">暂无能力画像，请先完善个人档案并完成测评</div>';
         }
+    }
+
+    // 规划落地性跟踪：渲染求职总览与时间线
+    renderTrackingOverview(data) {
+        const summary = data.summary || {};
+        const records = Array.isArray(data.records) ? data.records : [];
+        const agentInsight = data.agent_insight || '';
+
+        const toPercent = (v) => {
+            if (v == null || isNaN(v)) return '0%';
+            const num = Math.round(Number(v) * 100);
+            return `${num}%`;
+        };
+
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+
+        setText('trackingTotalApplied', String(summary.total_applied ?? 0));
+        setText('trackingWrittenRate', toPercent(summary.written_test_pass_rate));
+        setText('trackingInterviewRate', toPercent(summary.interview_pass_rate));
+        setText('trackingOfferCount', String(summary.offer_count ?? 0));
+        setText('trackingRejectedCount', String(summary.rejected_count ?? 0));
+        setText('trackingInProgressCount', String(summary.in_progress_count ?? 0));
+
+        // 缓存记录，便于后续更新/复盘
+        this.trackingRecordsCache = {};
+        records.forEach(r => {
+            if (r && r.record_id) {
+                this.trackingRecordsCache[r.record_id] = r;
+            }
+        });
+
+        const container = document.getElementById('trackingRecordsList');
+        if (container) {
+            if (!records.length) {
+                container.innerHTML = '<div class="hint-text">还没有任何求职记录，可以点击上方「新建求职跟踪」开始记录你的第一份投递。</div>';
+            } else {
+                const esc = (s) => (s == null ? '' : String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;'));
+                const stageLabel = {
+                    applied: '已投递',
+                    written_test: '笔试',
+                    interview_1: '一面',
+                    interview_2: '二面',
+                    final: '终面',
+                    offer: 'Offer',
+                    rejected: '已拒绝'
+                };
+                const stageClass = (stage, result) => {
+                    if (stage === 'offer' || result === 'offer') return 'tracking-stage--offer';
+                    if (stage === 'rejected' || result === 'rejected' || result === 'failed') return 'tracking-stage--rejected';
+                    if (stage === 'applied') return 'tracking-stage--applied';
+                    return 'tracking-stage--in-progress';
+                };
+                let html = '';
+                records.forEach(r => {
+                    const label = stageLabel[r.current_stage] || '进行中';
+                    const cls = stageClass(r.current_stage, r.result);
+                    const hasReport = !!r.has_failure_report;
+                    html += `
+                        <div class="tracking-record" data-record-id="${esc(r.record_id)}">
+                            <div class="tracking-record-header">
+                                <div>
+                                    <div class="tracking-record-title">${esc(r.job_title || '未命名岗位')} · ${esc(r.company_name || '')}</div>
+                                    <div class="tracking-record-meta">
+                                        <span class="tracking-stage-tag ${cls}">${label}</span>
+                                        <span>最近更新：${esc(r.last_updated || '-')}</span>
+                                        ${hasReport ? '<span class="tracking-stage-tag tracking-stage--rejected">已生成复盘报告</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="tracking-record-actions">
+                                    <button type="button" class="btn-secondary tracking-update-btn" data-record-id="${esc(r.record_id)}">更新进展</button>
+                                    <button type="button" class="btn-ghost tracking-failure-btn" data-record-id="${esc(r.record_id)}">
+                                        ${hasReport ? '查看复盘' : '生成复盘'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        }
+
+        const insightEl = document.getElementById('trackingAgentInsight');
+        if (insightEl) {
+            if (agentInsight) {
+                insightEl.textContent = agentInsight;
+                insightEl.classList.remove('hidden');
+            } else {
+                insightEl.textContent = '';
+                insightEl.classList.add('hidden');
+            }
+        }
+
+        this.initTrackingFunnel(summary);
+    }
+
+    // 规划落地性跟踪：初始化求职转换漏斗图
+    initTrackingFunnel(summary) {
+        const dom = document.getElementById('trackingFunnelChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        const total = Number(summary.total_applied || 0);
+        const wtRate = Number(summary.written_test_pass_rate || 0);
+        const ivRate = Number(summary.interview_pass_rate || 0);
+        const offer = Number(summary.offer_count || 0);
+
+        const written = total > 0 ? Math.max(1, Math.round(total * wtRate)) : 0;
+        const interview = total > 0 ? Math.max(1, Math.round(total * ivRate)) : 0;
+        const data = [
+            { value: Math.max(total, written, interview, offer || 1), name: '投递岗位' },
+            { value: written, name: '进入笔试' },
+            { value: interview, name: '进入面试' },
+            { value: offer || 1, name: '获得 Offer' }
+        ];
+
+        if (this.trackingFunnelChart) {
+            this.trackingFunnelChart.dispose();
+        }
+        const chart = echarts.init(dom);
+        this.trackingFunnelChart = chart;
+
+        chart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}<br/>数量：{c}' },
+            series: [
+                {
+                    type: 'funnel',
+                    left: '10%',
+                    right: '10%',
+                    top: 10,
+                    bottom: 10,
+                    min: 0,
+                    maxSize: '80%',
+                    sort: 'none',
+                    gap: 4,
+                    itemStyle: {
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}\n{c}',
+                        fontSize: 12
+                    },
+                    data
+                }
+            ]
+        });
+
+        window.addEventListener('resize', () => {
+            try {
+                chart.resize();
+            } catch (_) {}
+        });
+    }
+
+    // 规划落地性跟踪：渲染失败反馈报告列表
+    renderTrackingReports(data) {
+        const container = document.getElementById('trackingReportsList');
+        if (!container) return;
+        const list = Array.isArray(data.list) ? data.list : [];
+        if (!list.length) {
+            container.innerHTML = '<div class="hint-text">暂无反馈优化报告。当某次求职失败并完成 AI 复盘后，会出现在这里。</div>';
+            return;
+        }
+        const esc = (s) => (s == null ? '' : String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;'));
+        let html = '';
+        list.forEach(item => {
+            html += `
+                <div class="tracking-report-item">
+                    <div class="tracking-report-main">
+                        <div class="tracking-report-title">${esc(item.job_title || '')} · ${esc(item.company_name || '')}</div>
+                        <div class="tracking-report-meta">
+                            失败阶段：${esc(item.failure_stage || '—')} · 关键短板：${esc(item.key_weakness || '—')} · 生成时间：${esc(item.created_at || '')}
+                        </div>
+                    </div>
+                    <div>
+                        ${item.plan_updated ? '<span class="tracking-report-tag">已同步到职业规划</span>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
     }
 
     // AI生成学生能力画像
@@ -2785,6 +3066,266 @@ class CareerPlanningApp {
             }, 3000);
         } else {
             this.showToast(result.msg || '生成失败', 'error');
+        }
+    }
+
+    // 求职跟踪：切换 Tab（总览 / 报告）
+    switchTrackingTab(tabName) {
+        document.querySelectorAll('#trackingPage .tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+            }
+        });
+        document.querySelectorAll('#trackingPage .tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        const target = document.querySelector(`#trackingPage #${tabName}Tab`);
+        if (target) {
+            target.classList.add('active');
+        }
+    }
+
+    // 求职跟踪：新建记录弹窗
+    openTrackingCreateModal() {
+        const modal = document.getElementById('trackingCreateModal');
+        if (!modal) return;
+        ['trackingJobTitle', 'trackingCompanyName', 'trackingJobId', 'trackingApplyDate'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const src = document.getElementById('trackingSource');
+        if (src) src.value = 'system_recommend';
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingCreateModal() {
+        const modal = document.getElementById('trackingCreateModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    async handleCreateTrackingRecord() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+        const jobTitle = (document.getElementById('trackingJobTitle')?.value || '').trim();
+        const companyName = (document.getElementById('trackingCompanyName')?.value || '').trim();
+        const jobId = (document.getElementById('trackingJobId')?.value || '').trim();
+        const applyDate = document.getElementById('trackingApplyDate')?.value || '';
+        const source = document.getElementById('trackingSource')?.value || 'system_recommend';
+
+        if (!jobTitle || !companyName) {
+            this.showToast('请填写岗位名称和公司名称', 'error');
+            return;
+        }
+
+        this.showLoading();
+        const payload = {
+            job_id: jobId || undefined,
+            job_title: jobTitle,
+            company_name: companyName,
+            apply_date: applyDate || undefined,
+            source
+        };
+        const res = await createTrackingRecord(userId, payload);
+        this.hideLoading();
+
+        if (res && res.success) {
+            this.showToast('跟踪记录已创建', 'success');
+            this.closeTrackingCreateModal();
+            await this.loadTrackingData();
+        } else {
+            this.showToast((res && res.msg) || '创建失败，请稍后重试', 'error');
+        }
+    }
+
+    // 求职跟踪：更新进展弹窗
+    openTrackingUpdateModal(record) {
+        const modal = document.getElementById('trackingUpdateModal');
+        if (!modal || !record) return;
+        this.trackingEditingRecordId = record.record_id;
+        const title = document.getElementById('trackingUpdateTitle');
+        if (title) {
+            title.textContent = `${record.job_title || ''} · ${record.company_name || ''}`;
+        }
+        const stageSel = document.getElementById('trackingStageSelect');
+        const resultSel = document.getElementById('trackingResultSelect');
+        const dateInput = document.getElementById('trackingStageDate');
+        if (stageSel && record.current_stage) stageSel.value = record.current_stage;
+        if (resultSel && record.result) resultSel.value = record.result;
+        if (dateInput && record.last_updated) dateInput.value = record.last_updated;
+        ['trackingPerformanceScore','trackingDifficulty','trackingStrongPoints','trackingWeakPoints','trackingNotes'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && id === 'trackingDifficulty' && !el.value) {
+                el.value = 'medium';
+            } else if (el && id !== 'trackingDifficulty') {
+                el.value = '';
+            }
+        });
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingUpdateModal() {
+        const modal = document.getElementById('trackingUpdateModal');
+        if (modal) modal.classList.add('hidden');
+        this.trackingEditingRecordId = null;
+    }
+
+    async handleUpdateTrackingRecord() {
+        const recordId = this.trackingEditingRecordId;
+        const userId = getCurrentUserId();
+        if (!recordId || !userId) {
+            this.showToast('记录信息缺失，请重试', 'error');
+            return;
+        }
+        const stage = document.getElementById('trackingStageSelect')?.value || 'applied';
+        const result = document.getElementById('trackingResultSelect')?.value || 'pending';
+        const stageDate = document.getElementById('trackingStageDate')?.value || '';
+        const scoreRaw = document.getElementById('trackingPerformanceScore')?.value || '';
+        const difficulty = document.getElementById('trackingDifficulty')?.value || 'medium';
+        const strongText = document.getElementById('trackingStrongPoints')?.value || '';
+        const weakText = document.getElementById('trackingWeakPoints')?.value || '';
+        const notes = document.getElementById('trackingNotes')?.value || '';
+
+        const toList = (txt) => txt
+            .split(/[\n,，。]/)
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        const payload = {
+            user_id: userId,
+            stage,
+            result,
+            stage_date: stageDate || undefined,
+            self_evaluation: {
+                performance_score: scoreRaw ? Number(scoreRaw) : 0,
+                difficulty,
+                weak_points: toList(weakText),
+                strong_points: toList(strongText)
+            },
+            notes
+        };
+
+        this.showLoading();
+        const res = await updateTrackingRecord(recordId, payload);
+        this.hideLoading();
+
+        if (res && res.success) {
+            this.showToast('进展已更新', 'success');
+            this.closeTrackingUpdateModal();
+            await this.loadTrackingData();
+        } else {
+            this.showToast((res && res.msg) || '更新失败，请稍后重试', 'error');
+        }
+    }
+
+    // 求职失败复盘：打开弹窗
+    openTrackingFailureModal(record) {
+        const modal = document.getElementById('trackingFailureModal');
+        if (!modal || !record) return;
+        this.trackingFailureRecord = record;
+        const subtitle = document.getElementById('trackingFailureSubtitle');
+        if (subtitle) {
+            subtitle.textContent = `${record.job_title || ''} · ${record.company_name || ''}`;
+        }
+        const statusEl = document.getElementById('trackingFailureStatus');
+        if (statusEl) statusEl.textContent = '等待开始分析';
+        const streamEl = document.getElementById('trackingFailureStream');
+        if (streamEl) {
+            streamEl.innerHTML = '<p class="hint-text">点击「开始 AI 分析」后，这里会实时生成本次求职的复盘报告与后续规划。</p>';
+        }
+        const feedback = document.getElementById('trackingRejectionFeedback');
+        if (feedback) feedback.value = '';
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingFailureModal() {
+        const modal = document.getElementById('trackingFailureModal');
+        if (modal) modal.classList.add('hidden');
+        this.trackingFailureRecord = null;
+    }
+
+    // 求职失败复盘：SSE 流式调用 9.3 接口
+    async startFailureAnalysisForCurrentRecord() {
+        const record = this.trackingFailureRecord;
+        const userId = getCurrentUserId();
+        if (!record || !userId) {
+            this.showToast('记录信息缺失，请重试', 'error');
+            return;
+        }
+        const statusEl = document.getElementById('trackingFailureStatus');
+        const streamEl = document.getElementById('trackingFailureStream');
+        const feedback = document.getElementById('trackingRejectionFeedback')?.value || '';
+
+        if (statusEl) statusEl.textContent = 'AI 正在分析你的求职数据...';
+        if (streamEl) streamEl.textContent = '';
+
+        try {
+            const base = (typeof API_CONFIG !== 'undefined')
+                ? (API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL)
+                : '/api/v1';
+            const url = `${base}/tracking/record/${encodeURIComponent(record.record_id)}/failure-analysis`;
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    record_id: record.record_id,
+                    final_stage: record.current_stage || 'final',
+                    final_result: 'rejected',
+                    rejection_feedback: feedback
+                })
+            });
+            if (!res.ok || !res.body) {
+                throw new Error(`接口返回异常 (${res.status})`);
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let bufferText = '';
+            let doneReportId = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data:')) continue;
+                    const payloadStr = trimmed.slice(5).trim();
+                    if (!payloadStr) continue;
+                    let payload;
+                    try {
+                        payload = JSON.parse(payloadStr);
+                    } catch (_) {
+                        continue;
+                    }
+                    if (payload.description && statusEl) {
+                        statusEl.textContent = payload.description;
+                    }
+                    if (payload.chunk && streamEl) {
+                        bufferText += payload.chunk;
+                        streamEl.textContent = bufferText;
+                    }
+                    if (payload.report_id) {
+                        doneReportId = payload.report_id;
+                    }
+                }
+            }
+
+            if (statusEl) statusEl.textContent = doneReportId ? '分析完成' : '分析结束';
+            if (doneReportId) {
+                this.showToast('复盘报告生成完成', 'success');
+                await this.loadTrackingData();
+            }
+        } catch (e) {
+            console.error('失败复盘分析异常:', e);
+            if (statusEl) statusEl.textContent = '分析失败：' + (e.message || '网络错误');
+            this.showToast('求职失败分析接口异常', 'error');
         }
     }
 
