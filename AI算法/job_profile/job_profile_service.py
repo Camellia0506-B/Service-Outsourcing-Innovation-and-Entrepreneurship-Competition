@@ -389,7 +389,11 @@ def _load_profiles_store() -> dict:
             for i, row in enumerate(reader):
                 if max_rows > 0 and i >= max_rows:
                     break
-                job_id = _row(row, "职位编号", "岗位编码", default=f"job_{i+1:04d}")
+                # 注意：CSV 里 job_id 可能重复（同岗位多次发布/不同来源），若直接用 dict 会覆盖导致“加载条数变少”
+                base_job_id = _row(row, "职位编号", "岗位编码", default=f"job_{i+1:04d}")
+                job_id = base_job_id
+                if job_id in profiles:
+                    job_id = f"{base_job_id}__row{i+1}"
                 job_name = _row(row, "职位名称", "岗位名称", default=f"岗位_{i+1}")
                 location = _row(row, "工作地址", "地址")
                 salary = _row(row, "薪资范围")
@@ -415,6 +419,8 @@ def _load_profiles_store() -> dict:
                 company_intro = _row(row, "公司简介", "公司详情")
                 profiles[job_id] = {
                     "job_id": job_id,
+                    "source_job_id": base_job_id,
+                    "source_row_index": i + 1,
                     "job_name": job_name,
                     "basic_info": {
                         "industry": industry,
