@@ -182794,135 +182794,67 @@
       "growth_trend": "稳定"
     }
   },
-  "gen_互联网_AI_行业的前端开发工程师_网/AI 行": {
-    "job_id": "gen_互联网_AI_行业的前端开发工程师_网/AI 行",
-    "job_name": "互联网/AI 行业的前端开发工程师",
-    "category": "前端开发",
-    "basic_info": {
-      "industry": "",
-      "salary_range": "",
-      "avg_salary": "",
-      "location": "",
-      "work_locations": [],
-      "company": "",
-      "company_scale": "",
-      "company_type": "",
-      "level": "初级",
-      "level_range": [
-        "初级"
-      ]
-    },
-    "requirements": {
-      "professional_skills": {
-        "programming_languages": [
-          {
-            "skill": "Python",
-            "level": "熟悉",
-            "importance": "重要",
-            "weight": 0.05
-          }
-        ],
-        "frameworks_tools": [],
-        "domain_knowledge": [
-          {
-            "skill": "机器学习",
-            "level": "熟悉",
-            "importance": "重要",
-            "weight": 0.05
-          },
-          {
-            "skill": "算法",
-            "level": "熟悉",
-            "importance": "重要",
-            "weight": 0.05
-          }
-        ]
-      },
-      "basic_requirements": {
-        "education": {
-          "level": "本科",
-          "preferred_majors": [
-            "计算机",
-            "软件工程",
-            "电子信息"
-          ]
-        },
-        "gpa": {
-          "min_requirement": "3.0/4.0",
-          "preferred": "3.5/4.0以上",
-          "weight": 0.05
-        }
-      },
-      "soft_skills": {
-        "innovation": "高",
-        "learning": "高",
-        "communication": "中",
-        "pressure": "中"
-      }
-    },
-    "market_analysis": {
-      "demand_score": 80,
-      "growth_trend": "稳定",
-      "tags": []
-    },
-    "career_development": {
-      "advantages": [
-        "「互联网/AI 行业的前端开发工程师」属于当前行业的典型岗位，适合具备相关技术基础与学习能力的学生。"
-      ],
-      "challenges": [
-        "需要持续学习新技术、跟进行业变化，对自我驱动力与时间管理有一定要求。"
-      ],
-      "suitable_personality": "对该岗位方向有兴趣，愿意投入时间提升专业技能、能够与团队协作的同学。",
-      "entry_advice": "建议通过相关课程、项目和实习逐步积累经验，朝「互联网/AI 行业的前端开发工程师」方向发展。",
-      "timeline": "通常需要 1-3 年时间完成从入门到熟练的成长。",
-      "recommended_projects": []
-    },
-    "description": "这是基于公开招聘信息与经验规则生成的「互联网/AI 行业的前端开发工程师」基础岗位画像，用于在 AI 服务不可用时提供参考。",
-    "industry": "",
-    "salary_range": "",
-    "demand_score": 80,
+  "job_007": {
+    "job_name": "前端开发工程师",
+    "industry": "互联网/AI",
+    "salary_range": "10k-20k/月",
+    "demand_score": 85,
     "trend": "上升",
-    "trend_desc": "",
+    "trend_desc": "随着数字化转型加速，前端开发工程师的需求在过去一年中显著增加。",
     "core_skills": {
       "professional": [
-        "Python",
-        "机器学习",
-        "算法"
+        "React",
+        "TypeScript",
+        "HTML/CSS",
+        "JavaScript"
       ],
-      "tools": [],
-      "certificates": [
-        "本科"
+      "tools": [
+        "Git",
+        "Webpack",
+        "Jest",
+        "Figma/Sketch"
       ],
+      "certificates": [],
       "soft_skills": {
-        "innovation": "具备一定创新意识，能够主动提出优化和改进方案，并敢于尝试新技术。",
-        "learning": "保持持续学习的习惯，能够在项目中快速上手新工具和新框架。",
-        "pressure": "在需求变更或上线节点临近时，依然可以保持稳定输出与良好心态。",
-        "communication": "重视跨团队沟通，能够把复杂问题讲清楚，并与产品、设计、测试高效协作。",
-        "internship": "有相关项目或实习经历更佳，有助于更快理解业务场景并进入岗位角色。"
+        "innovation": "需要能够利用现有技术栈创造性地解决问题，并对新兴前端技术保持敏感。",
+        "learning": "前端技术迭代迅速，需持续关注并学习新框架和工具。",
+        "pressure": "面对项目截止日期的压力时，仍能保持高质量的工作输出。",
+        "communication": "与设计师、后端开发者及产品经理紧密合作，确保产品需求准确实现。",
+        "internship": "通过参与开源项目或实习积累实际工作经验，有助于提升就业竞争力。"
       }
     },
     "reality_check": {
       "pros": [
-        "「互联网/AI 行业的前端开发工程师」属于当前行业的典型岗位，适合具备相关技术基础与学习能力的学生。"
+        "技术更新快，不断学习新东西充满挑战性",
+        "职业发展空间大，可以向全栈或管理方向发展",
+        "良好的团队协作氛围"
       ],
       "cons": [
-        "需要持续学习新技术、跟进行业变化，对自我驱动力与时间管理有一定要求。"
+        "工作强度有时较大，特别是在项目冲刺阶段",
+        "需持续学习以跟上技术进步的步伐",
+        "解决跨浏览器兼容问题可能耗时"
       ],
-      "suitable_for": "适合对互联网/AI 行业的前端开发工程师方向感兴趣、喜欢解决实际问题，并愿意投入时间打磨技术与项目的同学。",
-      "not_suitable_for": "不太适合抗压能力较弱、对长期编码或数据工作缺乏耐心，或者不愿意持续学习新技术的同学。",
-      "misconceptions": "常见误解是认为只要会几门编程语言就能胜任互联网/AI 行业的前端开发工程师，其实还需要扎实基础、良好沟通以及对业务的深入理解。"
+      "misconceptions": "前端开发不仅仅是视觉设计；它涉及用户体验优化以及与后端系统的交互逻辑。",
+      "suitable_for": "适合喜欢编程且对UI/UX有一定兴趣的人，同时具备良好的沟通技巧和快速学习能力。",
+      "not_suitable_for": "不适合不愿意花时间学习新技术或无法适应快速变化环境的人。"
     },
     "entry_path": {
-      "fresh_grad": "建议通过相关课程、项目和实习逐步积累经验，朝「互联网/AI 行业的前端开发工程师」方向发展。",
-      "key_projects": [],
-      "timeline": "通常需要 1-3 年时间完成从入门到熟练的成长。"
+      "fresh_grad": "建议在校期间多参与相关课程项目或实习，积累实战经验；积极参加线上社区讨论，扩大人脉圈。",
+      "key_projects": [
+        "个人网站或博客",
+        "小型管理系统（如待办事项列表）",
+        "响应式网页设计案例"
+      ],
+      "timeline": "从零基础到获得第一份正式工作大约需要6个月至1年的时间，具体取决于个人学习速度及实践机会多少。"
     },
-    "ai_summary": "这是基于公开招聘信息与经验规则生成的「互联网/AI 行业的前端开发工程师」基础岗位画像，用于在 AI 服务不可用时提供参考。",
+    "ai_summary": "前端开发工程师是当前互联网行业非常热门的职业之一，尤其对于熟悉React和TypeScript的应届毕业生来说更是如此。这个职位要求候选人不仅掌握扎实的专业知识，还要具备较强的学习能力和创新思维。虽然这个行业提供了广阔的发展空间和个人成长的机会，但同时也面临着较高的工作压力和技术更新换代带来的挑战。因此，在选择这一职业道路之前，应该充分考虑自己的兴趣点、适应能力和长期规划。",
+    "job_id": "job_007",
+    "category": "前端开发",
     "data_source": "前端传入JD分析（1条样本）",
     "csv_sample_count": 0,
     "csv_market_meta": {},
-    "created_at": "2026-03-01 21:24:04",
-    "updated_at": "2026-03-01 21:24:04",
+    "created_at": "2026-03-03 12:29:09",
+    "updated_at": "2026-03-03 12:29:09",
     "status": "completed",
     "_ai_confidence": 0.88,
     "dimension_weights": {
@@ -182932,143 +182864,73 @@
       "发展潜力": 0.15
     }
   },
-  "gen_互联网_AI_行业的算法工程师_网/AI 行": {
-    "job_id": "gen_互联网_AI_行业的算法工程师_网/AI 行",
-    "job_name": "互联网/AI 行业的算法工程师",
-    "category": "AI与算法",
-    "basic_info": {
-      "industry": "",
-      "salary_range": "",
-      "avg_salary": "",
-      "location": "",
-      "work_locations": [],
-      "company": "",
-      "company_scale": "",
-      "company_type": "",
-      "level": "初级",
-      "level_range": [
-        "初级"
-      ]
-    },
-    "requirements": {
-      "professional_skills": {
-        "programming_languages": [
-          {
-            "skill": "Python",
-            "level": "熟悉",
-            "importance": "重要",
-            "weight": 0.05
-          }
-        ],
-        "frameworks_tools": [],
-        "domain_knowledge": [
-          {
-            "skill": "机器学习",
-            "level": "熟悉",
-            "importance": "重要",
-            "weight": 0.05
-          },
-          {
-            "skill": "算法",
-            "level": "熟悉",
-            "importance": "重要",
-            "weight": 0.05
-          }
-        ]
-      },
-      "basic_requirements": {
-        "education": {
-          "level": "硕士",
-          "preferred_majors": [
-            "计算机",
-            "数学",
-            "人工智能",
-            "软件工程",
-            "统计学"
-          ]
-        },
-        "gpa": {
-          "min_requirement": "3.2/4.0",
-          "preferred": "3.5/4.0以上",
-          "weight": 0.05
-        }
-      },
-      "soft_skills": {
-        "innovation": "高",
-        "learning": "高",
-        "communication": "中",
-        "pressure": "中"
-      }
-    },
-    "market_analysis": {
-      "demand_score": 80,
-      "growth_trend": "稳定",
-      "tags": []
-    },
-    "career_development": {
-      "advantages": [
-        "「互联网/AI 行业的算法工程师」属于当前行业的典型岗位，适合具备相关技术基础与学习能力的学生。"
-      ],
-      "challenges": [
-        "需要持续学习新技术、跟进行业变化，对自我驱动力与时间管理有一定要求。"
-      ],
-      "suitable_personality": "对该岗位方向有兴趣，愿意投入时间提升专业技能、能够与团队协作的同学。",
-      "entry_advice": "建议通过相关课程、项目和实习逐步积累经验，朝「互联网/AI 行业的算法工程师」方向发展。",
-      "timeline": "通常需要 1-3 年时间完成从入门到熟练的成长。",
-      "recommended_projects": []
-    },
-    "description": "这是基于公开招聘信息与经验规则生成的「互联网/AI 行业的算法工程师」基础岗位画像，用于在 AI 服务不可用时提供参考。",
-    "industry": "",
-    "salary_range": "",
-    "demand_score": 80,
+  "job_015": {
+    "job_name": "数据分析师",
+    "industry": "金融行业",
+    "salary_range": "根据地区和公司规模不同，大约在8,000-15,000元/月",
+    "demand_score": 85,
     "trend": "上升",
-    "trend_desc": "",
+    "trend_desc": "随着大数据技术的发展以及金融机构对数据分析需求的增长，预计未来一年内该职位需求将持续增加。",
     "core_skills": {
       "professional": [
+        "Python编程",
+        "SQL数据库操作",
+        "数据分析方法论",
+        "统计学基础"
+      ],
+      "tools": [
         "Python",
-        "机器学习",
-        "算法"
+        "SQL",
+        "Tableau或Power BI等可视化工具",
+        "Excel高级功能"
       ],
-      "tools": [],
-      "certificates": [
-        "硕士"
-      ],
+      "certificates": [],
       "soft_skills": {
-        "innovation": "具备一定创新意识，能够主动提出优化和改进方案，并敢于尝试新技术。",
-        "learning": "保持持续学习的习惯，能够在项目中快速上手新工具和新框架。",
-        "pressure": "在需求变更或上线节点临近时，依然可以保持稳定输出与良好心态。",
-        "communication": "重视跨团队沟通，能够把复杂问题讲清楚，并与产品、设计、测试高效协作。",
-        "internship": "有相关项目或实习经历更佳，有助于更快理解业务场景并进入岗位角色。"
+        "innovation": "需要能够独立思考并提出新的分析角度来解决问题。",
+        "learning": "由于技术和业务场景不断变化，持续学习新技术和新知识是非常重要的。",
+        "pressure": "面对项目截止日期的压力时，仍需保持高质量的工作输出。",
+        "communication": "与团队成员（如产品经理、开发人员）有效沟通以理解业务需求，并清晰地传达自己的分析结果。",
+        "internship": "参与过实际的数据分析项目或者相关的实习经历将非常有助于求职。"
       }
     },
     "reality_check": {
       "pros": [
-        "「互联网/AI 行业的算法工程师」属于当前行业的典型岗位，适合具备相关技术基础与学习能力的学生。"
+        "工作内容具有挑战性，有利于个人成长",
+        "行业内待遇相对较好",
+        "职业发展路径清晰"
       ],
       "cons": [
-        "需要持续学习新技术、跟进行业变化，对自我驱动力与时间管理有一定要求。"
+        "初期可能面临较大的学习曲线",
+        "需要经常加班以满足项目期限",
+        "对于非相关专业背景的人来说入门较难"
       ],
-      "suitable_for": "适合对互联网/AI 行业的算法工程师方向感兴趣、喜欢解决实际问题，并愿意投入时间打磨技术与项目的同学。",
-      "not_suitable_for": "不太适合抗压能力较弱、对长期编码或数据工作缺乏耐心，或者不愿意持续学习新技术的同学。",
-      "misconceptions": "常见误解是认为只要会几门编程语言就能胜任互联网/AI 行业的算法工程师，其实还需要扎实基础、良好沟通以及对业务的深入理解。"
+      "misconceptions": "数据分析师不仅仅是处理数字，还需要深刻理解业务逻辑才能做出有价值的洞察。",
+      "suitable_for": "适合那些对数字敏感、喜欢解决问题且愿意深入研究的人。",
+      "not_suitable_for": "不适合追求轻松工作环境或是对数学和编程不感兴趣者。"
     },
     "entry_path": {
-      "fresh_grad": "建议通过相关课程、项目和实习逐步积累经验，朝「互联网/AI 行业的算法工程师」方向发展。",
-      "key_projects": [],
-      "timeline": "通常需要 1-3 年时间完成从入门到熟练的成长。"
+      "fresh_grad": "在校期间积极参加数据分析相关的课程及实践项目；同时寻找机会到相关企业进行实习。",
+      "key_projects": [
+        "基于公开数据集的分析报告",
+        "小型商业智能应用开发",
+        "参与校内外数据分析比赛"
+      ],
+      "timeline": "从零开始准备至获得第一份正式工作offer通常需要6个月至1年的时间。"
     },
-    "ai_summary": "这是基于公开招聘信息与经验规则生成的「互联网/AI 行业的算法工程师」基础岗位画像，用于在 AI 服务不可用时提供参考。",
+    "ai_summary": "作为一名数据分析师，在金融行业中你将负责通过分析大量复杂的数据来支持决策制定过程。这不仅要求扎实的专业技能如Python编程、SQL查询能力以及使用数据可视化工具的能力，同时也考验着你的创新思维、快速学习能力、抗压能力和良好的人际交往技巧。虽然这个职业道路充满机遇——比如较高的薪资水平和发展潜力——但同时也伴随着不小的挑战，包括高强度的工作节奏和技术更新速度极快等。因此，只有那些真正热爱数据分析并对这一领域抱有热情的学生才最适合走上这条职业之路。",
+    "job_id": "job_015",
+    "category": "AI与算法",
     "data_source": "前端传入JD分析（1条样本）",
     "csv_sample_count": 0,
     "csv_market_meta": {},
-    "created_at": "2026-03-01 21:24:44",
-    "updated_at": "2026-03-01 21:24:44",
+    "created_at": "2026-03-03 12:30:02",
+    "updated_at": "2026-03-03 12:30:02",
     "status": "completed",
     "_ai_confidence": 0.88,
     "dimension_weights": {
-      "基础要求": 0.15,
+      "基础要求": 0.1,
       "专业技能": 0.4,
-      "职业素养": 0.3,
+      "职业素养": 0.35,
       "发展潜力": 0.15
     }
   }

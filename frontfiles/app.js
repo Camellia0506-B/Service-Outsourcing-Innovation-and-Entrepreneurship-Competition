@@ -1,3 +1,19 @@
+// 安全 storage：部分浏览器（如 Safari 防跟踪）会拦截 localStorage，导致报错；失败时用内存兜底
+var _storage = (function () {
+    try {
+        _storage.setItem('_', '_');
+        _storage.removeItem('_');
+        return localStorage;
+    } catch (e) {
+        var o = {};
+        return {
+            getItem: function (k) { return o[k] != null ? o[k] : null; },
+            setItem: function (k, v) { o[k] = String(v); },
+            removeItem: function (k) { delete o[k]; }
+        };
+    }
+})();
+
 // 晋升路径默认数据（按岗位名关键词匹配，无接口或接口空时使用，避免卡片显示"-"）
 const PROMOTION_STAGES_BY_JOB = {
     default: [
@@ -828,7 +844,7 @@ class CareerPlanningApp {
         try {
             const result = await login(username, password);
             if (result.success) {
-                localStorage.setItem('token', result.data.token);
+                _storage.setItem('token', result.data.token);
                 saveUserInfo(result.data);
                 this.currentUser = result.data;
                 this.showToast('登录成功', 'success');
@@ -931,7 +947,7 @@ class CareerPlanningApp {
         const result = await login(username, password);
         
         if (result.success) {
-            localStorage.setItem('token', result.data.token);
+            _storage.setItem('token', result.data.token);
             saveUserInfo(result.data);
             this.currentUser = result.data;
             this.showMainApp();
@@ -1090,7 +1106,7 @@ class CareerPlanningApp {
         const loginResult = await login(username, password);
         if (loginResult.success) {
             if (result.data && result.data.avatar) loginResult.data.avatar = result.data.avatar;
-            localStorage.setItem('token', loginResult.data.token);
+            _storage.setItem('token', loginResult.data.token);
             saveUserInfo(loginResult.data);
             this.currentUser = loginResult.data;
             this.showMainApp();
@@ -1113,8 +1129,8 @@ class CareerPlanningApp {
             clearUserInfo();
             if (userId) {
                 // 清除该用户的所有历史记录key
-                localStorage.removeItem('report_history_' + userId);
-                localStorage.removeItem('last_assessment_report_id_' + userId);
+                _storage.removeItem('report_history_' + userId);
+                _storage.removeItem('last_assessment_report_id_' + userId);
             }
             this.currentUser = null;
             document.getElementById('navbar').classList.add('hidden');
@@ -2143,7 +2159,7 @@ class CareerPlanningApp {
     // 持久化：保存最近一次测评报告 ID（按用户）
     saveLastAssessmentReportId(reportId) {
         const userId = getCurrentUserId();
-        if (userId && reportId) localStorage.setItem('last_assessment_report_id_' + userId, reportId);
+        if (userId && reportId) _storage.setItem('last_assessment_report_id_' + userId, reportId);
     }
 
     // 将单条测评报告追加到本地历史记录（用于历史报告列表展示与 Mock 模式）
@@ -2153,7 +2169,7 @@ class CareerPlanningApp {
         const key = 'report_history_' + userId;
         let list = [];
         try {
-            const raw = localStorage.getItem(key);
+            const raw = _storage.getItem(key);
             if (raw) list = JSON.parse(raw);
             if (!Array.isArray(list)) list = [];
         } catch (_) {}
@@ -2162,14 +2178,14 @@ class CareerPlanningApp {
         const exists = list.some(item => (item.report_id || item.id) === reportId);
         if (!exists) list.unshift(entry);
         try {
-            localStorage.setItem(key, JSON.stringify(list));
+            _storage.setItem(key, JSON.stringify(list));
         } catch (_) {}
     }
 
     // 恢复：读取当前用户最近一次测评报告 ID
     getLastAssessmentReportId() {
         const userId = getCurrentUserId();
-        return userId ? localStorage.getItem('last_assessment_report_id_' + userId) : null;
+        return userId ? _storage.getItem('last_assessment_report_id_' + userId) : null;
     }
 
     // 是否有历史报告（兼容 last_assessment_report_id_ 与 report_history_ 两种 key）
@@ -2178,7 +2194,7 @@ class CareerPlanningApp {
         if (id1) return true;
         const userId = getCurrentUserId();
         if (!userId) return false;
-        const raw = localStorage.getItem('report_history_' + userId);
+        const raw = _storage.getItem('report_history_' + userId);
         if (!raw) return false;
         try {
             const arr = JSON.parse(raw);
@@ -2257,7 +2273,7 @@ class CareerPlanningApp {
         }
         const userId = getCurrentUserId();
         if (userId) {
-            const saved = localStorage.getItem('last_assessment_total_questions_' + userId);
+            const saved = _storage.getItem('last_assessment_total_questions_' + userId);
             if (saved) return parseInt(saved, 10) || null;
         }
         return 20;
@@ -2614,7 +2630,7 @@ class CareerPlanningApp {
             this.currentReportId = reportId;
             this.saveLastAssessmentReportId(reportId);
             const userIdForSave = getCurrentUserId();
-            if (userIdForSave) localStorage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
+            if (userIdForSave) _storage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
             this.showToast('测评提交成功，正在生成报告...', 'success');
             this.setViewReportButtonState('generating');
             
@@ -8998,8 +9014,20 @@ class CareerPlanningApp {
         const dist = interest.interest_distribution || [];
         const fields = interest.suitable_fields || [];
         const personality = data.personality_analysis || {};
-        const mbti = personality.mbti_type || '—';
+        let mbti = (personality.mbti_type && String(personality.mbti_type).trim()) || '';
         const traits = personality.traits || [];
+        // 后端未返回 MBTI 时，根据五项特质在前端做简易推断，避免显示为「—」
+        if (!mbti && traits.length >= 4) {
+            const scoreByName = {};
+            traits.forEach(t => { scoreByName[t.trait_name] = Number(t.score) || 50; });
+            const get = (name) => scoreByName[name] != null ? scoreByName[name] : 50;
+            const e_i = get('外向性') >= 50 ? 'E' : 'I';
+            const s_n = get('开放性') >= 50 ? 'N' : 'S';
+            const t_f = get('宜人性') >= 50 ? 'F' : 'T';
+            const j_p = get('尽责性') >= 50 ? 'J' : 'P';
+            mbti = e_i + s_n + t_f + j_p;
+        }
+        if (!mbti) mbti = '—';
         const ability = data.ability_analysis || {};
         const strengths = ability.strengths || [];
         const areas = ability.areas_to_improve || [];
@@ -9026,9 +9054,7 @@ class CareerPlanningApp {
         const topAbility = sortedByScore[0] || null;
         const secondAbility = sortedByScore[1] || null;
         const TRAIT_MAX_SCORE = 100;
-        if (traits.length) {
-            traits.forEach(t => { console.log('[性格特质]', t.trait_name, 'score=', t.score, '展示不低于 20'); });
-        }
+        /* 性格特质已用于雷达图与展示，无需控制台输出 */
         const radarLabels = traits.map(t => t.trait_name);
         const radarValues = traits.map(t => safePct(safeTraitScore(t.score)));
 
@@ -9523,8 +9549,8 @@ function sendFloatingAgentMessage() {
     if (statusEl) statusEl.innerHTML = '<span class="agent-status-dot"></span>正在思考...';
 
     var botText = '';
-    var token = localStorage.getItem('token') || '';
-    var userInfoStr = localStorage.getItem('userInfo') || '{}';
+    var token = _storage.getItem('token') || '';
+    var userInfoStr = _storage.getItem('userInfo') || '{}';
     var userId = 0;
     try { userId = (JSON.parse(userInfoStr)).id || 0; } catch (e) {}
     var baseURL = (typeof API_CONFIG !== 'undefined') ? (API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL || 'http://localhost:5002/api/v1') : 'http://localhost:5002/api/v1';

@@ -419,6 +419,21 @@ class AssessmentService:
             "values": value_scores
         }
 
+    def _infer_mbti_from_traits(self, trait_scores: dict) -> str:
+        """
+        根据五项性格特质分数简易推断 MBTI 四维（E/I, S/N, T/F, J/P），
+        用于 AI 未返回 mbti_type 或本地模板报告时保证报告页有显示。
+        对应关系：外向性→E/I, 开放性→N/S, 宜人性→F/T, 尽责性→J/P。
+        """
+        if not trait_scores:
+            return "INTJ"  # 默认
+        get = lambda name: int(trait_scores.get(name, 50))
+        e_i = "E" if get("外向性") >= 50 else "I"
+        s_n = "N" if get("开放性") >= 50 else "S"
+        t_f = "F" if get("宜人性") >= 50 else "T"
+        j_p = "J" if get("尽责性") >= 50 else "P"
+        return e_i + s_n + t_f + j_p
+
     def _inject_scores_into_report(self, report: dict, scores: dict) -> dict:
         """
         用后端计分结果覆盖报告中的能力分析、兴趣匹配度，保证数据有区分度且基于 Holland 计算。
@@ -455,6 +470,9 @@ class AssessmentService:
             }
             for name in trait_names
         ]
+        # 若 AI 未返回 MBTI，则根据五项特质做简易推断，保证报告页有显示
+        if not (report["personality_analysis"].get("mbti_type") or "").strip():
+            report["personality_analysis"]["mbti_type"] = self._infer_mbti_from_traits(trait_scores)
 
         # 3) 兴趣匹配度：取 Holland 最高维度作为主要兴趣类型，其分数即兴趣匹配度
         holland = scores.get("holland") or {}
@@ -600,6 +618,7 @@ class AssessmentService:
             # 生成一个简单的本地报告结构，兼容前端字段
             primary_trait = max(traits.items(), key=lambda x: x[1])[0] if traits else "外向性"
             primary_ability = max(abilities.items(), key=lambda x: x[1])[0] if abilities else "学习能力"
+            mbti_fallback = self._infer_mbti_from_traits(traits)
 
             return {
                 "status": "completed",
@@ -619,6 +638,7 @@ class AssessmentService:
                     ],
                 },
                 "personality_analysis": {
+                    "mbti_type": mbti_fallback,
                     "traits": [
                         {
                             "trait_name": name,
