@@ -33,16 +33,28 @@ from model.factory import chat_model
 from job_profile.job_profile_service import get_job_profile_service
 from job_profile.job_dataset_service import calculate_weighted_skill_match
 from student_ability.ability_profile_service import get_student_ability_service
+from matching.hybrid_retriever import HybridRetriever
 
-# 语义搜索依赖（FAISS 向量检索 + Embedding）
+# 语义搜索依赖（向量检索 + Embedding）
+# 注意：faiss 在 Windows 上可能不可用，但 numpy 仍应可用；不要因为 faiss 导入失败而把 np 置空。
 try:
     import numpy as np  # type: ignore
+except Exception:
+    np = None  # type: ignore
+
+try:
     import faiss  # type: ignore
     _FAISS_AVAILABLE = True
 except Exception:
-    np = None  # type: ignore
     faiss = None  # type: ignore
     _FAISS_AVAILABLE = False
+
+try:
+    import hnswlib  # type: ignore
+    _HNSW_AVAILABLE = True
+except Exception:
+    hnswlib = None  # type: ignore
+    _HNSW_AVAILABLE = False
 
 try:
     # 部署环境若已安装 sentence-transformers，则使用真正的多语种模型
@@ -50,6 +62,66 @@ try:
     _SEMANTIC_EMBED_MODEL = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 except Exception:
     _SEMANTIC_EMBED_MODEL = None
+
+
+def _build_student_query_text(student_profile: dict) -> str:
+    """
+    将学生能力画像拼成“可用于召回”的长文本（吃简历段落/项目经历/技能列表）。
+    目标：让召回阶段真正利用“成段文字”的信息。
+    """
+    if not isinstance(student_profile, dict):
+        return ""
+
+    parts: List[str] = []
+
+    # 1) 直接长文本字段（若上游愿意传入）
+    for k in ("resume_text", "raw_resume_text", "experience_text", "profile_text", "raw_text"):
+        v = student_profile.get(k)
+        if isinstance(v, str) and v.strip():
+            parts.append(v.strip())
+
+    # 2) 结构化技能
+    skills = student_profile.get("skills") or []
+    if isinstance(skills, list) and skills:
+        sn = []
+        for s in skills:
+            if isinstance(s, dict):
+                name = s.get("skill") or s.get("name") or ""
+                if name:
+                    sn.append(str(name))
+            elif isinstance(s, str):
+                sn.append(s)
+        if sn:
+            parts.append("技能：" + "，".join(sn[:60]))
+
+    # 3) 项目/实习经历（通常是长文本的主要来源）
+    pe = student_profile.get("practical_experience") or {}
+    if isinstance(pe, dict):
+        projects = pe.get("projects") or []
+        if isinstance(projects, list) and projects:
+            for p in projects[:6]:
+                if isinstance(p, dict):
+                    parts.append(str(p.get("name") or ""))
+                    parts.append(str(p.get("description") or ""))
+        internships = pe.get("internships") or []
+        if isinstance(internships, list) and internships:
+            for it in internships[:6]:
+                if isinstance(it, dict):
+                    parts.append(str(it.get("company") or ""))
+                    parts.append(str(it.get("position") or ""))
+                    parts.append(str(it.get("description") or ""))
+
+    # 4) 基本信息（专业/方向）
+    bi = student_profile.get("basic_info") or {}
+    if isinstance(bi, dict):
+        for k in ("major", "direction", "career_goal"):
+            v = bi.get(k)
+            if isinstance(v, str) and v.strip():
+                parts.append(v.strip())
+
+    text = "\n".join([p for p in parts if isinstance(p, str) and p.strip()])
+    # 控制长度，避免下游 embedding 或 LLM 超限
+    return text[:6000]
 
 
 # ============================================================
@@ -775,7 +847,38 @@ class JobMatchingService:
         self._semantic_index = None
         self._semantic_job_ids: List[str] = []
         self._semantic_dim: Optional[int] = None
+        self._semantic_hnsw = None
         self._build_job_semantic_index()
+
+        # Hybrid 检索器（BM25 + 双塔向量召回 + 可选精排/MMR）
+        self._hybrid_retriever: Optional[HybridRetriever] = None
+        self._build_hybrid_retriever()
+
+    def _build_hybrid_retriever(self) -> None:
+        """
+        构建 Hybrid 检索器：
+        - 文本：岗位名 + JD(截断) + 技能词 + 行业 + 层级
+        - embedding：复用本文件的 _embed_text_for_semantic（sentence-transformers / hash）
+        """
+        try:
+            all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
+            if not all_jobs:
+                return
+
+            job_texts: Dict[str, str] = {}
+            for job_id, job in all_jobs.items():
+                if not isinstance(job, dict):
+                    continue
+                job_texts[str(job_id)] = self._build_job_semantic_text(job)
+
+            def _embed(text: str):
+                return self._embed_text_for_semantic(text)
+
+            self._hybrid_retriever = HybridRetriever(job_texts, _embed, enable_faiss=True, enable_bm25=True)
+            # Cross-Encoder 精排默认不强制开启（需要额外模型/下载），有条件再开
+        except Exception as e:
+            logger.warning(f"[Hybrid] 构建失败，将回退到原搜索/推荐: {e}", exc_info=True)
+            self._hybrid_retriever = None
     
     def recommend_jobs(self, user_id: int, top_n: int = 10, filters: dict = None, ability_profile: Optional[dict] = None) -> dict:
         """
@@ -798,6 +901,28 @@ class JobMatchingService:
         # 应用筛选条件
         if filters:
             all_jobs = self._apply_filters(all_jobs, filters)
+
+        # 召回加速 + 利用简历长文本：先用 Hybrid 召回 topK，再对候选做精确4维度打分
+        # 这样能实现“竞争岗位推荐”（同类岗位内部的差异会被长文本拉开）。
+        candidate_jobs = all_jobs
+        student_query = _build_student_query_text(student_profile)
+        if self._hybrid_retriever is not None and student_query:
+            try:
+                recall_k = min(max(200, top_n * 50), 800)
+                cands = self._hybrid_retriever.retrieve(student_query, top_k=recall_k, alpha=0.30)
+                if cands:
+                    # MMR 做一点多样性，避免推荐全是同一类标题
+                    cands = self._hybrid_retriever.mmr_rerank(student_query, cands, top_n=min(recall_k, 200), lambda_diversity=0.80)
+                    cand_ids = [c.job_id for c in cands]
+                    # 只在候选集上做 4 维度打分（保持原有可解释性与稳定性）
+                    candidate_jobs = {jid: all_jobs[jid] for jid in cand_ids if jid in all_jobs}
+                    if len(candidate_jobs) < max(30, top_n * 5):
+                        candidate_jobs = all_jobs  # 候选过少则回退全量
+                else:
+                    candidate_jobs = all_jobs  # Hybrid 无信号，回退全量
+            except Exception as e:
+                logger.warning(f"[Hybrid] 推荐召回失败，回退全量匹配: {e}")
+                candidate_jobs = all_jobs
         
         # 批量计算匹配度
         def _job_loc(job: dict) -> str:
@@ -807,7 +932,7 @@ class JobMatchingService:
             return str(loc) if loc else ""
 
         recommendations = []
-        for job_id, job_profile in all_jobs.items():
+        for job_id, job_profile in candidate_jobs.items():
             if not isinstance(job_profile, dict):
                 continue
             try:
@@ -857,10 +982,10 @@ class JobMatchingService:
         - 调用 Embedding 模型生成向量
         - 使用 FAISS 建立向量索引，支持余弦相似度检索
         """
-        if not _FAISS_AVAILABLE:
-            logger.warning("[Matching] 当前环境未安装 faiss，语义岗位搜索将不可用")
-            return
         if np is None:
+            return
+        if not _FAISS_AVAILABLE and not _HNSW_AVAILABLE:
+            logger.warning("[Matching] 当前环境未安装 faiss/hnswlib，语义岗位搜索将不可用")
             return
 
         all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
@@ -885,15 +1010,27 @@ class JobMatchingService:
             return
 
         mat = np.vstack(vectors).astype("float32")
-        faiss.normalize_L2(mat)
         dim = mat.shape[1]
-        index = faiss.IndexFlatIP(dim)
-        index.add(mat)
+        # 统一归一化用于 cosine / inner-product
+        mat = mat / (np.linalg.norm(mat, axis=1, keepdims=True) + 1e-9)
 
-        self._semantic_index = index
-        self._semantic_job_ids = job_ids
-        self._semantic_dim = dim
-        logger.info(f"[Matching] 语义岗位索引构建完成，共 {len(job_ids)} 条岗位")
+        if _FAISS_AVAILABLE:
+            faiss.normalize_L2(mat)
+            index = faiss.IndexFlatIP(dim)
+            index.add(mat)
+            self._semantic_index = index
+            self._semantic_job_ids = job_ids
+            self._semantic_dim = dim
+            logger.info(f"[Matching] 语义岗位索引（FAISS）构建完成，共 {len(job_ids)} 条岗位")
+        elif _HNSW_AVAILABLE:
+            index = hnswlib.Index(space="cosine", dim=dim)
+            index.init_index(max_elements=len(job_ids), ef_construction=200, M=16)
+            index.add_items(mat, list(range(len(job_ids))))
+            index.set_ef(64)
+            self._semantic_hnsw = index
+            self._semantic_job_ids = job_ids
+            self._semantic_dim = dim
+            logger.info(f"[Matching] 语义岗位索引（HNSW）构建完成，共 {len(job_ids)} 条岗位")
 
     def _build_job_semantic_text(self, job_profile: dict) -> str:
         """为语义检索构造岗位描述文本。"""
@@ -914,7 +1051,8 @@ class JobMatchingService:
 
         parts = [
             job_profile.get("job_name", ""),
-            (basic.get("description") or "")[:400],
+            # 兼容 JobProfileService：JD 文本通常在 job_profile["description"]，不是 basic_info["description"]
+            (basic.get("description") or job_profile.get("description") or "")[:400],
             " ".join(skill_names),
             basic.get("industry", ""),
             basic.get("level", ""),
@@ -953,7 +1091,9 @@ class JobMatchingService:
 
     def _semantic_search_jobs(self, query: str, top_k: int = 20, filters: Optional[dict] = None) -> List[Dict]:
         """使用 Embedding + FAISS 对岗位进行语义检索，返回带 semantic_score 的结果列表。"""
-        if not query or not _FAISS_AVAILABLE or self._semantic_index is None or np is None:
+        if not query or np is None:
+            return []
+        if (_FAISS_AVAILABLE and self._semantic_index is None) and (_HNSW_AVAILABLE and self._semantic_hnsw is None):
             return []
 
         vec = self._embed_text_for_semantic(query)
@@ -961,8 +1101,20 @@ class JobMatchingService:
             return []
 
         q = np.asarray([vec], dtype="float32")
-        faiss.normalize_L2(q)
-        scores, idxs = self._semantic_index.search(q, top_k)
+        q = q / (np.linalg.norm(q, axis=1, keepdims=True) + 1e-9)
+
+        scores = None
+        idxs = None
+        if _FAISS_AVAILABLE and self._semantic_index is not None:
+            faiss.normalize_L2(q)
+            scores, idxs = self._semantic_index.search(q, top_k)
+        elif _HNSW_AVAILABLE and self._semantic_hnsw is not None:
+            labels, distances = self._semantic_hnsw.knn_query(q, k=top_k)
+            idxs = labels
+            # cosine distance -> similarity
+            scores = (1.0 - distances).astype("float32")
+        else:
+            return []
 
         all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
         results: List[Dict] = []
@@ -990,8 +1142,34 @@ class JobMatchingService:
         """
         filters = filters or {}
         all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
-        keyword_lower = (keyword or "").strip().lower()
+        keyword = (keyword or "").strip()
 
+        # Hybrid 搜索优先（BM25 + 向量召回 + MMR 多样性）
+        if self._hybrid_retriever is not None and keyword:
+            # 先用 Hybrid 召回，再对结果应用 filters（避免对全量岗位做 filters 计算）
+            cands = self._hybrid_retriever.retrieve(keyword, top_k=max(200, top_n * 10), alpha=0.40)
+            if cands:
+                cands = self._hybrid_retriever.mmr_rerank(keyword, cands, top_n=top_n, lambda_diversity=0.75)
+            else:
+                # Hybrid 没有有效信号时，回退旧逻辑（避免返回一堆 0 分无关岗位）
+                cands = []
+
+            if cands:
+                jobs: List[Dict] = []
+                for c in cands:
+                    job = all_jobs.get(c.job_id)
+                    if not job or not isinstance(job, dict):
+                        continue
+                    if not self._job_pass_filters_single(job, filters):
+                        continue
+                    # 用 hybrid score 复用 semantic_score 字段，前端无需改
+                    jobs.append(self._build_search_job_entry(c.job_id, job, semantic_score=c.score))
+                    if len(jobs) >= top_n:
+                        break
+                return {"total": len(jobs), "jobs": jobs[:top_n]}
+
+        # 回退：原有关键词+语义检索
+        keyword_lower = keyword.lower()
         keyword_results: Dict[str, Dict] = {}
         for job_id, job in all_jobs.items():
             if not isinstance(job, dict):
@@ -999,12 +1177,11 @@ class JobMatchingService:
             if not self._job_pass_filters_single(job, filters):
                 continue
             if not keyword_lower:
-                # 无关键词时，先不加入，交给语义检索主导
                 continue
             basic = job.get("basic_info") or {}
             name = str(job.get("job_name") or "").lower()
             industry = str(basic.get("industry") or "").lower()
-            desc = str(basic.get("description") or "").lower()
+            desc = str((basic.get("description") or job.get("description") or "")).lower()
             if keyword_lower in name or keyword_lower in industry or keyword_lower in desc:
                 keyword_results[job_id] = self._build_search_job_entry(job_id, job, semantic_score=None)
 
@@ -1013,27 +1190,20 @@ class JobMatchingService:
         if need_semantic:
             semantic_results = self._semantic_search_jobs(keyword or "适合大学生的岗位", top_n, filters)
 
-        # 合并去重
         merged: Dict[str, Dict] = dict(keyword_results)
         for item in semantic_results:
             jid = item.get("job_id")
             if not jid:
                 continue
             if jid in merged:
-                # 为关键词命中补充 semantic_score
                 if item.get("semantic_score") is not None:
                     merged[jid]["semantic_score"] = item["semantic_score"]
             else:
                 merged[jid] = item
 
         jobs = list(merged.values())
-        # 排序：优先语义相关度高的岗位
         jobs.sort(key=lambda x: (x.get("semantic_score") or 0.0), reverse=True)
-
-        return {
-            "total": len(jobs),
-            "jobs": jobs[:top_n]
-        }
+        return {"total": len(jobs), "jobs": jobs[:top_n]}
 
     def _build_search_job_entry(self, job_id: str, job_profile: dict, semantic_score: Optional[float]) -> Dict:
         """构造岗位搜索结果条目，包含 semantic_score 字段。"""

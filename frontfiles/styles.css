@@ -27,10 +27,10 @@
     --shadow: 0 2px 8px rgba(26, 63, 168, 0.06);
     --shadow-lg: 0 12px 28px rgba(26, 63, 168, 0.12);
     
-    /* 字体 */
-    --font-heading: 'Sora', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    /* 字体：优先外链，失败时回退到系统字体，避免 Google Fonts 连不上时排版错乱 */
+    --font-heading: 'Sora', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     --blue: #2d5be3;
     --sky: #4f79f6;
     --bg: var(--page-bg);
@@ -55,11 +55,11 @@
 }
 
 h1, h2, h3, .logo {
-    font-family: 'Sora', sans-serif;
+    font-family: var(--font-heading);
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-body);
     background: var(--page-bg);
     color: var(--text-primary);
     line-height: 1.6;
@@ -1262,6 +1262,295 @@ body::before {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 24px;
+}
+
+/* 规划落地性跟踪模块 (Career Tracking) */
+.tracking-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.tracking-summary-card {
+    flex: 1 1 180px;
+    min-width: 180px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.tracking-summary-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.tracking-summary-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.tracking-summary-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-actions {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.tracking-actions-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.tracking-funnel-wrap {
+    margin-top: 28px;
+    padding: 18px 20px 12px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #eef2ff, #f9fafb);
+    border: 1px solid rgba(129, 140, 248, 0.35);
+}
+
+.tracking-funnel-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tracking-funnel-sub {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-funnel-chart {
+    width: 100%;
+    height: 260px;
+    margin-top: 12px;
+}
+
+.tracking-records-header {
+    margin-top: 28px;
+}
+
+.tracking-records-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tracking-records-sub {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-records-list {
+    margin-top: 18px;
+    position: relative;
+    padding-left: 18px;
+}
+
+.tracking-records-list::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0));
+}
+
+.tracking-record {
+    position: relative;
+    padding: 14px 16px 14px 20px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+.tracking-record::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 2px solid #ffffff;
+    background: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.tracking-record-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.tracking-record-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tracking-record-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-stage-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.tracking-stage--in-progress {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+}
+
+.tracking-stage--offer {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+.tracking-stage--rejected {
+    background: rgba(248, 113, 113, 0.12);
+    color: #b91c1c;
+}
+
+.tracking-stage--applied {
+    background: rgba(251, 191, 36, 0.12);
+    color: #92400e;
+}
+
+.tracking-record-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tracking-record-actions .btn-ghost {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.tracking-agent-insight {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f9fafb;
+    border: 1px dashed rgba(148, 163, 184, 0.65);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-reports-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tracking-report-item {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 3px 14px rgba(15, 23, 42, 0.03);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+
+.tracking-report-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.tracking-report-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.tracking-report-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-report-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    color: #15803d;
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.tracking-update-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.tracking-modal .modal-body textarea {
+    resize: vertical;
+}
+
+.tracking-failure-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.tracking-failure-status-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.tracking-failure-stream {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 10px;
+    background: #0f172a;
+    color: #e5e7eb;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.tracking-failure-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 4px 0 0 0;
 }
 
 .job-card {
@@ -4985,6 +5274,7 @@ body::before {
     font-size: 12px;
     line-height: 1.7;
     color: #9095a8;
+    white-space: pre-line; /* 支持 \n 换行，便于多行分析展示 */
 }
 
 .agent-message .job-profile-footer {
@@ -10456,7 +10746,7 @@ body::before {
 
 .hero-title {
     font-family: 宋体, SimSun, serif;
-    font-size: 32px;
+    font-size: 38.4px; /* 放大为原来的 1.2 倍（32 → 38.4） */
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1.3;
@@ -10468,13 +10758,13 @@ body::before {
     font-family: 宋体, SimSun, serif;
     font-style: italic;
     font-weight: 700;
-    font-size: 36px;
+    font-size: 43.2px; /* 放大为原来的 1.2 倍（36 → 43.2） */
     color: #2952e3;
     text-decoration: none;
 }
 
 .hero-title-suffix {
-    font-size: 36px;
+    font-size: 43.2px; /* 放大为原来的 1.2 倍（36 → 43.2） */
     font-weight: 800;
     font-style: normal;
     font-family: 宋体, SimSun, serif;
@@ -10483,7 +10773,7 @@ body::before {
 
 .hero-subtitle {
     font-family: var(--font-body);
-    font-size: 15px;
+    font-size: 18px; /* 放大为原来的 1.2 倍（15 → 18） */
     color: var(--gray-blue);
     line-height: 1.75;
     margin-bottom: 24px;
@@ -10502,7 +10792,7 @@ body::before {
     color: #2d5be3;
     border: 1.5px solid rgba(45,91,227,0.2);
     border-radius: 100px;
-    font-size: 14px;
+    font-size: 16.8px; /* 放大为原来的 1.2 倍（14 → 16.8） */
     font-weight: 500;
     box-shadow: 0 2px 6px rgba(45,91,227,0.08);
     cursor: default;
@@ -10540,6 +10830,14 @@ body::before {
 .hero-right .stat-card:hover {
     transform: translateX(-4px);
     box-shadow: 0 8px 24px rgba(45,91,227,0.15);
+}
+
+/* 桌面端：让右侧统计卡片整体大幅向页面中间移动 */
+@media (min-width: 1200px) {
+    .hero-right.hero-stats-grid {
+        /* 当前基础位置再向右回调 100px（净左移 100px） */
+        transform: translateX(-100px);
+    }
 }
 
 .hero-right .stat-icon {

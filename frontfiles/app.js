@@ -1,3 +1,19 @@
+// 安全 storage：部分浏览器（如 Safari 防跟踪）会拦截 localStorage，导致报错；失败时用内存兜底
+var _storage = (function () {
+    try {
+        _storage.setItem('_', '_');
+        _storage.removeItem('_');
+        return localStorage;
+    } catch (e) {
+        var o = {};
+        return {
+            getItem: function (k) { return o[k] != null ? o[k] : null; },
+            setItem: function (k, v) { o[k] = String(v); },
+            removeItem: function (k) { delete o[k]; }
+        };
+    }
+})();
+
 // 晋升路径默认数据（按岗位名关键词匹配，无接口或接口空时使用，避免卡片显示"-"）
 const PROMOTION_STAGES_BY_JOB = {
     default: [
@@ -381,6 +397,9 @@ class CareerPlanningApp {
         this.currentAssessmentId = null;  // 3.1 返回，提交测评时使用
         this.currentReportId = null;       // 职业规划报告 ID
         this.currentReportData = null;     // 职业规划报告完整数据（用于编辑）
+        this.trackingRecordsCache = {};    // 规划落地性跟踪：记录缓存
+        this.trackingFailureRecord = null; // 当前正在复盘的记录
+        this.trackingFunnelChart = null;   // 求职漏斗图表实例
         this.init();
     }
 
@@ -662,6 +681,49 @@ class CareerPlanningApp {
         });
         this._initAIGenTab();
 
+        // 求职跟踪 Tab 切换
+        document.querySelectorAll('#trackingPage .tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tab = (e.currentTarget && e.currentTarget.dataset.tab) || e.target.dataset.tab;
+                if (tab) this.switchTrackingTab(tab);
+            });
+        });
+
+        // 求职跟踪：新建记录按钮与弹窗
+        document.getElementById('trackingCreateBtn')?.addEventListener('click', () => this.openTrackingCreateModal());
+        document.getElementById('trackingCreateClose')?.addEventListener('click', () => this.closeTrackingCreateModal());
+        document.getElementById('trackingCreateCancel')?.addEventListener('click', () => this.closeTrackingCreateModal());
+        document.getElementById('trackingCreateConfirm')?.addEventListener('click', () => this.handleCreateTrackingRecord());
+
+        // 求职跟踪：更新进展弹窗
+        document.getElementById('trackingUpdateClose')?.addEventListener('click', () => this.closeTrackingUpdateModal());
+        document.getElementById('trackingUpdateCancel')?.addEventListener('click', () => this.closeTrackingUpdateModal());
+        document.getElementById('trackingUpdateConfirm')?.addEventListener('click', () => this.handleUpdateTrackingRecord());
+
+        // 求职跟踪：列表内按钮（事件委托）
+        const trackingRecordsList = document.getElementById('trackingRecordsList');
+        if (trackingRecordsList) {
+            trackingRecordsList.addEventListener('click', (e) => {
+                const updateBtn = e.target.closest?.('.tracking-update-btn');
+                if (updateBtn) {
+                    const recordId = updateBtn.dataset.recordId;
+                    const record = this.trackingRecordsCache?.[recordId];
+                    this.openTrackingUpdateModal(record || { record_id: recordId });
+                    return;
+                }
+                const failureBtn = e.target.closest?.('.tracking-failure-btn');
+                if (failureBtn) {
+                    const recordId = failureBtn.dataset.recordId;
+                    const record = this.trackingRecordsCache?.[recordId];
+                    this.openTrackingFailureModal(record || { record_id: recordId });
+                }
+            });
+        }
+
+        // 求职失败复盘弹窗
+        document.getElementById('trackingFailureClose')?.addEventListener('click', () => this.closeTrackingFailureModal());
+        document.getElementById('trackingFailureStartBtn')?.addEventListener('click', () => this.startFailureAnalysisForCurrentRecord());
+
         // 档案详情模态框关闭
         document.getElementById('closeProfileModal')?.addEventListener('click', () => {
             const modal = document.getElementById('profileModal');
@@ -765,6 +827,9 @@ class CareerPlanningApp {
             case 'jobProfile':
                 await this.loadJobProfileData();
                 break;
+            case 'tracking':
+                await this.loadTrackingData();
+                break;
             case 'report':
                 this.showReportGenerateArea();
                 break;
@@ -828,7 +893,7 @@ class CareerPlanningApp {
         try {
             const result = await login(username, password);
             if (result.success) {
-                localStorage.setItem('token', result.data.token);
+                _storage.setItem('token', result.data.token);
                 saveUserInfo(result.data);
                 this.currentUser = result.data;
                 this.showToast('登录成功', 'success');
@@ -931,7 +996,7 @@ class CareerPlanningApp {
         const result = await login(username, password);
         
         if (result.success) {
-            localStorage.setItem('token', result.data.token);
+            _storage.setItem('token', result.data.token);
             saveUserInfo(result.data);
             this.currentUser = result.data;
             this.showMainApp();
@@ -1090,7 +1155,7 @@ class CareerPlanningApp {
         const loginResult = await login(username, password);
         if (loginResult.success) {
             if (result.data && result.data.avatar) loginResult.data.avatar = result.data.avatar;
-            localStorage.setItem('token', loginResult.data.token);
+            _storage.setItem('token', loginResult.data.token);
             saveUserInfo(loginResult.data);
             this.currentUser = loginResult.data;
             this.showMainApp();
@@ -1113,8 +1178,8 @@ class CareerPlanningApp {
             clearUserInfo();
             if (userId) {
                 // 清除该用户的所有历史记录key
-                localStorage.removeItem('report_history_' + userId);
-                localStorage.removeItem('last_assessment_report_id_' + userId);
+                _storage.removeItem('report_history_' + userId);
+                _storage.removeItem('last_assessment_report_id_' + userId);
             }
             this.currentUser = null;
             document.getElementById('navbar').classList.add('hidden');
@@ -1973,7 +2038,8 @@ class CareerPlanningApp {
         const statusDiv = document.getElementById('uploadStatus');
         let attempts = 0;
         let stepIndex = 1;
-        const placeholders = ['', '李明远…', '武汉理工大学…', 'Python / Java…', '项目经历…'];
+        // 解析进度步骤的占位文案，避免展示具体姓名/学校示例
+        const placeholders = ['', '解析中…', '解析中…', '解析中…', '解析中…'];
         this._resumeParseStepTimer = setInterval(() => {
             if (stepIndex <= 4) {
                 this.advanceResumeParseStep(stepIndex, placeholders[stepIndex]);
@@ -2142,7 +2208,7 @@ class CareerPlanningApp {
     // 持久化：保存最近一次测评报告 ID（按用户）
     saveLastAssessmentReportId(reportId) {
         const userId = getCurrentUserId();
-        if (userId && reportId) localStorage.setItem('last_assessment_report_id_' + userId, reportId);
+        if (userId && reportId) _storage.setItem('last_assessment_report_id_' + userId, reportId);
     }
 
     // 将单条测评报告追加到本地历史记录（用于历史报告列表展示与 Mock 模式）
@@ -2152,7 +2218,7 @@ class CareerPlanningApp {
         const key = 'report_history_' + userId;
         let list = [];
         try {
-            const raw = localStorage.getItem(key);
+            const raw = _storage.getItem(key);
             if (raw) list = JSON.parse(raw);
             if (!Array.isArray(list)) list = [];
         } catch (_) {}
@@ -2161,14 +2227,14 @@ class CareerPlanningApp {
         const exists = list.some(item => (item.report_id || item.id) === reportId);
         if (!exists) list.unshift(entry);
         try {
-            localStorage.setItem(key, JSON.stringify(list));
+            _storage.setItem(key, JSON.stringify(list));
         } catch (_) {}
     }
 
     // 恢复：读取当前用户最近一次测评报告 ID
     getLastAssessmentReportId() {
         const userId = getCurrentUserId();
-        return userId ? localStorage.getItem('last_assessment_report_id_' + userId) : null;
+        return userId ? _storage.getItem('last_assessment_report_id_' + userId) : null;
     }
 
     // 是否有历史报告（兼容 last_assessment_report_id_ 与 report_history_ 两种 key）
@@ -2177,7 +2243,7 @@ class CareerPlanningApp {
         if (id1) return true;
         const userId = getCurrentUserId();
         if (!userId) return false;
-        const raw = localStorage.getItem('report_history_' + userId);
+        const raw = _storage.getItem('report_history_' + userId);
         if (!raw) return false;
         try {
             const arr = JSON.parse(raw);
@@ -2256,7 +2322,7 @@ class CareerPlanningApp {
         }
         const userId = getCurrentUserId();
         if (userId) {
-            const saved = localStorage.getItem('last_assessment_total_questions_' + userId);
+            const saved = _storage.getItem('last_assessment_total_questions_' + userId);
             if (saved) return parseInt(saved, 10) || null;
         }
         return 20;
@@ -2613,7 +2679,7 @@ class CareerPlanningApp {
             this.currentReportId = reportId;
             this.saveLastAssessmentReportId(reportId);
             const userIdForSave = getCurrentUserId();
-            if (userIdForSave) localStorage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
+            if (userIdForSave) _storage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
             this.showToast('测评提交成功，正在生成报告...', 'success');
             this.setViewReportButtonState('generating');
             
@@ -2732,6 +2798,46 @@ class CareerPlanningApp {
         await this.loadJobList();
     }
 
+    // 加载规划落地性跟踪数据（求职进展 + 失败反馈）
+    async loadTrackingData() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+        const recordsContainer = document.getElementById('trackingRecordsList');
+        if (recordsContainer) {
+            recordsContainer.innerHTML = '<div class="loading-message">正在加载求职记录...</div>';
+        }
+        const reportsContainer = document.getElementById('trackingReportsList');
+        if (reportsContainer) {
+            reportsContainer.innerHTML = '<div class="loading-message">正在加载反馈报告...</div>';
+        }
+
+        const [overviewRes, reportsRes] = await Promise.all([
+            getTrackingOverview(userId),
+            getFailureReports(userId, 1, 20)
+        ]);
+
+        if (overviewRes && overviewRes.success && overviewRes.data) {
+            this.renderTrackingOverview(overviewRes.data);
+        } else if (recordsContainer) {
+            const msg = (overviewRes && overviewRes.msg) || '暂无求职记录';
+            recordsContainer.innerHTML = `<div class="hint-text">${msg}</div>`;
+            const summaryEls = ['trackingTotalApplied','trackingWrittenRate','trackingInterviewRate','trackingOfferCount','trackingRejectedCount','trackingInProgressCount'];
+            summaryEls.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = id.includes('Rate') ? '0%' : '0';
+            });
+        }
+
+        if (reportsRes && reportsRes.success && reportsRes.data) {
+            this.renderTrackingReports(reportsRes.data);
+        } else if (reportsContainer) {
+            reportsContainer.innerHTML = '<div class="hint-text">暂无反馈优化报告</div>';
+        }
+    }
+
     // 加载学生能力画像
     async loadAbilityProfile() {
         const userId = getCurrentUserId();
@@ -2746,6 +2852,198 @@ class CareerPlanningApp {
         } else {
             container.innerHTML = '<div class="hint-text">暂无能力画像，请先完善个人档案并完成测评</div>';
         }
+    }
+
+    // 规划落地性跟踪：渲染求职总览与时间线
+    renderTrackingOverview(data) {
+        const summary = data.summary || {};
+        const records = Array.isArray(data.records) ? data.records : [];
+        const agentInsight = data.agent_insight || '';
+
+        const toPercent = (v) => {
+            if (v == null || isNaN(v)) return '0%';
+            const num = Math.round(Number(v) * 100);
+            return `${num}%`;
+        };
+
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+
+        setText('trackingTotalApplied', String(summary.total_applied ?? 0));
+        setText('trackingWrittenRate', toPercent(summary.written_test_pass_rate));
+        setText('trackingInterviewRate', toPercent(summary.interview_pass_rate));
+        setText('trackingOfferCount', String(summary.offer_count ?? 0));
+        setText('trackingRejectedCount', String(summary.rejected_count ?? 0));
+        setText('trackingInProgressCount', String(summary.in_progress_count ?? 0));
+
+        // 缓存记录，便于后续更新/复盘
+        this.trackingRecordsCache = {};
+        records.forEach(r => {
+            if (r && r.record_id) {
+                this.trackingRecordsCache[r.record_id] = r;
+            }
+        });
+
+        const container = document.getElementById('trackingRecordsList');
+        if (container) {
+            if (!records.length) {
+                container.innerHTML = '<div class="hint-text">还没有任何求职记录，可以点击上方「新建求职跟踪」开始记录你的第一份投递。</div>';
+            } else {
+                const esc = (s) => (s == null ? '' : String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;'));
+                const stageLabel = {
+                    applied: '已投递',
+                    written_test: '笔试',
+                    interview_1: '一面',
+                    interview_2: '二面',
+                    final: '终面',
+                    offer: 'Offer',
+                    rejected: '已拒绝'
+                };
+                const stageClass = (stage, result) => {
+                    if (stage === 'offer' || result === 'offer') return 'tracking-stage--offer';
+                    if (stage === 'rejected' || result === 'rejected' || result === 'failed') return 'tracking-stage--rejected';
+                    if (stage === 'applied') return 'tracking-stage--applied';
+                    return 'tracking-stage--in-progress';
+                };
+                let html = '';
+                records.forEach(r => {
+                    const label = stageLabel[r.current_stage] || '进行中';
+                    const cls = stageClass(r.current_stage, r.result);
+                    const hasReport = !!r.has_failure_report;
+                    html += `
+                        <div class="tracking-record" data-record-id="${esc(r.record_id)}">
+                            <div class="tracking-record-header">
+                                <div>
+                                    <div class="tracking-record-title">${esc(r.job_title || '未命名岗位')} · ${esc(r.company_name || '')}</div>
+                                    <div class="tracking-record-meta">
+                                        <span class="tracking-stage-tag ${cls}">${label}</span>
+                                        <span>最近更新：${esc(r.last_updated || '-')}</span>
+                                        ${hasReport ? '<span class="tracking-stage-tag tracking-stage--rejected">已生成复盘报告</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="tracking-record-actions">
+                                    <button type="button" class="btn-secondary tracking-update-btn" data-record-id="${esc(r.record_id)}">更新进展</button>
+                                    <button type="button" class="btn-ghost tracking-failure-btn" data-record-id="${esc(r.record_id)}">
+                                        ${hasReport ? '查看复盘' : '生成复盘'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+        }
+
+        const insightEl = document.getElementById('trackingAgentInsight');
+        if (insightEl) {
+            if (agentInsight) {
+                insightEl.textContent = agentInsight;
+                insightEl.classList.remove('hidden');
+            } else {
+                insightEl.textContent = '';
+                insightEl.classList.add('hidden');
+            }
+        }
+
+        this.initTrackingFunnel(summary);
+    }
+
+    // 规划落地性跟踪：初始化求职转换漏斗图
+    initTrackingFunnel(summary) {
+        const dom = document.getElementById('trackingFunnelChart');
+        if (!dom || typeof echarts === 'undefined') return;
+        const total = Number(summary.total_applied || 0);
+        const wtRate = Number(summary.written_test_pass_rate || 0);
+        const ivRate = Number(summary.interview_pass_rate || 0);
+        const offer = Number(summary.offer_count || 0);
+
+        const written = total > 0 ? Math.max(1, Math.round(total * wtRate)) : 0;
+        const interview = total > 0 ? Math.max(1, Math.round(total * ivRate)) : 0;
+        const data = [
+            { value: Math.max(total, written, interview, offer || 1), name: '投递岗位' },
+            { value: written, name: '进入笔试' },
+            { value: interview, name: '进入面试' },
+            { value: offer || 1, name: '获得 Offer' }
+        ];
+
+        if (this.trackingFunnelChart) {
+            this.trackingFunnelChart.dispose();
+        }
+        const chart = echarts.init(dom);
+        this.trackingFunnelChart = chart;
+
+        chart.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}<br/>数量：{c}' },
+            series: [
+                {
+                    type: 'funnel',
+                    left: '10%',
+                    right: '10%',
+                    top: 10,
+                    bottom: 10,
+                    min: 0,
+                    maxSize: '80%',
+                    sort: 'none',
+                    gap: 4,
+                    itemStyle: {
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}\n{c}',
+                        fontSize: 12
+                    },
+                    data
+                }
+            ]
+        });
+
+        window.addEventListener('resize', () => {
+            try {
+                chart.resize();
+            } catch (_) {}
+        });
+    }
+
+    // 规划落地性跟踪：渲染失败反馈报告列表
+    renderTrackingReports(data) {
+        const container = document.getElementById('trackingReportsList');
+        if (!container) return;
+        const list = Array.isArray(data.list) ? data.list : [];
+        if (!list.length) {
+            container.innerHTML = '<div class="hint-text">暂无反馈优化报告。当某次求职失败并完成 AI 复盘后，会出现在这里。</div>';
+            return;
+        }
+        const esc = (s) => (s == null ? '' : String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;'));
+        let html = '';
+        list.forEach(item => {
+            html += `
+                <div class="tracking-report-item">
+                    <div class="tracking-report-main">
+                        <div class="tracking-report-title">${esc(item.job_title || '')} · ${esc(item.company_name || '')}</div>
+                        <div class="tracking-report-meta">
+                            失败阶段：${esc(item.failure_stage || '—')} · 关键短板：${esc(item.key_weakness || '—')} · 生成时间：${esc(item.created_at || '')}
+                        </div>
+                    </div>
+                    <div>
+                        ${item.plan_updated ? '<span class="tracking-report-tag">已同步到职业规划</span>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
     }
 
     // AI生成学生能力画像
@@ -2768,6 +3066,266 @@ class CareerPlanningApp {
             }, 3000);
         } else {
             this.showToast(result.msg || '生成失败', 'error');
+        }
+    }
+
+    // 求职跟踪：切换 Tab（总览 / 报告）
+    switchTrackingTab(tabName) {
+        document.querySelectorAll('#trackingPage .tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+            }
+        });
+        document.querySelectorAll('#trackingPage .tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        const target = document.querySelector(`#trackingPage #${tabName}Tab`);
+        if (target) {
+            target.classList.add('active');
+        }
+    }
+
+    // 求职跟踪：新建记录弹窗
+    openTrackingCreateModal() {
+        const modal = document.getElementById('trackingCreateModal');
+        if (!modal) return;
+        ['trackingJobTitle', 'trackingCompanyName', 'trackingJobId', 'trackingApplyDate'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const src = document.getElementById('trackingSource');
+        if (src) src.value = 'system_recommend';
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingCreateModal() {
+        const modal = document.getElementById('trackingCreateModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    async handleCreateTrackingRecord() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+        const jobTitle = (document.getElementById('trackingJobTitle')?.value || '').trim();
+        const companyName = (document.getElementById('trackingCompanyName')?.value || '').trim();
+        const jobId = (document.getElementById('trackingJobId')?.value || '').trim();
+        const applyDate = document.getElementById('trackingApplyDate')?.value || '';
+        const source = document.getElementById('trackingSource')?.value || 'system_recommend';
+
+        if (!jobTitle || !companyName) {
+            this.showToast('请填写岗位名称和公司名称', 'error');
+            return;
+        }
+
+        this.showLoading();
+        const payload = {
+            job_id: jobId || undefined,
+            job_title: jobTitle,
+            company_name: companyName,
+            apply_date: applyDate || undefined,
+            source
+        };
+        const res = await createTrackingRecord(userId, payload);
+        this.hideLoading();
+
+        if (res && res.success) {
+            this.showToast('跟踪记录已创建', 'success');
+            this.closeTrackingCreateModal();
+            await this.loadTrackingData();
+        } else {
+            this.showToast((res && res.msg) || '创建失败，请稍后重试', 'error');
+        }
+    }
+
+    // 求职跟踪：更新进展弹窗
+    openTrackingUpdateModal(record) {
+        const modal = document.getElementById('trackingUpdateModal');
+        if (!modal || !record) return;
+        this.trackingEditingRecordId = record.record_id;
+        const title = document.getElementById('trackingUpdateTitle');
+        if (title) {
+            title.textContent = `${record.job_title || ''} · ${record.company_name || ''}`;
+        }
+        const stageSel = document.getElementById('trackingStageSelect');
+        const resultSel = document.getElementById('trackingResultSelect');
+        const dateInput = document.getElementById('trackingStageDate');
+        if (stageSel && record.current_stage) stageSel.value = record.current_stage;
+        if (resultSel && record.result) resultSel.value = record.result;
+        if (dateInput && record.last_updated) dateInput.value = record.last_updated;
+        ['trackingPerformanceScore','trackingDifficulty','trackingStrongPoints','trackingWeakPoints','trackingNotes'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && id === 'trackingDifficulty' && !el.value) {
+                el.value = 'medium';
+            } else if (el && id !== 'trackingDifficulty') {
+                el.value = '';
+            }
+        });
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingUpdateModal() {
+        const modal = document.getElementById('trackingUpdateModal');
+        if (modal) modal.classList.add('hidden');
+        this.trackingEditingRecordId = null;
+    }
+
+    async handleUpdateTrackingRecord() {
+        const recordId = this.trackingEditingRecordId;
+        const userId = getCurrentUserId();
+        if (!recordId || !userId) {
+            this.showToast('记录信息缺失，请重试', 'error');
+            return;
+        }
+        const stage = document.getElementById('trackingStageSelect')?.value || 'applied';
+        const result = document.getElementById('trackingResultSelect')?.value || 'pending';
+        const stageDate = document.getElementById('trackingStageDate')?.value || '';
+        const scoreRaw = document.getElementById('trackingPerformanceScore')?.value || '';
+        const difficulty = document.getElementById('trackingDifficulty')?.value || 'medium';
+        const strongText = document.getElementById('trackingStrongPoints')?.value || '';
+        const weakText = document.getElementById('trackingWeakPoints')?.value || '';
+        const notes = document.getElementById('trackingNotes')?.value || '';
+
+        const toList = (txt) => txt
+            .split(/[\n,，。]/)
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        const payload = {
+            user_id: userId,
+            stage,
+            result,
+            stage_date: stageDate || undefined,
+            self_evaluation: {
+                performance_score: scoreRaw ? Number(scoreRaw) : 0,
+                difficulty,
+                weak_points: toList(weakText),
+                strong_points: toList(strongText)
+            },
+            notes
+        };
+
+        this.showLoading();
+        const res = await updateTrackingRecord(recordId, payload);
+        this.hideLoading();
+
+        if (res && res.success) {
+            this.showToast('进展已更新', 'success');
+            this.closeTrackingUpdateModal();
+            await this.loadTrackingData();
+        } else {
+            this.showToast((res && res.msg) || '更新失败，请稍后重试', 'error');
+        }
+    }
+
+    // 求职失败复盘：打开弹窗
+    openTrackingFailureModal(record) {
+        const modal = document.getElementById('trackingFailureModal');
+        if (!modal || !record) return;
+        this.trackingFailureRecord = record;
+        const subtitle = document.getElementById('trackingFailureSubtitle');
+        if (subtitle) {
+            subtitle.textContent = `${record.job_title || ''} · ${record.company_name || ''}`;
+        }
+        const statusEl = document.getElementById('trackingFailureStatus');
+        if (statusEl) statusEl.textContent = '等待开始分析';
+        const streamEl = document.getElementById('trackingFailureStream');
+        if (streamEl) {
+            streamEl.innerHTML = '<p class="hint-text">点击「开始 AI 分析」后，这里会实时生成本次求职的复盘报告与后续规划。</p>';
+        }
+        const feedback = document.getElementById('trackingRejectionFeedback');
+        if (feedback) feedback.value = '';
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingFailureModal() {
+        const modal = document.getElementById('trackingFailureModal');
+        if (modal) modal.classList.add('hidden');
+        this.trackingFailureRecord = null;
+    }
+
+    // 求职失败复盘：SSE 流式调用 9.3 接口
+    async startFailureAnalysisForCurrentRecord() {
+        const record = this.trackingFailureRecord;
+        const userId = getCurrentUserId();
+        if (!record || !userId) {
+            this.showToast('记录信息缺失，请重试', 'error');
+            return;
+        }
+        const statusEl = document.getElementById('trackingFailureStatus');
+        const streamEl = document.getElementById('trackingFailureStream');
+        const feedback = document.getElementById('trackingRejectionFeedback')?.value || '';
+
+        if (statusEl) statusEl.textContent = 'AI 正在分析你的求职数据...';
+        if (streamEl) streamEl.textContent = '';
+
+        try {
+            const base = (typeof API_CONFIG !== 'undefined')
+                ? (API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL)
+                : '/api/v1';
+            const url = `${base}/tracking/record/${encodeURIComponent(record.record_id)}/failure-analysis`;
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    record_id: record.record_id,
+                    final_stage: record.current_stage || 'final',
+                    final_result: 'rejected',
+                    rejection_feedback: feedback
+                })
+            });
+            if (!res.ok || !res.body) {
+                throw new Error(`接口返回异常 (${res.status})`);
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let bufferText = '';
+            let doneReportId = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data:')) continue;
+                    const payloadStr = trimmed.slice(5).trim();
+                    if (!payloadStr) continue;
+                    let payload;
+                    try {
+                        payload = JSON.parse(payloadStr);
+                    } catch (_) {
+                        continue;
+                    }
+                    if (payload.description && statusEl) {
+                        statusEl.textContent = payload.description;
+                    }
+                    if (payload.chunk && streamEl) {
+                        bufferText += payload.chunk;
+                        streamEl.textContent = bufferText;
+                    }
+                    if (payload.report_id) {
+                        doneReportId = payload.report_id;
+                    }
+                }
+            }
+
+            if (statusEl) statusEl.textContent = doneReportId ? '分析完成' : '分析结束';
+            if (doneReportId) {
+                this.showToast('复盘报告生成完成', 'success');
+                await this.loadTrackingData();
+            }
+        } catch (e) {
+            console.error('失败复盘分析异常:', e);
+            if (statusEl) statusEl.textContent = '分析失败：' + (e.message || '网络错误');
+            this.showToast('求职失败分析接口异常', 'error');
         }
     }
 
@@ -5499,6 +6057,9 @@ class CareerPlanningApp {
         const pros = Array.isArray(reality.pros) ? reality.pros : [];
         const cons = Array.isArray(reality.cons) ? reality.cons : [];
 
+        // 提前计算趋势标签，供后面的 AI 综合分析与头部标签复用
+        const trendLabel = summary.trend || '';
+
         const abilitiesOrder = [
             { icon: '🔬', label: '创新能力', key: 'innovation' },
             { icon: '📚', label: '学习能力', key: 'learning' },
@@ -5516,9 +6077,61 @@ class CareerPlanningApp {
         const prosHtml = pros.map(p => `<li>${escape(p)}</li>`).join('');
         const consHtml = cons.map(c => `<li>${escape(c)}</li>`).join('');
 
+        // 基于上方已展示的信息，生成一段更具体的 AI 综合分析 + 建议（带少量表情），每一行单独一条
+        const aiSummaryHtml = (() => {
+            const name = summary.job_name || '该岗位';
+            const industry = summary.industry || '相关行业';
+            const demandScore = summary.demand_score ?? undefined;
+            const trend = trendLabel || '';
+            const suitable = (reality && reality.suitable_for && String(reality.suitable_for).trim()) || '';
+            const consOne = cons[0] ? String(cons[0]).trim() : '';
+            const entryAdvice = (entryPath && entryPath.fresh_grad && String(entryPath.fresh_grad).trim()) || '';
+            const mainSkills = (professional || []).slice(0, 2).join('、');
+            const mainTools = (tools || []).slice(0, 2).join('、');
+
+            const parts = [];
+            // 总体判断
+            if (demandScore !== undefined || trend) {
+                const trendText = trend || '整体发展稳中向上';
+                const demandText = demandScore !== undefined ? `需求热度约为 ${demandScore} 分` : '需求相对稳定';
+                parts.push(`🧭 综合来看，「${name}」在${industry}方向${demandText}，${trendText}。`);
+            } else {
+                parts.push(`🧭 综合来看，「${name}」在当前行业具备一定的发展空间和成长潜力。`);
+            }
+            // 优势 / 挑战
+            if (pros.length) {
+                const prosFirst = String(pros[0]).trim();
+                const prosExtra = pros[1] ? `；同时还体现出：${String(pros[1]).trim()}` : '';
+                parts.push(`✅ 优势侧重：${prosFirst}${prosExtra}`);
+            }
+            if (consOne) {
+                parts.push(`⚠️ 需要注意：${consOne}，建议提前评估自己的节奏控制和抗压能力。`);
+            }
+            // 适合人群
+            if (suitable) {
+                parts.push(`🎯 更适合：${suitable}，如果你在校期间已经有相关项目 / 实习经历，会更有优势。`);
+            }
+            // 入行建议
+            if (entryAdvice) {
+                parts.push(`🚀 入行建议：${entryAdvice}`);
+            } else {
+                parts.push('🚀 入行建议：建议结合校内项目 / 实习经历，尽早参与真实业务场景，形成一个「基础知识 + 项目实践 + 简历作品」的完整闭环。');
+            }
+
+            // 学习与成长重点
+            if (mainSkills || mainTools) {
+                const skillPart = mainSkills ? `核心能力建议重点夯实：${mainSkills}` : '';
+                const toolPart = mainTools ? `常用技术栈可以从：${mainTools} 入手。` : '';
+                parts.push(`📚 学习重点：${skillPart}${skillPart && toolPart ? '；' : ''}${toolPart} 日常可以多做小项目 / Demo，把知识尽量变成「可展示的作品」。`);
+            }
+
+            // 每个小段落单独成行，用 <br> 换行，并对内容逐条转义
+            return parts.map(line => escape(line)).join('<br>');
+        })();
+
         const abilitiesHtml = abilitiesOrder.map(cfg => {
             const v = softSkills[cfg.key];
-            const text = (v != null && String(v).trim() !== '') ? String(v).trim() : '暂无描述';
+            const text = (v != null && String(v).trim() !== '') ? String(v).trim() : 'AI生成的意见';
             return `
                 <div class="job-ability-card">
                     <div class="job-ability-icon">${cfg.icon}</div>
@@ -5527,8 +6140,6 @@ class CareerPlanningApp {
                 </div>
             `;
         }).join('');
-
-        const trendLabel = summary.trend || '';
 
         const div = document.createElement('div');
         div.className = 'agent-message';
@@ -5596,29 +6207,29 @@ class CareerPlanningApp {
                                 <div class="job-reality-top">
                                     <div class="job-reality-box job-reality-pros">
                                         <div class="job-reality-title">✅ 真实优势</div>
-                                        <ul>${prosHtml || '<li>暂无明显优势描述</li>'}</ul>
+                                        <ul>${prosHtml || '<li>AI生成的意见</li>'}</ul>
                                     </div>
                                     <div class="job-reality-box job-reality-cons">
                                         <div class="job-reality-title">⚠️ 真实挑战</div>
-                                        <ul>${consHtml || '<li>暂无典型挑战描述</li>'}</ul>
+                                        <ul>${consHtml || '<li>AI生成的意见</li>'}</ul>
                                     </div>
                                 </div>
                                 <div class="job-reality-bottom">
                                     <div class="job-reality-box job-reality-suit">
                                         <div class="job-reality-fit">
                                             <span class="job-reality-fit-label">✓ 适合：</span>
-                                            <span>${escape(reality.suitable_for || '暂无说明')}</span>
+                                            <span>${escape(reality.suitable_for || 'AI生成的意见')}</span>
                                         </div>
                                     </div>
                                     <div class="job-reality-box job-reality-unsuit">
                                         <div class="job-reality-fit">
                                             <span class="job-reality-fit-label">✗ 不适合：</span>
-                                            <span>${escape(reality.not_suitable_for || '暂无说明')}</span>
+                                            <span>${escape(reality.not_suitable_for || 'AI生成的意见')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="job-reality-misc">
-                                    💡 常见误解：${escape(reality.misconceptions || '暂无')}
+                                    💡 常见误解：${escape(reality.misconceptions || 'AI生成的意见')}
                                 </div>
                             </div>
                         </section>
@@ -5647,7 +6258,7 @@ class CareerPlanningApp {
                             </header>
                             <div class="job-section-content">
                                 <p class="job-ai-summary">
-                                    ${escape(summary.ai_summary || '本画像基于样本岗位数据与岗位画像数据库，由智能体自动聚合生成，仅供职业规划参考。')}
+                                    ${aiSummaryHtml}
                                 </p>
                             </div>
                         </section>
@@ -5848,7 +6459,7 @@ class CareerPlanningApp {
         const abilitiesArr = raw.abilities || raw.requirements?.abilities || [];
         const findSoft = (keywords) => {
             const s = softArr.find(s => keywords.some(k => String(s).includes(k)));
-            return (s != null && String(s).trim()) ? s : '暂无描述';
+            return (s != null && String(s).trim()) ? s : 'AI生成的意见';
         };
         const desc = (v) => (v != null && String(v).trim() !== '') ? String(v).trim() : '';
         // 优先使用后端新格式：core_skills.soft_skills 对象 { innovation, learning, pressure, communication, internship }
@@ -5885,11 +6496,11 @@ class CareerPlanningApp {
                 tools: (raw.requirements?.core_skills?.tools || raw.core_skills?.tools || []).map(s => typeof s === 'string' ? s : (s && s.skill) || String(s)),
                 certificates: (raw.requirements?.basic_requirements?.certifications || raw.core_skills?.certificates || []).map(c => typeof c === 'string' ? c : String(c)),
                 soft_skills: {
-                    innovation: innovation || '暂无描述',
-                    learning: learning || '暂无描述',
-                    pressure: pressure || '暂无描述',
-                    communication: communication || '暂无描述',
-                    internship: internship || '暂无描述',
+                    innovation: innovation || 'AI生成的意见',
+                    learning: learning || 'AI生成的意见',
+                    pressure: pressure || 'AI生成的意见',
+                    communication: communication || 'AI生成的意见',
+                    internship: internship || 'AI生成的意见',
                 },
             },
             reality_check: {
@@ -5897,7 +6508,7 @@ class CareerPlanningApp {
                 cons: raw.career_development?.challenges || raw.market_info?.challenges || raw.reality_check?.cons || [],
                 suitable_for: raw.suitable_for || raw.career_development?.suitable_personality || raw.reality_check?.suitable_for || '-',
                 not_suitable_for: raw.not_suitable_for || raw.reality_check?.not_suitable_for || '-',
-                misconceptions: raw.misconceptions || raw.career_development?.common_misconceptions || raw.reality_check?.misconceptions || '暂无',
+                misconceptions: raw.misconceptions || raw.career_development?.common_misconceptions || raw.reality_check?.misconceptions || 'AI生成的意见',
             },
             entry_path: {
                 fresh_grad: raw.career_development?.entry_path || (promotion0 ? `初级阶段（${promotion0.years_required || ''}）需要：${(promotion0.key_requirements || []).join('、')}` : (raw.entry_path?.fresh_grad || '')),
@@ -8944,8 +9555,20 @@ class CareerPlanningApp {
         const dist = interest.interest_distribution || [];
         const fields = interest.suitable_fields || [];
         const personality = data.personality_analysis || {};
-        const mbti = personality.mbti_type || '—';
+        let mbti = (personality.mbti_type && String(personality.mbti_type).trim()) || '';
         const traits = personality.traits || [];
+        // 后端未返回 MBTI 时，根据五项特质在前端做简易推断，避免显示为「—」
+        if (!mbti && traits.length >= 4) {
+            const scoreByName = {};
+            traits.forEach(t => { scoreByName[t.trait_name] = Number(t.score) || 50; });
+            const get = (name) => scoreByName[name] != null ? scoreByName[name] : 50;
+            const e_i = get('外向性') >= 50 ? 'E' : 'I';
+            const s_n = get('开放性') >= 50 ? 'N' : 'S';
+            const t_f = get('宜人性') >= 50 ? 'F' : 'T';
+            const j_p = get('尽责性') >= 50 ? 'J' : 'P';
+            mbti = e_i + s_n + t_f + j_p;
+        }
+        if (!mbti) mbti = '—';
         const ability = data.ability_analysis || {};
         const strengths = ability.strengths || [];
         const areas = ability.areas_to_improve || [];
@@ -8972,9 +9595,7 @@ class CareerPlanningApp {
         const topAbility = sortedByScore[0] || null;
         const secondAbility = sortedByScore[1] || null;
         const TRAIT_MAX_SCORE = 100;
-        if (traits.length) {
-            traits.forEach(t => { console.log('[性格特质]', t.trait_name, 'score=', t.score, '展示不低于 20'); });
-        }
+        /* 性格特质已用于雷达图与展示，无需控制台输出 */
         const radarLabels = traits.map(t => t.trait_name);
         const radarValues = traits.map(t => safePct(safeTraitScore(t.score)));
 
@@ -9469,8 +10090,8 @@ function sendFloatingAgentMessage() {
     if (statusEl) statusEl.innerHTML = '<span class="agent-status-dot"></span>正在思考...';
 
     var botText = '';
-    var token = localStorage.getItem('token') || '';
-    var userInfoStr = localStorage.getItem('userInfo') || '{}';
+    var token = _storage.getItem('token') || '';
+    var userInfoStr = _storage.getItem('userInfo') || '{}';
     var userId = 0;
     try { userId = (JSON.parse(userInfoStr)).id || 0; } catch (e) {}
     var baseURL = (typeof API_CONFIG !== 'undefined') ? (API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL || 'http://localhost:5002/api/v1') : 'http://localhost:5002/api/v1';

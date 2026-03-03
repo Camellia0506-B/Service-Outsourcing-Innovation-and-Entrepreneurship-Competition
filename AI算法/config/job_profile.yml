@@ -15,12 +15,13 @@
 # transfer_targets 字段：预定义该岗位的换岗目标 job_id，用于图谱连线
 # ============================================================
 
-job_data_path: data/求职岗位信息数据.csv
+# 岗位匹配与图谱数据源 CSV（兼容 岗位名称/岗位详情 等表头）
+job_data_path: data/a13基于AI的大学生职业规划智能体-JD采样数据.csv
 job_profiles_store: data/job_profiles/profiles.json
 job_graph_store:    data/job_profiles/graph.json
 max_csv_sample_per_job: 10
 # 岗位匹配加载 CSV 时最多处理行数，0=不限制（1万+ 行会较慢）
-max_csv_rows_for_matching: 2000
+max_csv_rows_for_matching: 0
 
 
 # ============================================================

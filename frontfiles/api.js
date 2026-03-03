@@ -1,3 +1,19 @@
+// 安全 storage（与 app.js 一致）：浏览器防跟踪可能拦截 localStorage，用内存兜底
+var _storage = (function () {
+    try {
+        _storage.setItem('_', '_');
+        _storage.removeItem('_');
+        return localStorage;
+    } catch (e) {
+        var o = {};
+        return {
+            getItem: function (k) { return o[k] != null ? o[k] : null; },
+            setItem: function (k, v) { o[k] = String(v); },
+            removeItem: function (k) { delete o[k]; }
+        };
+    }
+})();
+
 // API配置
 const API_CONFIG = {
     baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、档案更新等）
@@ -47,7 +63,7 @@ class API {
     // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }
     async requestToAI(endpoint, options = {}) {
         const url = `${this.aiBaseURL}${endpoint}`;
-        const token = localStorage.getItem('token');
+        const token = _storage.getItem('token');
         if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, options);
         }
@@ -88,7 +104,7 @@ class API {
         const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/');
         const base = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
         const url = `${base}${endpoint}`;
-        const token = localStorage.getItem('token');
+        const token = _storage.getItem('token');
         
         // 模拟模式
         if (API_CONFIG.mockMode) {
@@ -129,7 +145,7 @@ class API {
                 return { success: true, data: result.data, msg: result.msg };
             } else if (result.code === 401) {
                 // Token失效，跳转到登录页
-                localStorage.removeItem('token');
+                _storage.removeItem('token');
                 window.location.reload();
                 throw new Error('请重新登录');
             } else {
@@ -162,7 +178,7 @@ class API {
 
     // 文件上传请求（走 Java 后端）
     async upload(endpoint, formData) {
-        const token = localStorage.getItem('token');
+        const token = _storage.getItem('token');
         const url = `${this.baseURL}${endpoint}`;
         
         // 模拟模式
@@ -197,7 +213,7 @@ class API {
 
     // 向 AI 服务（Python）上传文件，用于简历 AI 解析等
     async uploadToAI(endpoint, formData) {
-        const token = localStorage.getItem('token');
+        const token = _storage.getItem('token');
         const url = `${this.aiBaseURL}${endpoint}`;
         if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, { formData });
@@ -392,7 +408,7 @@ class API {
                     let list = [];
                     if (userId) {
                         try {
-                            const raw = localStorage.getItem('report_history_' + userId);
+                            const raw = _storage.getItem('report_history_' + userId);
                             if (raw) list = JSON.parse(raw);
                             if (!Array.isArray(list)) list = [];
                         } catch (_) {}
@@ -422,7 +438,7 @@ class API {
     _getRegisteredUsers() {
         const key = 'mock_registered_users';
         try {
-            const raw = localStorage.getItem(key);
+            const raw = _storage.getItem(key);
             if (raw) return JSON.parse(raw);
         } catch (_) {}
         // 首次使用：预置几个演示账号，写入 localStorage
@@ -432,20 +448,20 @@ class API {
             { username: 'demo', password: '123456', nickname: '演示用户', user_id: 10003 },
             { username: 'student', password: '123456', nickname: '学生用户', user_id: 10004 }
         ];
-        localStorage.setItem(key, JSON.stringify(preset));
+        _storage.setItem(key, JSON.stringify(preset));
         return preset;
     }
 
     _saveRegisteredUsers(users) {
         try {
-            localStorage.setItem('mock_registered_users', JSON.stringify(users));
+            _storage.setItem('mock_registered_users', JSON.stringify(users));
         } catch (_) {}
     }
 
     // 头像单独存储，避免大 data URL 撑爆用户列表导致保存失败
     _getMockAvatars() {
         try {
-            const raw = localStorage.getItem('mock_avatars');
+            const raw = _storage.getItem('mock_avatars');
             return raw ? JSON.parse(raw) : {};
         } catch (_) { return {}; }
     }
@@ -453,7 +469,7 @@ class API {
         try {
             const avatars = this._getMockAvatars();
             avatars[String(userId)] = dataUrl;
-            localStorage.setItem('mock_avatars', JSON.stringify(avatars));
+            _storage.setItem('mock_avatars', JSON.stringify(avatars));
         } catch (_) {}
     }
     _getMockAvatar(userId) {
@@ -534,16 +550,16 @@ class API {
 
     _getProfileSaved(userId) {
         try {
-            const saved = JSON.parse(localStorage.getItem('mock_profile_saved') || '{}');
+            const saved = JSON.parse(_storage.getItem('mock_profile_saved') || '{}');
             return !!saved[String(userId)];
         } catch (_) { return false; }
     }
 
     _setProfileSaved(userId) {
         try {
-            const saved = JSON.parse(localStorage.getItem('mock_profile_saved') || '{}');
+            const saved = JSON.parse(_storage.getItem('mock_profile_saved') || '{}');
             saved[String(userId)] = true;
-            localStorage.setItem('mock_profile_saved', JSON.stringify(saved));
+            _storage.setItem('mock_profile_saved', JSON.stringify(saved));
         } catch (_) {}
     }
 
@@ -1835,6 +1851,34 @@ async function getReportHistory(userId) {
     return await api.get('/assessment/report-history', { user_id: userId });
 }
 
+// ==================== 规划落地性跟踪模块 (Career Tracking 9.x) ====================
+
+// 9.1 创建求职跟踪记录
+async function createTrackingRecord(userId, payload) {
+    return await api.post('/tracking/record/create', {
+        user_id: userId,
+        ...payload
+    });
+}
+
+// 9.2 更新求职进展
+async function updateTrackingRecord(recordId, payload) {
+    return await api.request(`/tracking/record/${encodeURIComponent(recordId)}/update`, {
+        method: 'PUT',
+        body: payload
+    });
+}
+
+// 9.4 获取求职跟踪总览
+async function getTrackingOverview(userId) {
+    return await api.get('/tracking/overview', { user_id: userId });
+}
+
+// 9.5 获取反馈优化报告列表
+async function getFailureReports(userId, page = 1, size = 10) {
+    return await api.get('/tracking/failure-reports', { user_id: userId, page, size });
+}
+
 // ==================== 知识库模块 ====================
 
 // 查询知识库
@@ -1851,24 +1895,24 @@ async function searchKnowledge(userId, query, topK = 5, category = null) {
 
 // 保存用户信息到本地存储
 function saveUserInfo(userInfo) {
-    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+    _storage.setItem('userInfo', JSON.stringify(userInfo));
 }
 
 // 获取本地存储的用户信息
 function getUserInfo() {
-    const userInfo = localStorage.getItem('userInfo');
+    const userInfo = _storage.getItem('userInfo');
     return userInfo ? JSON.parse(userInfo) : null;
 }
 
 // 清除用户信息
 function clearUserInfo() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userInfo');
+    _storage.removeItem('token');
+    _storage.removeItem('userInfo');
 }
 
 // 检查是否已登录
 function isLoggedIn() {
-    return !!localStorage.getItem('token');
+    return !!_storage.getItem('token');
 }
 
 // 获取当前用户ID

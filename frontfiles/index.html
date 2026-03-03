@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>职业规划智能体</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%231e3a5f' width='32' height='32' rx='4'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>C</text></svg>" type="image/svg+xml">
+    <!-- 字体异步加载，失败时使用系统字体，避免 ERR_CONNECTION_ABORTED 阻塞页面 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="styles.css?v=4">
     <!-- ECharts库 -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
@@ -41,6 +43,7 @@
                         <a href="#" class="nav-link" data-page="abilityProfile">能力画像</a>
                         <a href="#" class="nav-link" data-page="jobProfile">岗位画像</a>
                         <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
+                        <a href="#" class="nav-link" data-page="tracking">求职跟踪</a>
                         <a href="#" class="nav-link" data-page="report">职业规划报告</a>
                     </div>
                 </div>
@@ -299,7 +302,7 @@
                             <span id="welcomeName" class="username"></span><span class="hero-title-suffix">，你的职业规划助手已<span class="hero-title-ready">就绪</span></span>
                         </h1>
                         <p class="hero-subtitle">
-                            基于 Holland RIASEC × MBTI 双维度分析，为你量身定制职业发展路径。洞察行业趋势，做出更明智的每一个选择。
+                            基于兴趣性格与能力大数据分析，为高校学子提供从测评诊断、岗位匹配到成长路径规划的一站式智能职业规划服务平台，让每一次选择更有底气。
                         </p>
                         <div class="hero-chips">
                             <div class="hero-chip">精准职业测评</div>
@@ -769,7 +772,7 @@
                                             <!-- 隐藏的真实输入，用于 Agent 代码内部透传文本 -->
                                             <input type="hidden" id="aiAgentQuery" value="">
                                             <button type="button" id="aiAgentGenerateBtn" class="ai-agent-btn">
-                                                <span class="ai-agent-btn-text">打开智能体</span>
+                                                <span class="ai-agent-btn-text">启动智能体</span>
                                                 <span class="ai-agent-btn-arrow">→</span>
                                                 <span class="ai-agent-spinner hidden" aria-hidden="true"></span>
                                             </button>
@@ -1033,6 +1036,99 @@
                         <div class="ana-main">
                             <div id="analysisResult"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 规划落地性跟踪页面（求职进展 + 反馈报告） -->
+        <div id="trackingPage" class="page hidden">
+            <div class="matching-container">
+                <div class="page-header">
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">求职进展跟踪</span>
+                    </div>
+                    <p class="page-subtitle">从投递到拿到 Offer，系统帮助你记录每一次笔试/面试结果，并基于失败经验生成复盘报告。</p>
+                </div>
+
+                <div class="matching-tabs">
+                    <button class="tab-btn active" data-tab="trackingOverview">📈 求职总览</button>
+                    <button class="tab-btn" data-tab="trackingReports">📑 反馈报告</button>
+                </div>
+
+                <!-- 求职总览 Tab -->
+                <div class="tab-content active" id="trackingOverviewTab">
+                    <div class="tracking-summary">
+                        <div class="tracking-summary-card">
+                            <div class="tracking-summary-label">累计投递岗位</div>
+                            <div class="tracking-summary-value" id="trackingTotalApplied">0</div>
+                            <div class="tracking-summary-sub">含系统推荐与自主投递</div>
+                        </div>
+                        <div class="tracking-summary-card">
+                            <div class="tracking-summary-label">笔试通过率</div>
+                            <div class="tracking-summary-value" id="trackingWrittenRate">0%</div>
+                            <div class="tracking-summary-sub">通过 / 参加笔试</div>
+                        </div>
+                        <div class="tracking-summary-card">
+                            <div class="tracking-summary-label">面试通过率</div>
+                            <div class="tracking-summary-value" id="trackingInterviewRate">0%</div>
+                            <div class="tracking-summary-sub">通过 / 参加面试</div>
+                        </div>
+                        <div class="tracking-summary-card">
+                            <div class="tracking-summary-label">Offer 数量</div>
+                            <div class="tracking-summary-value" id="trackingOfferCount">0</div>
+                            <div class="tracking-summary-sub">已拿到的 Offer</div>
+                        </div>
+                        <div class="tracking-summary-card">
+                            <div class="tracking-summary-label">失败次数</div>
+                            <div class="tracking-summary-value" id="trackingRejectedCount">0</div>
+                            <div class="tracking-summary-sub">含被拒 / 主动放弃</div>
+                        </div>
+                        <div class="tracking-summary-card">
+                            <div class="tracking-summary-label">进行中的岗位</div>
+                            <div class="tracking-summary-value" id="trackingInProgressCount">0</div>
+                            <div class="tracking-summary-sub">尚在笔试/面试流程中</div>
+                        </div>
+                    </div>
+
+                    <div class="tracking-actions">
+                        <div class="tracking-actions-left">
+                            <button id="trackingCreateBtn" class="btn-primary">+ 新建求职跟踪</button>
+                        </div>
+                        <p class="tracking-actions-hint">
+                            小提示：也可以在「岗位匹配」中选中目标岗位，再回到这里持续更新进展。
+                        </p>
+                    </div>
+
+                    <div class="tracking-funnel-wrap">
+                        <div class="tracking-funnel-header">
+                            <h3>求职转化漏斗</h3>
+                            <p class="tracking-funnel-sub">从投递到 Offer 的各阶段转化情况，一眼看出你的求职短板。</p>
+                        </div>
+                        <div id="trackingFunnelChart" class="tracking-funnel-chart"></div>
+                    </div>
+
+                    <div class="tracking-records-header">
+                        <h3>岗位时间线</h3>
+                        <p class="tracking-records-sub">每一条记录代表一个岗位，从投递到拿到结果，清晰还原你的求职旅程。</p>
+                    </div>
+                    <div id="trackingRecordsList" class="tracking-records-list">
+                        <div class="loading-message">正在加载求职记录...</div>
+                    </div>
+
+                    <div id="trackingAgentInsight" class="tracking-agent-insight hidden"></div>
+                </div>
+
+                <!-- 反馈报告 Tab -->
+                <div class="tab-content" id="trackingReportsTab">
+                    <div class="tracking-reports-header">
+                        <h3>求职失败反馈报告</h3>
+                        <p class="tracking-records-sub">当某个岗位结果为「拒绝」，可一键生成 AI 复盘报告，这里会汇总所有失败经验与优化建议。</p>
+                    </div>
+                    <div id="trackingReportsList" class="tracking-reports-list">
+                        <div class="hint-text">暂无反馈优化报告。当有失败记录并完成 AI 复盘后，会自动出现在这里。</div>
                     </div>
                 </div>
             </div>
@@ -1348,6 +1444,143 @@
             </div>
         </div>
 
+        <!-- 新建求职跟踪记录弹窗 -->
+        <div id="trackingCreateModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>新建求职跟踪记录</h3>
+                    <button type="button" class="modal-close" id="trackingCreateClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>岗位名称</label>
+                        <input type="text" id="trackingJobTitle" placeholder="如：AI产品经理">
+                    </div>
+                    <div class="form-group">
+                        <label>公司名称</label>
+                        <input type="text" id="trackingCompanyName" placeholder="如：某科技公司">
+                    </div>
+                    <div class="form-group">
+                        <label>岗位ID（可选）</label>
+                        <input type="text" id="trackingJobId" placeholder="如：job_2025_001">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>投递日期</label>
+                            <input type="date" id="trackingApplyDate">
+                        </div>
+                        <div class="form-group">
+                            <label>来源</label>
+                            <select id="trackingSource">
+                                <option value="system_recommend">系统推荐</option>
+                                <option value="self_found">自行寻找</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="trackingCreateCancel">取消</button>
+                    <button type="button" class="btn-primary" id="trackingCreateConfirm">创建</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 更新求职进展弹窗 -->
+        <div id="trackingUpdateModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>更新求职进展</h3>
+                    <button type="button" class="modal-close" id="trackingUpdateClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="trackingUpdateTitle" class="tracking-update-title"></p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>阶段</label>
+                            <select id="trackingStageSelect">
+                                <option value="applied">已投递</option>
+                                <option value="written_test">笔试</option>
+                                <option value="interview_1">一面</option>
+                                <option value="interview_2">二面</option>
+                                <option value="final">终面</option>
+                                <option value="offer">Offer</option>
+                                <option value="rejected">拒绝/未通过</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>结果</label>
+                            <select id="trackingResultSelect">
+                                <option value="pending">待定</option>
+                                <option value="passed">通过</option>
+                                <option value="failed">未通过</option>
+                                <option value="withdrawn">已撤回</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>阶段日期</label>
+                        <input type="date" id="trackingStageDate">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>自评得分 (0-100)</label>
+                            <input type="number" id="trackingPerformanceScore" min="0" max="100" placeholder="如：70">
+                        </div>
+                        <div class="form-group">
+                            <label>难度感受</label>
+                            <select id="trackingDifficulty">
+                                <option value="easy">较易</option>
+                                <option value="medium" selected>一般</option>
+                                <option value="hard">偏难</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>表现亮点（用换行或逗号分隔）</label>
+                        <textarea id="trackingStrongPoints" rows="2" placeholder="如：技术背景获得认可；沟通表达清晰"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>需要改进的地方（用换行或逗号分隔）</label>
+                        <textarea id="trackingWeakPoints" rows="2" placeholder="如：产品案例准备不充分；数据分析题目偏弱"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="trackingNotes" rows="2" placeholder="可记录笔试/面试中的关键问题、面试官反馈等"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="trackingUpdateCancel">取消</button>
+                    <button type="button" class="btn-primary" id="trackingUpdateConfirm">保存进展</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 求职失败复盘分析弹窗（SSE流式输出） -->
+        <div id="trackingFailureModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal tracking-failure-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div>
+                        <h3>求职失败复盘报告</h3>
+                        <p id="trackingFailureSubtitle" class="tracking-failure-subtitle"></p>
+                    </div>
+                    <button type="button" class="modal-close" id="trackingFailureClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>HR / 面试官反馈（可选）</label>
+                        <textarea id="trackingRejectionFeedback" rows="2" placeholder="例如：产品 sense 不足，对商业模式理解较浅；简历项目与岗位不够匹配"></textarea>
+                    </div>
+                    <div class="tracking-failure-status-row">
+                        <button type="button" class="btn-primary" id="trackingFailureStartBtn">开始 AI 分析</button>
+                        <span id="trackingFailureStatus" class="tracking-failure-status-text">等待开始分析</span>
+                    </div>
+                    <div id="trackingFailureStream" class="tracking-failure-stream">
+                        <p class="hint-text">点击「开始 AI 分析」后，这里会实时生成本次求职的复盘报告与后续规划。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 快速注册模态框 -->
         <div id="quickRegisterModal" class="modal-overlay hidden">
             <div class="quick-register-modal">
@@ -1595,7 +1828,7 @@
     </div>
 
     <!-- ========== 合并：悬浮聊天智能体（与图谱共存，不删除现有结构） ========== -->
-    <div id="agentFab" class="agent-fab" title="打开智能体小智" aria-label="打开智能体">
+    <div id="agentFab" class="agent-fab" title="启动智能体小智" aria-label="启动智能体">
         <span class="agent-fab-tooltip">点击和智能体小智聊天</span>
         <span class="agent-fab-icon" aria-hidden="true">🤖</span>
         <span id="agentFabDot" class="agent-fab-dot"></span>
