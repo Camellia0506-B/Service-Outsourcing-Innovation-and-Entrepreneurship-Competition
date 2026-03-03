@@ -393,12 +393,6 @@ def list_reports_for_career_history(assessment_service, user_id: int) -> List[di
         if not report:
             continue
         
-        # 检查是否为职业规划报告（包含职业规划特有的字段）
-        # 职业规划报告通常包含 section_1_job_matching 等字段
-        if not (report.get("section_1_job_matching") or report.get("section_2_career_path") or report.get("section_3_action_plan")):
-            # 跳过测评报告，只保留职业规划报告
-            continue
-        
         # 计算完整度（如果报告中没有完整度字段）
         completeness = report.get("completeness", 85)
         

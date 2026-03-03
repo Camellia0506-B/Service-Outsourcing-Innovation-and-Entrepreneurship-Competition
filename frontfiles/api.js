@@ -374,7 +374,8 @@ class API {
                 return { success: true, data: { total: allJobs.length, list: allJobs } };
             }
             case '/student/ability-profile':
-                return { success: true, data: this.mockAbilityProfile() };
+                // 从后端获取真实数据
+                return this.request(options);
             case '/student/ai-generate-profile':
                 return { success: true, data: { task_id: 'stu_gen_' + Date.now(), status: 'processing' }, msg: 'AI画像生成中...' };
             case '/student/update-profile':
@@ -392,10 +393,8 @@ class API {
             case '/career/view-report':
                 return { success: true, data: this.mockCareerReportFull() };
             case '/career/report-history':
-                return { success: true, data: { total: 2, list: [
-                    { report_id: 'report_career_001', created_at: new Date().toISOString(), status: 'completed', primary_career: '算法工程师', completeness: 95, last_viewed: new Date().toISOString() },
-                    { report_id: 'report_career_002', created_at: new Date(Date.now()-86400000).toISOString(), status: 'archived', primary_career: '后端开发工程师', completeness: 88 }
-                ]} };
+                // 从后端获取真实的历史报告数据
+                return this.request(options);
             case '/career/edit-report':
                 return { success: true, data: { updated_at: new Date().toISOString() }, msg: '报告编辑成功' };
             case '/career/ai-polish-report':
@@ -1094,17 +1093,10 @@ class API {
                 expected_graduation: '2026-06'
             },
             professional_skills: {
-                programming_languages: [
-                    { skill: 'Python', level: '熟练', evidence: ['3个Python项目经验', '开源贡献'], score: 85 },
-                    { skill: 'Java', level: '熟悉', evidence: ['课程项目', '实习应用'], score: 70 }
-                ],
-                frameworks_tools: [
-                    { skill: 'React', level: '熟练', evidence: ['2个前端项目'], score: 80 }
-                ],
-                domain_knowledge: [
-                    { domain: '机器学习', level: '熟悉', evidence: ['相关课程', 'Kaggle竞赛'], score: 75 }
-                ],
-                overall_score: 78
+                programming_languages: [],
+                frameworks_tools: [],
+                domain_knowledge: [],
+                overall_score: 0
             },
             certificates: {
                 items: [{ name: '全国计算机等级考试二级', level: '二级', issue_date: '2023-03' }],

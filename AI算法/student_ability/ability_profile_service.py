@@ -390,13 +390,14 @@ class AIAbilityProfileGenerator:
 请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
 
 {{
-  "basic_info": {{
+  "basic_info": {
     "education": "本科/硕士/博士",
     "major": "专业名称",
     "school": "学校名称",
     "gpa": "X.X/4.0",
-    "expected_graduation": "YYYY-MM"
-  }},
+    "expected_graduation": "YYYY-MM",
+    "target_job": "推荐的目标岗位"
+  },
   "professional_skills": {{
     "programming_languages": [
       {{ "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }}
@@ -455,13 +456,14 @@ class AIAbilityProfileGenerator:
 请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
         
 {{
-  "basic_info": {{
+  "basic_info": {
     "education": "本科/硕士/博士",
     "major": "专业名称",
     "school": "学校名称",
     "gpa": "X.X/4.0",
-    "expected_graduation": "YYYY-MM"
-  }},
+    "expected_graduation": "YYYY-MM",
+    "target_job": "推荐的目标岗位"
+  },
   "professional_skills": {{
     "programming_languages": [
       {{
@@ -571,6 +573,36 @@ class AIAbilityProfileGenerator:
                 {"indicator": "GPA", "value": gpa_val, "percentile": 80}
             )
 
+        # 处理技能数据
+        skills = profile_data.get("skills", []) or []
+        programming_languages = []
+        frameworks_tools = []
+        domain_knowledge = []
+        
+        for skill_item in skills:
+            if isinstance(skill_item, dict):
+                category = skill_item.get("category", "").strip()
+                items = skill_item.get("items", []) or []
+                
+                # 转换技能数据为能力画像所需格式
+                if category in ["编程语言", "编程", "coding", "programming"]:
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            programming_languages.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
+                elif category in ["框架工具", "框架", "工具", "frameworks", "tools"]:
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            frameworks_tools.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
+                elif category in ["领域知识", "领域", "知识", "domain", "knowledge"]:
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            domain_knowledge.append({"domain": item.strip(), "level": "熟悉", "evidence": []})
+                else:
+                    # 其他技能分类，默认添加到框架工具中
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            frameworks_tools.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
+        
         profile = {
             "basic_info": {
                 "education": basic.get("education", "待补充"),
@@ -578,12 +610,12 @@ class AIAbilityProfileGenerator:
                 "school": basic.get("school", "待补充"),
                 "gpa": gpa_raw or "待补充",
                 "expected_graduation": basic.get("expected_graduation", "待补充"),
+                "target_job": "算法工程师（中级）",
             },
             "professional_skills": {
-                # 规则兜底模式下不给具体评分，只占位，评分由 AbilityScorer 决定（可能为 0）
-                "programming_languages": [],
-                "frameworks_tools": [],
-                "domain_knowledge": [],
+                "programming_languages": programming_languages,
+                "frameworks_tools": frameworks_tools,
+                "domain_knowledge": domain_knowledge,
             },
             "certificates": {
                 "items": [],
@@ -685,6 +717,20 @@ class AIAbilityProfileGenerator:
         # 8. 综合评分
         profile["overall_assessment"] = self._calculate_overall_assessment(profile)
         
+        # 9. 推荐目标岗位
+        try:
+            from matching.matching_service import JobMatchingService
+            matching_service = JobMatchingService()
+            recommendations = matching_service.recommend_jobs(0, top_n=1, ability_profile=profile)
+            if recommendations.get("recommendations"):
+                top_job = recommendations["recommendations"][0]
+                profile["basic_info"]["target_job"] = top_job.get("job_name", "算法工程师（中级）")
+            else:
+                profile["basic_info"]["target_job"] = "算法工程师（中级）"
+        except Exception as e:
+            logger.warning(f"[AbilityProfile] 目标岗位推荐失败，使用默认值: {e}")
+            profile["basic_info"]["target_job"] = "算法工程师（中级）"
+        
         return profile
     
     def _calculate_overall_assessment(self, profile: dict) -> dict:
@@ -772,15 +818,59 @@ class StudentAbilityProfileService:
     def get_ability_profile(self, user_id: int) -> Optional[dict]:
         """
         5.1 获取学生能力画像
+        检查个人档案是否有更新，如果有更新则重新生成能力画像
         """
         profile_id = f"profile_{user_id}"
         
-        if profile_id in self.profiles_store:
-            logger.info(f"[AbilityProfile] 返回已存在的画像: {profile_id}")
-            return self.profiles_store[profile_id]
+        # 获取个人档案的更新时间
+        profile_data = self._get_user_profile_data(user_id)
+        if not profile_data:
+            logger.warning(f"[AbilityProfile] 用户{user_id}的档案数据不存在")
+            return None
         
-        logger.warning(f"[AbilityProfile] 用户{user_id}的能力画像不存在")
-        return None
+        # 获取个人档案的更新时间（从Profile模块获取）
+        try:
+            from profile.profile_service import ProfileService
+            profile_service = ProfileService()
+            profile = profile_service.get_profile(user_id)
+            profile_updated_at = profile.get("updated_at", "") if profile else ""
+        except Exception as e:
+            logger.warning(f"[AbilityProfile] 获取档案更新时间失败: {e}")
+            profile_updated_at = ""
+        
+        # 检查能力画像是否存在，以及是否需要更新
+        if profile_id in self.profiles_store:
+            existing_profile = self.profiles_store[profile_id]
+            ability_updated_at = existing_profile.get("updated_at", existing_profile.get("generated_at", ""))
+            
+            # 添加调试日志
+            logger.info(f"[AbilityProfile] 个人档案更新时间: {profile_updated_at}")
+            logger.info(f"[AbilityProfile] 能力画像更新时间: {ability_updated_at}")
+            logger.info(f"[AbilityProfile] 个人档案是否更新: {profile_updated_at > ability_updated_at}")
+            
+            # 如果个人档案的更新时间晚于能力画像的更新时间，或者能力画像中没有技能数据，则重新生成
+            if (profile_updated_at and ability_updated_at and profile_updated_at > ability_updated_at) or \
+               (not existing_profile.get("professional_skills", {}).get("programming_languages", []) and \
+                not existing_profile.get("professional_skills", {}).get("frameworks_tools", []) and \
+                not existing_profile.get("professional_skills", {}).get("domain_knowledge", [])):
+                logger.info(f"[AbilityProfile] 个人档案已更新或能力画像技能数据为空，重新生成能力画像: {profile_id}")
+                # 重新生成能力画像
+                resolved_profile = self._adapt_profile_for_generator(profile_data)
+                ability_profile = self.generator.generate_from_profile(user_id, resolved_profile)
+                self.profiles_store[profile_id] = ability_profile
+                _save_profiles_store(self.profiles_store)
+                return ability_profile
+            else:
+                logger.info(f"[AbilityProfile] 返回已存在的画像: {profile_id}")
+                return existing_profile
+        else:
+            # 能力画像不存在，生成新的
+            logger.info(f"[AbilityProfile] 能力画像不存在，生成新的: {profile_id}")
+            resolved_profile = self._adapt_profile_for_generator(profile_data)
+            ability_profile = self.generator.generate_from_profile(user_id, resolved_profile)
+            self.profiles_store[profile_id] = ability_profile
+            _save_profiles_store(self.profiles_store)
+            return ability_profile
     
     def start_ability_profile_generation(
         self, user_id: int, data_source: str = "profile",
