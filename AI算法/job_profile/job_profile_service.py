@@ -9,7 +9,7 @@
   - 之前：从CSV只提取薪资/城市/公司3个字段（辅助信息）
   - 现在：从CSV提取完整职位描述JD（主要信息源），模型基于真实JD提炼画像
 
-CSV字段说明（来自求职岗位信息数据.csv）：
+CSV字段说明（兼容求职岗位信息数据 / a13 JD采样数据，以 job_data_path 配置为准）：
   职位代码 / 职位名称 / 工作地址 / 薪资范围 /
   企业性质 / 公司全称 / 人员规模 / 所属行业 / 职位描述 / 公司简介
 
@@ -378,7 +378,7 @@ def _row(row: dict, *keys: str, default: str = "") -> str:
 def _load_profiles_store() -> dict:
     """岗位匹配从 job_data_path 指定 CSV 加载岗位；兼容表头 职位名称/岗位名称、工作地址/地址、职位描述/岗位详情 等。"""
     try:
-        csv_path = get_abs_path(job_profile_conf.get("job_data_path", "data/求职岗位信息数据.csv"))
+        csv_path = get_abs_path(job_profile_conf.get("job_data_path", "data/a13基于AI的大学生职业规划智能体-JD采样数据.csv"))
         if not os.path.exists(csv_path):
             logger.warning(f"[ProfileStore] CSV 不存在: {csv_path}，返回空字典")
             return {}

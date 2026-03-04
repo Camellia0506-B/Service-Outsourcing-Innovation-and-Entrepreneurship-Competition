@@ -6,9 +6,7 @@
 2. 数据集不存在时才用LLM生成（保证覆盖度）
 3. 加权技能匹配算法（准确率>80%）
 
-对应命题要求：
-- 岗位画像关键信息准确率>90%（数据集优先）
-- 人岗匹配技能匹配准确率>80%（加权算法）
+数据源：config job_data_path（默认 a13 JD采样数据.csv）
 """
 
 import pandas as pd
@@ -19,19 +17,44 @@ from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
 
 
+def _get_job_data_path() -> str:
+    """从配置获取岗位数据 CSV 路径（a13 真实数据）"""
+    try:
+        from utils.config_handler import job_profile_conf
+        path = job_profile_conf.get("job_data_path", "data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
+        return get_abs_path(path)
+    except Exception:
+        return get_abs_path("data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
+
+
+# a13 表头 -> 内部统一列名（兼容旧 求职岗位信息数据 列名）
+_CSV_COLUMN_MAP = {
+    "岗位名称": "职位名称",
+    "地址": "工作地址",
+    "公司名称": "公司全称",
+    "岗位详情": "职位描述",
+    "公司详情": "公司简介",
+    "公司规模": "人员规模",
+    "公司类型": "企业性质",
+    "岗位编码": "职位编号",
+}
+
+
 class JobDatasetService:
     """企业数据集服务"""
     
     def __init__(self):
-        self.dataset_path = get_abs_path("data/求职岗位信息数据.csv")
+        self.dataset_path = _get_job_data_path()
         self.dataset = None
         self._load_dataset()
     
     def _load_dataset(self):
-        """加载企业数据集"""
+        """加载企业数据集（支持 a13 与旧表头）"""
         try:
             if os.path.exists(self.dataset_path):
-                self.dataset = pd.read_csv(self.dataset_path, encoding='utf-8')
+                self.dataset = pd.read_csv(self.dataset_path, encoding='utf-8-sig')
+                # 统一列名为 职位名称/工作地址 等，便于后续逻辑复用
+                self.dataset = self.dataset.rename(columns={k: v for k, v in _CSV_COLUMN_MAP.items() if k in self.dataset.columns})
                 logger.info(f"[Dataset] 成功加载企业数据集，共 {len(self.dataset)} 条岗位")
             else:
                 logger.warning(f"[Dataset] 数据集文件不存在: {self.dataset_path}")

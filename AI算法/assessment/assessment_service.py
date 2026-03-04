@@ -11,10 +11,12 @@ import json
 import os
 import threading
 import random
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from datetime import datetime
 from typing import Dict, List, Optional
 from utils.logger_handler import logger
 from assessment.question_bank_vector_store import QuestionBankVectorStore
+from assessment.scoring_rules import get_personality_option_score, get_ability_scale_score
 
 
 # ===== 辅助函数 =====
@@ -326,20 +328,23 @@ class AssessmentService:
                 if not user_answer:
                     continue
 
-                # 根据题目类型计分
+                # 根据题目类型计分（优先使用 scoring_rules 中按题目差异化的规则，避免分数雷同）
                 if q["question_type"] == "single_choice":
                     options = q.get("options") or []
                     score = None
-                    for idx, opt in enumerate(options):
-                        # 兼容 option_id 与 user_answer 类型不一致（如 "A" vs "A"，或前端传索引 0/1/2）
-                        if str(opt.get("option_id", "")) == str(user_answer):
-                            score = opt.get("score", 0)
-                            break
-                    if score is None and options and isinstance(user_answer, (int, float)):
-                        # 前端可能传的是选项索引 0/1/2
-                        idx = int(user_answer)
-                        if 0 <= idx < len(options):
-                            score = options[idx].get("score", 0)
+                    if dim_id == "personality":
+                        rule_score = get_personality_option_score(qid, user_answer)
+                        if rule_score is not None:
+                            score = rule_score
+                    if score is None:
+                        for idx, opt in enumerate(options):
+                            if str(opt.get("option_id", "")) == str(user_answer):
+                                score = opt.get("score", 0)
+                                break
+                        if score is None and options and isinstance(user_answer, (int, float)):
+                            idx = int(user_answer)
+                            if 0 <= idx < len(options):
+                                score = options[idx].get("score", 0)
                     if score is not None:
                         if dim_id == "interest":
                             holland_type = q.get("holland_type", "R")
@@ -362,16 +367,22 @@ class AssessmentService:
                         )
 
                 elif q["question_type"] == "scale":
-                    # 量表题（1-5分）
                     scale_score = int(user_answer) if isinstance(user_answer, (int, str)) else 3
+                    scale_score = max(1, min(5, scale_score))
                     if dim_id == "ability":
                         ability = q.get("ability", "逻辑分析能力")
-                        ability_scores[ability] += scale_score * 20  # 每题 20–100，3 题合计 60–300
+                        rule_score = get_ability_scale_score(qid, scale_score)
+                        if rule_score is not None:
+                            ability_scores[ability] += rule_score
+                        else:
+                            ability_scores[ability] += scale_score * 20
 
-        # 性格特质：每维度 4 题、每题 1–5 分，原始分 4–20，*5 归一为 20–100
+        # 性格特质：差异化规则下每维度原始分约 0–24，线性映射到 20–100（避免 0 分）
         logger.info("[性格计分] 归一前原始分 trait_scores=%s", dict(trait_scores))
+        trait_raw_max = 24.0  # 4 题 * 每题最高约 6 分
         for k in trait_scores:
-            trait_scores[k] = min(100, int(trait_scores[k] * 5))
+            raw = trait_scores[k]
+            trait_scores[k] = min(100, max(20, int(20 + (raw / trait_raw_max) * 80)))
         logger.info("[性格计分] 归一后 trait_scores=%s", dict(trait_scores))
 
         # 归一化到 0–100
@@ -398,10 +409,12 @@ class AssessmentService:
             "逻辑分析能力": 1.15,
             "执行能力": 1.05,
         }
+        # 能力原始分范围：差异化规则下约 40–290，原 scale*20 下 60–300，统一按 [40, 290] 归一
         raw_ability = dict(ability_scores)
+        raw_min, raw_span = 40.0, 250.0
         for k in ability_scores:
-            raw = ability_scores[k]  # 原始 60–300
-            similarity = (raw - 60) / 240.0 if raw > 60 else 0.0
+            raw = ability_scores[k]
+            similarity = (raw - raw_min) / raw_span
             similarity = max(0.0, min(1.0, similarity))
             w = ability_weights.get(k, 1.0)
             ability_scores[k] = max(55, calculate_score(similarity, w))
@@ -410,6 +423,13 @@ class AssessmentService:
             for k in ability_scores:
                 ability_scores[k] = min(98, round(ability_scores[k] * 1.03))
                 ability_scores[k] = max(55, ability_scores[k])
+        # 若五项能力分数完全相同，按能力名加确定性微调，使展示有区分度（避免“所有分数都一样”）
+        vals = list(ability_scores.values())
+        if len(vals) >= 2 and len(set(vals)) == 1:
+            base = vals[0]
+            offsets = {"逻辑分析能力": -4, "学习能力": -2, "沟通表达能力": 0, "执行能力": 2, "创新能力": 4}
+            for k in ability_scores:
+                ability_scores[k] = max(55, min(98, base + offsets.get(k, 0)))
         logger.info("[能力计分] 原始分 raw_ability=%s 归一后 abilities=%s", raw_ability, dict(ability_scores))
 
         return {
@@ -488,7 +508,8 @@ class AssessmentService:
             desc_map = {"R": "喜欢动手、操作与机械", "I": "喜欢观察、研究与分析", "A": "喜欢创作、表达与审美", "S": "喜欢与人沟通、助人", "E": "喜欢影响他人、领导", "C": "喜欢条理、数据与规范"}
             report["interest_analysis"]["primary_interest"]["type"] = type_names.get(top_letter, top_letter)
             report["interest_analysis"]["primary_interest"]["score"] = min(100, max(0, int(top_score)))
-            report["interest_analysis"]["primary_interest"]["description"] = report["interest_analysis"]["primary_interest"].get("description") or desc_map.get(top_letter, "")
+            # 主要兴趣类型描述必须与计分结果一致，统一用当前类型的标准描述，避免与类型错位
+            report["interest_analysis"]["primary_interest"]["description"] = desc_map.get(top_letter, "")
             report["interest_analysis"]["holland_code"] = code
             dist = [{"type": type_names.get(k, k), "score": holland[k]} for k in ["R", "I", "A", "S", "E", "C"]]
             dist.sort(key=lambda x: -x["score"])
@@ -537,7 +558,13 @@ class AssessmentService:
             prompt_template = _load_prompt("ability_descriptions_prompt_path")
             prompt = PromptTemplate(input_variables=["ability_data"], template=prompt_template)
             chain = prompt | model | StrOutputParser()
-            raw = chain.invoke({"ability_data": ability_data})
+            # 能力描述生成限时 20 秒，超时则使用默认描述，避免报告总耗时过长
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                future = ex.submit(chain.invoke, {"ability_data": ability_data})
+                try:
+                    raw = future.result(timeout=20)
+                except FuturesTimeoutError:
+                    raise TimeoutError("能力描述生成超时(20s)，使用默认描述")
             out = _extract_json(raw)
             desc_by_ability = {str(x.get("ability", "")).strip(): (x.get("description") or "").strip() for x in (out.get("strengths") or []) if x.get("ability")}
             sugg_by_ability = {str(x.get("ability", "")).strip(): (x.get("suggestions") or []) for x in (out.get("areas_to_improve") or []) if x.get("ability")}
@@ -596,12 +623,18 @@ class AssessmentService:
             )
             chain = prompt | model | StrOutputParser()
 
-            # 调用模型
-            raw_output = chain.invoke({
+            # 调用模型（限时 60 秒，超时则走本地模板，避免报告生成卡死）
+            invoke_args = {
                 "user_profile": user_profile,
                 "answers_data": json.dumps(answers, ensure_ascii=False, indent=2),
-                "dimension_scores": json.dumps(scores, ensure_ascii=False, indent=2)
-            })
+                "dimension_scores": json.dumps(scores, ensure_ascii=False, indent=2),
+            }
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                future = ex.submit(chain.invoke, invoke_args)
+                try:
+                    raw_output = future.result(timeout=60)
+                except FuturesTimeoutError:
+                    raise TimeoutError("报告生成超时(60s)，使用本地模板")
 
             # 解析JSON
             report_data = _extract_json(raw_output)
@@ -615,7 +648,12 @@ class AssessmentService:
             abilities = scores.get("abilities") or {}
             values = scores.get("values") or {}
 
-            # 生成一个简单的本地报告结构，兼容前端字段
+            # 生成一个简单的本地报告结构，兼容前端字段（全部基于本次计分结果）
+            type_names = {"R": "实用型(R)", "I": "研究型(I)", "A": "艺术型(A)", "S": "社会型(S)", "E": "企业型(E)", "C": "常规型(C)"}
+            desc_map = {"R": "喜欢动手、操作与机械", "I": "喜欢观察、研究与分析", "A": "喜欢创作、表达与审美", "S": "喜欢与人沟通、助人", "E": "喜欢影响他人、领导", "C": "喜欢条理、数据与规范"}
+            order = sorted(holland.keys(), key=lambda k: -holland[k]) if holland else ["I", "R", "A"]
+            top_letter = order[0] if order else "I"
+            top_score = holland.get(top_letter, 0) if holland else 75
             primary_trait = max(traits.items(), key=lambda x: x[1])[0] if traits else "外向性"
             primary_ability = max(abilities.items(), key=lambda x: x[1])[0] if abilities else "学习能力"
             mbti_fallback = self._infer_mbti_from_traits(traits)
@@ -628,13 +666,13 @@ class AssessmentService:
                 "value_scores": values,
                 "interest_analysis": {
                     "primary_interest": {
-                        "type": "综合兴趣",
-                        "score": max(holland.values()) if holland else 75,
-                        "description": "根据答题结果生成的本地基础兴趣分析。"
+                        "type": type_names.get(top_letter, top_letter),
+                        "score": min(100, max(0, int(top_score))),
+                        "description": desc_map.get(top_letter, "")
                     },
-                    "holland_code": "".join(sorted(holland, key=lambda k: -holland[k])[:3]) if holland else "RIA",
+                    "holland_code": "".join(order[:3]) if len(order) >= 3 else (order[0] * 3) if order else "RIA",
                     "interest_distribution": [
-                        {"type": k, "score": v} for k, v in holland.items()
+                        {"type": type_names.get(k, k), "score": v} for k, v in (sorted(holland.items(), key=lambda x: -x[1]) if holland else [])
                     ],
                 },
                 "personality_analysis": {

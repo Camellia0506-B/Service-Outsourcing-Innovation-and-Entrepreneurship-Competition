@@ -18,7 +18,7 @@ from datetime import datetime
 import threading
 import json as _json
 
-import csv
+import pandas as pd
 from job_profile.job_profile_service import get_job_profile_service, job_profile_conf, _load_profiles_store
 from job_profile.job_graph_service import get_job_graph_service
 from job_profile.career_path_generator import generate_career_path
@@ -308,42 +308,95 @@ def get_job_profiles():
 
 
 # ============================================================
-# 真实招聘数据：先查 CSV（前4字模糊匹配），无结果则 AI 生成，返回不加 isAIGenerated
-# GET /api/v1/job/real-data?jobName=算法工程师&size=5
+# 真实招聘数据：CSV 全局缓存 + 模糊匹配，无结果则 AI 生成
+# GET /api/v1/job/real-data?jobName=算法工程师&size=50
 # ============================================================
 
+_cached_real_data_df = None
+
+
+def get_cached_data():
+    """获取缓存的 CSV 数据（job_data_path，a13），启动后只读一次。"""
+    global _cached_real_data_df
+    if _cached_real_data_df is None:
+        csv_path = get_abs_path(
+            job_profile_conf.get("job_data_path", "data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
+        )
+        if not os.path.exists(csv_path):
+            logger.warning(f"[real-data] CSV 不存在: {csv_path}")
+            return pd.DataFrame()
+        try:
+            _cached_real_data_df = pd.read_csv(csv_path, encoding="utf-8-sig")
+            _cached_real_data_df.columns = _cached_real_data_df.columns.str.strip()
+            logger.info(f"[real-data] 数据已缓存：{len(_cached_real_data_df)} 条")
+        except Exception as e:
+            logger.error(f"[real-data] 缓存加载失败: {e}", exc_info=True)
+            _cached_real_data_df = pd.DataFrame()
+    return _cached_real_data_df
+
+
+def _row_val(df_row, *keys):
+    """取 DataFrame 行中任一列名存在的值。"""
+    for k in keys:
+        if k in df_row.index:
+            v = df_row.get(k)
+            if pd.notna(v) and str(v).strip():
+                return str(v).strip()
+    return ""
+
+
 def _search_csv(job_name, size):
-    """从 CSV 按岗位名前 4 字模糊匹配，最多返回 size 条。"""
-    csv_path = get_abs_path("data/求职岗位信息数据.csv")
-    if not job_name or not os.path.exists(csv_path):
+    """从缓存的 DataFrame 按岗位名模糊匹配，最多返回 size 条；含岗位编码、来源地址。"""
+    if not job_name or not job_name.strip():
         return []
     keyword = (job_name[:4] if len(job_name) >= 4 else job_name).strip()
     if not keyword:
         return []
-    results = []
+    df = get_cached_data()
+    if df.empty:
+        return []
+    # 列名兼容：a13 为 岗位名称/地址/公司名称/岗位详情/公司详情/岗位编码/岗位来源地址 等
+    name_col = "岗位名称" if "岗位名称" in df.columns else "职位名称"
+    if name_col not in df.columns:
+        return []
     try:
-        with open(csv_path, encoding="utf-8-sig") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                title = (row.get("职位名称") or "").strip()
-                if keyword in title:
-                    desc = (row.get("职位描述") or "").strip()
-                    intro = (row.get("公司简介") or "").strip()
-                    results.append({
-                        "jobTitle": title,
-                        "company": row.get("公司全称", ""),
-                        "salary": row.get("薪资范围", ""),
-                        "address": row.get("工作地址", ""),
-                        "industry": row.get("所属行业", ""),
-                        "scale": row.get("人员规模", ""),
-                        "companyType": row.get("企业性质", ""),
-                        "description": (desc[:200] + "…") if len(desc) > 200 else desc,
-                        "companyIntro": (intro[:150] + "…") if len(intro) > 150 else intro,
-                    })
-                    if len(results) >= size:
-                        break
+        mask = df[name_col].astype(str).str.contains(keyword, na=False, regex=False)
+        filtered = df.loc[mask].head(size)
     except Exception as e:
-        logger.warning(f"[API] real-data 读取 CSV 失败: {e}", exc_info=True)
+        logger.warning(f"[real-data] 筛选异常: {e}", exc_info=True)
+        return []
+    results = []
+    for idx, row in filtered.iterrows():
+        title = _row_val(row, "岗位名称", "职位名称")
+        desc = _row_val(row, "岗位详情", "职位描述")
+        intro = _row_val(row, "公司详情", "公司简介")
+        job_code = _row_val(row, "岗位编码", "职位编号")
+        source_url = _row_val(row, "岗位来源地址")
+        if not source_url:
+            source_url = ""
+        company = _row_val(row, "公司名称", "公司全称")
+        address = _row_val(row, "地址", "工作地址")
+        salary = _row_val(row, "薪资范围")
+        industry = _row_val(row, "所属行业")
+        scale = _row_val(row, "公司规模", "人员规模")
+        company_type = _row_val(row, "公司类型", "企业性质")
+        results.append({
+            "jobTitle": title,
+            "jobName": title,
+            "company": company,
+            "salary": salary,
+            "address": address,
+            "location": address,
+            "industry": industry,
+            "scale": scale,
+            "companyType": company_type,
+            "jobCode": job_code or ("JD-%d" % (len(results) + 1)),
+            "jobDetail": desc,
+            "companyDetail": intro,
+            "description": (desc[:200] + "…") if len(desc) > 200 else desc,
+            "companyIntro": (intro[:150] + "…") if len(intro) > 150 else intro,
+            "sourceUrl": source_url,
+        })
     return results
 
 
@@ -351,10 +404,10 @@ def _search_csv(job_name, size):
 def get_real_data():
     job_name = (request.args.get("jobName") or "").strip()
     try:
-        size = int(request.args.get("size", 3))
-        size = max(1, min(size, 20))
+        size = int(request.args.get("size", 30))
+        size = max(1, min(size, 100))
     except (TypeError, ValueError):
-        size = 3
+        size = 30
 
     results = _search_csv(job_name, size)
 
@@ -385,7 +438,37 @@ def get_real_data():
             content = (response.output.choices[0].message.content or "").strip()
             content = content.replace("```json", "").replace("```", "").strip()
             data = json.loads(content)
-            results = data.get("jobs", [])[:size]
+            jobs = data.get("jobs", [])[:size]
+            results = []
+            for i, j in enumerate(jobs, start=1):
+                title = str(j.get("jobTitle") or job_name or "").strip()
+                company = str(j.get("company") or "").strip()
+                salary = str(j.get("salary") or "").strip()
+                address = str(j.get("address") or "").strip()
+                industry = str(j.get("industry") or "").strip()
+                scale = str(j.get("scale") or "").strip()
+                company_type = str(j.get("companyType") or "").strip()
+                desc = str(j.get("description") or "").strip()
+                intro = str(j.get("companyIntro") or "").strip()
+                job_code = str(j.get("jobCode") or "").strip() or f"AI-{i:03d}"
+                source_url = str(j.get("sourceUrl") or "").strip()
+                results.append({
+                    "jobTitle": title,
+                    "jobName": title,
+                    "company": company,
+                    "salary": salary,
+                    "address": address,
+                    "location": address,
+                    "industry": industry,
+                    "scale": scale,
+                    "companyType": company_type,
+                    "jobCode": job_code,
+                    "jobDetail": desc,
+                    "companyDetail": intro,
+                    "description": desc,
+                    "companyIntro": intro,
+                    "sourceUrl": source_url,
+                })
         except Exception as e:
             logger.error(f"[API] real-data AI 生成失败: {e}", exc_info=True)
             results = []
@@ -394,47 +477,643 @@ def get_real_data():
 
 
 # ============================================================
+# 热门岗位（从 data/hot_jobs.json 读取，由 scripts/extract_hot_jobs.py 生成）
+# GET /api/v1/job/hot-jobs
+# ============================================================
+@job_bp.route("/hot-jobs", methods=["GET"])
+def get_hot_jobs():
+    """获取热门岗位列表（Top 12）。"""
+    try:
+        path = get_abs_path(os.path.join("data", "hot_jobs.json"))
+        if not os.path.exists(path):
+            return success_response([])
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return success_response(data if isinstance(data, list) else [])
+    except Exception as e:
+        logger.warning(f"[API] hot-jobs 读取失败: {e}")
+        return success_response([])
+
+
+# ============================================================
+# AI 生成个性化晋升路径（优先读缓存，未命中时实时调用千问）
+# GET /api/v1/job/career-path-ai/<job_name>
+# ============================================================
+_CAREER_PATH_AI_PROMPT = '''为"{job_name}"生成职业发展路径（4个级别）。
+要求：
+1. 每个级别包含：级别名、年限、薪资范围、薪资涨幅、角色定位
+2. 核心要求：3-5条，具体可落地
+3. 晋升行动：5-6条，带数字和时间（如"完成500+测试用例"、"主导2个大型项目"）
+4. 技能标签：4-6个，技术栈相关
+5. 薪资递增合理（初级约8-15k → 中级15-25k → 高级25-40k → 总监40-80k）
+
+只输出JSON，不要其他文字。格式：
+{{"levels":[{{"level":"初级XX","year":"0-2年","salary":"8k-15k","salaryIncrease":null,"role":"执行者","badge":"入职期","icon":"🌱","requirements":["要求1","要求2"],"actions":["行动1","行动2"],"skills":["技能1","技能2"]}},{{"level":"...","year":"2-4年","salary":"15k-25k","salaryIncrease":"约+60%","role":"骨干","badge":"进阶期","icon":"🌿","requirements":[],"actions":[],"skills":[]}},{{"level":"...","year":"4-7年","salary":"25k-40k","salaryIncrease":"约+60%","role":"技术负责人","badge":"专家期","icon":"🌳","requirements":[],"actions":[],"skills":[]}},{{"level":"...","year":"7年+","salary":"40k-80k","salaryIncrease":"约+80%","role":"总监","badge":"领导期","icon":"🏆","requirements":[],"actions":[],"skills":[]}}]}}'''
+
+
+def _load_career_paths_ai_cache():
+    """读取 data/career_paths_ai_generated.json，返回 { 岗位名: { levels: [...] } }"""
+    path = get_abs_path("data/career_paths_ai_generated.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        logger.warning(f"[career-path-ai] 读取缓存失败: {e}")
+        return {}
+
+
+def _save_career_paths_ai_cache(data):
+    """保存到 data/career_paths_ai_generated.json"""
+    path = get_abs_path("data/career_paths_ai_generated.json")
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.warning(f"[career-path-ai] 保存缓存失败: {e}")
+
+
+def _normalize_career_path_ai_level(level, index):
+    """规范化单级别字段"""
+    icons = ["🌱", "🌿", "🌳", "🏆"]
+    badges = ["入职期", "进阶期", "专家期", "领导期"]
+    if not isinstance(level, dict):
+        return None
+    req = level.get("requirements")
+    act = level.get("actions")
+    sk = level.get("skills")
+    return {
+        "level": str(level.get("level", "")).strip() or f"阶段{index+1}",
+        "year": str(level.get("year", "")).strip() or "",
+        "salary": str(level.get("salary", "")).strip() or "",
+        "salaryIncrease": level.get("salaryIncrease"),
+        "role": str(level.get("role", "")).strip() or "",
+        "badge": str(level.get("badge", "")).strip() or (badges[index] if index < len(badges) else ""),
+        "icon": str(level.get("icon", "")).strip() or (icons[index] if index < len(icons) else "📌"),
+        "requirements": [str(x).strip() for x in (req if isinstance(req, list) else []) if x][:6],
+        "actions": [str(x).strip() for x in (act if isinstance(act, list) else []) if x][:8],
+        "skills": [str(x).strip() for x in (sk if isinstance(sk, list) else []) if x][:8],
+    }
+
+
+def _generate_career_path_ai_with_qwen(job_name):
+    """实时调用千问生成该岗位的晋升路径，返回 { levels: [...] } 或 None"""
+    job_name = (job_name or "").strip()
+    if not job_name:
+        return None
+    try:
+        from dashscope import Generation
+    except ImportError:
+        return None
+    model = (rag_conf or {}).get("chat_model_name", "qwen-max")
+    if model in (None, ""):
+        model = "qwen-max"
+    prompt = _CAREER_PATH_AI_PROMPT.format(job_name=job_name)
+    try:
+        response = Generation.call(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            result_format="message",
+        )
+        content = (response.output.choices[0].message.content or "").strip()
+        content = content.replace("```json", "").replace("```", "").strip()
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            s, e = content.find("{"), content.rfind("}")
+            if s >= 0 and e > s:
+                data = json.loads(content[s : e + 1])
+            else:
+                raise
+        levels_raw = data.get("levels") if isinstance(data, dict) else []
+        if not isinstance(levels_raw, list) or len(levels_raw) < 4:
+            return None
+        levels = []
+        for i, lev in enumerate(levels_raw[:4]):
+            n = _normalize_career_path_ai_level(lev, i)
+            if n:
+                levels.append(n)
+        if len(levels) < 4:
+            return None
+        return {"levels": levels}
+    except Exception as e:
+        logger.warning(f"[career-path-ai] 千问生成失败: {e}", exc_info=True)
+        return None
+
+
+@job_bp.route("/career-path-ai/<path:job_name>", methods=["GET"])
+def get_career_path_ai(job_name):
+    """
+    获取 AI 生成的个性化晋升路径（4 级）。
+    优先读缓存 data/career_paths_ai_generated.json；
+    缓存未命中时调用千问实时生成并写入缓存后返回。
+    返回: { "code": 200, "data": { "levels": [ { level, year, salary, salaryIncrease, role, badge, icon, requirements, actions, skills }, ... ] } }
+    """
+    job_name = (job_name or "").strip()
+    if not job_name:
+        return error_response(400, "请提供岗位名称")
+    try:
+        cache = _load_career_paths_ai_cache()
+        # 精确匹配
+        if job_name in cache and cache[job_name].get("levels"):
+            return success_response(cache[job_name])
+        # 模糊匹配：缓存键包含岗位名或岗位名包含键
+        for key in cache:
+            if key in job_name or job_name in key:
+                if cache[key].get("levels"):
+                    return success_response(cache[key])
+        # 缓存未命中：实时生成
+        result = _generate_career_path_ai_with_qwen(job_name)
+        if result and result.get("levels"):
+            cache[job_name] = result
+            _save_career_paths_ai_cache(cache)
+            return success_response(result)
+        return error_response(503, "AI 生成晋升路径失败，请稍后重试或先运行脚本生成缓存")
+    except Exception as e:
+        logger.error(f"[API] career-path-ai 异常: {e}", exc_info=True)
+        return error_response(500, str(e))
+
+
+# ============================================================
+# 岗位关联图谱（基于真实数据集：晋升路径 + 转岗路径 + Top5 岗位）
+# GET /api/v1/job/career-graph?jobName=算法工程师
+# ============================================================
+def _parse_salary_for_graph(s):
+    """解析薪资字符串为数值，用于排序。"""
+    try:
+        s = str(s).strip()
+        if not s or s == "nan":
+            return 0
+        s = s.replace("元", "").replace("k", "").replace("K", "").replace("万", "").replace("/天", "").strip()
+        if "-" in s:
+            parts = s.split("-")
+            if len(parts) >= 2:
+                a, b = float(parts[0].strip()), float(parts[1].strip())
+                return (a + b) / 2
+        return float(s) if s else 0
+    except Exception:
+        return 0
+
+
+# 转岗路径：匹配度/难度/时间（基于技能相似度，确定性计算）
+_TRANSFER_RELATED_KEYWORDS = {
+    "前端": ["前端", "React", "Vue", "JavaScript", "UI", "H5", "开发", "工程师", "全栈", "移动端", "架构师", "设计"],
+    "后端": ["Java", "Python", "Go", "Spring", "MySQL", "开发", "工程师", "服务端", "全栈", "架构师"],
+    "算法": ["机器学习", "AI", "深度学习", "数据", "算法", "工程师", "研究员", "科学家"],
+    "测试": ["自动化", "QA", "质量", "测试", "工程师", "开发"],
+    "产品": ["产品", "经理", "需求", "运营", "项目经理"],
+    "数据": ["数据", "分析", "开发", "工程师", "算法", "BI"],
+}
+
+
+def _transfer_match_score(current_job: str, target_job: str) -> int:
+    """计算转岗匹配度（基于岗位名称相似度，确定性）。"""
+    c, t = (current_job or "").strip(), (target_job or "").strip()
+    if not t:
+        return 50
+    # 相同或包含关系 -> 高匹配（85-95，用名称哈希做小幅区分）
+    if c in t or t in c:
+        return min(95, 85 + (hash(t) % 11))
+    # 相关技术栈 -> 中匹配（65-80）
+    c_lower = c.lower()
+    for tech, keywords in _TRANSFER_RELATED_KEYWORDS.items():
+        if tech in c or c in tech:
+            if any(kw in t for kw in keywords):
+                return min(80, 65 + (hash(t) % 16))
+            break
+    # 通用：目标含“开发/工程师”等 -> 中低
+    if any(k in t for k in ("开发", "工程师", "架构师", "经理")):
+        return min(70, 50 + (hash(t) % 21))
+    return min(60, 40 + (hash(t) % 21))
+
+
+def _transfer_difficulty(match: int) -> str:
+    """根据匹配度返回难度文案。"""
+    if match >= 80:
+        return "容易"
+    if match >= 60:
+        return "中等"
+    return "较难"
+
+
+def _transfer_time(difficulty: str) -> str:
+    """根据难度估算转岗时间。"""
+    return {"容易": "3-6个月", "中等": "6-12个月", "较难": "12-18个月"}.get(difficulty, "6-12个月")
+
+
+def _expand_transfer_keywords(job_name: str) -> str:
+    """根据当前岗位名生成转岗检索关键词（正则），用于在 CSV 中找相关但可区分的岗位。"""
+    j = (job_name or "").strip()[:20]
+    if not j:
+        return "开发|工程师"
+    parts = [j]
+    for tech, keywords in _TRANSFER_RELATED_KEYWORDS.items():
+        if tech in j or j in tech:
+            parts.extend(keywords[:6])
+            break
+    # 通用补充
+    for kw in ("开发", "工程师", "架构师", "经理", "设计", "分析"):
+        if kw not in parts:
+            parts.append(kw)
+    # 去重并组成正则（至少匹配一个）
+    seen = set()
+    unique = []
+    for p in parts:
+        if p and p not in seen:
+            seen.add(p)
+            unique.append(p)
+    return "|".join(unique) if unique else "开发|工程师"
+
+
+def _load_career_graphs_json():
+    """若存在 data/career_graphs.json（由 scripts/fix_career_graphs.py 生成）则返回其内容，否则 None。"""
+    path = get_abs_path("data/career_graphs.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"[career-graph] 读取 career_graphs.json 失败: {e}")
+        return None
+
+
+@job_bp.route("/career-graph", methods=["GET"])
+def get_career_graph():
+    """获取岗位关联图谱（基于真实数据：晋升路径、转岗路径、Top5 最优岗位）。"""
+    job_name = (request.args.get("jobName") or request.args.get("job_name") or "算法工程师").strip()
+    try:
+        # 优先使用预生成的 career_graphs.json（脚本生成）
+        precomputed = _load_career_graphs_json()
+        if precomputed:
+            # 匹配键：精确或包含（如 job_name=算法工程师 或 后端开发）
+            key = None
+            if job_name in precomputed:
+                key = job_name
+            else:
+                for k in precomputed:
+                    if k in job_name or job_name in k:
+                        key = k
+                        break
+            if key:
+                g = precomputed[key]
+                career_path = g.get("career_path") or []
+                transfer_paths = g.get("transfer_paths") or []
+                # 统一字段名给前端：level/name/salary/time/company/description，transfer: name/salary/company/location/industry/match/difficulty/time
+                career_path = [
+                    {
+                        "level": p.get("level"),
+                        "name": p.get("name"),
+                        "salary": p.get("salary"),
+                        "time": f"{i*2}-{(i+1)*2}年",
+                        "company": p.get("company", ""),
+                        "location": p.get("location", ""),
+                        "description": p.get("skills", p.get("description", "")),
+                        "icon": ["🌱", "🌿", "🌳", "🏆"][i] if i < 4 else "🌟",
+                    }
+                    for i, p in enumerate(career_path[:4])
+                ]
+                transfer_paths = [
+                    {
+                        "name": p.get("name"),
+                        "salary": p.get("salary"),
+                        "company": p.get("company", ""),
+                        "location": p.get("location", ""),
+                        "industry": p.get("industry", ""),
+                        "scale": p.get("scale", ""),
+                        "match": p.get("match", 80),
+                        "difficulty": p.get("difficulty", "中"),
+                        "time": p.get("time", "6-12个月"),
+                    }
+                    for p in (transfer_paths or [])[:6]
+                ]
+                df = get_cached_data()
+                top_jobs = []
+                if not df.empty:
+                    name_col = "岗位名称" if "岗位名称" in df.columns else "职位名称"
+                    addr_col = "地址" if "地址" in df.columns else "工作地址"
+                    company_col = "公司名称" if "公司名称" in df.columns else "公司全称"
+                    scale_col = "公司规模" if "公司规模" in df.columns else "人员规模"
+                    type_col = "公司类型" if "公司类型" in df.columns else "企业性质"
+                    desc_col = "岗位详情" if "岗位详情" in df.columns else "职位描述"
+                    job_data = df[df[name_col].astype(str).str.contains(key, na=False, regex=False)].copy()
+                    job_data["_avg_salary"] = job_data["薪资范围"].apply(_parse_salary_for_graph)
+                    for _, row in job_data.nlargest(5, "_avg_salary").iterrows():
+                        desc = str(row.get(desc_col, ""))
+                        top_jobs.append({
+                            "company": str(row.get(company_col, "")),
+                            "location": str(row.get(addr_col, "")),
+                            "salary": str(row.get("薪资范围", "")),
+                            "industry": str(row.get("所属行业", "")),
+                            "scale": str(row.get(scale_col, "")),
+                            "companyType": str(row.get(type_col, "")),
+                            "description": (desc[:200] + "...") if len(desc) > 200 else desc,
+                        })
+                return success_response({
+                    "careerPath": career_path,
+                    "transferPaths": transfer_paths,
+                    "topJobs": top_jobs,
+                })
+        # 无预生成或未匹配到键时，继续用 CSV 动态生成
+        df = get_cached_data()
+        if df.empty:
+            # 无数据时返回默认结构
+            levels = ["初级", "中级", "高级", "专家"]
+            career_path = [
+                {"level": l, "name": f"{l}{job_name}", "time": f"{i*2}-{(i+1)*2}年", "salary": f"{10+i*10}k-{20+i*15}k", "icon": ["🌱", "🌿", "🌳", "🏆"][i]}
+                for i, l in enumerate(levels)
+            ]
+            return success_response({
+                "careerPath": career_path,
+                "transferPaths": [],
+                "topJobs": [],
+            })
+
+        name_col = "岗位名称" if "岗位名称" in df.columns else "职位名称"
+        addr_col = "地址" if "地址" in df.columns else "工作地址"
+        company_col = "公司名称" if "公司名称" in df.columns else "公司全称"
+        scale_col = "公司规模" if "公司规模" in df.columns else "人员规模"
+        type_col = "公司类型" if "公司类型" in df.columns else "企业性质"
+        desc_col = "岗位详情" if "岗位详情" in df.columns else "职位描述"
+        industry_col = "所属行业" if "所属行业" in df.columns else "所属行业"
+
+        keyword = (job_name[:10] if len(job_name) >= 10 else job_name).strip() or job_name
+        job_data = df[df[name_col].astype(str).str.contains(keyword, na=False, regex=False)]
+        job_data = job_data.copy()
+        job_data["_avg_salary"] = job_data["薪资范围"].apply(_parse_salary_for_graph)
+        top_5 = job_data.nlargest(5, "_avg_salary")
+
+        # 晋升路径（4 级）：按「岗位名+级别」在真实数据中匹配
+        level_keywords = [
+            f"初级.*{keyword}|{keyword}.*初级",
+            keyword,
+            f"高级.*{keyword}|{keyword}.*高级",
+            f"专家|架构师|资深.*{keyword}",
+        ]
+        level_names = ["初级", "中级", "高级", "专家/架构师"]
+        career_path = []
+        for i, (kw, level_label) in enumerate(zip(level_keywords, level_names)):
+            matched = df[df[name_col].astype(str).str.contains(kw, na=False, case=False, regex=True)]
+            if len(matched) > 0:
+                sample = matched.iloc[0]
+                desc = sample.get(desc_col, "")
+                desc_str = (desc[:150] + "...") if isinstance(desc, str) and len(str(desc)) > 150 else str(desc or "")
+                career_path.append({
+                    "level": level_label,
+                    "name": str(sample.get(name_col, f"{level_label}{job_name}")),
+                    "time": f"{i*2}-{(i+1)*2}年",
+                    "salary": str(sample.get("薪资范围", "")),
+                    "icon": ["🌱", "🌿", "🌳", "🏆"][i],
+                    "company": str(sample.get(company_col, ""))[:25],
+                    "location": str(sample.get(addr_col, "")),
+                    "description": desc_str.replace("\n", " "),
+                })
+            else:
+                career_path.append({
+                    "level": level_label,
+                    "name": f"{level_label}{job_name}",
+                    "time": f"{i*2}-{(i+1)*2}年",
+                    "salary": f"{10+i*10}k-{20+i*15}k",
+                    "icon": ["🌱", "🌿", "🌳", "🏆"][i],
+                    "company": "知名互联网公司",
+                    "location": "北京/上海/深圳",
+                    "description": "技能要求详见岗位详情",
+                })
+
+        # 转岗路径：从 CSV 按「扩展关键词」筛相关岗位，按薪资排序、去重，最多 6 条（真实公司/地点/行业）
+        expand_regex = _expand_transfer_keywords(job_name)
+        try:
+            related = df[df[name_col].astype(str).str.contains(expand_regex, na=False, case=False, regex=True)].copy()
+        except Exception:
+            related = df[df[name_col].astype(str).str.contains(keyword, na=False, regex=False)].copy()
+        related["_avg_salary"] = related["薪资范围"].apply(_parse_salary_for_graph)
+        related = related.sort_values("_avg_salary", ascending=False)
+        transfer_paths = []
+        seen_names = set()
+        for _, row in related.iterrows():
+            jname = str(row.get(name_col, "")).strip()
+            if not jname or jname in seen_names or len(transfer_paths) >= 6:
+                continue
+            seen_names.add(jname)
+            match = _transfer_match_score(job_name, jname)
+            difficulty = _transfer_difficulty(match)
+            time_str = _transfer_time(difficulty)
+            transfer_paths.append({
+                "name": jname,
+                "company": str(row.get(company_col, "")).strip(),
+                "location": str(row.get(addr_col, "")).strip(),
+                "salary": str(row.get("薪资范围", "")).strip(),
+                "industry": str(row.get(industry_col, "")).strip(),
+                "scale": str(row.get(scale_col, "")),
+                "match": match,
+                "difficulty": difficulty,
+                "time": time_str,
+            })
+
+        # Top5 最优岗位
+        top_jobs = []
+        for _, row in top_5.iterrows():
+            desc = str(row.get(desc_col, ""))
+            top_jobs.append({
+                "company": str(row.get(company_col, "")),
+                "location": str(row.get(addr_col, "")),
+                "salary": str(row.get("薪资范围", "")),
+                "industry": str(row.get("所属行业", "")),
+                "scale": str(row.get(scale_col, "")),
+                "companyType": str(row.get(type_col, "")),
+                "description": (desc[:200] + "...") if len(desc) > 200 else desc,
+            })
+
+        return success_response({
+            "careerPath": career_path[:4],
+            "transferPaths": transfer_paths[:6],
+            "topJobs": top_jobs,
+        })
+    except Exception as e:
+        logger.error(f"[CareerGraph] 生成失败: {e}", exc_info=True)
+        return error_response(500, str(e))
+
+
+# ============================================================
+# 多样化晋升路径（不同岗位不同阶段名称与年限）
+# GET /api/v1/job/career-path-diverse/<job_type>
+# ============================================================
+_DIVERSE_PATTERNS = {
+    "测试": ["测试工程师", "高级测试", "测试架构师", "测试总监"],
+    "科研": ["科研助理", "研究员", "高级研究员", "首席科学家"],
+    "前端": ["前端工程师", "高级前端", "前端架构师", "技术总监"],
+    "算法": ["算法工程师", "高级算法", "算法专家", "首席科学家"],
+    "Java": ["Java工程师", "高级Java", "Java架构师", "技术总监"],
+    "产品": ["产品助理", "产品经理", "高级产品", "产品总监"],
+    "硬件": ["硬件工程师", "高级硬件", "硬件架构师", "硬件总监"],
+}
+_DIVERSE_YEARS = ["0-2年", "2-4年", "4-7年", "7年+"]
+
+
+def _load_diverse_career_paths_json():
+    """若存在 data/diverse_career_paths.json 则返回其内容，否则 None。"""
+    path = get_abs_path("data/diverse_career_paths.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"[career-path-diverse] 读取 diverse_career_paths.json 失败: {e}")
+        return None
+
+
+@job_bp.route("/career-path-diverse/<job_type>", methods=["GET"])
+def get_diverse_career_path(job_type):
+    """获取多样化的晋升路径（基于真实数据，不同岗位不同阶段）。"""
+    job_type = (job_type or "").strip() or "算法"
+    try:
+        # 优先使用预生成的 diverse_career_paths.json
+        precomputed = _load_diverse_career_paths_json()
+        if precomputed and job_type in precomputed:
+            path_list = precomputed[job_type]
+            career_path = []
+            for i, p in enumerate(path_list[:4]):
+                real = p.get("realExample")
+                if real:
+                    career_path.append({
+                        "level": p.get("level", ""),
+                        "year": p.get("year", _DIVERSE_YEARS[i] if i < len(_DIVERSE_YEARS) else ""),
+                        "jobName": real.get("jobName", ""),
+                        "company": (real.get("company", ""))[:25],
+                        "location": real.get("location", ""),
+                        "salary": real.get("salary", ""),
+                        "industry": "",
+                        "description": (real.get("skills", ""))[:100],
+                        "hasRealData": True,
+                    })
+                else:
+                    career_path.append({
+                        "level": p.get("level", ""),
+                        "year": p.get("year", ""),
+                        "salary": p.get("salaryRange", ""),
+                        "description": p.get("description", ""),
+                        "hasRealData": False,
+                    })
+            return success_response({
+                "jobType": job_type,
+                "careerPath": career_path,
+                "pathStyle": [p.get("level", "") for p in path_list[:4]],
+            })
+
+        # 无预生成时从 CSV 动态生成
+        df = get_cached_data()
+        if df.empty:
+            pattern = _DIVERSE_PATTERNS.get(job_type, ["初级", "中级", "高级", "专家"])
+            return success_response({
+                "jobType": job_type,
+                "careerPath": [
+                    {"level": pattern[i], "year": _DIVERSE_YEARS[i], "salary": f"{10+i*10}k-{20+i*15}k", "hasRealData": False}
+                    for i in range(min(4, len(pattern)))
+                ],
+                "pathStyle": pattern[:4],
+            })
+
+        name_col = "岗位名称" if "岗位名称" in df.columns else "职位名称"
+        addr_col = "地址" if "地址" in df.columns else "工作地址"
+        company_col = "公司名称" if "公司名称" in df.columns else "公司全称"
+        desc_col = "岗位详情" if "岗位详情" in df.columns else "职位描述"
+        industry_col = "所属行业" if "所属行业" in df.columns else "所属行业"
+
+        pattern = _DIVERSE_PATTERNS.get(job_type, [keyword for keyword in [job_type] * 4])
+        if len(pattern) < 4:
+            pattern = pattern + ["专家"] * (4 - len(pattern))
+
+        result = []
+        for i, (level_name, year) in enumerate(zip(pattern[:4], _DIVERSE_YEARS)):
+            matched = df[df[name_col].astype(str).str.contains(level_name, na=False, case=False)]
+            if len(matched) > 0:
+                sample = matched.iloc[0]
+                desc = str(sample.get(desc_col, ""))
+                result.append({
+                    "level": level_name,
+                    "year": year,
+                    "jobName": str(sample.get(name_col, level_name)),
+                    "company": str(sample.get(company_col, ""))[:25],
+                    "location": str(sample.get(addr_col, "")),
+                    "salary": str(sample.get("薪资范围", "")),
+                    "industry": str(sample.get(industry_col, "")),
+                    "description": (desc[:100] + "...") if len(desc) > 100 else desc,
+                    "hasRealData": True,
+                })
+            else:
+                result.append({
+                    "level": level_name,
+                    "year": year,
+                    "salary": f"{10+i*10}k-{20+i*15}k",
+                    "hasRealData": False,
+                })
+
+        return success_response({
+            "jobType": job_type,
+            "careerPath": result,
+            "pathStyle": pattern[:4],
+        })
+    except Exception as e:
+        logger.error(f"[CareerPathDiverse] 失败: {e}", exc_info=True)
+        return error_response(500, str(e))
+
+
+# ============================================================
 # 岗位画像流式生成（SSE）
 # POST /api/v1/job/generate-profile-stream
 # ============================================================
 def _stream_job_profile_generate(job_name: str, job_description: str):
     """Generator: yield SSE events (data: {...}\n\n). 使用 dashscope Generation 流式调用。"""
-    prompt = f"""你是职业规划专家。根据岗位"{job_name}"和描述"{job_description}"生成岗位画像。
+    prompt = f"""你是职业规划专家。根据岗位「{job_name}」和描述「{job_description}」生成岗位画像。
+
+【重要】差异化要求，避免与其它岗位雷同：
+- 学历(education)、经验(experience)：根据该岗位实际要求写，可写大专及以上/本科及以上/硕士优先、应届生/1-3年/3-5年等，不同岗位要有区别。
+- 竞赛加分(competition)：必须写与该岗位直接相关的竞赛名称，不要写“推荐竞赛经历”等笼统句。例如：软件测试→全国大学生软件测试大赛、中国软件杯、蓝桥杯软件测试赛项；实施/运维→华为ICT大赛、全国大学生计算机设计大赛、蓝桥杯；算法/研发→天池、Kaggle、中国软件杯；前端/后端→蓝桥杯、ACM、中国高校计算机大赛等。
+- 实习要求(internship)：针对该岗位写具体时长与方向，不要所有岗位都用“推荐3个月以上相关实习经历，大厂或AI实验室优先”；可写该岗位更看重的实习类型（如测试岗强调测试/质量实习，实施岗强调项目交付实习）。
+- 工作地点(location)：写该岗位招聘量大的3～5个城市，用顿号或逗号分隔；技术研发多为北上深杭成，实施/交付可含更多二线，测试/运维可侧重一线与省会。
+- 公司规模(company_size)：用一句话概括目标企业类型，如“中小型科技公司及大型互联网企业”“中大型企业(200人以上)或科技型中小企业”等，与岗位类型匹配。
+- 岗位描述(description)：写职责、工作内容与角色定位，约150～200字；不要与下方 skills_core 简单重复同一批关键词，描述侧重“做什么、和谁协作、产出什么”。
+- 综合能力(abilities)：每条 desc 必须针对「{job_name}」具体化，说明在该岗位上为何需要该能力、如何体现，避免各岗位用同一套话术；keywords 用该岗位相关术语。
+
 严格按以下JSON格式输出，不加任何多余内容，不加markdown代码块：
 {{
-  "salary": "薪资范围",
-  "location": "主要城市",
-  "company_size": "公司规模",
-  "demand_score": 88,
-  "trend": "上升",
-  "experience": "1-3年",
-  "education": "本科及以上",
-  "competition": "推荐竞赛经历",
-  "english": "英语要求描述",
-  "internship": "推荐3个月以上相关实习经历，大厂或AI实验室优先",
-  "description": "针对该岗位的职责、要求与工作内容的详细描述，约150-200字",
-  "skills_core": ["核心技能1","核心技能2","核心技能3","核心技能4","核心技能5"],
+  "salary": "根据岗位写薪资范围，如8K-20K或6K-15K",
+  "location": "3～5个该岗位招聘量大的城市，顿号或逗号分隔",
+  "company_size": "与该岗位匹配的公司规模描述",
+  "demand_score": 75～95之间的整数，不同岗位可不同,
+  "trend": "上升或稳定或下降",
+  "experience": "针对该岗位的经验要求，如应届生/1-3年/3-5年",
+  "education": "针对该岗位的学历要求，如大专及以上/本科及以上/硕士优先",
+  "competition": "与该岗位直接相关的竞赛名称与加分说明，具体到赛事名",
+  "english": "该岗位的英语要求，若无则写暂无或四级即可",
+  "internship": "针对该岗位的实习时长与方向，具体化",
+  "description": "职责与工作内容描述，不与skills_core重复罗列",
+  "skills_core": ["该岗位核心技能1","核心技能2","核心技能3","核心技能4","核心技能5"],
   "skills_advanced": ["进阶技能1","进阶技能2","进阶技能3"],
   "skills_plus": ["加分技能1","加分技能2"],
   "abilities": [
-    {{"icon":"🧠","name":"学习能力","level":"高要求","level_type":"high","desc":"针对{job_name}的学习能力要求详细描述，约100字，说明需要掌握哪些知识体系、如何持续学习","keywords":["关键词1","关键词2"]}},
-    {{"icon":"💡","name":"创新能力","level":"高要求","level_type":"high","desc":"针对{job_name}的创新能力要求详细描述，约100字","keywords":["关键词1"]}},
-    {{"icon":"🔥","name":"抗压能力","level":"中等要求","level_type":"medium","desc":"针对{job_name}的抗压能力要求详细描述，约100字","keywords":["关键词1"]}},
-    {{"icon":"💬","name":"沟通能力","level":"中等要求","level_type":"medium","desc":"针对{job_name}的沟通能力要求详细描述，约100字","keywords":["关键词1"]}},
-    {{"icon":"🤝","name":"团队协作","level":"中等要求","level_type":"medium","desc":"针对{job_name}的团队协作要求详细描述，约100字","keywords":["关键词1"]}},
-    {{"icon":"🏢","name":"实习能力","level":"基础要求","level_type":"base","desc":"针对{job_name}的实习能力要求详细描述，约100字，包含推荐实习时长和方向","keywords":["关键词1","关键词2"]}}
+    {{"icon":"🧠","name":"学习能力","level":"高/中/基础要求其一","level_type":"high/medium/base","desc":"针对{job_name}为何需要、如何体现学习能力，约80字","keywords":["该岗位相关词"]}},
+    {{"icon":"💡","name":"创新能力","level":"高/中/基础要求","level_type":"high/medium/base","desc":"针对{job_name}的创新能力要求，具体化","keywords":["相关词"]}},
+    {{"icon":"🔥","name":"抗压能力","level":"高/中/基础要求","level_type":"high/medium/base","desc":"针对{job_name}的抗压场景与要求，具体化","keywords":["相关词"]}},
+    {{"icon":"💬","name":"沟通能力","level":"高/中/基础要求","level_type":"high/medium/base","desc":"针对{job_name}的沟通对象与要求，具体化","keywords":["相关词"]}},
+    {{"icon":"🤝","name":"团队协作","level":"高/中/基础要求","level_type":"high/medium/base","desc":"针对{job_name}的协作场景，具体化","keywords":["相关词"]}},
+    {{"icon":"🏢","name":"实习能力","level":"高/中/基础要求","level_type":"high/medium/base","desc":"针对{job_name}的实习时长与方向建议，具体化","keywords":["相关词"]}}
   ],
   "certs": [
-    {{"icon":"🏅","name":"证书名称","desc":"证书说明和要求分数","type":"必须","type_code":"must"}},
-    {{"icon":"📜","name":"证书名称","desc":"证书说明","type":"加分项","type_code":"plus"}},
-    {{"icon":"🌐","name":"证书名称","desc":"证书说明","type":"推荐","type_code":"opt"}}
+    {{"icon":"🏅","name":"与该岗位相关的证书名","desc":"说明与要求","type":"必须","type_code":"must"}},
+    {{"icon":"📜","name":"证书名称","desc":"说明","type":"加分项","type_code":"plus"}},
+    {{"icon":"🌐","name":"证书名称","desc":"说明","type":"推荐","type_code":"opt"}}
   ],
   "intern_directions": [
-    {{"type":"方向类型","icon":"🏢","role":"推荐实习岗位名称","companies":["公司1","公司2","公司3","公司4"]}},
-    {{"type":"方向类型","icon":"🔬","role":"推荐实习岗位名称","companies":["公司1","公司2","公司3"]}}
+    {{"type":"与该岗位相关的方向","icon":"🏢","role":"推荐实习岗位名","companies":["公司类型或代表企业"]}},
+    {{"type":"方向类型","icon":"🔬","role":"推荐实习岗位名","companies":["公司1","公司2"]}}
   ]
 }}
-所有内容必须针对{job_name}个性化生成，abilities必须包含以上6项且顺序不变，level_type只能是high/medium/base，type_code只能是must/plus/opt。"""
+abilities 必须包含以上6项且顺序不变，level_type 只能是 high/medium/base，type_code 只能是 must/plus/opt。所有字段值必须针对「{job_name}」生成，不要与其它岗位通用化。"""
 
     try:
         from dashscope import Generation

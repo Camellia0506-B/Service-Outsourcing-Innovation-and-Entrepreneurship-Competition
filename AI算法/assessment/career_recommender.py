@@ -1,6 +1,6 @@
 """
 职业测评报告 - 计算机相关岗位推荐
-结合 Holland Code、MBTI 与岗位数据集（求职岗位信息数据.csv）生成：
+结合 Holland Code、MBTI 与岗位数据集（job_data_path，默认 a13 JD采样数据）生成：
 - 适合职业领域推荐（suitable_fields）
 - 最匹配职业（suitable_careers，来自数据集）
 """
@@ -10,6 +10,16 @@ import os
 from typing import List, Dict, Any, Optional, Tuple
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
+
+
+def _get_job_data_csv_path() -> str:
+    """从配置获取岗位数据 CSV 路径"""
+    try:
+        from utils.config_handler import job_profile_conf
+        path = job_profile_conf.get("job_data_path", "data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
+        return get_abs_path(path)
+    except Exception:
+        return get_abs_path("data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
 
 
 # 适合职业领域：固定为计算机相关岗位类型（用于报告展示）
@@ -52,28 +62,29 @@ HOLLAND_TO_FIELDS = {
 
 
 def _load_jobs_csv() -> List[Dict[str, str]]:
-    """加载求职岗位信息数据.csv，只保留计算机/IT 相关岗位。"""
-    path = get_abs_path("data/求职岗位信息数据.csv")
+    """加载岗位数据 CSV（job_data_path，a13 真实数据），只保留计算机/IT 相关岗位。"""
+    path = _get_job_data_csv_path()
     if not os.path.exists(path):
         logger.warning("[CareerRecommender] 岗位数据文件不存在: %s", path)
         return []
 
     rows = []
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             if not reader.fieldnames:
                 return []
             for row in reader:
-                job_id = (row.get("职位编号") or "").strip()
-                title = (row.get("职位名称") or "").strip()
+                job_id = (row.get("职位编号") or row.get("岗位编码") or "").strip()
+                title = (row.get("职位名称") or row.get("岗位名称") or "").strip()
+                desc = (row.get("职位描述") or row.get("岗位详情") or "")
                 # 筛选：职位编号以 IT- 开头，或职位名称包含计算机相关关键词
                 if job_id.startswith("IT-"):
-                    rows.append({"职位名称": title, "职位编号": job_id, "职位描述": row.get("职位描述", "")})
+                    rows.append({"职位名称": title, "职位编号": job_id, "职位描述": desc})
                     continue
                 low = title.lower()
                 if any(k in low or k in title for k in ["开发", "算法", "测试", "运维", "产品经理", "数据", "IT", "软件", "程序员", "工程师", "项目经理", "信息化", "网络安全"]):
-                    rows.append({"职位名称": title, "职位编号": job_id, "职位描述": row.get("职位描述", "")})
+                    rows.append({"职位名称": title, "职位编号": job_id, "职位描述": desc})
     except Exception as e:
         logger.error("[CareerRecommender] 读取岗位CSV失败: %s", e, exc_info=True)
         return []

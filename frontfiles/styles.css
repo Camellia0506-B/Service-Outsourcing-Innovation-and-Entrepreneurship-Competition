@@ -3255,15 +3255,16 @@ body::before {
     color: var(--primary-color);
 }
 
-/* 真实招聘数据弹窗（深绿头部） */
+/* 真实招聘数据弹窗：弹窗形式，半透明遮罩，无整屏蓝色背景；内容可滚动 */
 .real-data-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10000;
+    padding: 20px;
 }
 
 .real-data-modal-overlay.hidden {
@@ -3272,58 +3273,353 @@ body::before {
 
 .real-data-modal-box {
     background: #fff;
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    max-width: 560px;
-    width: 90%;
+    box-shadow: 0 20px 60px rgba(67, 97, 238, 0.25);
+    max-width: 1100px;
+    width: 100%;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
 }
 
+.real-data-modal-box.real-data-slide-box {
+    max-height: 92vh;
+}
+
 .real-data-modal-header {
-    background: linear-gradient(135deg, #064e3b, #065f46);
+    background: linear-gradient(135deg, #4361ee 0%, #5a72f0 100%);
     color: #fff;
-    padding: 14px 18px;
+    padding: 14px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
 .real-data-modal-label {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
 }
 
 .real-data-modal-close {
-    background: none;
+    background: rgba(255,255,255,0.2);
     border: none;
     color: #fff;
-    font-size: 24px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 22px;
     cursor: pointer;
     line-height: 1;
-    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
 .real-data-modal-close:hover {
-    opacity: 1;
+    background: rgba(255,255,255,0.3);
+}
+
+.real-data-slide-wrap {
+    padding: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    max-height: 90vh;
 }
 
 .real-data-modal-body {
-    padding: 16px;
-    overflow-y: auto;
-    max-height: 80vh;
+    padding: 0;
+    overflow: visible;
+    flex: 1;
+    min-height: 0;
 }
 
+.real-data-modal-body.real-data-slide-body {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(67, 97, 238, 0.2);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px 32px;
+    flex: 1;
+    min-height: 0;
+}
+
+.real-data-slide-card-inner {
+    outline: none;
+}
+
+.real-data-card-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #f0f4ff;
+    margin-bottom: 18px;
+}
+
+.real-data-title-section h2.real-data-slide-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 12px 0;
+}
+
+.real-data-company-name {
+    font-size: 18px;
+    color: #4a5568;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.real-data-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.real-data-tag {
+    padding: 6px 14px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #4a5568;
+}
+
+.real-data-salary-box {
+    text-align: right;
+}
+
+.real-data-salary-label {
+    font-size: 13px;
+    color: #718096;
+    margin-bottom: 6px;
+}
+
+.real-data-salary-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #4361ee;
+}
+
+.real-data-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px 20px;
+    margin-bottom: 18px;
+}
+
+.real-data-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.real-data-info-label {
+    font-size: 12px;
+    color: #a0aec0;
+    font-weight: 600;
+}
+
+.real-data-info-value {
+    font-size: 15px;
+    color: #2d3748;
+    font-weight: 600;
+}
+/* 岗位名称、公司名称等完整显示，不截断 */
+.real-data-info-value-full {
+    word-break: break-word;
+    overflow: visible;
+    white-space: normal;
+}
+.real-data-title-section .real-data-slide-title,
+.real-data-title-section .real-data-company-name {
+    word-break: break-word;
+    overflow: visible;
+    white-space: normal;
+}
+
+.real-data-info-value.real-data-mono {
+    font-family: monospace;
+}
+
+.real-data-info-value.real-data-salary-txt {
+    color: #4361ee;
+}
+
+.real-data-details-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.real-data-detail-box {
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.real-data-detail-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 12px;
+}
+
+.real-data-detail-content {
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.7;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.real-data-detail-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.real-data-detail-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+.real-data-source-link {
+    background: #fff8f0;
+    border-left: 4px solid #f59e0b;
+    padding: 16px 20px;
+    border-radius: 8px;
+}
+
+.real-data-source-title {
+    font-size: 13px;
+    color: #92400e;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.real-data-source-link a {
+    font-size: 13px;
+    color: #4361ee;
+    word-break: break-all;
+    text-decoration: none;
+}
+
+.real-data-source-link a:hover {
+    text-decoration: underline;
+}
+
+.real-data-no-url {
+    color: #718096;
+    font-size: 13px;
+}
+
+.real-data-slide-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 6px 0;
+    flex-shrink: 0;
+}
+
+.real-data-nav-btn {
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,0.95);
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    color: #4361ee;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.real-data-nav-btn:hover:not(:disabled) {
+    background: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+}
+
+.real-data-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.real-data-page-indicator {
+    color: #1a202c;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 52px;
+    text-align: center;
+}
+
+.real-data-keyboard-hint {
+    display: none;
+}
+
+/* 幻灯片翻页动画 0.4s ease */
+.real-data-slide-out-left {
+    animation: realDataSlideOutLeft 0.4s ease forwards;
+}
+
+.real-data-slide-out-right {
+    animation: realDataSlideOutRight 0.4s ease forwards;
+}
+
+.real-data-slide-in-left {
+    animation: realDataSlideInLeft 0.4s ease forwards;
+}
+
+.real-data-slide-in-right {
+    animation: realDataSlideInRight 0.4s ease forwards;
+}
+
+@keyframes realDataSlideOutLeft {
+    to { transform: translateX(-100%); opacity: 0; }
+}
+
+@keyframes realDataSlideOutRight {
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes realDataSlideInLeft {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes realDataSlideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .real-data-modal-body.real-data-slide-body { padding: 24px 20px; }
+    .real-data-card-header { grid-template-columns: 1fr; }
+    .real-data-salary-box { text-align: left; }
+    .real-data-info-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .real-data-details-section { grid-template-columns: 1fr; }
+    .real-data-title-section h2.real-data-slide-title { font-size: 22px; }
+}
+
+/* 兼容旧列表项（无数据时或回退） */
 .real-data-item {
     padding: 14px 0;
     border-bottom: 1px solid #e5e7eb;
 }
 
-.real-data-item:last-child {
-    border-bottom: none;
-}
+.real-data-item:last-child { border-bottom: none; }
 
 .real-data-item-header {
     display: flex;
@@ -3333,43 +3629,23 @@ body::before {
     margin-bottom: 10px;
 }
 
-.real-data-company {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
+.real-data-company { font-size: 13px; color: var(--text-secondary); }
 
-.real-data-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
+.real-data-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 
-.real-data-salary {
-    font-size: 14px;
-    font-weight: 600;
-    color: #059669;
-    margin-left: auto;
-}
+.real-data-salary { font-size: 14px; font-weight: 600; color: #4361ee; margin-left: auto; }
 
-.real-data-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 10px;
-}
+.real-data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
 
 .real-data-cell {
-    background: rgba(4, 120, 87, 0.08);
-    color: #065f46;
+    background: rgba(67, 97, 238, 0.08);
+    color: #4361ee;
     font-size: 12px;
     padding: 6px 10px;
     border-radius: 6px;
 }
 
-.real-data-desc-wrap {
-    font-size: 13px;
-    color: var(--text-secondary);
-}
+.real-data-desc-wrap { font-size: 13px; color: var(--text-secondary); }
 
 .real-data-desc.short {
     display: -webkit-box;
@@ -3378,18 +3654,9 @@ body::before {
     overflow: hidden;
 }
 
-.real-data-expand {
-    margin-top: 6px;
-    background: none;
-    border: none;
-    color: #059669;
-    font-size: 12px;
-    cursor: pointer;
-}
+.real-data-expand { margin-top: 6px; background: none; border: none; color: #4361ee; font-size: 12px; cursor: pointer; }
 
-.real-data-expand:hover {
-    text-decoration: underline;
-}
+.real-data-expand:hover { text-decoration: underline; }
 
 /* 岗位画像详情面板 */
 .job-profile-detail {
@@ -3874,6 +4141,10 @@ body::before {
 .graph-legend-dot.high { background: #10b981; }
 .graph-legend-dot.medium { background: #f59e0b; }
 .graph-legend-dot.low { background: #ef4444; }
+/* 匹配度颜色类（与图例一致，供图谱/列表复用） */
+.match-high { color: #10b981; }
+.match-medium { color: #f59e0b; }
+.match-low { color: #ef4444; }
 
 .graph-transfer-empty {
     padding: 32px 24px;
@@ -4062,6 +4333,289 @@ body::before {
 .node.pos-5 { left: 25%; top: 62%; transform: translateX(-50%); }
 .node.pos-6 { left: 25%; top: 25%; transform: translateX(-50%); }
 
+/* ========== 转岗路径图谱（完全遵照 graph_template.html）：容器+图例+graph-svg-wrap+g-node ========== */
+#jobProfileGraph .graph-panel-transfer .transfer-container-gt {
+    background: var(--white, #fff);
+    border: 1px solid rgba(79, 124, 255, 0.12);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 16px rgba(79, 100, 200, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+#jobProfileGraph .graph-panel-transfer .transfer-container-gt::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(79, 124, 255, 0.045) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+}
+#jobProfileGraph .graph-panel-transfer .legend-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#jobProfileGraph .graph-panel-transfer .legend-title {
+    font-size: 12px;
+    color: var(--dim, #5a6a8a);
+    font-weight: 600;
+}
+#jobProfileGraph .graph-panel-transfer .leg {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--dim, #5a6a8a);
+}
+#jobProfileGraph .graph-panel-transfer .leg-line {
+    width: 24px;
+    height: 2px;
+}
+#jobProfileGraph .graph-panel-transfer .leg-high {
+    background: linear-gradient(90deg, #4f7cff, #00b894);
+}
+#jobProfileGraph .graph-panel-transfer .leg-mid {
+    background: linear-gradient(90deg, #4f7cff, #f5a623);
+}
+#jobProfileGraph .graph-panel-transfer .leg-low {
+    background: none;
+    border-top: 2px dashed #ff4d6d;
+}
+#jobProfileGraph .graph-panel-transfer .leg-arrow {
+    font-size: 14px;
+}
+#jobProfileGraph .graph-panel-transfer .leg-note {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted, #aab4cc);
+    border-left: 1px solid rgba(79, 124, 255, 0.2);
+    padding-left: 12px;
+}
+#jobProfileGraph .graph-panel-transfer .legend-row {
+    background: linear-gradient(135deg, rgba(79, 124, 255, 0.04), rgba(124, 92, 255, 0.02));
+    border: 1px solid rgba(79, 124, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 14px;
+}
+
+/* graph_template：画布与节点 */
+#jobProfileGraph .graph-panel-transfer .transfer-graph.graph-svg-wrap {
+    position: relative;
+    width: 100%;
+    height: 640px;
+    min-height: 640px;
+    margin: 0;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+}
+#jobProfileGraph .graph-panel-transfer .transfer-graph.graph-svg-wrap::before {
+    display: none;
+}
+#jobProfileGraph .graph-panel-transfer .transfer-graph-lines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+#jobProfileGraph .graph-panel-transfer .g-node {
+    position: absolute;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, z-index 0s;
+    animation: transfer-fadeUp 0.45s ease both;
+    z-index: 2;
+}
+#jobProfileGraph .graph-panel-transfer .g-node:hover {
+    transform: scale(1.03) translateY(-3px);
+    box-shadow: 0 10px 28px rgba(79, 100, 200, 0.15);
+    z-index: 10;
+}
+@keyframes transfer-fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 中心节点 .cn（template + 指南③：光晕圆环） */
+#jobProfileGraph .graph-panel-transfer .g-node .cn {
+    width: 136px;
+    background: linear-gradient(135deg, #4f7cff 0%, #7c5cff 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 16px 14px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(79, 124, 255, 0.5), 0 0 0 7px rgba(79, 124, 255, 0.18), 0 0 0 14px rgba(79, 124, 255, 0.08), 0 0 0 22px rgba(79, 124, 255, 0.04);
+}
+#jobProfileGraph .graph-panel-transfer .cn-ico {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+#jobProfileGraph .graph-panel-transfer .cn-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    line-height: 1.3;
+}
+#jobProfileGraph .graph-panel-transfer .cn-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 10px;
+    padding: 2px 9px;
+    border-radius: 10px;
+}
+/* 岗位节点 .jn（template + 指南①⑥：左侧色条、宽度 168、阴影） */
+#jobProfileGraph .graph-panel-transfer .g-node .jn {
+    width: 168px;
+    min-height: 175px;
+    border: 1.5px solid;
+    border-radius: 14px;
+    padding: 11px 13px;
+    box-shadow: 0 4px 20px rgba(79, 100, 200, 0.12);
+}
+#jobProfileGraph .graph-panel-transfer .g-node .jn.jn-with-bar .jn-accent-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3.5px;
+    border-radius: 14px 0 0 14px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 7px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-ico {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+#jobProfileGraph .graph-panel-transfer .jn-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text, #1a2340);
+    line-height: 1.3;
+    max-width: none;
+}
+#jobProfileGraph .graph-panel-transfer .jn-sal {
+    font-size: 10px;
+    color: var(--muted, #aab4cc);
+    margin-top: 1px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-extra {
+    font-size: 9px;
+    color: var(--muted, #aab4cc);
+    line-height: 1.4;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+#jobProfileGraph .graph-panel-transfer .jn.jn-with-bar .jn-extra {
+    padding-left: 8px;
+}
+#jobProfileGraph .graph-panel-transfer .jn.jn-with-bar .jn-mr {
+    padding-left: 8px;
+}
+#jobProfileGraph .graph-panel-transfer .jn.jn-with-bar .jn-tags {
+    padding-left: 8px;
+}
+#jobProfileGraph .graph-panel-transfer .jn.jn-with-bar .jn-btn {
+    margin-left: 8px;
+    width: calc(100% - 8px);
+}
+#jobProfileGraph .graph-panel-transfer .jn-mr {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-ml {
+    font-size: 10px;
+    color: var(--muted, #aab4cc);
+}
+#jobProfileGraph .graph-panel-transfer .jn-mv {
+    font-size: 10px;
+    font-weight: 700;
+}
+#jobProfileGraph .graph-panel-transfer .jn-bar-bg {
+    height: 3px;
+    background: rgba(79, 124, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-bar {
+    height: 100%;
+    border-radius: 3px;
+    animation: jn-bar-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+@keyframes jn-bar-grow {
+    from { width: 0 !important; }
+}
+#jobProfileGraph .graph-panel-transfer .jn-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-tag {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+#jobProfileGraph .graph-panel-transfer .jn-tag.jn-diff.low { background: rgba(0, 184, 148, 0.1); color: #009e7a; border: 1px solid rgba(0, 184, 148, 0.2); }
+#jobProfileGraph .graph-panel-transfer .jn-tag.jn-diff.medium { background: rgba(245, 166, 35, 0.1); color: #c47d00; border: 1px solid rgba(245, 166, 35, 0.2); }
+#jobProfileGraph .graph-panel-transfer .jn-tag.jn-diff.high { background: rgba(255, 77, 109, 0.08); color: #d03050; border: 1px solid rgba(255, 77, 109, 0.18); }
+#jobProfileGraph .graph-panel-transfer .jn-tag.jn-time {
+    background: rgba(79, 124, 255, 0.07);
+    color: #3d65e0;
+    border: 1px solid rgba(79, 124, 255, 0.15);
+}
+#jobProfileGraph .graph-panel-transfer .jn-btn {
+    width: 100%;
+    padding: 4px;
+    border-radius: 6px;
+    border: none;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+#jobProfileGraph .graph-panel-transfer .jn-btn.tg-btn-recommend {
+    background: linear-gradient(90deg, rgba(79, 124, 255, 0.85), rgba(124, 92, 255, 0.85));
+    color: #fff;
+    border: none;
+    padding: 6px 0;
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    box-shadow: 0 2px 8px rgba(79, 124, 255, 0.25);
+}
+#jobProfileGraph .graph-panel-transfer .jn-btn.tg-btn-recommend:hover {
+    background: linear-gradient(90deg, rgba(79, 124, 255, 0.95), rgba(124, 92, 255, 0.95));
+    box-shadow: 0 3px 12px rgba(79, 124, 255, 0.35);
+}
+
 /* ========== 转岗路径图谱：无连线，容器+中心+周围节点+入场动画 ========== */
 .transfer-graph {
     position: relative;
@@ -4141,6 +4695,15 @@ body::before {
 .tg-transfer-card .transfer-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .tg-transfer-card .transfer-icon { font-size: 24px; }
 .tg-transfer-card .transfer-name { font-size: 16px; font-weight: 700; color: #333; }
+.tg-transfer-card .transfer-real-info {
+    font-size: 11px; color: #555; margin-bottom: 10px; line-height: 1.35;
+}
+.tg-transfer-card .transfer-company,
+.tg-transfer-card .transfer-location,
+.tg-transfer-card .transfer-industry,
+.tg-transfer-card .transfer-salary {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;
+}
 .tg-transfer-card .match-info {
     display: flex;
     align-items: center;
@@ -4181,6 +4744,7 @@ body::before {
     font-size: 12px;
     font-weight: 600;
 }
+/* 难度：红=低、绿=高 */
 .tg-transfer-card .difficulty.low { background: #d1fae5; color: #065f46; }
 .tg-transfer-card .difficulty.medium { background: #fef3c7; color: #92400e; }
 .tg-transfer-card .difficulty.high { background: #fee2e2; color: #991b1b; }
@@ -4281,9 +4845,24 @@ body::before {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    color: var(--text-secondary);
+    color: var(--text-secondary, #64748b);
     text-align: center;
     padding: 24px;
+    max-width: 320px;
+    line-height: 1.6;
+}
+.graph-transfer-empty-hint {
+    font-size: 12px;
+    color: var(--muted, #94a3b8);
+    margin-top: 8px;
+    display: inline-block;
+}
+.graph-transfer-empty-hint a {
+    color: #4f7cff;
+    text-decoration: none;
+}
+.graph-transfer-empty-hint a:hover {
+    text-decoration: underline;
 }
 
 /* ========== 晋升路径图谱：参照参考页，竖向中线 + 奇左偶右 level-card ========== */
@@ -4401,6 +4980,294 @@ body::before {
     margin-top: 8px;
 }
 .career-path .level-card.current .level-info { opacity: 0.95; color: rgba(255,255,255,0.95); }
+.career-path .level-real-data {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    font-size: 12px;
+}
+.career-path .level-real-data .real-badge {
+    color: #00b894;
+    font-weight: 600;
+    margin-right: 6px;
+}
+.career-path .level-real-data .real-meta {
+    margin: 4px 0 0;
+    color: #5a6a8a;
+    line-height: 1.4;
+}
+.career-path .level-card.current .level-real-data .real-badge { color: rgba(255,255,255,0.95); }
+.career-path .level-card.current .level-real-data .real-meta { color: rgba(255,255,255,0.8); }
+
+/* AI 晋升路径卡片：级别信息、核心要求、晋升行动、技能标签 */
+.career-path .level-card-ai .level-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.career-path .level-card-ai .stage-badge { padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.career-path .level-card-ai .stage-subtitle { font-size: 13px; color: #64748b; margin-top: 4px; margin-bottom: 10px; }
+.career-path .level-card-ai .stage-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.career-path .level-card-ai .info-item { padding: 10px; background: #f8fafc; border-radius: 10px; text-align: center; }
+.career-path .level-card-ai .info-item-label { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+.career-path .level-card-ai .info-item-value { font-size: 14px; font-weight: 700; color: #1e293b; }
+.career-path .level-card-ai .requirements { margin-bottom: 12px; }
+.career-path .level-card-ai .requirements-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+.career-path .level-card-ai .requirements-list { display: grid; gap: 6px; }
+.career-path .level-card-ai .requirement-item { display: flex; align-items: start; gap: 8px; padding: 8px 10px; background: #f1f5f9; border-radius: 8px; font-size: 13px; color: #475569; line-height: 1.4; }
+.career-path .level-card-ai .requirement-item::before { content: '✓'; flex-shrink: 0; width: 18px; height: 18px; background: #10b981; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.career-path .level-card-ai .actions { background: #fffbeb; padding: 12px; border-radius: 12px; border-left: 4px solid #f59e0b; margin-bottom: 12px; }
+.career-path .level-card-ai .actions-title { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+.career-path .level-card-ai .actions-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.career-path .level-card-ai .action-tag { padding: 5px 10px; background: #fff; border: 1px solid #fbbf24; border-radius: 6px; font-size: 12px; color: #92400e; font-weight: 500; }
+.career-path .level-card-ai .skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.career-path .level-card-ai .skill-tag { padding: 5px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.career-path .level-card-ai.current .stage-badge { background: rgba(255,255,255,0.25); }
+.career-path .level-card-ai.current .stage-subtitle { color: rgba(255,255,255,0.9); }
+.career-path .level-card-ai.current .info-item { background: rgba(255,255,255,0.15); }
+.career-path .level-card-ai.current .info-item-label { color: rgba(255,255,255,0.8); }
+.career-path .level-card-ai.current .info-item-value { color: #fff; }
+.career-path .level-card-ai.current .requirements-title { color: rgba(255,255,255,0.95); }
+.career-path .level-card-ai.current .requirement-item { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.95); }
+.career-path .level-card-ai.current .actions { background: rgba(255,255,255,0.12); border-left-color: rgba(255,255,255,0.6); }
+.career-path .level-card-ai.current .actions-title { color: rgba(255,255,255,0.95); }
+.career-path .level-card-ai.current .action-tag { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.4); color: #fff; }
+.career-path .level-card-ai.current .skill-tag { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* ========== 晋升图谱美化版：timeline-ai + stage（左侧竖线+圆点+卡片） ========== */
+.career-path .timeline.timeline-ai {
+    position: relative;
+    padding-left: 80px;
+    padding-right: 0;
+    margin: 0;
+}
+.career-path .timeline.timeline-ai::before {
+    content: '';
+    position: absolute;
+    left: 40px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #10b981, #3b82f6, #8b5cf6, #ec4899);
+    border-radius: 2px;
+    z-index: 0;
+}
+.career-path .timeline.timeline-ai .stage {
+    position: relative;
+    margin-bottom: 60px;
+    animation: careerSlideIn 0.6s ease forwards;
+    opacity: 0;
+    z-index: 1;
+}
+.career-path .timeline.timeline-ai .stage:nth-child(1) { animation-delay: 0.1s; }
+.career-path .timeline.timeline-ai .stage:nth-child(2) { animation-delay: 0.3s; }
+.career-path .timeline.timeline-ai .stage:nth-child(3) { animation-delay: 0.5s; }
+.career-path .timeline.timeline-ai .stage:nth-child(4) { animation-delay: 0.7s; }
+.career-path .timeline.timeline-ai .stage-dot {
+    position: absolute;
+    left: -56px;
+    top: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 2;
+}
+.career-path .timeline.timeline-ai .stage-dot::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 72px;
+    height: 72px;
+    margin-left: -36px;
+    margin-top: -36px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    animation: careerDotPulse 2s infinite;
+}
+.career-path .timeline.timeline-ai .stage-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transition: all 0.3s;
+    border: 1px solid rgba(102,126,234,0.1);
+}
+.career-path .timeline.timeline-ai .stage-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+}
+.career-path .timeline.timeline-ai .stage-card.current {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    box-shadow: 0 12px 32px rgba(102,126,234,0.35);
+}
+.career-path .timeline.timeline-ai .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f0f0;
+}
+.career-path .timeline.timeline-ai .stage-card.current .stage-header { border-bottom-color: rgba(255,255,255,0.25); }
+.career-path .timeline.timeline-ai .stage-title { flex: 1; }
+.career-path .timeline.timeline-ai .stage-title h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+}
+.career-path .timeline.timeline-ai .stage-card.current .stage-title h3 { color: #fff; }
+.career-path .timeline.timeline-ai .stage-subtitle {
+    font-size: 14px;
+    color: #64748b;
+}
+.career-path .timeline.timeline-ai .stage-card.current .stage-subtitle { color: rgba(255,255,255,0.9); }
+.career-path .timeline.timeline-ai .stage-badge {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.career-path .timeline.timeline-ai .stage-card.current .stage-badge { background: rgba(255,255,255,0.3); }
+.career-path .timeline.timeline-ai .stage-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.career-path .timeline.timeline-ai .info-item {
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    text-align: center;
+}
+.career-path .timeline.timeline-ai .stage-card.current .info-item { background: rgba(255,255,255,0.15); }
+.career-path .timeline.timeline-ai .info-item-label {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+.career-path .timeline.timeline-ai .stage-card.current .info-item-label { color: rgba(255,255,255,0.8); }
+.career-path .timeline.timeline-ai .info-item-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+.career-path .timeline.timeline-ai .stage-card.current .info-item-value { color: #fff; }
+.career-path .timeline.timeline-ai .requirements { margin-bottom: 20px; }
+.career-path .timeline.timeline-ai .requirements-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.career-path .timeline.timeline-ai .stage-card.current .requirements-title { color: rgba(255,255,255,0.95); }
+.career-path .timeline.timeline-ai .requirements-list { display: grid; gap: 10px; }
+.career-path .timeline.timeline-ai .requirement-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+}
+.career-path .timeline.timeline-ai .requirement-item::before {
+    content: '✓';
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: #10b981;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+.career-path .timeline.timeline-ai .stage-card.current .requirement-item {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.95);
+}
+.career-path .timeline.timeline-ai .actions {
+    background: #fffbeb;
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid #f59e0b;
+    margin-bottom: 20px;
+}
+.career-path .timeline.timeline-ai .stage-card.current .actions {
+    background: rgba(255,255,255,0.12);
+    border-left-color: rgba(255,255,255,0.6);
+}
+.career-path .timeline.timeline-ai .actions-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.career-path .timeline.timeline-ai .stage-card.current .actions-title { color: rgba(255,255,255,0.95); }
+.career-path .timeline.timeline-ai .actions-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.career-path .timeline.timeline-ai .action-tag {
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid #fbbf24;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #92400e;
+    font-weight: 500;
+}
+.career-path .timeline.timeline-ai .stage-card.current .action-tag {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.4);
+    color: #fff;
+}
+.career-path .timeline.timeline-ai .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+.career-path .timeline.timeline-ai .skill-tag {
+    padding: 6px 14px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.career-path .timeline.timeline-ai .stage-card.current .skill-tag {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+}
+@media (max-width: 768px) {
+    .career-path .timeline.timeline-ai { padding-left: 60px; }
+    .career-path .timeline.timeline-ai::before { left: 30px; }
+    .career-path .timeline.timeline-ai .stage-dot {
+        left: -46px;
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+    .career-path .timeline.timeline-ai .stage-info { grid-template-columns: 1fr; }
+}
+
 /* 时间线：中间竖线，奇左偶右 */
 .timeline {
     position: relative;
@@ -4564,6 +5431,221 @@ body::before {
 .level-desc { font-size: 13px; opacity: 0.9; margin-top: 8px; line-height: 1.4; }
 .level-years { font-size: 13px; opacity: 0.85; margin-top: 4px; }
 .career-path-inner { position: relative; }
+/* ========== 晋升路径 advanced_template 风格（AI 4 级时间轴） ========== */
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai {
+    position: relative;
+    padding-left: 80px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai::before {
+    content: '';
+    position: absolute;
+    left: 40px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #10b981, #3b82f6, #8b5cf6, #ec4899);
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage {
+    position: relative;
+    margin-bottom: 48px;
+    animation: careerStageIn 0.5s ease forwards;
+    opacity: 0;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage:nth-child(1) { animation-delay: 0.05s; }
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage:nth-child(2) { animation-delay: 0.15s; }
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage:nth-child(3) { animation-delay: 0.25s; }
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage:nth-child(4) { animation-delay: 0.35s; }
+@keyframes careerStageIn {
+    to { opacity: 1; transform: translateX(0); }
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-dot {
+    position: absolute;
+    left: -56px;
+    top: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    z-index: 2;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transition: transform 0.25s, box-shadow 0.25s;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #f0f0f0;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-title h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 6px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-subtitle {
+    font-size: 13px;
+    color: #64748b;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-badge {
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .info-item {
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 10px;
+    text-align: center;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .info-item-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .info-item-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .requirements { margin-bottom: 16px; }
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .requirements-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .requirements-list { display: grid; gap: 8px; }
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .requirement-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .requirement-item::before {
+    content: '✓';
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: #10b981;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .actions {
+    background: #fffbeb;
+    padding: 14px;
+    border-radius: 12px;
+    border-left: 4px solid #f59e0b;
+    margin-bottom: 14px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .actions-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .actions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .action-tag {
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid #fbbf24;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #92400e;
+    font-weight: 500;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+#jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .skill-tag {
+    padding: 6px 14px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+#jobProfileGraph .graph-panel-vertical .career-path-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+#jobProfileGraph .graph-panel-vertical .career-path-advanced-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+#jobProfileGraph .graph-panel-vertical .career-path-advanced-header h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+#jobProfileGraph .graph-panel-vertical .career-path-advanced-header p {
+    font-size: 14px;
+    color: #64748b;
+}
+@media (max-width: 768px) {
+    #jobProfileGraph .graph-panel-vertical .timeline.timeline-ai { padding-left: 60px; }
+    #jobProfileGraph .graph-panel-vertical .timeline.timeline-ai::before { left: 30px; }
+    #jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-dot {
+        left: -46px;
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+    #jobProfileGraph .graph-panel-vertical .timeline.timeline-ai .stage-info { grid-template-columns: 1fr; }
+}
 .level-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .level-skill-tag {
     display: inline-block;
@@ -11761,6 +12843,12 @@ body::before {
   pointer-events: auto;
 }
 .agent-msg-bubble .agent-capsule-btn:hover { opacity: 0.92; }
+.agent-msg-bubble .agent-capsule-btn-secondary {
+  background: #fff;
+  color: #4f7cff;
+  border: 1.5px solid #4f7cff;
+}
+.agent-msg-bubble .agent-capsule-btn-secondary:hover { background: #f0f4ff; }
 .agent-typing { display: flex; gap: 4px; padding: 12px 14px; }
 .agent-typing span {
   width: 8px;

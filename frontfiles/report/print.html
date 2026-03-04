@@ -57,8 +57,32 @@
 (function() {
         var params = new URLSearchParams(location.search);
         var reportId = params.get('report_id') || params.get('id');
+        var uidFromUrl = params.get('uid');
         var container = document.getElementById('reportPrintContent');
         var btnPrint = document.getElementById('btnPrintPdf');
+
+        function getUserId() {
+            var uid = typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
+            return uid || (uidFromUrl ? String(uidFromUrl).trim() : null) || null;
+        }
+
+        function getCachedReport(id) {
+            try {
+                var key = 'print_report_' + (id || '');
+                var raw = sessionStorage.getItem(key);
+                if (raw) {
+                    var data = JSON.parse(raw);
+                    if (data && (data.interest_analysis || data.status === 'completed')) return data;
+                }
+            } catch (e) { /* ignore */ }
+            return null;
+        }
+
+        function setCachedReport(id, data) {
+            try {
+                if (id && data) sessionStorage.setItem('print_report_' + id, JSON.stringify(data));
+            } catch (e) { /* ignore */ }
+        }
 
         function formatDateTime(dateString) {
             if (!dateString) return new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -189,29 +213,59 @@
             return;
         }
 
-        var userId = getCurrentUserId();
+        var userId = getUserId();
         if (!userId) {
             container.className = 'error';
-            container.innerHTML = '<p>请先登录后再查看报告。</p>';
+            container.innerHTML = '<p>请先登录后再查看报告；或从报告页点击「导出 PDF」打开本页。</p>';
             return;
         }
 
-        getAssessmentReport(userId, reportId).then(function(result) {
-            if (!result.success) {
-                container.className = 'error';
-                container.innerHTML = '<p>加载失败：' + (result.msg || '请重试') + '</p>';
-                return;
-            }
-            if (result.data.status !== 'completed') {
+        function showReport(data) {
+            if (!data || data.status && data.status !== 'completed') {
                 container.className = 'error';
                 container.innerHTML = '<p>报告尚未生成完成，请稍后再试。</p>';
                 return;
             }
             container.classList.remove('loading');
-            renderReport(result.data);
+            container.classList.remove('error');
+            renderReport(data);
+            setCachedReport(reportId, data);
+        }
+
+        var cached = getCachedReport(reportId);
+        if (cached) {
+            showReport(cached);
+        }
+
+        function onLoadFailed(msg) {
+            if (!cached) {
+                container.className = 'error';
+                container.innerHTML = '<p>' + (msg || '加载失败，请重试') + '</p>';
+            }
+        }
+
+        getAssessmentReport(userId, reportId).then(function(result) {
+            if (result.success) {
+                showReport(result.data);
+                return;
+            }
+            if (cached) return;
+            if (typeof getCareerReport === 'function' && (String(reportId).indexOf('career') >= 0 || result.msg && (result.msg.indexOf('未找到') >= 0 || result.msg.indexOf('不存在') >= 0))) {
+                getCareerReport(userId, reportId).then(function(careerRes) {
+                    if (careerRes.success && careerRes.data) {
+                        container.classList.remove('loading');
+                        container.classList.remove('error');
+                        container.innerHTML = '<div class="report-wrap" style="padding:24px;"><p style="margin-bottom:12px;">此为职业规划报告，本打印页主要支持测评报告。</p><p>请返回报告页，使用页面内的「导出 PDF」按钮直接下载。</p><p style="margin-top:16px;"><a href="../index.html#report">返回报告页</a></p></div>';
+                        document.getElementById('printActions').style.display = 'block';
+                    } else {
+                        onLoadFailed('加载失败：' + (careerRes.msg || '请重试'));
+                    }
+                }).catch(function() { onLoadFailed('加载失败，请重试'); });
+            } else {
+                onLoadFailed('加载失败：' + (result.msg || '请重试'));
+            }
         }).catch(function(err) {
-            container.className = 'error';
-            container.innerHTML = '<p>加载失败，请重试。</p>';
+            onLoadFailed('加载失败，请重试');
         });
 
         async function exportPDF() {

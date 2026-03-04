@@ -31,11 +31,11 @@ def _ensure_job_profiles():
             cur = conn.execute("SELECT COUNT(*) FROM job_profiles")
             if cur.fetchone()[0] == 0:
                 conf_path = get_abs_path(os.path.join("config", "job_profile.yml"))
-                csv_path = get_abs_path(os.path.join("data", "求职岗位信息数据.csv"))
+                csv_path = get_abs_path("data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
                 if os.path.isfile(conf_path):
                     with open(conf_path, "r", encoding="utf-8") as f:
                         conf = yaml.safe_load(f) or {}
-                    csv_path = get_abs_path(conf.get("job_data_path", "data/求职岗位信息数据.csv"))
+                    csv_path = get_abs_path(conf.get("job_data_path", "data/a13基于AI的大学生职业规划智能体-JD采样数据.csv"))
                 if os.path.isfile(csv_path):
                     populate_from_csv(csv_path, limit=5000)
         finally:

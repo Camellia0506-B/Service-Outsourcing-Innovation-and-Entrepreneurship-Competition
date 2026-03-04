@@ -1,16 +1,34 @@
-# 关联图谱：岗位搜索与薪资上下文（基于 求职岗位信息数据.csv）
+# 关联图谱：岗位搜索与薪资上下文（数据源：job_data_path，默认 a13 JD采样数据）
 import pandas as pd
 import re
 import os
 from functools import lru_cache
 
-CSV_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', '求职岗位信息数据.csv')
+
+def _get_csv_path():
+    """从配置获取岗位数据 CSV 路径（项目根相对）"""
+    try:
+        from utils.config_handler import job_profile_conf
+        from utils.path_tool import get_abs_path
+        path = job_profile_conf.get("job_data_path", "data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
+        return get_abs_path(path)
+    except Exception:
+        from utils.path_tool import get_abs_path
+        return get_abs_path("data/a13基于AI的大学生职业规划智能体-JD采样数据.csv")
+
+
+_COLUMN_MAP = {"岗位名称": "职位名称", "地址": "工作地址", "公司名称": "公司全称", "岗位详情": "职位描述",
+               "公司详情": "公司简介", "公司规模": "人员规模", "公司类型": "企业性质", "岗位编码": "职位编号"}
 
 
 @lru_cache(maxsize=1)
 def load_jobs():
     """启动时加载一次，缓存内存，不要每次请求都读文件"""
-    df = pd.read_csv(CSV_PATH, encoding='utf-8-sig')
+    csv_path = _get_csv_path()
+    if not os.path.isfile(csv_path):
+        return pd.DataFrame()
+    df = pd.read_csv(csv_path, encoding='utf-8-sig')
+    df = df.rename(columns={k: v for k, v in _COLUMN_MAP.items() if k in df.columns})
     df = df.fillna('')
     return df
 

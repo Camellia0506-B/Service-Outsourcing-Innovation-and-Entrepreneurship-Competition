@@ -1,0 +1,14 @@
+[
+  {"jobName": "前端开发工程师", "level": "中级", "salaryRange": "12k-22k", "category": "技术研发", "industry": "计算机软件,互联网,IT服务", "heat": 100, "tags": ["技术", "经验", "学历"], "dataCount": 320},
+  {"jobName": "实施工程师", "level": "中级", "salaryRange": "7k-12k", "category": "技术研发", "industry": "计算机软件", "heat": 95, "tags": ["技术", "经验", "学历"], "dataCount": 280},
+  {"jobName": "Java开发工程师", "level": "中级", "salaryRange": "15k-28k", "category": "技术研发", "industry": "互联网", "heat": 92, "tags": ["技术", "经验", "学历"], "dataCount": 265},
+  {"jobName": "软件测试", "level": "中级", "salaryRange": "7k-13k", "category": "技术研发", "industry": "计算机软件", "heat": 88, "tags": ["技术", "经验", "学历"], "dataCount": 240},
+  {"jobName": "科研人员", "level": "中级", "salaryRange": "1-2万", "category": "其他", "industry": "学术/科研", "heat": 85, "tags": ["技术", "经验", "学历"], "dataCount": 220},
+  {"jobName": "技术支持工程师", "level": "中级", "salaryRange": "6k-12k", "category": "技术研发", "industry": "计算机软件", "heat": 82, "tags": ["技术", "经验", "学历"], "dataCount": 200},
+  {"jobName": "算法工程师", "level": "中级", "salaryRange": "20k-35k", "category": "技术研发", "industry": "互联网/AI", "heat": 78, "tags": ["技术", "经验", "学历"], "dataCount": 185},
+  {"jobName": "数据分析师", "level": "中级", "salaryRange": "10k-18k", "category": "数据分析", "industry": "互联网", "heat": 75, "tags": ["技术", "经验", "学历"], "dataCount": 170},
+  {"jobName": "产品经理", "level": "中级", "salaryRange": "15k-28k", "category": "产品运营", "industry": "互联网", "heat": 72, "tags": ["技术", "经验", "学历"], "dataCount": 160},
+  {"jobName": "后端开发工程师", "level": "中级", "salaryRange": "14k-25k", "category": "技术研发", "industry": "互联网", "heat": 70, "tags": ["技术", "经验", "学历"], "dataCount": 155},
+  {"jobName": "测试工程师", "level": "中级", "salaryRange": "12k-20k", "category": "技术研发", "industry": "互联网", "heat": 68, "tags": ["技术", "经验", "学历"], "dataCount": 148},
+  {"jobName": "UI/UX设计师", "level": "中级", "salaryRange": "12k-22k", "category": "设计创意", "industry": "互联网", "heat": 65, "tags": ["技术", "经验", "学历"], "dataCount": 140}
+]

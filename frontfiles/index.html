@@ -811,14 +811,21 @@
             </div>
         </div>
 
-        <!-- 真实招聘数据弹窗（深绿头部，来自 CSV） -->
+        <!-- 真实招聘数据弹窗（幻灯片式，蓝色主题 #4361ee） -->
         <div id="realDataModal" class="real-data-modal-overlay hidden">
-            <div class="real-data-modal-box" onclick="event.stopPropagation()">
+            <div class="real-data-modal-box real-data-slide-box" onclick="event.stopPropagation()">
                 <div class="real-data-modal-header">
-                    <span class="real-data-modal-label">📂 来自真实招聘数据库</span>
+                    <span id="realDataModalTitle" class="real-data-modal-label">📂 真实招聘数据</span>
                     <button type="button" class="real-data-modal-close" id="realDataModalClose" aria-label="关闭">&times;</button>
                 </div>
-                <div id="realDataModalBody" class="real-data-modal-body"></div>
+                <div class="real-data-slide-wrap">
+                    <div id="realDataModalBody" class="real-data-modal-body real-data-slide-body"></div>
+                    <div class="real-data-slide-nav">
+                        <button type="button" class="real-data-nav-btn" id="realDataPrevBtn" aria-label="上一页">‹</button>
+                        <span class="real-data-page-indicator"><span id="realDataCurrentPage">1</span> / <span id="realDataTotalPages">1</span></span>
+                        <button type="button" class="real-data-nav-btn" id="realDataNextBtn" aria-label="下一页">›</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1857,7 +1864,7 @@
                 <button type="button" class="agent-quick-btn" data-key="ability">画像</button>
                 <button type="button" class="agent-quick-btn" data-key="matching">匹配</button>
                 <button type="button" class="agent-quick-btn" data-key="report">报告</button>
-                <button type="button" class="agent-quick-btn" data-key="query">查询</button>
+                <button type="button" class="agent-quick-btn" data-key="query">画像</button>
             </div>
             <div class="agent-input-wrap">
                 <textarea id="agentInput" class="agent-input" rows="1" placeholder="问我任何职业规划问题..." maxlength="2000"></textarea>

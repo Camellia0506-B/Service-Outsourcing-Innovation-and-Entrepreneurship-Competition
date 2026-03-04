@@ -481,122 +481,152 @@ const nodes = {
   arch:  { name:'大数据架构师', icon:'🏗️', sal:'45k–90k', match:52, color:'#ff4d6d', desc:'基于数据处理经验转向系统架构',  diff:'高', time:'18–24月',skills:'分布式系统·Spark·架构设计', transfers:['mle','quant'] },
 };
 
-// 布局坐标（百分比，相对画布宽高）
+// 布局坐标（百分比）：中心稍偏上，6 节点均匀分布不遮挡（来自 files (3).zip 替换代码）
 const layout = {
-  center:{ rx:0.5,  ry:0.5  },
-  pm:    { rx:0.5,  ry:0.1  },
-  ds:    { rx:0.82, ry:0.22 },
-  mle:   { rx:0.82, ry:0.72 },
-  quant: { rx:0.5,  ry:0.88 },
-  res:   { rx:0.18, ry:0.72 },
-  arch:  { rx:0.18, ry:0.22 },
+  center: { rx: 0.50, ry: 0.48 },
+  pm:     { rx: 0.50, ry: 0.10 },
+  ds:     { rx: 0.82, ry: 0.26 },
+  mle:    { rx: 0.82, ry: 0.70 },
+  quant:  { rx: 0.50, ry: 0.88 },
+  res:    { rx: 0.15, ry: 0.70 },
+  arch:   { rx: 0.15, ry: 0.26 },
 };
 
-// 卡片尺寸
-const CARD = { center:{w:136,h:108}, job:{w:150,h:172} };
+// 卡片尺寸：与截图一致，岗位卡 170px 宽
+const CARD = { center: { w: 148, h: 116 }, job: { w: 170, h: 195 } };
+
+function esc(s) {
+  return s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 function buildGraph() {
+  const dynamicNodes = nodes;
   const wrap = document.getElementById('graphWrap');
-  const W = wrap.offsetWidth, H = wrap.offsetHeight;
-  wrap.querySelectorAll('.g-node,.edge-lbl').forEach(e=>e.remove());
+  if (!wrap) return;
+  const W = wrap.offsetWidth;
+  const H = wrap.offsetHeight;
+  wrap.querySelectorAll('.g-node, .edge-lbl').forEach(e => e.remove());
 
   const pos = {};
-  Object.keys(layout).forEach(id=>{
+  Object.keys(layout).forEach(id => {
     pos[id] = { x: layout[id].rx * W, y: layout[id].ry * H };
   });
 
-  // SVG
   const svg = document.getElementById('svgLayer');
-  let defs = `<defs>
-    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#00b894"/></marker>
-    <marker id="arr-gold"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f5a623"/></marker>
-    <marker id="arr-red"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ff4d6d"/></marker>
-    <marker id="arr-blue"  markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#4f7cff"/></marker>
-  </defs>`;
+  if (!svg) return;
+  const defs = `<defs>
+  <marker id="arr-green"  markerWidth="10" markerHeight="10" refX="9" refY="4" orient="auto"><path d="M0,0.5 L9,4 L0,7.5 Z" fill="#10b981"/></marker>
+  <marker id="arr-gold"   markerWidth="10" markerHeight="10" refX="9" refY="4" orient="auto"><path d="M0,0.5 L9,4 L0,7.5 Z" fill="#f59e0b"/></marker>
+  <marker id="arr-red"    markerWidth="10" markerHeight="10" refX="9" refY="4" orient="auto"><path d="M0,0.5 L9,4 L0,7.5 Z" fill="#ef4444"/></marker>
+  <marker id="arr-purple" markerWidth="10" markerHeight="10" refX="9" refY="4" orient="auto"><path d="M0,0.5 L9,4 L0,7.5 Z" fill="#7c5cff" opacity="0.7"/></marker>
+</defs>`;
   let paths = '';
+  const nodeIds = Object.keys(dynamicNodes).filter(id => id !== 'center');
 
-  // 中心到各节点的连线
-  Object.keys(nodes).forEach(id=>{
-    if(id==='center') return;
-    const n = nodes[id];
-    const p1 = pos.center, p2 = pos[id];
-    const color = n.match>=80 ? '#00b894' : n.match>=60 ? '#f5a623' : '#ff4d6d';
-    const arrId = n.match>=80 ? 'arr-green' : n.match>=60 ? 'arr-gold' : 'arr-red';
-    const dash = n.match < 60 ? 'stroke-dasharray="7 4"' : n.match < 80 ? 'stroke-dasharray="10 3"' : '';
-    // 曲线控制点
-    const cpx = (p1.x+p2.x)/2 + (p2.y-p1.y)*0.15;
-    const cpy = (p1.y+p2.y)/2 - (p2.x-p1.x)*0.15;
-    paths += `<path d="M${p1.x},${p1.y} Q${cpx},${cpy} ${p2.x},${p2.y}"
-      fill="none" stroke="${color}" stroke-width="2" ${dash} opacity="0.75"
-      marker-end="url(#${arrId})"
-      style="animation:dashFlow 2s linear infinite"/>`;
-
-    // 中间标签
-    const lx = (p1.x*0.45 + p2.x*0.55 + (p2.y-p1.y)*0.08);
-    const ly = (p1.y*0.45 + p2.y*0.55 - (p2.x-p1.x)*0.08);
-    const lbl = document.createElement('div');
-    lbl.className = 'edge-lbl';
-    lbl.textContent = `${n.match}% · ${n.diff}`;
-    lbl.style.cssText = `left:${lx}px;top:${ly}px;color:${color};border-color:${color}30`;
-    wrap.appendChild(lbl);
+  nodeIds.forEach(id => {
+    const n = dynamicNodes[id];
+    const p1 = pos['center'];
+    const p2 = pos[id];
+    if (!p1 || !p2) return;
+    const color = n.match >= 80 ? '#10b981' : n.match >= 60 ? '#f59e0b' : '#ef4444';
+    const arrId = n.match >= 80 ? 'arr-green' : n.match >= 60 ? 'arr-gold' : 'arr-red';
+    const dash = n.match < 60 ? 'stroke-dasharray="8 5"' : n.match < 80 ? 'stroke-dasharray="12 4"' : '';
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const ux = dx / dist, uy = dy / dist;
+    const centerR = 72;
+    const sx = p1.x + ux * centerR, sy = p1.y + uy * centerR;
+    const hw = CARD.job.w / 2, hh = CARD.job.h / 2;
+    const uxBack = -ux, uyBack = -uy;
+    const tW2 = Math.abs(uxBack) > 0.0001 ? hw / Math.abs(uxBack) : Infinity;
+    const tH2 = Math.abs(uyBack) > 0.0001 ? hh / Math.abs(uyBack) : Infinity;
+    const tEdge = Math.min(tW2, tH2) + 8;
+    const ex = p2.x + uxBack * tEdge, ey = p2.y + uyBack * tEdge;
+    const midX = (sx + ex) / 2, midY = (sy + ey) / 2;
+    const perpX = -(ey - sy), perpY = (ex - sx);
+    const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
+    const curvature = 0.12;
+    const cpx = midX + (perpLen > 0 ? perpX / perpLen : 0) * dist * curvature;
+    const cpy = midY + (perpLen > 0 ? perpY / perpLen : 0) * dist * curvature;
+    paths += `<path d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${cpx.toFixed(1)},${cpy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="${color}" stroke-width="2.5" ${dash} opacity="0.9" marker-end="url(#${arrId})"/>`;
   });
 
-  // 岗位间换岗连线（细虚线）
-  const drawn = new Set();
-  Object.keys(nodes).forEach(fromId=>{
-    if(fromId==='center') return;
-    const n = nodes[fromId];
-    (n.transfers||[]).forEach(toId=>{
-      const key = [fromId,toId].sort().join('-');
-      if(drawn.has(key)) return;
-      drawn.add(key);
-      const p1=pos[fromId], p2=pos[toId];
-      const cpx=(p1.x+p2.x)/2+(p2.y-p1.y)*0.2;
-      const cpy=(p1.y+p2.y)/2-(p2.x-p1.x)*0.2;
-      paths += `<path d="M${p1.x},${p1.y} Q${cpx},${cpy} ${p2.x},${p2.y}"
-        fill="none" stroke="#7c5cff" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.5"
-        marker-end="url(#arr-blue)"/>`;
-    });
-  });
+  svg.innerHTML = defs + paths;
 
-  svg.innerHTML = defs + `<style>@keyframes dashFlow{to{stroke-dashoffset:-20}}</style>` + paths;
-
-  // 渲染节点
   let delay = 0;
-  Object.keys(nodes).forEach(id=>{
-    const n = nodes[id];
+  const renderOrder = ['center', ...nodeIds];
+  renderOrder.forEach(id => {
+    const n = dynamicNodes[id];
     const p = pos[id];
+    if (!p || !n) return;
     const el = document.createElement('div');
     el.className = 'g-node';
-    el.style.animationDelay = (delay+=0.07) + 's';
 
-    if(n.isCenter){
-      el.style.cssText = `left:${p.x - CARD.center.w/2}px;top:${p.y - CARD.center.h/2}px;animation-delay:0s`;
-      el.innerHTML = `<div class="cn"><div class="cn-ico">🤖</div><div class="cn-name">算法工程师</div><div class="cn-badge">当前岗位</div></div>`;
+    if (n.isCenter) {
+      el.style.cssText = `left:${(p.x - CARD.center.w / 2).toFixed(1)}px;top:${(p.y - CARD.center.h / 2).toFixed(1)}px;animation-delay:0s;z-index:5;`;
+      el.innerHTML = `<div class="cn" style="width:${CARD.center.w}px;background:linear-gradient(135deg,#5b7fff 0%,#7c5cff 100%);color:#fff;border-radius:18px;padding:18px 14px;text-align:center;box-shadow:0 8px 32px rgba(92,92,255,0.45),0 0 0 8px rgba(92,92,255,0.16),0 0 0 16px rgba(92,92,255,0.07);position:relative;">
+        <div class="cn-ico" style="font-size:26px;margin-bottom:8px">💼</div>
+        <div class="cn-name" style="font-size:14px;font-weight:700;margin-bottom:6px">${esc(n.name || '当前岗位')}</div>
+        <div class="cn-badge" style="display:inline-block;background:rgba(255,255,255,0.20);border:1px solid rgba(255,255,255,0.32);font-size:10px;padding:2px 10px;border-radius:10px">当前岗位</div>
+      </div>`;
     } else {
-      const diff_color = n.match>=80?'#009e7a':n.match>=60?'#c47d00':'#d03050';
-      const diff_bg    = n.match>=80?'rgba(0,184,148,0.1)':n.match>=60?'rgba(245,166,35,0.1)':'rgba(255,77,109,0.08)';
-      const diff_bd    = n.match>=80?'rgba(0,184,148,0.2)':n.match>=60?'rgba(245,166,35,0.2)':'rgba(255,77,109,0.18)';
-      el.style.cssText = `left:${p.x - CARD.job.w/2}px;top:${p.y - CARD.job.h/2}px;animation-delay:${delay}s;opacity:0`;
-      el.innerHTML = `
-        <div class="jn" style="border-color:${n.color}40">
-          <div class="jn-top">
-            <div class="jn-ico" style="background:${n.color}15">${n.icon}</div>
-            <div><div class="jn-name">${n.name}</div><div class="jn-sal">${n.sal}</div></div>
-          </div>
-          <div class="jn-mr"><span class="jn-ml">匹配度</span><span class="jn-mv" style="color:${n.color}">${n.match}%</span></div>
-          <div class="jn-bar-bg"><div class="jn-bar" style="width:${n.match}%;background:${n.color}"></div></div>
-          <div class="jn-tags">
-            <span class="jn-tag" style="background:${diff_bg};color:${diff_color};border:1px solid ${diff_bd}">难度${n.diff}</span>
-            <span class="jn-tag" style="background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.15)">⏱ ${n.time}</span>
-          </div>
-          <div class="jn-skills"><em>可迁移：</em>${n.skills}</div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${n.desc}</div>
-          <button class="jn-btn" style="background:${n.color}12;color:${n.color};border:1px solid ${n.color}30">→ 查看详情</button>
-        </div>`;
+      delay += 0.07;
+      const color = n.color || '#f59e0b';
+      const matchPct = n.match || 0;
+      const diffText = n.diff || '中';
+      let diffColor, diffBg, diffBd;
+      if (diffText === '低' || matchPct >= 80) { diffColor = '#059669'; diffBg = 'rgba(5,150,105,0.1)'; diffBd = 'rgba(5,150,105,0.2)'; }
+      else if (diffText === '高' || matchPct < 60) { diffColor = '#dc2626'; diffBg = 'rgba(220,38,38,0.08)'; diffBd = 'rgba(220,38,38,0.18)'; }
+      else { diffColor = '#d97706'; diffBg = 'rgba(245,158,11,0.1)'; diffBd = 'rgba(245,158,11,0.2)'; }
+      const company = esc(n.company || '');
+      const nameEsc = esc(n.name || '');
+      const salEsc = esc(n.sal || '面议');
+      const timeEsc = esc(n.time || '');
+      el.style.cssText = `left:${(p.x - CARD.job.w / 2).toFixed(1)}px;top:${(p.y - CARD.job.h / 2).toFixed(1)}px;animation-delay:${delay}s;opacity:0;z-index:3;`;
+      el.innerHTML = `<div class="jn" style="width:${CARD.job.w}px;background:#fff;border:1.5px solid ${color}55;border-radius:14px;padding:12px 13px 10px 16px;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.07);">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${color};border-radius:14px 0 0 14px;"></div>
+        <div class="jn-top" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px">
+          <div class="jn-ico" style="width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:linear-gradient(135deg,${color}22,${color}11);border:1px solid ${color}33">📌</div>
+          <div style="flex:1;min-width:0"><div class="jn-name" style="font-size:13px;font-weight:700;color:#1a2340;line-height:1.3">${nameEsc}</div><div class="jn-sal" style="font-size:10px;color:#aab4cc;margin-top:1px">${salEsc}</div></div>
+        </div>
+        ${company ? `<div style="font-size:10px;color:#aab4cc;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${company} · ...</div>` : '<div style="height:4px"></div>'}
+        <div class="jn-mr" style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="jn-ml" style="font-size:10px;color:#aab4cc">匹配度</span><span class="jn-mv" style="font-size:12px;font-weight:800;color:${color}">${matchPct}%</span></div>
+        <div class="jn-bar-bg" style="height:4px;background:rgba(0,0,0,0.06);border-radius:10px;overflow:hidden;margin-bottom:8px"><div class="jn-bar" style="width:${matchPct}%;height:100%;border-radius:10px;background:${color}"></div></div>
+        <div class="jn-tags" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
+          <span class="jn-tag" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:${diffBg};color:${diffColor};border:1px solid ${diffBd}">难度${diffText}</span>
+          ${timeEsc ? `<span class="jn-tag" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.15)">⏱ ${timeEsc}</span>` : ''}
+        </div>
+        <button class="jn-btn" style="width:100%;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:linear-gradient(90deg,rgba(79,124,255,0.88),rgba(124,92,255,0.88));color:#fff;letter-spacing:0.03em;box-shadow:0 2px 8px rgba(79,124,255,0.28);display:flex;align-items:center;justify-content:center;gap:5px">📌 推荐岗位</button>
+      </div>`;
     }
     wrap.appendChild(el);
   });
+}
+
+// 将接口返回的转岗列表转为图谱用的 dynamicNodes（可选，供外部调用）
+function convertToGraphNodes(centerJobName, transferNodes) {
+  const out = { center: { name: centerJobName, icon: '💼', isCenter: true } };
+  const layoutKeys = ['pm', 'ds', 'mle', 'quant', 'res', 'arch'];
+  (transferNodes || []).forEach((node, index) => {
+    const matchScore = node.match_score ?? node.match ?? 0;
+    const color = matchScore >= 80 ? '#10b981' : matchScore >= 60 ? '#f59e0b' : '#ef4444';
+    const key = layoutKeys[index] || 'node' + index;
+    out[key] = {
+      name: node.name || node.job_name || '',
+      icon: node.icon || '💼',
+      sal: node.salary || node.sal || '面议',
+      company: node.company || node.top_company || '',
+      match: matchScore,
+      color: color,
+      desc: node.description || '',
+      diff: node.difficulty || '中',
+      time: node.time || node.transition_months || '',
+      skills: node.transferable_skills || '',
+      transfers: (node.kinship_edges || []).map(function(id) { var idx = (transferNodes || []).findIndex(function(n) { return (n.id || n.job_id) === id; }); return layoutKeys[idx] || id; }),
+    };
+  });
+  return out;
 }
 </script>
 </body>

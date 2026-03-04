@@ -23,6 +23,24 @@ const API_CONFIG = {
     mockMode: false  // true=模拟数据；false=连接真实后端（Java:5000 / AI:5002）
 };
 
+// 规范化 baseURL：若缺少 host（如 http://:5002）或非 http(s) 则补全为 localhost，避免 404
+function normalizeBaseURL(url, defaultOrigin) {
+    const def = defaultOrigin || 'http://localhost:5002/api/v1';
+    if (!url || typeof url !== 'string') return def;
+    var s = url.trim();
+    if (!s.startsWith('http://') && !s.startsWith('https://')) return def;
+    try {
+        const u = new URL(s);
+        if (!u.hostname || u.hostname === '') {
+            u.hostname = 'localhost';
+            return u.origin + (u.pathname || '/api/v1');
+        }
+        return s;
+    } catch (_) {
+        return def;
+    }
+}
+
 // ==================== 大模型解析（Agent核心：自然语言 → JSON，走本地AI服务） ====================
 // 与后端其它模块保持一致：由 Flask + ChatTongyi(qwen3-max) 调通义千问，
 // 前端只请求本地接口 /api/v1/job/agent/parse-requirement，不直接暴露外部 API Key。
@@ -30,7 +48,8 @@ async function agentParseJobProfileRequirement(userText) {
     if (!userText || !String(userText).trim()) {
         return { success: false, msg: '请输入岗位画像生成需求' };
     }
-    const url = `${API_CONFIG.jobProfilesBaseURL}/job/agent/parse-requirement`.replace(/\/api\/v1\/?$/, '/api/v1/job/agent/parse-requirement');
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL, 'http://localhost:5002/api/v1');
+    const url = `${base}/job/agent/parse-requirement`.replace(/\/api\/v1\/?$/, '/api/v1/job/agent/parse-requirement');
     try {
         const resp = await fetch(url, {
             method: 'POST',
@@ -56,8 +75,8 @@ async function agentParseJobProfileRequirement(userText) {
 // API工具类
 class API {
     constructor() {
-        this.baseURL = API_CONFIG.baseURL;
-        this.aiBaseURL = API_CONFIG.assessmentBaseURL || this.baseURL;
+        this.baseURL = normalizeBaseURL(API_CONFIG.baseURL, 'http://localhost:5000/api/v1');
+        this.aiBaseURL = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
     }
 
     // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }，带超时避免一直加载
@@ -110,7 +129,8 @@ class API {
     // 通用请求方法（测评、职业规划报告、人岗匹配走 AI 服务 5002，其余走 Java 5000）
     async request(endpoint, options = {}) {
         const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/') || endpoint.startsWith('/matching/');
-        const base = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
+        const raw = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
+        const base = normalizeBaseURL(raw, useAI ? 'http://localhost:5002/api/v1' : 'http://localhost:5000/api/v1');
         const url = `${base}${endpoint}`;
         const token = _storage.getItem('token');
         
@@ -168,12 +188,34 @@ class API {
         }
     }
 
-    // POST请求
+    // POST 请求（根据 endpoint 自动选择 5000/5002）
     async post(endpoint, data) {
         return this.request(endpoint, {
             method: 'POST',
             body: data
         });
+    }
+
+    // 明确请求 Java 后端 5000（用于 5002 返回 404 时的回退）
+    async postToJava(endpoint, data) {
+        const base = normalizeBaseURL(this.baseURL, 'http://localhost:5000/api/v1');
+        const url = `${base}${endpoint}`;
+        const token = _storage.getItem('token');
+        if (API_CONFIG.mockMode) return this.mockRequest(endpoint, { method: 'POST', body: data });
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...(token && { 'Authorization': `Bearer ${token}` }) },
+                body: JSON.stringify(data || {})
+            });
+            const text = await response.text();
+            let result;
+            try { result = JSON.parse(text); } catch (_) { return { success: false, msg: `服务返回异常 (${response.status})`, code: response.status }; }
+            if (result.code === 200) return { success: true, data: result.data, msg: result.msg };
+            return { success: false, msg: result.msg, code: result.code };
+        } catch (e) {
+            return { success: false, msg: e.message || '网络错误' };
+        }
     }
 
     // GET请求（query 参数对象）
@@ -1473,13 +1515,21 @@ async function getAssessmentReport(userId, reportId) {
     });
 }
 
+// 智能评分：根据测评答案计算四维度能力分数与建议（学习/逻辑/执行/创新）
+// answers: [{ question_id, answer }, ...] 或 { q1: 'A', q2: 'B', ... }
+async function calculateAssessmentScores(answers) {
+    const res = await api.postToAI('/assessment/calculate', { answers: answers });
+    if (res && res.code === 200 && res.data) return { success: true, data: res.data };
+    return { success: false, data: null };
+}
+
 // ==================== 岗位画像模块 ====================
 
 // 4.1 获取岗位画像列表（统一使用 GET，与后端 Flask GET/POST 双支持一致，避免 405）
 // 约定：GET /api/v1/job/profiles?page=1&size=12&keyword=&industry=&level=
 // 兼容返回格式：{ total, page, size, list }（Flask）或 { total, pages, current, records }（Java）
 async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', level = '', filters = null) {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('size', String(size));
@@ -1579,9 +1629,24 @@ async function getJobIndustries() {
     return { success: false, data: { industries: [] } };
 }
 
+// 热门岗位：GET /api/v1/job/hot-jobs（替换精选列表）
+async function getHotJobs() {
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
+    const url = `${base}/job/hot-jobs`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        if (data.code === 200 && Array.isArray(data.data)) return { success: true, data: data.data };
+        return { success: false, data: [] };
+    } catch (e) {
+        console.error('getHotJobs:', e);
+        return { success: false, data: [] };
+    }
+}
+
 // 真实招聘数据：GET http://localhost:5002/api/v1/job/real-data?jobName=xxx&size=5
 async function getJobRealData(jobName, size = 5) {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
     const url = `${base}/job/real-data?jobName=${encodeURIComponent(jobName || '')}&size=${Math.max(1, Math.min(20, size))}`;
     try {
         const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
@@ -1616,7 +1681,7 @@ async function getJobProfileDetail(jobIdOrName, byName = false) {
 
 // 岗位画像流式生成接口 URL（供 app.js 使用 fetch + ReadableStream）
 function getJobProfileStreamURL() {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || 'http://localhost:5002/api/v1';
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || 'http://localhost:5002/api/v1', 'http://localhost:5002/api/v1');
     return base + '/job/generate-profile-stream';
 }
 
@@ -1625,30 +1690,83 @@ async function getJobRelationGraph(jobId, graphType = 'all') {
     return await api.postToAI('/job/relation-graph', { job_id: jobId, graph_type: graphType });
 }
 
+// 岗位关联图谱（基于真实数据集：晋升路径 + 转岗路径 + Top5 岗位）
+async function getCareerGraph(jobName) {
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
+    const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '算法工程师';
+    const url = `${base}/job/career-graph?jobName=${encodeURIComponent(effective)}`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        if (json.code === 200 && json.data) return { success: true, data: json.data };
+        return { success: false, data: null };
+    } catch (e) {
+        console.error('getCareerGraph:', e);
+        return { success: false, data: null };
+    }
+}
+
 // 关联图谱：岗位搜索联想（基于 CSV，/api/v1/job/search）
 async function searchJobsGraph(keyword) {
     return await api.postToAI('/job/search', { keyword });
 }
 
+// 多样化晋升路径（不同岗位不同阶段名称与年限，基于真实数据）
+async function getCareerPathDiverse(jobType) {
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
+    const effective = (jobType != null && String(jobType).trim() !== '') ? String(jobType).trim() : '算法';
+    const url = `${base}/job/career-path-diverse/${encodeURIComponent(effective)}`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json().catch(() => ({}));
+        if (json.code === 200 && json.data && Array.isArray(json.data.careerPath)) {
+            return { success: true, data: json.data };
+        }
+        return { success: false, data: null };
+    } catch (e) {
+        console.error('getCareerPathDiverse:', e);
+        return { success: false, data: null };
+    }
+}
+
+// AI 生成个性化晋升路径（优先缓存，未命中时实时调用千问）
+async function getCareerPathAI(jobName) {
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
+    const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '算法工程师';
+    const url = `${base}/job/career-path-ai/${encodeURIComponent(effective)}`;
+    try {
+        const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json().catch(() => ({}));
+        if (json.code === 200 && json.data && Array.isArray(json.data.levels)) {
+            return { success: true, data: json.data };
+        }
+        return { success: false, data: null };
+    } catch (e) {
+        console.error('getCareerPathAI:', e);
+        return { success: false, data: null };
+    }
+}
+
 // 4.3.1 获取岗位晋升路径（GET，基于 job_profiles 表动态数据）
 async function getCareerPath(jobName) {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
     const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '';
-    if (!effective) return { code: 400, data: { path: [] } };
+    if (!effective) return { code: 400, data: { path: [] }, msg: '请填写岗位名称' };
     const url = `${base}/job/career-path?jobName=${encodeURIComponent(effective)}`;
     try {
         const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-        const json = await res.json();
+        if (!res.ok) return { code: res.status, data: { path: [] }, msg: '晋升路径接口异常，请确认 AI 服务 (5002) 已启动' };
+        const json = await res.json().catch(() => ({ code: 500, data: { path: [] } }));
         return json;
     } catch (e) {
         console.error('getCareerPath:', e);
-        return { code: 500, data: { path: [] } };
+        return { code: 500, data: { path: [] }, msg: (e && e.message) ? e.message : '网络错误，请确认 AI 服务已启动' };
     }
 }
 
 // 转岗图谱（GET，基于 job_profiles 表动态匹配度）
 async function getRelationGraphByJobName(jobName) {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
     const effective = (jobName != null && String(jobName).trim() !== '') ? String(jobName).trim() : '';
     if (!effective) return { code: 400, data: [], center_job: null };
     const url = `${base}/job/relation-graph?jobName=${encodeURIComponent(effective)}`;
@@ -1664,7 +1782,7 @@ async function getRelationGraphByJobName(jobName) {
 
 // 换岗卡片「查看详情」：拉取 3～5 条 CSV 招聘信息
 async function getJobRecruitments(keyword) {
-    const base = API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL;
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
     const effective = (keyword != null && String(keyword).trim() !== '') ? String(keyword).trim() : '';
     if (!effective) return { code: 400, data: [] };
     const url = `${base}/job/recruitments?keyword=${encodeURIComponent(effective)}`;
@@ -1768,10 +1886,15 @@ async function updateAbilityProfile(userId, updates) {
 // ==================== 人岗匹配模块 ====================
 
 // 获取推荐岗位（支持 filters: cities, salary_min, industries）
+// 先请求 AI 服务 5002，若 404 则回退到 Java 5000，避免仅启一方时报错
 async function getRecommendedJobs(userId, topN = 10, filters = {}) {
     const body = { user_id: userId, top_n: topN };
     if (filters && Object.keys(filters).length) body.filters = filters;
-    return await api.post('/matching/recommend-jobs', body);
+    let result = await api.post('/matching/recommend-jobs', body);
+    if (!result.success && (result.code === 404 || (result.msg && String(result.msg).indexOf('404') !== -1))) {
+        result = await api.postToJava('/matching/recommend-jobs', body);
+    }
+    return result;
 }
 
 // 人岗匹配分析（API 使用 job_id）
