@@ -3208,7 +3208,17 @@ class CareerPlanningApp {
         if (result.success && result.data) {
             this.renderAbilityProfile(result.data, container);
         } else {
-            container.innerHTML = '<div class="hint-text">暂无能力画像，请先完善个人档案并完成测评</div>';
+            const msg = (result && result.msg) ? String(result.msg) : '暂无能力画像，请先完善个人档案并完成测评';
+            const safe = msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            container.innerHTML = `
+                <div class="hint-text">
+                    ${safe}<br/>
+                    <button id="abilityProfileInlineGenBtn" class="btn-primary" style="margin-top: 12px;">🤖 生成能力画像</button>
+                    <button id="abilityProfileInlineRefreshBtn" class="btn-secondary" style="margin-top: 12px; margin-left: 8px;">刷新</button>
+                </div>
+            `;
+            document.getElementById('abilityProfileInlineGenBtn')?.addEventListener('click', () => this.aiGenerateAbilityProfile());
+            document.getElementById('abilityProfileInlineRefreshBtn')?.addEventListener('click', () => this.loadAbilityProfile());
         }
     }
 
@@ -7550,7 +7560,7 @@ class CareerPlanningApp {
 
             // 3. 轮询获取生成结果，完成后以卡片 + 对话形式输出
             let attempts = 0;
-            const maxAttempts = 20;
+            const maxAttempts = 60;
             while (attempts < maxAttempts) {
                 attempts += 1;
                 const pollResult = await getJobAiGenerateResult(taskId);
@@ -7566,10 +7576,10 @@ class CareerPlanningApp {
                     this.showToast('岗位画像生成失败，请稍后重试', 'error');
                     return;
                 }
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            this.showToast('岗位画像生成超时，请稍后重试', 'error');
+            this.showToast('岗位画像生成耗时较长：任务仍在后台处理中，可稍后再次进入本页继续查看结果', 'error');
         } finally {
             this._setAgentLoading(false);
         }
@@ -7846,7 +7856,7 @@ class CareerPlanningApp {
         }
     }
 
-    pollJobAiGenerateResult(taskId, btn, maxAttempts = 20) {
+    pollJobAiGenerateResult(taskId, btn, maxAttempts = 60) {
         let attempts = 0;
         const resultContainer = document.getElementById('aiGenerateResult');
         const errorBar = document.getElementById('aiErrorBar');

@@ -25,6 +25,7 @@ import os
 import re
 from datetime import datetime
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 import yaml
 from langchain_core.output_parsers import StrOutputParser
@@ -1048,28 +1049,42 @@ class JobProfileService:
         # Step 3: 调用模型（失败时自动降级为本地兜底画像）
         profile = None
         raw_output = None
-        try:
-            chain = self._build_chain()
-            raw_output = chain.invoke({
-                "job_name":     job_name,
-                "job_id":       job_id,
-                "category":     category,
-                "data_section": data_section,
-                "dim_weights":  json.dumps(weights, ensure_ascii=False),
-            })
-            # 调试：打印 qwen 完整返回内容（StrOutputParser 下 raw_output 即为模型输出字符串）
-            content = raw_output if isinstance(raw_output, str) else getattr(raw_output, "content", str(raw_output))
-            print("=== qwen完整返回 ===")
-            print(content)
-            print("=== 返回长度:", len(content), "===")
-
-            # Step 4: 解析JSON
-            profile = _extract_json(raw_output)
-            if not isinstance(profile, dict):
-                profile = {}
-        except Exception as e:
-            logger.error(f"[JobProfileService] 调用大模型生成画像失败，将使用本地规则兜底: {e}", exc_info=True)
+        # 若未配置大模型 Key，直接使用本地兜底画像，避免异步任务长时间卡在 processing
+        if not os.environ.get("DASHSCOPE_API_KEY"):
+            logger.warning("[JobProfileService] 未检测到 DASHSCOPE_API_KEY，跳过大模型，使用本地规则兜底画像: %s (%s)", job_name, job_id)
             profile = None
+        else:
+            try:
+                chain = self._build_chain()
+                payload = {
+                    "job_name":     job_name,
+                    "job_id":       job_id,
+                    "category":     category,
+                    "data_section": data_section,
+                    "dim_weights":  json.dumps(weights, ensure_ascii=False),
+                }
+
+                # 防止外部大模型请求卡死导致任务一直处于 processing：
+                # 这里用线程 + 超时包一层，超时则直接走本地兜底画像。
+                executor = ThreadPoolExecutor(max_workers=1)
+                fut = executor.submit(chain.invoke, payload)
+                try:
+                    raw_output = fut.result(timeout=20)
+                except FutureTimeoutError:
+                    logger.error("[JobProfileService] 大模型调用超时（20s），将使用本地规则兜底画像")
+                    raw_output = None
+                    profile = None
+                finally:
+                    executor.shutdown(wait=False, cancel_futures=True)
+
+                # Step 4: 解析JSON
+                if raw_output is not None:
+                    profile = _extract_json(raw_output)
+                if not isinstance(profile, dict):
+                    profile = {}
+            except Exception as e:
+                logger.error(f"[JobProfileService] 调用大模型生成画像失败，将使用本地规则兜底: {e}", exc_info=True)
+                profile = None
 
         # 若模型不可用或输出异常，则使用本地兜底画像（不依赖外部大模型）
         if not isinstance(profile, dict) or not profile:
@@ -1096,7 +1111,8 @@ class JobProfileService:
         has_reality = bool(profile.get("reality_check", {}).get("pros") or profile.get("reality_check", {}).get("cons"))
         has_summary = bool(profile.get("ai_summary") and str(profile.get("ai_summary")).strip())
         if not (has_core or has_reality or has_summary):
-            logger.warning(f"  [画像] 模型返回内容较少，核心技能/职场洞察/摘要多为空，请检查模型输出长度或 prompt。输出长度: {len(raw_output)}")
+            out_len = len(raw_output) if isinstance(raw_output, str) else 0
+            logger.warning(f"  [画像] 模型返回内容较少，核心技能/职场洞察/摘要多为空，请检查模型输出长度或 prompt。输出长度: {out_len}")
 
         # Step 5: 注入/校验关键元数据
         profile.setdefault("job_id",   job_id)

@@ -16,23 +16,26 @@ var _storage = (function () {
 
 // API配置
 const API_CONFIG = {
-    baseURL: 'http://localhost:5000/api/v1',            // Java 后端（登录、档案更新等）
-    assessmentBaseURL: 'http://localhost:5002/api/v1', // Python AI 服务（默认 5002，避免 Windows 保留 5000-5001）
-    jobProfilesBaseURL: 'http://localhost:5002/api/v1', // 岗位画像 → Flask AI
-    timeout: 30000,
+    // Windows 上 localhost 有时会解析到 IPv6 ::1，导致“服务明明启动了但连不上”
+    // 这里默认使用 127.0.0.1 更稳。
+    baseURL: 'http://127.0.0.1:5000/api/v1',            // Java 后端（登录、档案更新等）
+    assessmentBaseURL: 'http://127.0.0.1:5002/api/v1', // Python AI 服务（默认 5002）
+    jobProfilesBaseURL: 'http://127.0.0.1:5002/api/v1', // 岗位画像 → Flask AI
+    // 默认超时：60s（Windows 本地首次构建索引/加载数据时，30s 容易误触发 AbortError）
+    timeout: 60000,
     mockMode: false  // true=模拟数据；false=连接真实后端（Java:5000 / AI:5002）
 };
 
 // 规范化 baseURL：若缺少 host（如 http://:5002）或非 http(s) 则补全为 localhost，避免 404
 function normalizeBaseURL(url, defaultOrigin) {
-    const def = defaultOrigin || 'http://localhost:5002/api/v1';
+    const def = defaultOrigin || 'http://127.0.0.1:5002/api/v1';
     if (!url || typeof url !== 'string') return def;
     var s = url.trim();
     if (!s.startsWith('http://') && !s.startsWith('https://')) return def;
     try {
         const u = new URL(s);
         if (!u.hostname || u.hostname === '') {
-            u.hostname = 'localhost';
+            u.hostname = '127.0.0.1';
             return u.origin + (u.pathname || '/api/v1');
         }
         return s;
@@ -48,13 +51,17 @@ async function agentParseJobProfileRequirement(userText) {
     if (!userText || !String(userText).trim()) {
         return { success: false, msg: '请输入岗位画像生成需求' };
     }
-    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL, 'http://localhost:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
     const url = `${base}/job/agent/parse-requirement`.replace(/\/api\/v1\/?$/, '/api/v1/job/agent/parse-requirement');
+    // LLM 解析可能较慢，单独拉长超时（默认 60s）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     try {
         const resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: String(userText).trim() })
+            body: JSON.stringify({ text: String(userText).trim() }),
+            signal: controller.signal
         });
         const data = await resp.json().catch(() => ({}));
         if (data.code === 200 && data.data) {
@@ -66,17 +73,21 @@ async function agentParseJobProfileRequirement(userText) {
         console.error('[Agent] 智能解析接口异常:', e);
         return {
             success: false,
-            msg: '智能解析失败，请确认 AI 服务 (http://localhost:5002) 已启动',
+            msg: (e && e.name === 'AbortError')
+                ? '智能解析超时（60s），请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常'
+                : '智能解析失败，请确认 AI 服务 (http://127.0.0.1:5002) 已启动',
             error: e
         };
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
 // API工具类
 class API {
     constructor() {
-        this.baseURL = normalizeBaseURL(API_CONFIG.baseURL, 'http://localhost:5000/api/v1');
-        this.aiBaseURL = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
+        this.baseURL = normalizeBaseURL(API_CONFIG.baseURL, 'http://127.0.0.1:5000/api/v1');
+        this.aiBaseURL = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
     }
 
     // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }，带超时避免一直加载
@@ -86,7 +97,15 @@ class API {
         if (API_CONFIG.mockMode) {
             return this.mockRequest(endpoint, options);
         }
-        const timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
+        // 为避免网络/防火墙导致 fetch 长时间挂起，这里为所有请求加超时控制
+        // 并对容易慢的接口做默认加长（仅在调用方未显式传 timeout 时生效）
+        let timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 60000);
+        if (options.timeout == null) {
+            if (endpoint.startsWith('/matching/recommend-jobs')) timeoutMs = 120000;
+            if (endpoint.startsWith('/assessment/report')) timeoutMs = 120000;
+            if (endpoint.startsWith('/career/generate-report')) timeoutMs = 180000;
+            if (endpoint.startsWith('/career/report')) timeoutMs = 120000;
+        }
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         const config = {
@@ -112,11 +131,11 @@ class API {
             return { success: false, msg: result.msg, code: result.code };
         } catch (error) {
             clearTimeout(timeoutId);
-            console.error('API请求错误(AI):', error);
+            console.error('API请求错误(AI):', { endpoint, url, timeoutMs, error });
             const msg = error.name === 'AbortError'
-                ? '请求超时，请确认 AI 服务 (http://localhost:5002) 已启动且网络正常'
+                ? '请求超时，请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常'
                 : (error.message && error.message.toLowerCase().includes('fetch'))
-                    ? '无法连接 AI 服务 (http://localhost:5002)，请确认已启动'
+                    ? '无法连接 AI 服务 (http://127.0.0.1:5002)，请确认已启动'
                     : (error.message || '网络错误');
             return { success: false, msg };
         }
@@ -128,9 +147,13 @@ class API {
 
     // 通用请求方法（测评、职业规划报告、人岗匹配走 AI 服务 5002，其余走 Java 5000）
     async request(endpoint, options = {}) {
-        const useAI = endpoint.startsWith('/assessment/') || endpoint.startsWith('/career/') || endpoint.startsWith('/matching/');
-        const raw = useAI ? (API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
-        const base = normalizeBaseURL(raw, useAI ? 'http://localhost:5002/api/v1' : 'http://localhost:5000/api/v1');
+        const useAI = endpoint.startsWith('/assessment/')
+            || endpoint.startsWith('/career/')
+            || endpoint.startsWith('/matching/')
+            || endpoint.startsWith('/job/')
+            || endpoint.startsWith('/system/');
+        const raw = useAI ? (API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
+        const base = normalizeBaseURL(raw, useAI ? 'http://127.0.0.1:5002/api/v1' : 'http://127.0.0.1:5000/api/v1');
         const url = `${base}${endpoint}`;
         const token = _storage.getItem('token');
         
@@ -154,13 +177,12 @@ class API {
             config.body = JSON.stringify(options.body);
         }
 
+        // 为避免网络/防火墙导致 fetch 长时间挂起，这里为所有请求加超时控制
+        const timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         try {
-            // 为避免网络/防火墙导致 fetch 长时间挂起，这里为所有请求加超时控制
-            const timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
             const response = await fetch(url, { ...config, signal: controller.signal });
-            clearTimeout(timeoutId);
             const text = await response.text();
             let result;
             try {
@@ -169,8 +191,8 @@ class API {
                 // 服务返回了 HTML 或非 JSON（如 501 错误页），给出明确提示
                 const isAssessment = endpoint.startsWith('/assessment/');
                 const hint = response.status === 501
-                    ? '当前地址不支持 POST，请确认已启动 AI 测评服务 (http://localhost:5002)'
-                    : (isAssessment ? '请确认已启动 AI 测评服务 (http://localhost:5002)' : '请确认后端服务已运行');
+                    ? '当前地址不支持 POST，请确认已启动 AI 服务 (http://127.0.0.1:5002)'
+                    : (isAssessment ? '请确认已启动 AI 服务 (http://127.0.0.1:5002)' : '请确认后端服务已运行');
                 return { success: false, msg: `服务返回异常 (${response.status}): ${hint}` };
             }
             // 根据code判断是否成功
@@ -185,13 +207,18 @@ class API {
                 return { success: false, msg: result.msg, code: result.code };
             }
         } catch (error) {
-            console.error('API请求错误:', error);
+            console.error('API请求错误:', { endpoint, url, timeoutMs, error });
+            const serviceHint = useAI
+                ? 'AI 服务 (http://127.0.0.1:5002)'
+                : 'Java 后端 (http://127.0.0.1:5000/api/v1)';
             const msg = (error && error.name === 'AbortError')
-                ? '请求超时：请确认 AI 服务 (http://localhost:5002) 与 Java 后端 (http://localhost:5000) 已启动且网络未被拦截'
+                ? `请求超时（${timeoutMs / 1000}s）：请确认 ${serviceHint} 已启动且网络未被拦截`
                 : (error.message && error.message.toLowerCase().includes('fetch'))
-                    ? '无法连接后端，请确认已启动对应服务 (Java:5000 / AI:5002)'
+                    ? `无法连接后端，请确认已启动 ${serviceHint}`
                     : (error.message || '网络错误，请稍后重试');
             return { success: false, msg };
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 
@@ -205,7 +232,7 @@ class API {
 
     // 明确请求 Java 后端 5000（用于 5002 返回 404 时的回退）
     async postToJava(endpoint, data) {
-        const base = normalizeBaseURL(this.baseURL, 'http://localhost:5000/api/v1');
+        const base = normalizeBaseURL(this.baseURL, 'http://127.0.0.1:5000/api/v1');
         const url = `${base}${endpoint}`;
         const token = _storage.getItem('token');
         if (API_CONFIG.mockMode) return this.mockRequest(endpoint, { method: 'POST', body: data });
@@ -1818,12 +1845,21 @@ async function jobAiGenerateProfile(jobName, jobDescriptions, sampleSize = 30, i
     };
     if (industry) body.industry = industry;
     if (experience) body.experience = experience;
-    return await api.postToAI('/job/ai-generate-profile', body);
+    // 生成岗位画像可能调用大模型，单独拉长超时（默认 120s）
+    return await api.requestToAI('/job/ai-generate-profile', {
+        method: 'POST',
+        body,
+        timeout: 120000
+    });
 }
 
 // 4.5 获取 AI 生成结果
 async function getJobAiGenerateResult(taskId) {
-    return await api.postToAI('/job/ai-generate-result', { task_id: taskId });
+    return await api.requestToAI('/job/ai-generate-result', {
+        method: 'POST',
+        body: { task_id: taskId },
+        timeout: 60000
+    });
 }
 
 // app.js 调用的别名
@@ -1943,7 +1979,12 @@ async function updateAbilityProfile(userId, updates) {
 async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = {}) {
     const body = { user_id: userId, pageNum, pageSize };
     if (filters && Object.keys(filters).length) body.filters = filters;
-    let result = await api.post('/matching/recommend-jobs', body);
+    // 推荐岗位首次调用可能需要构建索引/生成能力画像，时间会明显更长，避免 60s 超时被前端中断
+    let result = await api.requestToAI('/matching/recommend-jobs', {
+        method: 'POST',
+        body,
+        timeout: 180000
+    });
     if (!result.success && (result.code === 404 || (result.msg && String(result.msg).indexOf('404') !== -1))) {
         result = await api.postToJava('/matching/recommend-jobs', body);
     }

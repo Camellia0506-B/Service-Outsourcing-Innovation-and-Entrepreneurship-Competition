@@ -17,6 +17,7 @@ from flask import Blueprint, request, jsonify, Response
 from datetime import datetime
 import threading
 import json as _json
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 import pandas as pd
 from job_profile.job_profile_service import get_job_profile_service, job_profile_conf, _load_profiles_store
@@ -142,6 +143,9 @@ def agent_parse_job_profile_requirement():
         parsed = None
         try:
             # 优先尝试使用大模型解析
+            # 若未配置 Key，直接跳过大模型，走本地规则解析，避免卡住导致前端超时
+            if not os.environ.get("DASHSCOPE_API_KEY"):
+                raise RuntimeError("DASHSCOPE_API_KEY 未配置")
             model_name = (rag_conf or {}).get("chat_model_name", "qwen-max")
             model = ChatTongyi(model=model_name)
             template = PromptTemplate.from_template(
@@ -149,7 +153,14 @@ def agent_parse_job_profile_requirement():
                 + "\n\n用户输入：{user_text}\n\n只输出JSON："
             )
             chain = template | model | StrOutputParser()
-            raw = chain.invoke({"user_text": text})
+            executor = ThreadPoolExecutor(max_workers=1)
+            fut = executor.submit(chain.invoke, {"user_text": text})
+            try:
+                raw = fut.result(timeout=10)
+            except FutureTimeoutError:
+                raise RuntimeError("大模型调用超时（10s）")
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
             raw_text = raw if isinstance(raw, str) else getattr(raw, "content", str(raw))
             parsed = _extract_json_obj(raw_text)
         except Exception as e:

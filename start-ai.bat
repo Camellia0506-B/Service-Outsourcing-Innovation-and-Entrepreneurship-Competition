@@ -3,8 +3,15 @@ chcp 65001 >nul
 title AI 服务 - 职业规划智能体
 cd /d "%~dp0"
 
-if not exist "AI算法\app.py" (
-    echo [错误] 未找到 AI算法\app.py，请确保在项目根目录运行本脚本。
+set "AIDIR="
+for /d %%D in (AI*) do (
+    if exist "%%D\app.py" (
+        set "AIDIR=%%D"
+    )
+)
+if "%AIDIR%"=="" (
+    echo [错误] 未找到 AI 服务入口 app.py（期望路径类似: AI^*\app.py）。
+    echo 请确认项目根目录下存在 AI 服务目录。
     pause
     exit /b 1
 )
@@ -16,7 +23,7 @@ echo.
 echo 正在启动，请稍候...
 echo.
 
-cd "AI算法"
+cd "%AIDIR%"
 
 where python >nul 2>&1
 if %errorlevel% equ 0 (
