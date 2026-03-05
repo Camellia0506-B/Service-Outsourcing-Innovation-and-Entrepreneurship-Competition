@@ -50,7 +50,10 @@ def recommend_jobs():
     }
     """
     try:
+        import time
+        t0 = time.time()
         body = request.get_json(silent=True) or {}
+        logger.info("[API] /matching/recommend-jobs 请求进入, user_id=%s", body.get("user_id"))
         user_id = body.get("user_id")
         # 兼容旧字段 top_n，但优先使用 pageNum/pageSize
         page_num = int(body.get("pageNum") or body.get("page_num") or 1)
@@ -71,8 +74,12 @@ def recommend_jobs():
         # 为减少一次性计算量，仅取到当前页为止的 TopK
         top_n = page_num * page_size
         try:
+            t1 = time.time()
             service = get_job_matching_service()
+            logger.info("[API] get_job_matching_service 耗时 %.2fs", time.time() - t1)
+            t2 = time.time()
             result = service.recommend_jobs(user_id, top_n, filters, ability_profile=ability_profile)
+            logger.info("[API] recommend_jobs 计算耗时 %.2fs", time.time() - t2)
         except Exception as svc_err:
             logger.warning(f"[API] /matching/recommend-jobs 匹配服务不可用，返回空列表: {svc_err}")
             return success_response({

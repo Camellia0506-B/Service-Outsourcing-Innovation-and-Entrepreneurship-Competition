@@ -20,7 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
 </head>
-<body>
+<body class="on-login-page">
     <div id="app">
         <!-- 加载动画 -->
         <div id="loading" class="loading hidden">
@@ -1074,9 +1074,9 @@
             </div>
         </div>
 
-        <!-- 规划落地性跟踪页面（求职进展 + 反馈报告） -->
+        <!-- 规划落地性跟踪页面（5 Tab：创建/更新/失败分析/总览/报告列表） -->
         <div id="trackingPage" class="page hidden">
-            <div class="matching-container">
+            <div class="matching-container tracking-page-wrap">
                 <div class="page-header">
                     <span class="job-profile-tag">职业规划智能体</span>
                     <div class="page-title-row">
@@ -1086,82 +1086,161 @@
                     <p class="page-subtitle">从投递到拿到 Offer，系统帮助你记录每一次笔试/面试结果，并基于失败经验生成复盘报告。</p>
                 </div>
 
-                <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="trackingOverview">📈 求职总览</button>
-                    <button class="tab-btn" data-tab="trackingReports">📑 反馈报告</button>
+                <div class="tracking-tabs-row">
+                    <button type="button" class="tracking-tab active" data-tab="trackingCreate">➕ 创建跟踪记录</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingUpdate">🔄 更新求职进展</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingFailure">🤖 失败反馈分析</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingOverview">📊 求职跟踪总览</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingReports">📋 反馈报告列表</button>
                 </div>
 
-                <!-- 求职总览 Tab -->
-                <div class="tab-content active" id="trackingOverviewTab">
-                    <div class="tracking-summary">
-                        <div class="tracking-summary-card">
-                            <div class="tracking-summary-label">累计投递岗位</div>
-                            <div class="tracking-summary-value" id="trackingTotalApplied">0</div>
-                            <div class="tracking-summary-sub">含系统推荐与自主投递</div>
-                        </div>
-                        <div class="tracking-summary-card">
-                            <div class="tracking-summary-label">笔试通过率</div>
-                            <div class="tracking-summary-value" id="trackingWrittenRate">0%</div>
-                            <div class="tracking-summary-sub">通过 / 参加笔试</div>
-                        </div>
-                        <div class="tracking-summary-card">
-                            <div class="tracking-summary-label">面试通过率</div>
-                            <div class="tracking-summary-value" id="trackingInterviewRate">0%</div>
-                            <div class="tracking-summary-sub">通过 / 参加面试</div>
-                        </div>
-                        <div class="tracking-summary-card">
-                            <div class="tracking-summary-label">Offer 数量</div>
-                            <div class="tracking-summary-value" id="trackingOfferCount">0</div>
-                            <div class="tracking-summary-sub">已拿到的 Offer</div>
-                        </div>
-                        <div class="tracking-summary-card">
-                            <div class="tracking-summary-label">失败次数</div>
-                            <div class="tracking-summary-value" id="trackingRejectedCount">0</div>
-                            <div class="tracking-summary-sub">含被拒 / 主动放弃</div>
-                        </div>
-                        <div class="tracking-summary-card">
-                            <div class="tracking-summary-label">进行中的岗位</div>
-                            <div class="tracking-summary-value" id="trackingInProgressCount">0</div>
-                            <div class="tracking-summary-sub">尚在笔试/面试流程中</div>
+                <div class="tracking-body">
+                    <!-- Tab1: 创建跟踪记录 -->
+                    <div class="tracking-panel on" id="trackingCreateTab">
+                        <div class="tracking-t1-layout">
+                            <div class="tracking-card">
+                                <h3 class="tracking-card-title">📝 新建求职跟踪记录</h3>
+                                <div class="tracking-form-grid">
+                                    <div class="tracking-form-item"><label>岗位名称</label><input type="text" id="trackingJobTitle" placeholder="如：后端开发工程师（实习）"></div>
+                                    <div class="tracking-form-item"><label>目标公司</label><input type="text" id="trackingCompanyName" placeholder="如：字节跳动"></div>
+                                    <div class="tracking-form-item"><label>投递日期</label><input type="date" id="trackingApplyDate"></div>
+                                    <div class="tracking-form-item"><label>投递渠道</label>
+                                        <select id="trackingSource">
+                                            <option value="system_recommend">系统推荐</option>
+                                            <option value="self_found">自行寻找</option>
+                                            <option value="official">官网直投</option>
+                                            <option value="campus">校招系统</option>
+                                            <option value="referral">内推</option>
+                                        </select>
+                                    </div>
+                                    <div class="tracking-form-item full"><label>备注（可选）</label><textarea id="trackingCreateNotes" rows="2" placeholder="记录岗位要求、薪资信息、特别注意事项…"></textarea></div>
+                                </div>
+                                <div class="tracking-btn-row">
+                                    <button type="button" class="btn-secondary" id="trackingCreateClear">清空</button>
+                                    <button type="button" class="btn-primary" id="trackingCreateConfirm">确认创建</button>
+                                </div>
+                            </div>
+                            <div class="tracking-card">
+                                <h3 class="tracking-card-title">📌 最近创建的记录</h3>
+                                <div id="trackingRecentList" class="tracking-recent-list">
+                                    <div class="loading-message">加载中...</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="tracking-actions">
-                        <div class="tracking-actions-left">
-                            <button id="trackingCreateBtn" class="btn-primary">+ 新建求职跟踪</button>
+                    <!-- Tab2: 更新求职进展 -->
+                    <div class="tracking-panel" id="trackingUpdateTab">
+                        <div class="tracking-t2-layout">
+                            <div class="tracking-card tracking-job-list-card">
+                                <h3 class="tracking-card-title">📋 求职记录</h3>
+                                <div id="trackingUpdateJobList" class="tracking-job-list">
+                                    <div class="hint-text">暂无记录</div>
+                                </div>
+                            </div>
+                            <div class="tracking-card tracking-detail-card">
+                                <h3 class="tracking-card-title" id="trackingUpdateDetailTitle">🔄 进展详情</h3>
+                                <div class="tracking-steps-wrap">
+                                    <h4 class="tracking-steps-label">当前阶段进度</h4>
+                                    <div class="tracking-steps" id="trackingSteps">
+                                        <div class="tracking-step" data-stage="applied"><div class="tracking-sdot">1</div><div class="tracking-slabel">投递</div></div>
+                                        <div class="tracking-sline"></div>
+                                        <div class="tracking-step" data-stage="written_test"><div class="tracking-sdot">2</div><div class="tracking-slabel">笔试</div></div>
+                                        <div class="tracking-sline"></div>
+                                        <div class="tracking-step" data-stage="interview_1"><div class="tracking-sdot">3</div><div class="tracking-slabel">一面</div></div>
+                                        <div class="tracking-sline"></div>
+                                        <div class="tracking-step" data-stage="interview_2"><div class="tracking-sdot">4</div><div class="tracking-slabel">二面</div></div>
+                                        <div class="tracking-sline"></div>
+                                        <div class="tracking-step" data-stage="final"><div class="tracking-sdot">5</div><div class="tracking-slabel">HR面</div></div>
+                                        <div class="tracking-sline"></div>
+                                        <div class="tracking-step" data-stage="offer"><div class="tracking-sdot">🎉</div><div class="tracking-slabel">Offer</div></div>
+                                    </div>
+                                    <div class="tracking-step-actions">
+                                        <button type="button" class="btn-primary tracking-advance-btn" id="trackingAdvanceBtn">推进到下一阶段</button>
+                                        <button type="button" class="btn-ghost tracking-reject-btn" id="trackingRejectBtn">标记为淘汰</button>
+                                    </div>
+                                </div>
+                                <div class="tracking-note-area">
+                                    <h4 class="tracking-note-label">📝 面试备注</h4>
+                                    <textarea id="trackingUpdateNotes" rows="3" placeholder="记录面试题目、面试官反馈、个人感受…"></textarea>
+                                    <div class="tracking-btn-row"><button type="button" class="btn-primary" id="trackingSaveNoteBtn">保存备注</button></div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="tracking-actions-hint">
-                            小提示：也可以在「岗位匹配」中选中目标岗位，再回到这里持续更新进展。
-                        </p>
                     </div>
 
-                    <div class="tracking-funnel-wrap">
-                        <div class="tracking-funnel-header">
-                            <h3>求职转化漏斗</h3>
-                            <p class="tracking-funnel-sub">从投递到 Offer 的各阶段转化情况，一眼看出你的求职短板。</p>
+                    <!-- Tab3: 失败反馈分析 -->
+                    <div class="tracking-panel" id="trackingFailureTab">
+                        <div class="tracking-t3-layout">
+                            <div class="tracking-card tracking-fail-list-card">
+                                <h3 class="tracking-card-title">❌ 失败记录</h3>
+                                <div id="trackingFailList" class="tracking-fail-list">
+                                    <div class="hint-text">暂无失败记录</div>
+                                </div>
+                                <button type="button" class="btn-primary tracking-regen-analysis-btn" id="trackingRegenAnalysisBtn">🤖 重新生成AI分析</button>
+                            </div>
+                            <div class="tracking-card tracking-analysis-card">
+                                <h3 class="tracking-card-title" id="trackingAnalysisTitle">🤖 AI 失败分析</h3>
+                                <div class="tracking-an-grid">
+                                    <div class="tracking-an-section">
+                                        <h4>🔍 技能 Gap</h4>
+                                        <ul id="trackingAnalysisSkillGap"></ul>
+                                    </div>
+                                    <div class="tracking-an-section">
+                                        <h4>📄 简历优化点</h4>
+                                        <ul id="trackingAnalysisResume"></ul>
+                                    </div>
+                                    <div class="tracking-an-section">
+                                        <h4>🗣️ 面试准备建议</h4>
+                                        <ul id="trackingAnalysisInterview"></ul>
+                                    </div>
+                                </div>
+                                <div class="tracking-btn-row">
+                                    <button type="button" class="btn-primary" id="trackingSaveAsReportBtn">保存为报告</button>
+                                    <button type="button" class="btn-secondary" id="trackingViewFullAnalysisBtn">查看完整分析</button>
+                                </div>
+                            </div>
                         </div>
-                        <div id="trackingFunnelChart" class="tracking-funnel-chart"></div>
                     </div>
 
-                    <div class="tracking-records-header">
-                        <h3>岗位时间线</h3>
-                        <p class="tracking-records-sub">每一条记录代表一个岗位，从投递到拿到结果，清晰还原你的求职旅程。</p>
-                    </div>
-                    <div id="trackingRecordsList" class="tracking-records-list">
-                        <div class="loading-message">正在加载求职记录...</div>
+                    <!-- Tab4: 求职跟踪总览 -->
+                    <div class="tracking-panel" id="trackingOverviewTab">
+                        <div class="tracking-t4-layout">
+                            <div class="tracking-kpi"><div class="tracking-kpi-lbl">累计投递</div><div class="tracking-kpi-val" id="trackingTotalApplied">0</div><div class="tracking-kpi-sub">岗位</div></div>
+                            <div class="tracking-kpi"><div class="tracking-kpi-lbl">笔试通过率</div><div class="tracking-kpi-val tracking-kpi-warn" id="trackingWrittenRate">0%</div><div class="tracking-kpi-sub" id="trackingWrittenRateSub">—</div></div>
+                            <div class="tracking-kpi"><div class="tracking-kpi-lbl">Offer 数量</div><div class="tracking-kpi-val tracking-kpi-ok" id="trackingOfferCount">0</div><div class="tracking-kpi-sub">进行中 <span id="trackingInProgressCount">0</span> 个</div></div>
+                            <div class="tracking-chart-card tracking-insight-col" id="trackingAgentInsightWrap" style="display:none;">
+                                <h3>💡 智能建议</h3>
+                                <p id="trackingAgentInsight" class="tracking-agent-insight"></p>
+                            </div>
+                            <div class="tracking-chart-card tracking-funnel-col">
+                                <h3>求职转化漏斗</h3>
+                                <div id="trackingFunnelChart" class="tracking-chart-box"></div>
+                            </div>
+                            <div class="tracking-chart-card tracking-line-col">
+                                <h3>📈 近30天投递趋势</h3>
+                                <div id="trackingLineChart" class="tracking-chart-box"></div>
+                            </div>
+                            <div class="tracking-chart-card">
+                                <h3>🎯 阶段分布</h3>
+                                <div id="trackingPieChart" class="tracking-chart-box"></div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="trackingAgentInsight" class="tracking-agent-insight hidden"></div>
-                </div>
-
-                <!-- 反馈报告 Tab -->
-                <div class="tab-content" id="trackingReportsTab">
-                    <div class="tracking-reports-header">
-                        <h3>求职失败反馈报告</h3>
-                        <p class="tracking-records-sub">当某个岗位结果为「拒绝」，可一键生成 AI 复盘报告，这里会汇总所有失败经验与优化建议。</p>
-                    </div>
-                    <div id="trackingReportsList" class="tracking-reports-list">
-                        <div class="hint-text">暂无反馈优化报告。当有失败记录并完成 AI 复盘后，会自动出现在这里。</div>
+                    <!-- Tab5: 反馈报告列表 -->
+                    <div class="tracking-panel" id="trackingReportsTab">
+                        <div class="tracking-t5-layout">
+                            <div class="tracking-card tracking-report-list-card">
+                                <h3 class="tracking-card-title">📋 历史报告 · <span id="trackingReportCount">0</span>份</h3>
+                                <div id="trackingReportsList" class="tracking-report-list">
+                                    <div class="hint-text">暂无反馈优化报告</div>
+                                </div>
+                            </div>
+                            <div id="trackingReportDetail" class="tracking-rpt-detail">
+                                <p class="tracking-rpt-detail-placeholder">左侧选择一份报告查看详情</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1616,6 +1695,34 @@
                     <div id="trackingFailureStream" class="tracking-failure-stream">
                         <p class="hint-text">点击「开始 AI 分析」后，这里会实时生成本次求职的复盘报告与后续规划。</p>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 查看完整分析弹窗（只读展示） -->
+        <div id="trackingFullAnalysisModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div>
+                        <h3>🤖 完整 AI 失败分析报告</h3>
+                        <p id="trackingFullAnalysisSubtitle" class="tracking-failure-subtitle"></p>
+                    </div>
+                    <button type="button" class="modal-close" id="trackingFullAnalysisClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tracking-detail-section">
+                        <h4>🔍 技能 Gap 分析</h4>
+                        <ul id="trackingFullAnalysisSkillGap"></ul>
+                    </div>
+                    <div class="tracking-detail-section">
+                        <h4>📄 简历优化建议</h4>
+                        <ul id="trackingFullAnalysisResume"></ul>
+                    </div>
+                    <div class="tracking-detail-section">
+                        <h4>🗣️ 面试准备行动计划</h4>
+                        <ul id="trackingFullAnalysisInterview"></ul>
+                    </div>
+                    <button type="button" class="btn-primary" style="width:100%;margin-top:12px" id="trackingFullAnalysisSaveBtn">保存到报告列表</button>
                 </div>
             </div>
         </div>

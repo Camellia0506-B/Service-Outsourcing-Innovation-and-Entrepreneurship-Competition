@@ -22,6 +22,7 @@
 
 import json
 import os
+import threading
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 
@@ -843,16 +844,25 @@ class JobMatchingService:
         self.job_profile_service = get_job_profile_service()
         self.student_ability_service = get_student_ability_service()
 
-        # 语义岗位搜索索引（FAISS + Embedding）
+        # 语义岗位搜索索引（FAISS + Embedding）— 后台构建，避免首次请求阻塞数分钟
         self._semantic_index = None
         self._semantic_job_ids: List[str] = []
         self._semantic_dim: Optional[int] = None
         self._semantic_hnsw = None
-        self._build_job_semantic_index()
 
-        # Hybrid 检索器（BM25 + 双塔向量召回 + 可选精排/MMR）
+        # Hybrid 检索器（BM25 + 双塔向量召回）— 后台构建
         self._hybrid_retriever: Optional[HybridRetriever] = None
-        self._build_hybrid_retriever()
+
+        def _build_indexes():
+            try:
+                self._build_job_semantic_index()
+                self._build_hybrid_retriever()
+            except Exception as e:
+                logger.warning("[Matching] 后台索引构建异常: %s", e, exc_info=True)
+
+        t = threading.Thread(target=_build_indexes, daemon=True)
+        t.start()
+        logger.info("[Matching] 语义索引与 Hybrid 检索器已在后台构建，首屏推荐将先用部分岗位快速返回")
 
     def _build_hybrid_retriever(self) -> None:
         """
@@ -902,8 +912,7 @@ class JobMatchingService:
         if filters:
             all_jobs = self._apply_filters(all_jobs, filters)
 
-        # 召回加速 + 利用简历长文本：先用 Hybrid 召回 topK，再对候选做精确4维度打分
-        # 这样能实现“竞争岗位推荐”（同类岗位内部的差异会被长文本拉开）。
+        # 召回加速：Hybrid 未就绪时仅用前 N 条岗位，保证首屏 60s 内返回；就绪后用语义召回
         candidate_jobs = all_jobs
         student_query = _build_student_query_text(student_profile)
         if self._hybrid_retriever is not None and student_query:
@@ -911,18 +920,22 @@ class JobMatchingService:
                 recall_k = min(max(200, top_n * 50), 800)
                 cands = self._hybrid_retriever.retrieve(student_query, top_k=recall_k, alpha=0.30)
                 if cands:
-                    # MMR 做一点多样性，避免推荐全是同一类标题
                     cands = self._hybrid_retriever.mmr_rerank(student_query, cands, top_n=min(recall_k, 200), lambda_diversity=0.80)
                     cand_ids = [c.job_id for c in cands]
-                    # 只在候选集上做 4 维度打分（保持原有可解释性与稳定性）
                     candidate_jobs = {jid: all_jobs[jid] for jid in cand_ids if jid in all_jobs}
                     if len(candidate_jobs) < max(30, top_n * 5):
-                        candidate_jobs = all_jobs  # 候选过少则回退全量
+                        candidate_jobs = dict(list(all_jobs.items())[:150]) if len(all_jobs) > 150 else all_jobs
                 else:
-                    candidate_jobs = all_jobs  # Hybrid 无信号，回退全量
+                    candidate_jobs = dict(list(all_jobs.items())[:150]) if len(all_jobs) > 150 else all_jobs
             except Exception as e:
                 logger.warning(f"[Hybrid] 推荐召回失败，回退全量匹配: {e}")
-                candidate_jobs = all_jobs
+                candidate_jobs = dict(list(all_jobs.items())[:150]) if len(all_jobs) > 150 else all_jobs
+        else:
+            # 索引未就绪：仅对前 100 条做匹配，确保首请求在 90s 内返回（岗位 CSV 加载可能较慢）
+            if len(all_jobs) > 100:
+                items = list(all_jobs.items())[:100]
+                candidate_jobs = dict(items)
+                logger.info("[Matching] Hybrid 索引构建中，本次推荐仅基于前 %d 条岗位，完整索引就绪后将自动使用", len(candidate_jobs))
         
         # 批量计算匹配度
         def _job_loc(job: dict) -> str:
@@ -965,6 +978,25 @@ class JobMatchingService:
         
         # 按匹配度排序
         recommendations.sort(key=lambda x: x["match_score"], reverse=True)
+
+        # 拉开匹配度区分：若分数集中（极差<20），按相对排名重标到 70–96，便于展示高度/较为/一般
+        if recommendations:
+            scores = [r["match_score"] for r in recommendations]
+            min_s, max_s = min(scores), max(scores)
+            spread = max_s - min_s
+            if spread < 18:
+                for r in recommendations:
+                    # 保持排序不变，将分数拉开到 [70, 96]（与前端 高度≥90 / 较为80-89 / 一般70-79 一致）
+                    raw = r["match_score"]
+                    new_score = int(70 + (raw - min_s) / (spread + 1e-6) * 26)
+                    new_score = max(70, min(98, new_score))
+                    r["match_score"] = new_score
+                    r["match_level"] = "高度匹配" if new_score >= 90 else ("较为匹配" if new_score >= 80 else "一般匹配")
+            else:
+                # 已有一定区分，仅统一 match_level 与分数区间（与前端 90/80/70 一致）
+                for r in recommendations:
+                    s = r["match_score"]
+                    r["match_level"] = "高度匹配" if s >= 90 else ("较为匹配" if s >= 80 else "一般匹配")
         
         return {
             "total_matched": len(recommendations),

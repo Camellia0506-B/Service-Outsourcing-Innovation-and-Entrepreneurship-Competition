@@ -101,13 +101,13 @@ def create_record():
 
         if not user_id:
             return _error(400, "请提供 user_id")
-        if not job_id:
-            return _error(400, "请提供 job_id")
         if not job_title:
             return _error(400, "请提供 job_title")
         if not company_name:
             return _error(400, "请提供 company_name")
 
+        if not job_id:
+            job_id = f"job_manual_{datetime.now().strftime('%Y%m%d%H%M%S')}"
         store = _load_records()
         ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         record_id = f"track_{ts}_{user_id}"

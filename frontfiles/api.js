@@ -101,7 +101,8 @@ class API {
         // 并对容易慢的接口做默认加长（仅在调用方未显式传 timeout 时生效）
         let timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 60000);
         if (options.timeout == null) {
-            if (endpoint.startsWith('/matching/recommend-jobs')) timeoutMs = 120000;
+            // 推荐岗位默认 90s（首屏匹配计算需时；调用方显式传 timeout 时以调用方为准）
+            if (endpoint.startsWith('/matching/recommend-jobs')) timeoutMs = 90000;
             if (endpoint.startsWith('/assessment/report')) timeoutMs = 120000;
             if (endpoint.startsWith('/career/generate-report')) timeoutMs = 180000;
             if (endpoint.startsWith('/career/report')) timeoutMs = 120000;
@@ -145,13 +146,14 @@ class API {
         return this.requestToAI(endpoint, { method: 'POST', body: data });
     }
 
-    // 通用请求方法（测评、职业规划报告、人岗匹配走 AI 服务 5002，其余走 Java 5000）
+    // 通用请求方法（测评、职业规划报告、人岗匹配、求职跟踪走 AI 服务 5002，其余走 Java 5000）
     async request(endpoint, options = {}) {
         const useAI = endpoint.startsWith('/assessment/')
             || endpoint.startsWith('/career/')
             || endpoint.startsWith('/matching/')
             || endpoint.startsWith('/job/')
-            || endpoint.startsWith('/system/');
+            || endpoint.startsWith('/system/')
+            || endpoint.startsWith('/tracking/');
         const raw = useAI ? (API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
         const base = normalizeBaseURL(raw, useAI ? 'http://127.0.0.1:5002/api/v1' : 'http://127.0.0.1:5000/api/v1');
         const url = `${base}${endpoint}`;
@@ -480,6 +482,68 @@ class API {
             case '/career/check-completeness':
                 return { success: true, data: this.mockCareerCompleteness() };
             default:
+                if (typeof endpoint === 'string' && endpoint.startsWith('/tracking/')) {
+                    if (endpoint.startsWith('/tracking/record/') && endpoint.includes('/update')) {
+                        const recordId = (endpoint.match(/\/record\/([^/]+)\/update/) || [])[1];
+                        try {
+                            const raw = _storage.getItem('mock_tracking_records');
+                            const arr = raw ? JSON.parse(raw) : [];
+                            const idx = arr.findIndex(r => r.record_id === recordId);
+                            if (idx >= 0 && (data.stage || data.result != null)) {
+                                if (data.stage) arr[idx].current_stage = data.stage;
+                                if (data.result != null) arr[idx].result = data.result;
+                                arr[idx].last_updated = (data.stage_date || new Date().toISOString().slice(0, 10));
+                                if (data.notes != null) arr[idx].notes = data.notes;
+                                _storage.setItem('mock_tracking_records', JSON.stringify(arr));
+                            }
+                        } catch (_) {}
+                        return { success: true, data: { record_id: recordId, current_stage: data.stage, result: data.result, agent_tip: '进展已更新' }, msg: '进展已更新' };
+                    }
+                    if (endpoint.startsWith('/tracking/record/create')) {
+                        const rid = 'track_' + Date.now();
+                        const today = new Date().toISOString().slice(0, 10);
+                        const newRecord = { record_id: rid, job_title: data.job_title || '', company_name: data.company_name || '', current_stage: 'applied', last_updated: today, result: 'pending', apply_date: data.apply_date || today };
+                        try {
+                            const raw = _storage.getItem('mock_tracking_records');
+                            const arr = raw ? JSON.parse(raw) : [];
+                            arr.unshift(newRecord);
+                            _storage.setItem('mock_tracking_records', JSON.stringify(arr));
+                        } catch (_) {}
+                        return { success: true, data: { record_id: rid, status: 'applied', created_at: new Date().toISOString().slice(0, 19).replace('T', ' ') }, msg: '跟踪记录已创建' };
+                    }
+                    if (endpoint.startsWith('/tracking/overview')) {
+                        try {
+                            const raw = _storage.getItem('mock_tracking_records');
+                            const records = raw ? JSON.parse(raw) : [];
+                            const total = records.length;
+                            const rejected = records.filter(r => r.result === 'rejected' || r.result === 'failed').length;
+                            const offer = records.filter(r => r.result === 'offer').length;
+                            const inProgress = records.filter(r => r.result !== 'offer' && r.result !== 'rejected' && r.result !== 'failed').length;
+                            const written = records.filter(r => ['written_test','interview_1','interview_2','final','offer'].indexOf(r.current_stage) >= 0 || r.current_stage === 'written_test').length;
+                            const wtRate = total > 0 && written > 0 ? Math.min(1, written / total) : 0;
+                            const ivRate = written > 0 ? (offer + rejected) / written : 0;
+                            return { success: true, data: {
+                                summary: { total_applied: total, written_test_pass_rate: wtRate, interview_pass_rate: ivRate, offer_count: offer, rejected_count: rejected, in_progress_count: inProgress },
+                                records: records.slice(0, 50).map(r => ({ record_id: r.record_id, job_title: r.job_title, company_name: r.company_name, current_stage: r.current_stage, last_updated: r.last_updated, has_failure_report: !!r.has_failure_report, result: r.result })),
+                                agent_insight: total > 0 ? '根据你的求职数据，建议持续投递并做好面试复盘。' : null
+                            } };
+                        } catch (_) {
+                            return { success: true, data: { summary: { total_applied: 0, written_test_pass_rate: 0, interview_pass_rate: 0, offer_count: 0, rejected_count: 0, in_progress_count: 0 }, records: [], agent_insight: null } };
+                        }
+                    }
+                    if (endpoint.startsWith('/tracking/failure-reports')) {
+                        try {
+                            const raw = _storage.getItem('mock_tracking_reports');
+                            const list = raw ? JSON.parse(raw) : [];
+                            const page = parseInt((endpoint.match(/[?&]page=(\d+)/) || [])[1], 10) || 1;
+                            const size = parseInt((endpoint.match(/[?&]size=(\d+)/) || [])[1], 10) || 10;
+                            const start = (page - 1) * size;
+                            return { success: true, data: { total: list.length, list: list.slice(start, start + size) } };
+                        } catch (_) {
+                            return { success: true, data: { total: 0, list: [] } };
+                        }
+                    }
+                }
                 if (typeof endpoint === 'string' && endpoint.startsWith('/assessment/report-history')) {
                     const q = endpoint.indexOf('?');
                     let userId = null;
@@ -1976,19 +2040,35 @@ async function updateAbilityProfile(userId, updates) {
 // ==================== 人岗匹配模块 ====================
 
 // 获取推荐岗位（支持 filters: cities, salary_min, industries；分页）
+// 优先请求 AI 服务 5002，失败时自动回退到 Java 5000，始终返回 { success, data?, msg?, code? }
 async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = {}) {
-    const body = { user_id: userId, pageNum, pageSize };
+    const body = { user_id: userId, pageNum, pageSize, top_n: pageSize };
     if (filters && Object.keys(filters).length) body.filters = filters;
-    // 推荐岗位首次调用可能需要构建索引/生成能力画像，时间会明显更长，避免 60s 超时被前端中断
-    let result = await api.requestToAI('/matching/recommend-jobs', {
-        method: 'POST',
-        body,
-        timeout: 180000
-    });
-    if (!result.success && (result.code === 404 || (result.msg && String(result.msg).indexOf('404') !== -1))) {
-        result = await api.postToJava('/matching/recommend-jobs', body);
+    try {
+        let result = await api.requestToAI('/matching/recommend-jobs', {
+            method: 'POST',
+            body,
+            timeout: 90000
+        });
+        // AI 服务不可用（未启动、连接重置、超时、404）时回退到 Java 后端
+        if (!result.success) {
+            result = await api.postToJava('/matching/recommend-jobs', body);
+        }
+        return result;
+    } catch (e) {
+        // 若 requestToAI 抛错（少见），也尝试 Java 回退
+        try {
+            return await api.postToJava('/matching/recommend-jobs', body);
+        } catch (e2) {
+            console.error('[getRecommendedJobs] 请求异常:', e2);
+            return {
+                success: false,
+                msg: (e2 && e2.name === 'AbortError')
+                    ? '请求超时，请确认后端服务已启动（Java 5000 或 AI 5002）'
+                    : (e2 && e2.message) || '推荐岗位服务暂不可用，请稍后重试'
+            };
+        }
     }
-    return result;
 }
 
 // 人岗匹配分析（API 使用 job_id）
@@ -2069,31 +2149,62 @@ async function getReportHistory(userId) {
 }
 
 // ==================== 规划落地性跟踪模块 (Career Tracking 9.x) ====================
+// 文档：§9 规划落地性跟踪模块，所有接口前缀 /api/v1，走 baseURL（Java 5000）
+
+// 投递渠道前端值 → API 9.1 规定：system_recommend | self_found
+function normalizeTrackingSource(source) {
+    const v = (source || '').trim().toLowerCase();
+    if (v === 'system_recommend') return 'system_recommend';
+    return 'self_found'; // official/campus/referral/自行寻找 等统一为 self_found
+}
 
 // 9.1 创建求职跟踪记录
+// 请求体：user_id, job_id, job_title, company_name, apply_date, source (system_recommend | self_found)
 async function createTrackingRecord(userId, payload) {
-    return await api.post('/tracking/record/create', {
+    const applyDate = (payload.apply_date || '').trim();
+    const body = {
         user_id: userId,
-        ...payload
-    });
+        job_id: payload.job_id || `job_apply_${Date.now()}`,
+        job_title: (payload.job_title || '').trim(),
+        company_name: (payload.company_name || '').trim(),
+        apply_date: applyDate || new Date().toISOString().slice(0, 10),
+        source: normalizeTrackingSource(payload.source)
+    };
+    return await api.post('/tracking/record/create', body);
 }
 
 // 9.2 更新求职进展
+// PUT /tracking/record/{record_id}/update
+// 请求体：user_id, stage, result, stage_date?, self_evaluation?, notes?
 async function updateTrackingRecord(recordId, payload) {
+    const body = { ...payload };
+    if (body.stage_date === undefined && body.stage) {
+        body.stage_date = new Date().toISOString().slice(0, 10);
+    }
     return await api.request(`/tracking/record/${encodeURIComponent(recordId)}/update`, {
         method: 'PUT',
-        body: payload
+        body
     });
 }
 
 // 9.4 获取求职跟踪总览
+// GET /tracking/overview?user_id=xxx
+// 响应：{ summary: { total_applied, written_test_pass_rate, interview_pass_rate, offer_count, rejected_count, in_progress_count }, records: [...], agent_insight? }
 async function getTrackingOverview(userId) {
     return await api.get('/tracking/overview', { user_id: userId });
 }
 
 // 9.5 获取反馈优化报告列表
+// GET /tracking/failure-reports?user_id=xxx&page=1&size=10
+// 响应：{ total, list: [{ report_id, job_title, company_name, failure_stage, key_weakness, plan_updated, created_at }] }
 async function getFailureReports(userId, page = 1, size = 10) {
     return await api.get('/tracking/failure-reports', { user_id: userId, page, size });
+}
+
+// 9.3 求职失败反馈分析（SSE）— 与 9.1/9.2/9.4/9.5 同属规划落地跟踪，走 AI 服务 5002
+function getTrackingFailureAnalysisURL(recordId) {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    return `${base}/tracking/record/${encodeURIComponent(recordId)}/failure-analysis`;
 }
 
 // ==================== 知识库模块 ====================
