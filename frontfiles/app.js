@@ -401,21 +401,17 @@ class CareerPlanningApp {
         this.trackingRecordsCache = {};    // 规划落地性跟踪：记录缓存
         this.trackingFailureRecord = null; // 当前正在复盘的记录
         this.trackingFunnelChart = null;   // 求职漏斗图表实例
-
-<<<<<<< Updated upstream
         // 岗位画像流式请求状态（用于防止并发请求串流导致内容错乱、卡顿）
         this._jobProfileStreamController = null; // AbortController 实例
         this._jobProfileStreamReqId = 0;         // 递增请求编号，始终只接受最新一次点击的结果
         this._jobProfileLastPartialTs = 0;       // 上一次局部渲染时间戳，用于节流 DOM 更新
 
-=======
         // 「主动探索」展示方式：默认按岗位归类（减少重复岗位导致的翻页痛点）
         this.searchViewMode = 'grouped'; // grouped | all
         this.searchPage = 1;
         this.searchPageSizeAll = 21;     // 原逻辑：全部职位
         this.searchPageSizeGrouped = 5;  // 新逻辑：按岗位归类（每页更少，便于阅读）
         this.searchPageSize = this.searchPageSizeGrouped;
->>>>>>> Stashed changes
         this.init();
     }
 
@@ -4485,21 +4481,10 @@ class CareerPlanningApp {
         if (!container) return;
 
         container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
-<<<<<<< Updated upstream
-        let result = { success: false, data: null };
-        try {
-            result = await getRecommendedJobs(userId, 24);
-        } catch (e) {
-            console.warn('推荐岗位接口请求失败（可能未启动 AI 服务 5002）:', e);
-        }
-        const recommendations = result.data?.recommendations ?? result.data?.jobs ?? [];
-=======
         // 默认仅加载第一页，pageSize 控制单次返回数量，避免一次性拉取全部岗位
         const result = await getRecommendedJobs(userId, 1, 24);
-
         // 不再按匹配度做前端过滤，直接展示后端返回的推荐结果
         const recommendations = result.data?.jobs ?? result.data?.recommendations ?? [];
->>>>>>> Stashed changes
         this.currentRecommendations = recommendations || [];
         this.recFilter = 'all';
 
@@ -6847,23 +6832,6 @@ class CareerPlanningApp {
                 </div>
             </div>
             <div class="graph-panel graph-panel-transfer" data-panel="transfer">
-<<<<<<< Updated upstream
-                <div class="transfer-container transfer-container-gt">
-                    <div class="legend-row">
-                        <span class="legend-title">图例：</span>
-                        <span class="leg"><span class="leg-line leg-high"></span>高匹配（≥80%）</span>
-                        <span class="leg"><span class="leg-line leg-mid"></span>中匹配（60-79%）</span>
-                        <span class="leg"><span class="leg-line leg-low"></span>低匹配（＜60%）</span>
-                        <span class="leg"><span class="leg-arrow">→</span>转岗方向</span>
-                        <span class="leg-note">实线=技能高度迁移 · 虚线=需较大跨度学习</span>
-                    </div>
-                <div class="transfer-graph graph-svg-wrap" data-count="${transferNodes.length}">
-                <div class="g-node g-node-center">
-                    <div class="cn">
-                        <div class="cn-ico">💼</div>
-                        <div class="cn-name">${jobName}</div>
-                        <div class="cn-badge">当前岗位</div>
-=======
                 <div class="graph-legend graph-legend-dots">
                     <strong>匹配度：</strong>
                     <span class="graph-legend-item"><span class="graph-legend-dot high"></span>高（≥90%）</span>
@@ -6876,7 +6844,6 @@ class CareerPlanningApp {
                         <div class="tg-center-icon">💼</div>
                         <div class="tg-center-name">${jobName}</div>
                         <span class="tg-center-badge">当前岗位</span>
->>>>>>> Stashed changes
                     </div>
                 </div>`;
 

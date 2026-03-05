@@ -1939,16 +1939,9 @@ async function updateAbilityProfile(userId, updates) {
 
 // ==================== 人岗匹配模块 ====================
 
-<<<<<<< Updated upstream
-// 获取推荐岗位（支持 filters: cities, salary_min, industries）
-// 先请求 AI 服务 5002，若 404 则回退到 Java 5000，避免仅启一方时报错
-async function getRecommendedJobs(userId, topN = 10, filters = {}) {
-    const body = { user_id: userId, top_n: topN };
-=======
 // 获取推荐岗位（支持 filters: cities, salary_min, industries；分页）
 async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = {}) {
     const body = { user_id: userId, pageNum, pageSize };
->>>>>>> Stashed changes
     if (filters && Object.keys(filters).length) body.filters = filters;
     let result = await api.post('/matching/recommend-jobs', body);
     if (!result.success && (result.code === 404 || (result.msg && String(result.msg).indexOf('404') !== -1))) {
