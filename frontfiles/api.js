@@ -42,7 +42,7 @@ function normalizeBaseURL(url, defaultOrigin) {
 }
 
 // ==================== 大模型解析（Agent核心：自然语言 → JSON，走本地AI服务） ====================
-// 与后端其它模块保持一致：由 Flask + ChatTongyi(qwen3-max) 调通义千问，
+// 与后端其它模块保持一致：由 Flask + ChatTongyi(qwen-max) 调通义千问，
 // 前端只请求本地接口 /api/v1/job/agent/parse-requirement，不直接暴露外部 API Key。
 async function agentParseJobProfileRequirement(userText) {
     if (!userText || !String(userText).trim()) {
@@ -155,7 +155,12 @@ class API {
         }
 
         try {
-            const response = await fetch(url, config);
+            // 为避免网络/防火墙导致 fetch 长时间挂起，这里为所有请求加超时控制
+            const timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            const response = await fetch(url, { ...config, signal: controller.signal });
+            clearTimeout(timeoutId);
             const text = await response.text();
             let result;
             try {
@@ -181,9 +186,11 @@ class API {
             }
         } catch (error) {
             console.error('API请求错误:', error);
-            const msg = (error.message && error.message.toLowerCase().includes('fetch')) 
-                ? '无法连接后端，请确认已启动对应服务 (Java:5000 / AI:5002)' 
-                : (error.message || '网络错误，请稍后重试');
+            const msg = (error && error.name === 'AbortError')
+                ? '请求超时：请确认 AI 服务 (http://localhost:5002) 与 Java 后端 (http://localhost:5000) 已启动且网络未被拦截'
+                : (error.message && error.message.toLowerCase().includes('fetch'))
+                    ? '无法连接后端，请确认已启动对应服务 (Java:5000 / AI:5002)'
+                    : (error.message || '网络错误，请稍后重试');
             return { success: false, msg };
         }
     }
@@ -1824,46 +1831,93 @@ async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 30, i
     return await jobAiGenerateProfile(jobName, jobDescriptions, sampleSize, industry, experience);
 }
 
-// 搜索岗位（优先使用语义搜索 /matching/search-jobs，失败时回退到 4.1 GET /job/profiles）
-async function searchJobs(keyword, page = 1, size = 20, filters = null) {
-    const industry = (filters && filters.industry) || '';
-    const level = '';
-
-    // 语义搜索：调用岗位匹配模块提供的 search-jobs 接口（走 AI 服务 5001）
-    try {
-        const body = {
-            keyword: keyword || '',
-            top_n: size,
-            filters: filters || {}
+// 搜索岗位（仅使用语义搜索 /matching/search-jobs，结果由 AI 岗位匹配模块统一分页）
+async function searchJobs(keyword, page = 1, size = 21, filters = null) {
+    const body = {
+        keyword: keyword || '',
+        pageNum: page,
+        pageSize: size,
+        filters: filters || {}
+    };
+    // 单独为岗位搜索拉长超时时间（默认 3 分钟），避免首次大批量向量检索被过早中断
+    const res = await api.requestToAI('/matching/search-jobs', {
+        method: 'POST',
+        body,
+        timeout: 180000
+    });
+    if (res && res.success && res.data && Array.isArray(res.data.jobs)) {
+        const list = res.data.jobs.map(j => ({
+            job_id: j.job_id,
+            job_name: j.job_name,
+            industry: j.industry,
+            level: j.level,
+            avg_salary: j.avg_salary,
+            tags: j.tags || [],
+            semantic_score: j.semantic_score ?? null
+        }));
+        return {
+            success: true,
+            data: {
+                list,
+                total: res.data.total_count ?? list.length,
+                page: res.data.page_num ?? page,
+                size: res.data.page_size ?? size,
+                pages: 1
+            }
         };
-        const res = await api.postToAI('/matching/search-jobs', body);
-        if (res && res.success && res.data && Array.isArray(res.data.jobs)) {
-            const list = res.data.jobs.map(j => ({
-                job_id: j.job_id,
-                job_name: j.job_name,
-                industry: j.industry,
-                level: j.level,
-                avg_salary: j.avg_salary,
-                tags: j.tags || [],
-                semantic_score: j.semantic_score ?? null
-            }));
-            return {
-                success: true,
-                data: {
-                    list,
-                    total: res.data.total ?? list.length,
-                    page,
-                    size,
-                    pages: 1
-                }
-            };
-        }
-    } catch (e) {
-        console.warn('语义岗位搜索接口异常，回退到关键词搜索:', e);
     }
 
-    // 回退：使用原有岗位列表接口进行关键词搜索
-    return getJobProfiles(page, size, keyword || '', industry, level, filters);
+    // 若 AI 接口异常，返回空结果（不再回退到旧接口，以避免页数/总数不一致）
+    return {
+        success: false,
+        data: {
+            list: [],
+            total: 0,
+            page,
+            size,
+            pages: 0
+        },
+        msg: (res && res.msg) || '语义岗位搜索接口异常'
+    };
+}
+
+// 搜索岗位（按岗位归类视图，默认 5 个岗位种类/页）
+async function searchJobsGrouped(keyword, page = 1, size = 5, filters = null, userId = null) {
+    const body = {
+        keyword: keyword || '',
+        pageNum: page,
+        pageSize: size,
+        filters: filters || {}
+    };
+    if (userId != null) body.user_id = userId;
+    const res = await api.requestToAI('/matching/search-jobs-grouped', {
+        method: 'POST',
+        body,
+        timeout: 180000
+    });
+    if (res && res.success && res.data && Array.isArray(res.data.groups)) {
+        return {
+            success: true,
+            data: {
+                groups: res.data.groups,
+                total: res.data.total_group_count ?? res.data.total ?? res.data.groups.length,
+                page: res.data.page_num ?? page,
+                size: res.data.page_size ?? size,
+                pages: 1
+            }
+        };
+    }
+    return {
+        success: false,
+        data: {
+            groups: [],
+            total: 0,
+            page,
+            size,
+            pages: 0
+        },
+        msg: (res && res.msg) || '岗位归类搜索接口异常'
+    };
 }
 
 // ==================== 学生能力画像模块 ====================
@@ -1885,10 +1939,16 @@ async function updateAbilityProfile(userId, updates) {
 
 // ==================== 人岗匹配模块 ====================
 
+<<<<<<< Updated upstream
 // 获取推荐岗位（支持 filters: cities, salary_min, industries）
 // 先请求 AI 服务 5002，若 404 则回退到 Java 5000，避免仅启一方时报错
 async function getRecommendedJobs(userId, topN = 10, filters = {}) {
     const body = { user_id: userId, top_n: topN };
+=======
+// 获取推荐岗位（支持 filters: cities, salary_min, industries；分页）
+async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = {}) {
+    const body = { user_id: userId, pageNum, pageSize };
+>>>>>>> Stashed changes
     if (filters && Object.keys(filters).length) body.filters = filters;
     let result = await api.post('/matching/recommend-jobs', body);
     if (!result.success && (result.code === 404 || (result.msg && String(result.msg).indexOf('404') !== -1))) {

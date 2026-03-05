@@ -1144,6 +1144,28 @@ class JobMatchingService:
         all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
         keyword = (keyword or "").strip()
 
+        # 无关键词时：按岗位名称拼音首字母降序列出所有岗位（分页由路由控制 top_n）
+        if not keyword:
+            jobs: List[Dict] = []
+            for job_id, job in all_jobs.items():
+                if not isinstance(job, dict):
+                    continue
+                if not self._job_pass_filters_single(job, filters):
+                    continue
+                jobs.append(self._build_search_job_entry(job_id, job, semantic_score=None))
+
+            def _pinyin_key(name: str) -> str:
+                base = (name or "").strip()
+                try:
+                    from pypinyin import lazy_pinyin  # type: ignore
+                    return "".join(lazy_pinyin(base))
+                except Exception:
+                    return base
+
+            jobs.sort(key=lambda x: _pinyin_key(str(x.get("job_name") or "")), reverse=True)
+            total = len(jobs)
+            return {"total": total, "jobs": jobs[:top_n]}
+
         # Hybrid 搜索优先（BM25 + 向量召回 + MMR 多样性）
         if self._hybrid_retriever is not None and keyword:
             # 先用 Hybrid 召回，再对结果应用 filters（避免对全量岗位做 filters 计算）
@@ -1219,34 +1241,436 @@ class JobMatchingService:
         }
 
     def _job_pass_filters_single(self, job: dict, filters: dict) -> bool:
-        """复用 _apply_filters 的逻辑，对单个岗位应用筛选条件。"""
-        if not filters:
+        """
+        对单个岗位应用筛选条件（兼容多种字段命名）。
+
+        兼容来源：
+        - 推荐/服务端调用：{ cities: [...], industries: [...], salary_min: 20000 }
+        - 前端「主动探索」：{ city, industry, salary, company_nature }
+        """
+        if not filters or not isinstance(filters, dict):
             return True
-        basic_info = job.get("basic_info", {})
 
-        # 城市筛选
-        if "cities" in filters:
-            locations = basic_info.get("work_locations", [])
-            if not any(city in (loc or "") for city in filters["cities"] for loc in locations):
+        basic_info = job.get("basic_info", {}) or {}
+
+        def _norm_list(v):
+            if v is None:
+                return []
+            if isinstance(v, (list, tuple)):
+                return [str(x).strip() for x in v if str(x).strip()]
+            s = str(v).strip()
+            return [s] if s else []
+
+        # 城市筛选：支持 city / cities
+        cities = _norm_list(filters.get("cities") or filters.get("city"))
+        if cities:
+            locations = basic_info.get("work_locations") or []
+            if not isinstance(locations, list):
+                locations = [locations] if locations else []
+            loc_strs = [str(x or "") for x in locations]
+            # 任一城市命中任一工作地点字符串
+            if not any(any(c in ls for ls in loc_strs) for c in cities):
                 return False
 
-        # 薪资筛选
-        if "salary_min" in filters:
-            salary_str = basic_info.get("avg_salary", "")
-            if "k" in str(salary_str).lower():
-                try:
-                    min_salary = int(str(salary_str).split("-")[0].replace("k", "").strip())
-                    if min_salary * 1000 < filters["salary_min"]:
-                        return False
-                except Exception:
-                    pass
-
-        # 行业筛选
-        if "industries" in filters:
-            if basic_info.get("industry") not in filters["industries"]:
+        # 行业筛选：支持 industry / industries（支持包含匹配）
+        industries = _norm_list(filters.get("industries") or filters.get("industry"))
+        if industries:
+            ind = str(basic_info.get("industry") or "")
+            if not any(i in ind for i in industries):
                 return False
+
+        # 企业性质筛选：支持 company_nature / company_type
+        nat = str(filters.get("company_nature") or filters.get("company_type") or "").strip()
+        if nat:
+            company_type = str(basic_info.get("company_type") or "")
+            if nat not in company_type:
+                return False
+
+        # 薪资筛选：支持 salary_min / salary（前端下拉）
+        salary_min = filters.get("salary_min")
+        salary_sel = str(filters.get("salary") or "").strip()
+        salary_str = str(basic_info.get("avg_salary") or basic_info.get("salary_range") or "")
+
+        def _parse_salary_k_range(s: str):
+            """
+            解析薪资字符串，返回 (min_k, max_k)（单位：k/月）。
+            兼容：15k-25k、15K-25K、10000-20000元、5,000~14,000元/月、面议
+            """
+            import re
+            if not s:
+                return None
+            t = s.replace("～", "~").replace("—", "-").replace("–", "-")
+            t = t.replace(",", "").replace("，", "")
+            if "面议" in t:
+                return None
+            m = re.search(r"(\d+)\s*[kK]\s*[-~]\s*(\d+)\s*[kK]", t)
+            if m:
+                a, b = int(m.group(1)), int(m.group(2))
+                return (min(a, b), max(a, b))
+            m = re.search(r"(\d+)\s*[-~]\s*(\d+)\s*元", t)
+            if m:
+                a, b = int(m.group(1)), int(m.group(2))
+                return (min(a, b) // 1000, max(a, b) // 1000)
+            m = re.search(r"(\d+)\s*[-~]\s*(\d+)", t)
+            if m:
+                a, b = int(m.group(1)), int(m.group(2))
+                # 若是 4-5 位数字，视为元
+                if a >= 1000 or b >= 1000:
+                    return (min(a, b) // 1000, max(a, b) // 1000)
+                return (min(a, b), max(a, b))
+            return None
+
+        rng = _parse_salary_k_range(salary_str)
+        if salary_min is not None:
+            try:
+                salary_min_int = int(salary_min)
+            except Exception:
+                salary_min_int = None
+            if salary_min_int is not None and rng is not None:
+                if rng[0] * 1000 < salary_min_int:
+                    return False
+
+        if salary_sel and rng is not None:
+            min_k, max_k = rng
+            if salary_sel == "10k以下":
+                if max_k >= 10:
+                    return False
+            elif salary_sel in ("10–20k", "10-20k"):
+                if max_k < 10 or min_k > 20:
+                    return False
+            elif salary_sel == "20k以上":
+                if min_k < 20:
+                    return False
 
         return True
+
+    def search_jobs_grouped(
+        self,
+        keyword: str,
+        page_num: int = 1,
+        page_size: int = 5,
+        filters: Optional[dict] = None,
+        user_id: Optional[int] = None,
+        ability_profile: Optional[dict] = None,
+    ) -> dict:
+        """
+        「主动探索」岗位归类视图：
+        - 按岗位名称分组（归一化后）
+        - 组内包含公司列表（来自 basic_info.company）
+        - 组按公司数量降序（热度）
+        """
+        import re
+        filters = filters or {}
+        all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
+        keyword = (keyword or "").strip()
+        # 归类视图匹配度：优先用“用户能力画像文本”作为查询；无画像则回退到 keyword
+        student_profile = ability_profile
+        if student_profile is None and user_id:
+            try:
+                student_profile = self.student_ability_service.get_ability_profile(int(user_id))
+            except Exception:
+                student_profile = None
+
+        def _norm_name(name: str) -> str:
+            base = (name or "").strip()
+            if not base:
+                return ""
+            # 去掉括号内容、以及常见的后缀噪声，尽量把同类岗位聚合到一起
+            base = re.sub(r"[（(].*?[)）]", "", base).strip()
+            base = re.sub(r"\s+", " ", base).strip()
+            return base
+
+        def _parse_salary_yuan_range(s: str):
+            """返回 (min_yuan, max_yuan) 或 None"""
+            if not s:
+                return None
+            t = str(s)
+            t = t.replace("～", "~").replace("—", "-").replace("–", "-")
+            t = t.replace(",", "").replace("，", "")
+            if "面议" in t:
+                return None
+            import re as _re
+            m = _re.search(r"(\d+)\s*[kK]\s*[-~]\s*(\d+)\s*[kK]", t)
+            if m:
+                a, b = int(m.group(1)) * 1000, int(m.group(2)) * 1000
+                return (min(a, b), max(a, b))
+            m = _re.search(r"(\d+)\s*[-~]\s*(\d+)\s*元", t)
+            if m:
+                a, b = int(m.group(1)), int(m.group(2))
+                return (min(a, b), max(a, b))
+            m = _re.search(r"(\d+)\s*[-~]\s*(\d+)", t)
+            if m:
+                a, b = int(m.group(1)), int(m.group(2))
+                # 若是 k 范围（较小），转为元；否则按元
+                if a < 1000 and b < 1000:
+                    a, b = a * 1000, b * 1000
+                return (min(a, b), max(a, b))
+            return None
+
+        def _split_industry_tags(ind: str) -> List[str]:
+            raw = (ind or "").strip()
+            if not raw:
+                return []
+            parts = re.split(r"[\/·\s、，,;；]+", raw)
+            out = []
+            for p in parts:
+                p = (p or "").strip()
+                if p and p not in out:
+                    out.append(p)
+            return out
+
+        # 可选：关键词过滤（轻量版，避免对所有岗位做向量检索）
+        kw_lower = keyword.lower()
+        def _kw_match(job: dict) -> bool:
+            if not kw_lower:
+                return True
+            basic = job.get("basic_info") or {}
+            name = str(job.get("job_name") or "").lower()
+            industry = str(basic.get("industry") or "").lower()
+            desc = str((basic.get("description") or job.get("description") or "")).lower()
+            return (kw_lower in name) or (kw_lower in industry) or (kw_lower in desc)
+
+        # 分组聚合
+        groups: Dict[str, dict] = {}
+        for job_id, job in all_jobs.items():
+            if not isinstance(job, dict):
+                continue
+            if not self._job_pass_filters_single(job, filters):
+                continue
+            if not _kw_match(job):
+                continue
+
+            job_name_raw = str(job.get("job_name") or "").strip()
+            group_name = _norm_name(job_name_raw) or job_name_raw
+            if not group_name:
+                continue
+
+            basic = job.get("basic_info") or {}
+            company = str(basic.get("company") or "").strip() or "未知公司"
+            salary = str(basic.get("avg_salary") or basic.get("salary_range") or "").strip()
+            industry = str(basic.get("industry") or "").strip()
+            company_type = str(basic.get("company_type") or "").strip()
+
+            g = groups.get(group_name)
+            if g is None:
+                g = {
+                    "job_name": group_name,
+                    "company_count": 0,
+                    "tags_counter": {},
+                    "salary_min": None,
+                    "salary_max": None,
+                    "companies": []
+                }
+                groups[group_name] = g
+
+            # tags 统计（行业拆词）
+            for t in _split_industry_tags(industry)[:6]:
+                g["tags_counter"][t] = g["tags_counter"].get(t, 0) + 1
+
+            # salary 聚合
+            yr = _parse_salary_yuan_range(salary)
+            if yr is not None:
+                mn, mx = yr
+                g["salary_min"] = mn if g["salary_min"] is None else min(g["salary_min"], mn)
+                g["salary_max"] = mx if g["salary_max"] is None else max(g["salary_max"], mx)
+
+            g["companies"].append({
+                "job_id": str(job_id),
+                "company": company,
+                "company_type": company_type,
+                "industry": industry,
+                "avg_salary": salary,
+                # 暂不做昂贵的匹配计算；前端可将 semantic_score 作为“预估匹配”展示
+                "match_score": None
+            })
+
+        # 整理 groups 列表
+        group_list: List[Dict] = []
+        for g in groups.values():
+            # 公司去重：同一公司可能多条重复发布，保留第一条
+            seen = set()
+            uniq_companies = []
+            for c in g["companies"]:
+                key = (c.get("company") or "") + "||" + (c.get("avg_salary") or "")
+                if key in seen:
+                    continue
+                seen.add(key)
+                uniq_companies.append(c)
+            g["companies"] = uniq_companies
+            g["company_count"] = len(uniq_companies)
+
+            # tags 取前3（按频次）
+            tc = g.get("tags_counter") or {}
+            tags = sorted(tc.items(), key=lambda x: x[1], reverse=True)
+            top_tags = [k for k, _ in tags[:3]]
+
+            # 组内公司排序：优先薪资高（可用信息更稳定）
+            def _company_salary_max(c):
+                rng = _parse_salary_yuan_range(c.get("avg_salary") or "")
+                return rng[1] if rng else -1
+            g["companies"].sort(key=_company_salary_max, reverse=True)
+
+            group_list.append({
+                "job_name": g["job_name"],
+                "company_count": g["company_count"],
+                "tags": top_tags,
+                "salary_range": {"min": g["salary_min"], "max": g["salary_max"]},
+                "companies": g["companies"]
+            })
+
+        # 热度排序：公司数量降序
+        group_list.sort(key=lambda x: (x.get("company_count") or 0, x.get("job_name") or ""), reverse=True)
+
+        total_groups = len(group_list)
+        if page_num < 1:
+            page_num = 1
+        if page_size < 1:
+            page_size = 5
+
+        start = (page_num - 1) * page_size
+        end = start + page_size
+        page_groups = group_list[start:end]
+
+        # 组内公司排序：优先按“匹配度(轻量语义相似)”降序；无查询向量时保持薪资优先
+        if page_groups:
+            # 用“可解释的技能匹配”计算预估 match_score，避免纯文本相似度的同质化
+            # 逻辑：学生技能（来自能力画像）vs 岗位画像 requirements.professional_skills（含权重），做加权语义相似度匹配
+
+            # 1) 取学生技能名称列表
+            student_skill_names: List[str] = []
+            if isinstance(student_profile, dict) and student_profile:
+                raw_sk = student_profile.get("skills") or []
+                if isinstance(raw_sk, list):
+                    for it in raw_sk[:160]:
+                        if isinstance(it, str) and it.strip():
+                            student_skill_names.append(it.strip())
+                        elif isinstance(it, dict):
+                            nm = it.get("skill") or it.get("name") or it.get("item") or ""
+                            if isinstance(nm, str) and nm.strip():
+                                student_skill_names.append(nm.strip())
+            # 去重
+            _seen = set()
+            _uniq_sk = []
+            for s in student_skill_names:
+                k = s.lower()
+                if k in _seen:
+                    continue
+                _seen.add(k)
+                _uniq_sk.append(s)
+            student_skill_names = _uniq_sk[:80]
+
+            def _extract_required_skills(job: dict) -> List[Dict]:
+                """
+                提取岗位画像里用于匹配的技能列表：[{skill, weight}]
+                """
+                reqs = (job.get("requirements") or {}) if isinstance(job, dict) else {}
+                pro = (reqs.get("professional_skills") or {}) if isinstance(reqs, dict) else {}
+                out: List[Dict] = []
+                if isinstance(pro, dict):
+                    for k in ("programming_languages", "frameworks_tools", "domain_knowledge"):
+                        arr = pro.get(k) or []
+                        if not isinstance(arr, list):
+                            continue
+                        for x in arr[:12]:
+                            if isinstance(x, str) and x.strip():
+                                out.append({"skill": x.strip(), "weight": 1.0})
+                            elif isinstance(x, dict):
+                                sk = (x.get("skill") or x.get("name") or "").strip() if isinstance(x.get("skill") or x.get("name") or "", str) else ""
+                                if not sk:
+                                    continue
+                                w = x.get("weight")
+                                try:
+                                    wf = float(w) if w is not None else 1.0
+                                except Exception:
+                                    wf = 1.0
+                                out.append({"skill": sk, "weight": max(0.2, min(3.0, wf * 10 if wf <= 0.2 else wf))})
+                # 去重
+                seen = set()
+                uniq = []
+                for it in out:
+                    sk = (it.get("skill") or "").lower()
+                    if not sk or sk in seen:
+                        continue
+                    seen.add(sk)
+                    uniq.append(it)
+                return uniq[:30]
+
+            def _skill_based_match_score(job: dict) -> int:
+                """
+                返回 0-100 的预估匹配度（基于技能要求的覆盖度/语义相似度）
+                """
+                required = _extract_required_skills(job)
+                if not required:
+                    return 50
+                # 没有“技能清单”时，回退到能力画像的长文本（项目/实习/专业方向等）做可解释的包含匹配，
+                # 避免所有岗位都固定同一个兜底分（同质化太严重）。
+                student_text_lower = ""
+                if not student_skill_names:
+                    try:
+                        student_text_lower = _build_student_query_text(student_profile).lower()
+                    except Exception:
+                        student_text_lower = ""
+
+                total_w = sum(float(r.get("weight") or 1.0) for r in required) or 1.0
+                got = 0.0
+                for r in required:
+                    req_skill = r.get("skill") or ""
+                    w = float(r.get("weight") or 1.0)
+                    best = 0.0
+                    if student_skill_names:
+                        for s in student_skill_names:
+                            try:
+                                sim = float(SemanticSkillMatcher.calculate_semantic_similarity(req_skill, s))
+                            except Exception:
+                                sim = 0.0
+                            if sim > best:
+                                best = sim
+                                if best >= 0.95:
+                                    break
+                    else:
+                        rl = str(req_skill).lower().strip()
+                        if rl and student_text_lower:
+                            # 1) 强匹配：直接包含（中英文都适用）
+                            if rl in student_text_lower:
+                                best = 1.0
+                            else:
+                                # 2) 弱匹配：英文/数字词命中（例如 mysql / java / python）
+                                import re as _re2
+                                words = [w for w in _re2.split(r"[^a-z0-9#+.]+", rl) if w]
+                                if words and any(w in student_text_lower for w in words):
+                                    best = 0.7
+                    # 只把有一定相似度的算入覆盖，避免噪声
+                    got += w * max(0.0, best)
+                ratio = max(0.0, min(1.0, got / total_w))
+                # 经验映射（与前端高/中/一般分档更协调）：
+                # 覆盖率 0→50，0.5→70，1.0→90
+                score = int(round(50 + ratio * 40))
+                return max(50, min(95, score))
+
+            for pg in page_groups:
+                comps = pg.get("companies") or []
+                scored = []
+                if isinstance(student_profile, dict) and student_profile:
+                    for c in comps:
+                        jid = c.get("job_id")
+                        job = all_jobs.get(jid) if jid else None
+                        if isinstance(job, dict):
+                            c["match_score"] = _skill_based_match_score(job)
+                        else:
+                            c["match_score"] = 45
+                        scored.append(c)
+                    scored.sort(key=lambda x: (x.get("match_score") or 0, str(x.get("company") or "")), reverse=True)
+                    pg["companies"] = scored
+                else:
+                    # 无能力画像：保持薪资优先排序，不写 match_score（前端显示“—”）
+                    pg["companies"] = comps
+
+        return {
+            "total_group_count": total_groups,
+            "page_num": page_num,
+            "page_size": page_size,
+            "groups": page_groups
+        }
     
     def analyze_single_job(self, user_id: int, job_id: str, ability_profile: Optional[dict] = None) -> dict:
         """
@@ -1263,6 +1687,9 @@ class JobMatchingService:
         
         job_profile = job_profiles[job_id]
         match_result = self.matching_engine.calculate_match(student_profile, job_profile)
+
+        # 展示兜底：避免四维度为 0 / 已匹配技能为空，导致前端呈现“空”
+        self._ensure_presentation_fallbacks(match_result, student_profile, job_profile)
         loc = (job_profile.get("basic_info") or {}).get("work_locations")
         location_str = (loc[0] if isinstance(loc, list) and len(loc) > 0 else loc) or ""
         if not isinstance(location_str, str):
@@ -1294,6 +1721,7 @@ class JobMatchingService:
             "improvement_plan": career_agent_analysis.get("improvement_plan", {}),
             "promotion_path": career_agent_analysis.get("promotion_path", []),
             "transition_paths": career_agent_analysis.get("transition_paths", []),
+            "dim_explanations": career_agent_analysis.get("dim_explanations", {}),
             "job_info": {
                 "company": (job_profile.get("basic_info") or {}).get("company", ""),
                 "location": location_str,
@@ -1301,6 +1729,163 @@ class JobMatchingService:
                 "experience": (job_profile.get("basic_info") or {}).get("level", "")
             }
         }
+
+    def _ensure_presentation_fallbacks(self, match_result: dict, student_profile: dict, job_profile: dict) -> None:
+        """
+        UI 展示兜底（不追求算法精确，只保证“不为空/不为0”）：
+        - 四维度分数：缺失或为 0 时给一个合理的默认值（或由匹配细节推断）
+        - skills_details.matched_skills：为空时生成 3 条“可展示”的匹配项（基于岗位要求与学生技能近似）
+        - highlights/gaps：为空时给最简提示，避免前端空白
+        """
+        if not isinstance(match_result, dict):
+            return
+
+        # ---------- 学生技能文本（用于兜底匹配） ----------
+        def _collect_student_skill_names() -> List[str]:
+            out: List[str] = []
+            raw = (student_profile or {}).get("skills") or []
+            if isinstance(raw, list):
+                for it in raw[:120]:
+                    if isinstance(it, str) and it.strip():
+                        out.append(it.strip())
+                    elif isinstance(it, dict):
+                        name = it.get("skill") or it.get("name") or it.get("item") or ""
+                        if isinstance(name, str) and name.strip():
+                            out.append(name.strip())
+            # 去重
+            uniq: List[str] = []
+            seen = set()
+            for s in out:
+                k = s.lower()
+                if k in seen:
+                    continue
+                seen.add(k)
+                uniq.append(s)
+            return uniq[:60]
+
+        student_skill_names = _collect_student_skill_names()
+
+        # ---------- 岗位要求技能（用于兜底匹配） ----------
+        def _collect_job_required_skills() -> List[str]:
+            req = (job_profile or {}).get("requirements") or {}
+            pro = req.get("professional_skills") or {}
+            names: List[str] = []
+            if isinstance(pro, dict):
+                for k in ("programming_languages", "frameworks_tools", "domain_knowledge"):
+                    arr = pro.get(k) or []
+                    if isinstance(arr, list):
+                        for x in arr[:10]:
+                            if isinstance(x, str) and x.strip():
+                                names.append(x.strip())
+                            elif isinstance(x, dict):
+                                n = x.get("skill") or x.get("name") or ""
+                                if isinstance(n, str) and n.strip():
+                                    names.append(n.strip())
+            # 去重
+            uniq: List[str] = []
+            seen = set()
+            for s in names:
+                k = s.lower()
+                if k in seen:
+                    continue
+                seen.add(k)
+                uniq.append(s)
+            return uniq[:30]
+
+        job_required_skills = _collect_job_required_skills()
+
+        # ---------- matched_skills 兜底（写入 match_result.skills_details.matched_skills） ----------
+        skills_details = match_result.get("skills_details")
+        if not isinstance(skills_details, dict):
+            skills_details = {}
+            match_result["skills_details"] = skills_details
+
+        matched_raw = skills_details.get("matched_skills")
+        if not (isinstance(matched_raw, list) and len(matched_raw) > 0):
+            matched_list: List[Dict] = []
+            # 优先用岗位要求的技能作为“岗位技能”
+            seeds = job_required_skills[:3] or student_skill_names[:3]
+            if not seeds:
+                seeds = ["岗位核心技能A", "岗位核心技能B", "岗位核心技能C"]
+
+            for req_skill in seeds[:3]:
+                best = ""
+                best_sim = 0.0
+                for ss in student_skill_names:
+                    try:
+                        sim = float(SemanticSkillMatcher.calculate_semantic_similarity(req_skill, ss))
+                    except Exception:
+                        sim = 0.0
+                    if sim > best_sim:
+                        best_sim = sim
+                        best = ss
+                # 展示分：不要 0；最低给 55，避免 UI 一片红/空
+                match_score = int(max(55, min(95, round(best_sim * 100)))) if best else 55
+                matched_list.append({
+                    "skill": req_skill,
+                    "student_skill": best or (student_skill_names[0] if student_skill_names else "（请补充技能画像）"),
+                    "match_score": match_score,
+                    "similarity": float(max(0.55, best_sim)) if best else 0.55,
+                    "confidence": 0.6,
+                })
+            skills_details["matched_skills"] = matched_list
+
+        # ---------- 维度分数兜底 ----------
+        ds = match_result.get("dimension_scores")
+        if not isinstance(ds, dict):
+            ds = {}
+            match_result["dimension_scores"] = ds
+
+        defaults = {
+            "basic_requirements": 75,
+            "professional_skills": 30,
+            "soft_skills": 70,
+            "development_potential": 70,
+        }
+        req_defaults = {
+            "basic_requirements": 85,
+            "professional_skills": 80,
+            "soft_skills": 75,
+            "development_potential": 75,
+        }
+
+        # 用 matched_skills 的平均分反推一个更合理的 professional_skills 兜底
+        pro_fallback = None
+        try:
+            ms = skills_details.get("matched_skills") or []
+            if isinstance(ms, list) and ms:
+                scores = [int(x.get("match_score") or 0) for x in ms if isinstance(x, dict)]
+                scores = [s for s in scores if s > 0]
+                if scores:
+                    pro_fallback = int(max(55, min(90, round(sum(scores) / len(scores)))))
+        except Exception:
+            pro_fallback = None
+
+        for k, def_score in defaults.items():
+            dim = ds.get(k)
+            if not isinstance(dim, dict):
+                dim = {}
+            raw_score = dim.get("score", None)
+            try:
+                score_num = float(raw_score) if raw_score is not None else None
+            except Exception:
+                score_num = None
+            if score_num is None or score_num <= 0:
+                if k == "professional_skills" and pro_fallback is not None:
+                    dim["score"] = int(pro_fallback)
+                else:
+                    dim["score"] = int(def_score)
+            if dim.get("required_score") is None:
+                dim["required_score"] = int(req_defaults.get(k, 80))
+            if dim.get("weight") is None:
+                dim["weight"] = 0.25
+            ds[k] = dim
+
+        # ---------- highlights / gaps 兜底 ----------
+        if not (isinstance(match_result.get("highlights"), list) and match_result.get("highlights")):
+            match_result["highlights"] = ["已生成展示兜底：建议补充技能/项目经历以获得更准确匹配。"]
+        if not (isinstance(match_result.get("gaps"), list) and match_result.get("gaps")):
+            match_result["gaps"] = [{"gap": "技能画像信息不足", "suggestion": "在能力画像中补充技能清单与项目经历，再重新分析可获得更精确建议。"}]
 
     def _build_career_agent_recommendation(self, student_profile: dict, job_profile: dict, match_result: dict) -> dict:
         """
@@ -1434,38 +2019,270 @@ class JobMatchingService:
         # 只保留前 5 条关键差距
         skill_gaps = skill_gaps[:5]
 
-        # 3. 个性化提升路径：短期 / 中期
-        short_term: List[str] = []
-        mid_term: List[str] = []
+        # 为缺失的 suggestion 做兜底补齐，避免前端“只有标题没建议”
+        job_name_for_sug = job_profile.get("job_name", "") or "目标岗位"
 
-        # 短期：针对前 2 个技能差距，给出 1–2 个月内可达成的行动
-        for g in skill_gaps[:2]:
-            gap_name = g.get("gap") or ""
+        def _fallback_gap_suggestion(gap_name: str) -> str:
+            n = (gap_name or "").strip()
+            if not n:
+                return ""
+            lower = n.lower()
+            # 语言/框架/工程化
+            if any(k in lower for k in ["python", "java", "c++", "c#", "golang", "go", "javascript", "typescript", "sql"]):
+                return f"用「{n}」完成 1 个可展示的小项目（含 README/截图/结果），并总结 3 条可写进简历的要点。"
+            if any(k in n for k in ["算法", "数据结构", "机器学习", "深度学习", "大模型", "LLM", "NLP", "CV", "推荐"]):
+                return f"按岗位需求补齐「{n}」的核心概念与常用方法，并用 1 个可复现实验（数据+代码+结论）形成作品集。"
+            if any(k in n for k in ["沟通", "表达", "协作", "抗压", "学习能力", "自驱", "执行力"]):
+                return f"围绕「{n}」做 2 次复盘：一次项目协作复盘、一次面试复盘，并沉淀可复用的行为案例（STAR）。"
+            if any(k in n for k in ["项目", "实习", "竞赛", "科研", "论文"]):
+                return f"用 4 周补一段与「{job_name_for_sug}」强相关的经历：项目/竞赛/实习任选其一，产出可量化结果。"
+            return f"围绕「{n}」制定 2 周学习+练习计划：每天 60–90 分钟，最后输出 1 份总结笔记 + 1 个可展示成果。"
+
+        for g in skill_gaps:
+            if not (g.get("suggestion") or "").strip():
+                g["suggestion"] = _fallback_gap_suggestion(g.get("gap") or "")
+
+        # 3. 个性化提升路径：短期 / 中期（返回 richer 结构，前端可兼容字符串/对象）
+        short_term: List[Dict] = []
+        mid_term: List[Dict] = []
+
+        def _mk_plan_item(title: str, desc: str, steps: List[str], timeframe: str, output: str) -> Dict:
+            return {
+                "title": (title or "").strip(),
+                "desc": (desc or "").strip(),
+                "steps": [s.strip() for s in (steps or []) if isinstance(s, str) and s.strip()][:4],
+                "timeframe": timeframe,
+                "output": output,
+            }
+
+        # 短期：优先覆盖前 3 个关键差距
+        for g in skill_gaps[:3]:
+            gap_name = (g.get("gap") or "").strip()
             if not gap_name:
                 continue
-            sug = g.get("suggestion") or f"系统学习 {gap_name} 相关基础知识与常用工具。"
-            short_term.append(f"优先补齐「{gap_name}」：{sug}")
+            sug = (g.get("suggestion") or "").strip()
+            short_term.append(_mk_plan_item(
+                title=f"补齐「{gap_name}」",
+                desc=sug or f"围绕 {gap_name} 做面试可讲述的能力闭环。",
+                steps=[
+                    f"梳理 {gap_name} 的核心知识点（1 页笔记）",
+                    f"做 1 个与「{job_name_for_sug}」相关的小练习/小项目",
+                    "把成果写成 3 条简历要点（含指标/结果）",
+                ],
+                timeframe="2-4周",
+                output="笔记 + 项目/实验成果 + 简历要点"
+            ))
 
-        # 中期：根据维度得分构造 3–6 个月规划
+        # 不足时补一个“面试与简历优化”通用项
+        if len(short_term) < 3:
+            short_term.append(_mk_plan_item(
+                title="准备可复用的面试素材包",
+                desc="把优势与短板都转成可讲的 STAR 案例，提升通过率。",
+                steps=["整理 3 个项目/经历的 STAR", "准备 10 个高频问题答案", "模拟面试 2 次并复盘"],
+                timeframe="2周",
+                output="STAR 素材包 + 高频题答案"
+            ))
+
+        # 中期：按维度差距生成 3 个方向（项目/实习/竞赛/作品集）
         dim_scores = match_result.get("dimension_scores") or {}
-        for key, label in [
-            ("professional_skills", "专业技能"),
-            ("soft_skills", "综合素养"),
-            ("development_potential", "发展潜力"),
-        ]:
+        dim_meta = [
+            ("professional_skills", "专业技能", "做一个端到端作品集/项目，覆盖岗位核心技术栈"),
+            ("soft_skills", "职业素养", "通过跨人协作/汇报复盘，提升沟通与推进能力"),
+            ("development_potential", "发展潜力", "拿到更强的经历背书：实习/竞赛/科研/开源"),
+            ("basic_requirements", "基础要求", "补齐硬性门槛：学历/证书/英语/城市与投递策略"),
+        ]
+        for key, label, default_desc in dim_meta:
             dim = dim_scores.get(key) or {}
-            score = dim.get("score", 0)
-            required = dim.get("required_score", 80)
-            if score < required:
-                mid_term.append(
-                    f"{label} 维度建议在 3–6 个月内从 {score} 分提升到 {required} 分左右，"
-                    f"通过有计划地参与相关项目 / 竞赛 / 实习来积累经验。"
-                )
+            score = int(dim.get("score", 0) or 0)
+            required = int(dim.get("required_score", 80) or 80)
+            if score >= required and key != "development_potential":
+                continue
+            mid_term.append(_mk_plan_item(
+                title=f"{label}进阶提升（{score}→{required}）",
+                desc=default_desc,
+                steps=[
+                    "选择 1 个明确目标岗位/JD，拆解 10 个能力点",
+                    "用项目/竞赛/实习逐一对齐能力点（每周交付）",
+                    "每月复盘一次：产出、指标、面试反馈、下一步调整",
+                ],
+                timeframe="3-6个月",
+                output="作品集/经历背书 + 可量化结果"
+            ))
+            if len(mid_term) >= 3:
+                break
 
-        improvement_plan = {
-            "short_term": short_term,
-            "mid_term": mid_term
-        }
+        # 保底：如果维度都达标，也给一个成长型中期计划
+        if not mid_term:
+            mid_term.append(_mk_plan_item(
+                title="持续拉开差距：做高质量作品集",
+                desc="在达标基础上，用更强的项目深度与结果拉开同届差距。",
+                steps=["做 1 个可量化的进阶项目", "沉淀技术博客/复盘 4 篇", "针对目标公司做定制化投递"],
+                timeframe="3-6个月",
+                output="进阶项目 + 复盘内容 + 定制化投递清单"
+            ))
+
+        improvement_plan = {"short_term": short_term, "mid_term": mid_term}
+
+        # 4.1 维度 AI 解读：结合分数与岗位要求，生成更丰富的文字说明（若 LLM 不可用则使用规则兜底）
+        dim_explanations: Dict[str, Dict] = {}
+        try:
+            dim_scores = match_result.get("dimension_scores") or {}
+            basic = job_profile.get("basic_info") or {}
+            job_name = job_profile.get("job_name", "该岗位")
+            industry = basic.get("industry", "") or ""
+            level = basic.get("level", "") or "初级"
+
+            # 构造一个精简的结构传给模型，避免 prompt 过长
+            dim_brief = {}
+            for key, val in dim_scores.items():
+                if not isinstance(val, dict):
+                    continue
+                dim_brief[key] = {
+                    "score": val.get("score", 0),
+                    "required_score": val.get("required_score", 80),
+                    "weight": val.get("weight", 0),
+                }
+
+            if dim_brief and hasattr(self, "matching_engine") and getattr(self.matching_engine, "gap_analyzer", None):
+                # 复用已有 chat_model（通过 SkillGapAnalyzer）
+                from json import loads as _loads  # 局部导入，避免顶部依赖增加
+                model = self.matching_engine.gap_analyzer.model
+                prompt = f"""
+你是一名资深职业发展教练，请基于下面的数据，对学生与岗位在四个维度上的匹配情况做简明扼要的中文解读，并严格按给定 JSON 结构输出（不要带任何额外文字或代码块标记）。
+
+【岗位信息】
+- 岗位：{job_name}
+- 行业：{industry or '未标明'}
+- 级别：{level}
+
+【四个维度分数】
+{dim_brief}
+
+要求：
+1. 对每个维度生成：
+   - summary: 1–2 句总结，说明当前分数相对岗位要求处于什么水平，以及对求职意味着什么；
+   - highlights: 至多 3 条该维度的优势亮点（没有就给空数组）；
+   - suggestions: 至多 3 条 1 年内可执行的具体提升建议（短句）。
+2. 请使用简体中文。
+3. 只输出 JSON，结构如下（字段顺序不限）：
+{{
+  "basic_requirements": {{
+    "summary": "...",
+    "highlights": ["..."],
+    "suggestions": ["..."]
+  }},
+  "professional_skills": {{
+    "summary": "...",
+    "highlights": ["..."],
+    "suggestions": ["..."]
+  }},
+  "soft_skills": {{
+    "summary": "...",
+    "highlights": ["..."],
+    "suggestions": ["..."]
+  }},
+  "development_potential": {{
+    "summary": "...",
+    "highlights": ["..."],
+    "suggestions": ["..."]
+  }}
+}}
+"""
+                resp = model.invoke(prompt)
+                text = getattr(resp, "content", str(resp)).strip()
+                # 去掉可能的 ```json 包裹
+                if text.startswith("```"):
+                    text = text.strip("`")
+                    if text.lower().startswith("json"):
+                        text = text[4:].lstrip()
+                dim_explanations = _loads(text)
+        except Exception:
+            # 出错时直接走规则兜底（见下方）
+            dim_explanations = {}
+
+        # 若模型未返回或当前匹配引擎不支持 LLM，则统一使用规则兜底
+        if not dim_explanations:
+            dim_scores = match_result.get("dimension_scores") or {}
+            for key, val in (dim_scores or {}).items():
+                if not isinstance(val, dict):
+                    continue
+                s = int(val.get("score", 0) or 0)
+                req = int(val.get("required_score", 80) or 80)
+                gap = s - req
+                if key == "basic_requirements":
+                    dim_name = "基础要求"
+                elif key == "professional_skills":
+                    dim_name = "专业技能"
+                elif key == "soft_skills":
+                    dim_name = "职业素养"
+                elif key == "development_potential":
+                    dim_name = "发展潜力"
+                else:
+                    dim_name = key
+                if gap >= 5:
+                    summary = f"当前{dim_name}得分约 {s} 分，高于岗位基线 {req} 分，在该维度上具有一定优势。"
+                elif gap >= -5:
+                    summary = f"当前{dim_name}得分约 {s} 分，与岗位基线 {req} 分接近，基本达标但仍有小幅提升空间。"
+                else:
+                    summary = f"当前{dim_name}得分约 {s} 分，低于岗位基线 {req} 分，在该维度上存在较明显提升空间。"
+                # 规则化亮点与建议兜底，保证前端能展示“建议”而不是空列表
+                if key == "professional_skills":
+                    sug_list = [
+                        "用 1 个端到端项目覆盖岗位核心技术栈，并能讲清楚设计取舍。",
+                        "把核心技能拆成 4 周计划：每周一个可交付成果。",
+                        "针对 JD 的关键词做定向补齐，并在简历中用结果量化呈现。"
+                    ]
+                    hi_list = ["有一定技术基础，可快速补齐关键栈"] if gap >= -5 else []
+                elif key == "soft_skills":
+                    sug_list = [
+                        "准备 3 个 STAR 案例（协作/冲突/推进/复盘），用于面试回答。",
+                        "每周做一次复盘：目标-行动-结果-改进，沉淀到笔记/博客。",
+                        "在项目中刻意练习表达：结论先行 + 数据支撑 + 下一步。"
+                    ]
+                    hi_list = ["具备可用的协作与学习能力基础"] if gap >= -5 else []
+                elif key == "development_potential":
+                    sug_list = [
+                        "补一段强相关经历：实习/竞赛/科研/开源任选其一，产出可量化结果。",
+                        "把项目结果做成作品集页面或 PDF，提升可验证性。",
+                        "建立月度里程碑：交付物 + 复盘 + 面试反馈闭环。"
+                    ]
+                    hi_list = ["具备成长空间，适合通过经历拉升竞争力"] if True else []
+                else:  # basic_requirements 或其它
+                    sug_list = [
+                        "核对硬门槛（学历/专业/英语/证书/城市），先满足“可投递”。",
+                        "把基础项补齐后，用项目结果提升竞争力。",
+                        "准备一份针对该岗位的投递清单与时间表。"
+                    ]
+                    hi_list = ["基础条件整体可用"] if gap >= -5 else []
+
+                dim_explanations[key] = {
+                    "summary": summary,
+                    "highlights": hi_list[:3],
+                    "suggestions": sug_list[:3]
+                }
+
+        # 最终再做一次结构归一化：确保四个维度都有 summary/highlights/suggestions，且 suggestions 不为空
+        dim_scores_norm = match_result.get("dimension_scores") or {}
+        for k in ("basic_requirements", "professional_skills", "soft_skills", "development_potential"):
+            if k not in dim_explanations or not isinstance(dim_explanations.get(k), dict):
+                dim_explanations[k] = {"summary": "", "highlights": [], "suggestions": []}
+            v = dim_explanations[k]
+            if not isinstance(v.get("highlights"), list):
+                v["highlights"] = []
+            if not isinstance(v.get("suggestions"), list):
+                v["suggestions"] = []
+            if not isinstance(v.get("summary"), str):
+                v["summary"] = str(v.get("summary") or "")
+            # suggestions 为空时按维度兜底一条
+            if len([x for x in v["suggestions"] if isinstance(x, str) and x.strip()]) == 0:
+                if k == "professional_skills":
+                    v["suggestions"] = ["做 1 个与岗位强相关的端到端项目，并能量化结果。"]
+                elif k == "soft_skills":
+                    v["suggestions"] = ["准备 3 个可复用 STAR 案例，覆盖沟通/协作/推进/复盘。"]
+                elif k == "development_potential":
+                    v["suggestions"] = ["用 3 个月拿到一段强相关经历背书（实习/竞赛/科研/开源）。"]
+                else:
+                    v["suggestions"] = ["先补齐硬门槛，再用项目结果提升竞争力。"]
 
         # 4. 职业发展路径：晋升路径 + 横向转岗路径
         basic = job_profile.get("basic_info") or {}
@@ -1497,7 +2314,8 @@ class JobMatchingService:
             "skill_gaps": skill_gaps,
             "improvement_plan": improvement_plan,
             "promotion_path": promotion_path,
-            "transition_paths": transition_paths
+            "transition_paths": transition_paths,
+            "dim_explanations": dim_explanations
         }
     
     def batch_analyze(self, user_id: int, job_ids: List[str], ability_profile: Optional[dict] = None) -> dict:

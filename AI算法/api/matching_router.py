@@ -35,29 +35,60 @@ def error_response(code, msg, data=None):
 @matching_bp.route("/recommend-jobs", methods=["POST"])
 def recommend_jobs():
     """
-    基于学生能力画像，推荐匹配的岗位
-    请求体：{ user_id, top_n, filters [, ability_profile] }
+    基于学生能力画像，推荐匹配的岗位（分页）
+    请求体：{ user_id, pageNum?, pageSize?, filters?, ability_profile? }
+    - pageNum: 页码（从1开始，默认1）
+    - pageSize: 每页条数（默认20，最大50）
     ability_profile: 可选，由 Java 传入的能力画像，有则优先使用
+
+    返回：
+    {
+      "total_count": 123,
+      "page_num": 1,
+      "page_size": 20,
+      "jobs": [ ... 当前页推荐岗位 ... ]
+    }
     """
     try:
         body = request.get_json(silent=True) or {}
         user_id = body.get("user_id")
-        top_n = body.get("top_n", 10)
+        # 兼容旧字段 top_n，但优先使用 pageNum/pageSize
+        page_num = int(body.get("pageNum") or body.get("page_num") or 1)
+        page_size = int(body.get("pageSize") or body.get("page_size") or body.get("top_n") or 20)
         filters = body.get("filters", {})
         ability_profile = body.get("ability_profile")
 
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
 
-        if top_n < 1 or top_n > 50:
-            return error_response(400, "top_n 参数应在1-50之间")
+        if page_num < 1:
+            page_num = 1
+        if page_size < 1:
+            page_size = 20
+        if page_size > 50:
+            return error_response(400, "pageSize 参数应在1-50之间")
 
         service = get_job_matching_service()
+        # 为减少一次性计算量，仅取到当前页为止的 TopK
+        top_n = page_num * page_size
         result = service.recommend_jobs(user_id, top_n, filters, ability_profile=ability_profile)
 
-        logger.info(f"[API] 为用户{user_id}推荐{len(result['recommendations'])}个岗位")
+        recs = result.get("recommendations") or result.get("jobs") or []
+        total = int(result.get("total_matched", len(recs)))
+        start = (page_num - 1) * page_size
+        end = start + page_size
+        page_items = recs[start:end]
+
+        data = {
+            "total_count": total,
+            "page_num": page_num,
+            "page_size": page_size,
+            "jobs": page_items,
+        }
+
+        logger.info(f"[API] 为用户{user_id}推荐岗位：page={page_num}, size={page_size}, total={total}")
         
-        return success_response(result)
+        return success_response(data)
 
     except ValueError as e:
         return error_response(404, str(e))
@@ -73,27 +104,122 @@ def recommend_jobs():
 @matching_bp.route("/search-jobs", methods=["POST"])
 def search_jobs():
     """
-    使用语义搜索获取岗位列表。
-    请求体：{ keyword, top_n?, filters? }
-    返回：{ total, jobs: [{ job_id, job_name, industry, level, avg_salary, tags, semantic_score }] }
+    使用语义搜索获取岗位列表（分页）。
+    请求体：{ keyword?, pageNum?, pageSize?, filters? }
+    - pageNum: 页码（从1开始，默认1）
+    - pageSize: 每页条数（默认20，最大50）
+
+    返回：
+    {
+      "total_count": 123,
+      "page_num": 1,
+      "page_size": 20,
+      "jobs": [{ job_id, job_name, industry, level, avg_salary, tags, semantic_score }]
+    }
     """
     try:
         body = request.get_json(silent=True) or {}
         keyword = body.get("keyword", "") or ""
-        top_n = body.get("top_n", 20)
+        page_num = int(body.get("pageNum") or body.get("page_num") or 1)
+        page_size = int(body.get("pageSize") or body.get("page_size") or body.get("top_n") or 20)
         filters = body.get("filters", {}) or {}
 
-        if top_n < 1 or top_n > 50:
-            return error_response(400, "top_n 参数应在1-50之间")
+        if page_num < 1:
+            page_num = 1
+        if page_size < 1:
+            page_size = 20
+        if page_size > 50:
+            return error_response(400, "pageSize 参数应在1-50之间")
 
         service = get_job_matching_service()
+        # 为了让前端有多页可翻，这里不再按「pageNum * pageSize」裁剪，
+        # 而是一次性取固定上限的 TopK，再在路由层做分页。
+        # 对当前数据量，200 条足够覆盖主要岗位，同时避免一次性全量遍历过慢。
+        top_n = max(200, page_size * 10)
         result = service.search_jobs(keyword, top_n, filters)
 
-        logger.info(f"[API] 语义搜索岗位，keyword='{keyword}', total={result.get('total', 0)}")
-        return success_response(result)
+        jobs = result.get("jobs") or []
+        total = int(result.get("total", len(jobs)))
+        start = (page_num - 1) * page_size
+        end = start + page_size
+        page_items = jobs[start:end]
+
+        data = {
+            "total_count": total,
+            "page_num": page_num,
+            "page_size": page_size,
+            "jobs": page_items,
+        }
+
+        logger.info(f"[API] 语义搜索岗位，keyword='{keyword}', page={page_num}, size={page_size}, total={total}")
+        return success_response(data)
 
     except Exception as e:
         logger.error(f"[API] /matching/search-jobs 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+# ============================================================
+# 6.x 语义岗位搜索（岗位归类视图）
+# POST /api/v1/matching/search-jobs-grouped
+# ============================================================
+@matching_bp.route("/search-jobs-grouped", methods=["POST"])
+def search_jobs_grouped():
+    """
+    「主动探索」岗位归类视图（热度排序）：
+    请求体：{ keyword?, pageNum?, pageSize?, filters? }
+    - pageNum: 页码（从1开始，默认1）
+    - pageSize: 每页岗位种类数（默认5，最大100）
+
+    返回：
+    {
+      "total_group_count": 123,
+      "page_num": 1,
+      "page_size": 30,
+      "groups": [
+        {
+          "job_name": "...",
+          "company_count": 47,
+          "tags": ["新能源", "电力/热力", "工业自动化"],
+          "salary_range": { "min": 5000, "max": 14000 },
+          "companies": [
+            { "job_id": "...", "company": "...", "industry": "...", "avg_salary": "...", "match_score": null }
+          ]
+        }
+      ]
+    }
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        keyword = body.get("keyword", "") or ""
+        user_id = body.get("user_id")
+        ability_profile = body.get("ability_profile")
+        page_num = int(body.get("pageNum") or body.get("page_num") or 1)
+        page_size = int(body.get("pageSize") or body.get("page_size") or 5)
+        filters = body.get("filters", {}) or {}
+
+        if page_num < 1:
+            page_num = 1
+        if page_size < 1:
+            page_size = 5
+        if page_size > 100:
+            return error_response(400, "pageSize 参数应在1-100之间")
+
+        service = get_job_matching_service()
+        result = service.search_jobs_grouped(
+            keyword,
+            page_num=page_num,
+            page_size=page_size,
+            filters=filters,
+            user_id=user_id,
+            ability_profile=ability_profile,
+        )
+
+        logger.info(f"[API] 岗位归类搜索，keyword='{keyword}', page={page_num}, size={page_size}, groups={result.get('total_group_count', 0)}")
+        return success_response(result)
+
+    except Exception as e:
+        logger.error(f"[API] /matching/search-jobs-grouped 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
 
 

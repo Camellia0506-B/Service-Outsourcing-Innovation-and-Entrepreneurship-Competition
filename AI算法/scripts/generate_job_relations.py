@@ -1,5 +1,5 @@
 """
-用 AI（qwen3-max）根据岗位列表自动生成晋升/转岗关系，写入 job_relations 表。
+用 AI（qwen-max）根据岗位列表自动生成晋升/转岗关系，写入 job_relations 表。
 覆盖至少 10 个主要岗位，每个岗位有晋升路径 + 至少 2 条转岗路径。
 运行：在 AI算法 目录下执行 python scripts/generate_job_relations.py
 """

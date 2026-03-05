@@ -23,14 +23,15 @@ class ChatModelFactory(BaseModelFactory):
         统一创建对话模型实例。
         - 若配置使用多模态模型（如 qwen3.5-plus 系列或包含 'vl' 的模型），
           直接用 ChatTongyi 文本端点会触发阿里云的 url error（要求传 image_url）。
-        - 这里自动降级为兼容的纯文本模型（默认 qwen3-max），避免 InvalidParameter/url error。
+        - 这里自动降级为兼容的纯文本模型（默认 qwen-max），避免 InvalidParameter/url error。
         """
-        model_name = rag_conf.get("chat_model_name", "qwen3-max") or "qwen3-max"
+        # 统一：默认使用 qwen-max
+        model_name = rag_conf.get("chat_model_name", "qwen-max") or "qwen-max"
 
         # 多模态 / VL 模型自动映射到纯文本模型
         if any(model_name.startswith(p) for p in ("qwen3.5-plus", "qwen-vl", "qwen-vl-plus")) or "vl" in model_name.lower():
             # 与项目中其他地方约定保持一致：多模态配置时优先退回到纯文本模型
-            model_name = "qwen3-max"
+            model_name = "qwen-max"
 
         return ChatTongyi(model=model_name)
 

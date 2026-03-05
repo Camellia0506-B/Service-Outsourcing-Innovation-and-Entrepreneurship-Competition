@@ -1,5 +1,5 @@
 """
-晋升路径生成器 - 使用 qwen3-max 根据岗位名称动态生成 4 个晋升阶段
+晋升路径生成器 - 使用 qwen-max 根据岗位名称动态生成 4 个晋升阶段
 每个阶段包含：name、time_range、salary_increase、key_skills、icon
 """
 
@@ -39,7 +39,7 @@ def _default_stages(job_name: str) -> List[Dict[str, Any]]:
 
 def generate_career_path(job_name: str) -> List[Dict[str, Any]]:
     """
-    根据岗位名称，调用 LLM（qwen3-max）动态生成 4 个晋升阶段。
+    根据岗位名称，调用 LLM（qwen-max）动态生成 4 个晋升阶段。
 
     每个阶段包含：
     - name: 阶段名称（如「初级Java工程师」）

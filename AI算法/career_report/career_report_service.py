@@ -28,7 +28,7 @@ rag_conf = config.get("rag", {})
 # ===================================================
 def get_chat_model():
     """获取通义大模型实例"""
-    model_name = rag_conf.get("chat_model_name", "qwen3-max")
+    model_name = rag_conf.get("chat_model_name", "qwen-max")
     return ChatTongyi(model=model_name)
 
 # 缓存模型实例
@@ -112,10 +112,134 @@ def generate_personalized_content(report_id: str, user_id: int, assessment_repor
             else:
                 result = {}
         
+        # 结构校验与兜底：避免前端出现“行动计划为空/很单调”
+        if not isinstance(result, dict):
+            result = {}
+
+        def _pick_target_career() -> str:
+            if isinstance(careers, list) and careers:
+                c0 = careers[0]
+                if isinstance(c0, dict):
+                    return (c0.get("career") or c0.get("name") or "").strip() or "目标岗位"
+                return str(c0).strip() or "目标岗位"
+            return "目标岗位"
+
+        def _fallback_payload() -> dict:
+            target = _pick_target_career()
+            ability2 = assessment_report.get("ability_analysis", {}) if isinstance(assessment_report, dict) else {}
+            strengths = ability2.get("strengths") or []
+            improves = ability2.get("areas_to_improve") or []
+
+            def _top_names(items, key1, key2, n=2):
+                out = []
+                if isinstance(items, list):
+                    for it in items:
+                        if isinstance(it, dict):
+                            name = (it.get(key1) or it.get(key2) or "").strip()
+                            if name:
+                                out.append(name)
+                        elif isinstance(it, str) and it.strip():
+                            out.append(it.strip())
+                return out[:n]
+
+            top_strength = _top_names(strengths, "ability", "name", 2)
+            top_gap = _top_names(improves, "ability", "name", 3)
+            gap_hint = "、".join(top_gap) if top_gap else "岗位核心能力"
+            strength_hint = "、".join(top_strength) if top_strength else "学习与执行"
+
+            short_term_plan = {
+                "period": "3个月",
+                "goal": f"围绕「{target}」补齐{gap_hint}短板，形成可投递的作品集，并开始稳定投递与面试准备。",
+                "monthly_plans": [
+                    {
+                        "month": "第1月",
+                        "focus": "能力补齐 + 选题定方向",
+                        "tasks": [
+                            {"task": f"拆解{target}岗位JD，建立能力清单", "具体行动": ["收集10条JD", "提炼关键词与能力点", "选出3个最常见能力点"], "时间投入": "每周3-4小时", "预期成果": "能力清单 + 目标公司清单"},
+                            {"task": f"补齐{gap_hint}基础与面试知识点", "具体行动": ["每天60-90分钟学习", "每周复盘一次", "把知识点写成笔记"], "时间投入": "每周7-10小时", "预期成果": "1份结构化笔记 + 10个高频问题答案"},
+                        ],
+                        "milestone": f"明确目标岗位与方向，形成可执行的学习/项目计划（并能讲清楚为什么适合{target}）。",
+                    },
+                    {
+                        "month": "第2月",
+                        "focus": "项目/作品集产出",
+                        "tasks": [
+                            {"task": "完成1个可展示项目（端到端）", "具体行动": ["确定需求与范围", "每周交付一个可运行版本", "补齐README与截图/结果"], "时间投入": "每周8-12小时", "预期成果": "项目仓库 + 演示材料"},
+                            {"task": "把项目沉淀为简历要点", "具体行动": ["写3条量化要点", "准备STAR讲述", "找同学/老师/学长评审"], "时间投入": "每周2小时", "预期成果": "1版可投递简历"},
+                        ],
+                        "milestone": "作品集完成度≥70%，简历能清晰呈现成果与贡献。",
+                    },
+                    {
+                        "month": "第3月",
+                        "focus": "投递与面试闭环",
+                        "tasks": [
+                            {"task": "建立投递与复盘机制", "具体行动": ["每周投递10-20个岗位", "记录反馈与原因", "按反馈迭代简历与项目"], "时间投入": "每周3-5小时", "预期成果": "投递表 + 复盘记录"},
+                            {"task": "模拟面试与专项提升", "具体行动": ["每周2次模拟", "针对薄弱点专项练习", "完善自我介绍与项目讲述"], "时间投入": "每周3-4小时", "预期成果": "面试题库 + 标准回答"},
+                        ],
+                        "milestone": "形成稳定投递节奏，并能在面试中清晰表达项目与优势。",
+                    },
+                ],
+            }
+
+            mid_term_plan = {
+                "period": "3-6个月",
+                "goal": f"在{strength_hint}基础上，通过更强经历背书（实习/竞赛/科研/开源）提升竞争力，拿到更优offer。",
+                "yearly_plans": [],
+            }
+
+            return {
+                "action_plan": {
+                    "short_term_plan": short_term_plan,
+                    "mid_term_plan": mid_term_plan,
+                },
+                "evaluation": {
+                    "evaluation_system": {
+                        "monthly_review": {"frequency": "每月1次", "review_items": ["产出物是否完成", "面试反馈与改进点", "下月目标是否需要调整"], "adjustment_triggers": ["连续2周无产出", "投递无反馈", "面试卡在同一环节"]},
+                        "quarterly_review": {"frequency": "每季度1次", "review_items": ["作品集质量", "简历命中率", "面试通过率"], "key_questions": ["哪些能力提升最有效", "下阶段最值得投入的方向是什么"]},
+                        "annual_review": {"frequency": "每年1次", "review_items": ["职业方向是否需要调整", "能力结构是否均衡"]},
+                    },
+                    "adjustment_scenarios": [],
+                },
+                "pain_points": {
+                    "identified_risks": [{"risk": "计划执行中断或产出不足", "mitigation": "把任务拆到每周可交付，并固定复盘时间"}],
+                    "contingency_plans": ["若两个月内无明显面试进展，优先补一段强相关经历背书（实习/竞赛/开源）。"],
+                },
+            }
+
+        # 若 action_plan 缺失或 short_term_plan/月计划为空，则填充兜底
+        ap = result.get("action_plan") if isinstance(result.get("action_plan"), dict) else None
+        stp = ap.get("short_term_plan") if isinstance(ap, dict) and isinstance(ap.get("short_term_plan"), dict) else None
+        mp = stp.get("monthly_plans") if isinstance(stp, dict) else None
+        if not ap or not stp or not isinstance(mp, list) or len(mp) == 0:
+            fb = _fallback_payload()
+            # 只补齐缺失部分，避免覆盖模型已生成的有效内容
+            result.setdefault("action_plan", fb.get("action_plan"))
+            result.setdefault("evaluation", fb.get("evaluation"))
+            result.setdefault("pain_points", fb.get("pain_points"))
+
         return result
     except Exception as e:
         logger.error(f"生成个性化内容失败: {e}")
-        return {}
+        # 异常时也返回兜底结构，保证前端不空
+        try:
+            # 复用上方兜底逻辑
+            careers = (assessment_report.get("comprehensive_recommendation", {}) or {}).get("recommended_careers") or []
+        except Exception:
+            careers = []
+        return {
+            "action_plan": {
+                "short_term_plan": {
+                    "period": "3个月",
+                    "goal": "生成个性化行动计划失败，已提供基础可执行方案。",
+                    "monthly_plans": [
+                        {"month": "第1月", "focus": "补齐基础", "tasks": [{"task": "拆解目标岗位JD", "具体行动": ["收集JD", "提炼能力点"], "时间投入": "每周3小时", "预期成果": "能力清单"}], "milestone": "明确目标与计划"},
+                        {"month": "第2月", "focus": "项目产出", "tasks": [{"task": "完成1个项目", "具体行动": ["每周交付", "沉淀README"], "时间投入": "每周8小时", "预期成果": "项目仓库"}], "milestone": "作品集成型"},
+                        {"month": "第3月", "focus": "投递面试", "tasks": [{"task": "投递+复盘", "具体行动": ["每周投递", "记录反馈"], "时间投入": "每周4小时", "预期成果": "投递表"}], "milestone": "形成闭环"},
+                    ],
+                },
+                "mid_term_plan": {"period": "3-6个月", "goal": "通过经历背书提升竞争力。", "yearly_plans": []},
+            }
+        }
 
 def _career_edits_path() -> str:
     p = get_abs_path("data/career_report/edits.json")

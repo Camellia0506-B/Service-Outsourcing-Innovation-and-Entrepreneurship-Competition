@@ -2042,7 +2042,32 @@ body::before {
 #matchingPage .filter-group { display: flex; align-items: center; gap: 6px; }
 #matchingPage .filter-label { font-size: 12px; color: var(--match-muted); white-space: nowrap; }
 #matchingPage .filter-sel { padding: 5px 10px; border: 1.5px solid var(--match-border); border-radius: 8px; font-size: 12px; font-family: inherit; color: var(--match-text2); background: white; cursor: pointer; outline: none; }
+#matchingPage .search-results-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 4px 2px 12px;
+}
+#matchingPage .search-results-meta { font-size: 12px; color: var(--match-muted); }
+#matchingPage .search-view-toggle { display: inline-flex; gap: 8px; }
+#matchingPage .sv-btn {
+    border: 1.5px solid var(--match-border);
+    background: white;
+    color: var(--match-text2);
+    padding: 7px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+#matchingPage .sv-btn:hover { border-color: var(--match-primary-mid); transform: translateY(-1px); }
+#matchingPage .sv-btn.active { background: var(--match-primary); border-color: var(--match-primary); color: white; box-shadow: 0 6px 18px rgba(44,95,212,.18); }
 #matchingPage .search-results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+#matchingPage .search-results-grid.grouped { grid-template-columns: 1fr; gap: 12px; }
 #matchingPage .search-result-card {
     background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border);
     padding: 18px; cursor: pointer; transition: all 0.2s;
@@ -2059,6 +2084,172 @@ body::before {
 #matchingPage .src-match { font-size: 12px; color: var(--match-text2); font-weight: 500; }
 #matchingPage .src-btn { font-size: 11px; padding: 4px 12px; border: 1.5px solid var(--match-primary); color: var(--match-primary); border-radius: 6px; cursor: pointer; background: none; font-family: inherit; transition: all 0.15s; }
 #matchingPage .src-btn:hover { background: var(--match-primary); color: white; }
+
+/* 搜索岗位 - 按岗位归类卡片 */
+#matchingPage .job-group-card {
+    background: var(--match-card);
+    border-radius: var(--match-radius);
+    border: 1.5px solid var(--match-border);
+    padding: 16px 18px;
+    transition: all 0.2s;
+}
+#matchingPage .job-group-card:hover { box-shadow: 0 6px 24px rgba(44,95,212,.12); border-color: var(--match-primary-mid); }
+#matchingPage .jg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#matchingPage .jg-left { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+#matchingPage .jg-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--match-primary-soft);
+    color: var(--match-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900;
+    flex-shrink: 0;
+}
+#matchingPage .jg-title { font-size: 15px; font-weight: 900; color: var(--match-text); line-height: 1.25; }
+#matchingPage .jg-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+#matchingPage .jg-count {
+    font-size: 12px; font-weight: 800;
+    background: var(--match-primary-soft); color: var(--match-primary);
+    padding: 4px 10px; border-radius: 999px;
+    white-space: nowrap;
+}
+#matchingPage .jg-salary { font-size: 12px; font-weight: 800; color: var(--match-text2); white-space: nowrap; }
+#matchingPage .jg-toggle {
+    width: 30px; height: 30px; border-radius: 10px;
+    border: 1.5px solid var(--match-border); background: white;
+    cursor: pointer; color: var(--match-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    user-select: none;
+}
+#matchingPage .jg-toggle:hover { border-color: var(--match-primary-mid); color: var(--match-primary); }
+#matchingPage .job-group-card.expanded .jg-toggle { transform: rotate(180deg); }
+
+#matchingPage .jg-tags { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+#matchingPage .jg-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--match-bg); color: var(--match-text2);
+}
+
+#matchingPage .jg-body { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--match-border); display: none; }
+#matchingPage .job-group-card.expanded .jg-body { display: block; }
+#matchingPage .jg-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+#matchingPage .jg-tools-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#matchingPage .jg-tool-item { display: flex; align-items: center; }
+#matchingPage .jg-search {
+    min-width: 180px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--match-border);
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--match-text);
+    outline: none;
+}
+#matchingPage .jg-search::placeholder { color: var(--match-muted); }
+#matchingPage .jg-sort,
+#matchingPage .jg-filter-industry {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--match-border);
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--match-text2);
+    background: white;
+    cursor: pointer;
+}
+#matchingPage .jg-tools-right { font-size: 11px; color: var(--match-muted); white-space: nowrap; }
+
+#matchingPage .jg-company-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 2px;
+    border-bottom: 1px solid rgba(228,233,245,0.75);
+}
+#matchingPage .jg-company-row:last-child { border-bottom: none; }
+#matchingPage .jg-co-left { display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 0; }
+#matchingPage .jg-co-logo {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; color: white; flex-shrink: 0;
+}
+#matchingPage .jg-co-name { font-size: 13px; font-weight: 800; color: var(--match-text); line-height: 1.2; }
+#matchingPage .jg-co-sub { font-size: 11px; color: var(--match-muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+#matchingPage .jg-co-sub .pill { background: var(--match-bg); color: var(--match-text2); padding: 2px 7px; border-radius: 999px; font-size: 10.5px; }
+#matchingPage .jg-co-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+#matchingPage .jg-co-salary { font-size: 12px; font-weight: 800; color: var(--match-primary); white-space: nowrap; }
+#matchingPage .jg-co-match { font-size: 12px; font-weight: 700; color: var(--match-text2); white-space: nowrap; }
+#matchingPage .jg-analyze {
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--match-primary);
+    color: var(--match-primary);
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 800;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+#matchingPage .jg-analyze:hover { background: var(--match-primary); color: white; transform: translateY(-1px); }
+#matchingPage .jg-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--match-border);
+}
+#matchingPage .jg-page-left { display: flex; align-items: center; gap: 6px; }
+#matchingPage .jg-page-label { font-size: 11px; color: var(--match-muted); }
+#matchingPage .jg-page-size {
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--match-border);
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--match-text2);
+    background: white;
+    cursor: pointer;
+}
+#matchingPage .jg-page-center { flex: 1; display: flex; justify-content: center; }
+#matchingPage .jg-page-buttons { display: inline-flex; align-items: center; gap: 4px; }
+#matchingPage .jg-page-btn {
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 999px;
+    border: 1px solid var(--match-border);
+    background: white;
+    color: var(--match-text2);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+#matchingPage .jg-page-btn:hover:not(:disabled) { border-color: var(--match-primary-mid); color: var(--match-primary); }
+#matchingPage .jg-page-btn.active {
+    background: var(--match-primary);
+    border-color: var(--match-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(44,95,212,.25);
+}
+#matchingPage .jg-page-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+#matchingPage .jg-page-ellipsis {
+    font-size: 11px;
+    color: var(--match-muted);
+    padding: 0 3px;
+}
+#matchingPage .jg-page-right { font-size: 11px; color: var(--match-muted); white-space: nowrap; }
 
 /* 匹配分析 */
 #matchingPage .analysis-layout { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
@@ -2103,6 +2294,40 @@ body::before {
 #matchingPage .ana-main .sec { background: var(--match-card); border-radius: var(--match-radius); border: 1.5px solid var(--match-border); padding: 22px; margin-bottom: 18px; }
 #matchingPage .ana-main .sec-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 #matchingPage .ana-main .sec-sub { font-size: 12px; color: var(--match-muted); margin-bottom: 18px; }
+#matchingPage .dim-ai {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px dashed rgba(148, 163, 184, 0.6);
+}
+#matchingPage .dim-ai-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1f2933;
+    margin-bottom: 4px;
+}
+#matchingPage .dim-ai-summary {
+    font-size: 12px;
+    color: var(--match-text2);
+    margin-bottom: 6px;
+}
+#matchingPage .dim-ai-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--match-muted);
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+#matchingPage .dim-ai-list {
+    padding-left: 16px;
+    margin: 0 0 4px 0;
+}
+#matchingPage .dim-ai-list li {
+    font-size: 11.5px;
+    color: var(--match-text2);
+    line-height: 1.4;
+}
 #matchingPage .path-node .pn-stage { font-size: 10px; font-weight: 700; color: var(--match-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
 #matchingPage .path-node .pn-title { font-size: 13px; font-weight: 700; }
 #matchingPage .path-node .pn-yr { font-size: 11px; color: var(--match-muted); }
@@ -2194,6 +2419,10 @@ body::before {
 #matchingPage .plan-item:hover { background: var(--match-primary-soft); border-left-color: var(--match-primary); }
 #matchingPage .plan-ico { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
 #matchingPage .plan-body { flex: 1; }
+#matchingPage .plan-steps { margin: 6px 0 0 0; padding-left: 18px; color: var(--match-text2); font-size: 12px; line-height: 1.55; }
+#matchingPage .plan-steps li { margin: 2px 0; }
+#matchingPage .plan-meta { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; color: var(--match-text2); font-size: 12px; }
+#matchingPage .plan-meta .pm { background: rgba(45, 91, 227, 0.06); border: 1px solid var(--match-border); padding: 2px 8px; border-radius: 999px; }
 #matchingPage .plan-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
 #matchingPage .plan-desc { font-size: 11px; color: var(--match-text2); line-height: 1.6; }
 #matchingPage .plan-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }

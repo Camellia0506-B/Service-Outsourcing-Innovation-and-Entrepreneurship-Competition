@@ -402,11 +402,20 @@ class CareerPlanningApp {
         this.trackingFailureRecord = null; // 当前正在复盘的记录
         this.trackingFunnelChart = null;   // 求职漏斗图表实例
 
+<<<<<<< Updated upstream
         // 岗位画像流式请求状态（用于防止并发请求串流导致内容错乱、卡顿）
         this._jobProfileStreamController = null; // AbortController 实例
         this._jobProfileStreamReqId = 0;         // 递增请求编号，始终只接受最新一次点击的结果
         this._jobProfileLastPartialTs = 0;       // 上一次局部渲染时间戳，用于节流 DOM 更新
 
+=======
+        // 「主动探索」展示方式：默认按岗位归类（减少重复岗位导致的翻页痛点）
+        this.searchViewMode = 'grouped'; // grouped | all
+        this.searchPage = 1;
+        this.searchPageSizeAll = 21;     // 原逻辑：全部职位
+        this.searchPageSizeGrouped = 5;  // 新逻辑：按岗位归类（每页更少，便于阅读）
+        this.searchPageSize = this.searchPageSizeGrouped;
+>>>>>>> Stashed changes
         this.init();
     }
 
@@ -550,6 +559,10 @@ class CareerPlanningApp {
         ['searchFilterCity', 'searchFilterIndustry', 'searchFilterSalary', 'searchFilterCompanyType'].forEach(id => {
             document.getElementById(id)?.addEventListener('change', () => this.searchJobs());
         });
+
+        // 主动探索：视图切换（默认按岗位归类）
+        document.getElementById('searchViewGroupedBtn')?.addEventListener('click', () => this.setSearchViewMode('grouped'));
+        document.getElementById('searchViewAllBtn')?.addEventListener('click', () => this.setSearchViewMode('all'));
 
         document.getElementById('analyzeBtn')?.addEventListener('click', () => {
             this.analyzeJobMatch();
@@ -4472,6 +4485,7 @@ class CareerPlanningApp {
         if (!container) return;
 
         container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
+<<<<<<< Updated upstream
         let result = { success: false, data: null };
         try {
             result = await getRecommendedJobs(userId, 24);
@@ -4479,6 +4493,13 @@ class CareerPlanningApp {
             console.warn('推荐岗位接口请求失败（可能未启动 AI 服务 5002）:', e);
         }
         const recommendations = result.data?.recommendations ?? result.data?.jobs ?? [];
+=======
+        // 默认仅加载第一页，pageSize 控制单次返回数量，避免一次性拉取全部岗位
+        const result = await getRecommendedJobs(userId, 1, 24);
+
+        // 不再按匹配度做前端过滤，直接展示后端返回的推荐结果
+        const recommendations = result.data?.jobs ?? result.data?.recommendations ?? [];
+>>>>>>> Stashed changes
         this.currentRecommendations = recommendations || [];
         this.recFilter = 'all';
 
@@ -4505,9 +4526,9 @@ class CareerPlanningApp {
 
     updateRecStats(recommendations) {
         const total = recommendations.length;
-        const high = recommendations.filter(r => (r.match_score ?? 0) >= 85).length;
-        const mid = recommendations.filter(r => { const s = r.match_score ?? 0; return s >= 65 && s < 85; }).length;
-        const low = recommendations.filter(r => (r.match_score ?? 0) < 65).length;
+        const high = recommendations.filter(r => (r.match_score ?? 0) >= 90).length;
+        const mid = recommendations.filter(r => { const s = r.match_score ?? 0; return s >= 80 && s < 90; }).length;
+        const low = recommendations.filter(r => { const s = r.match_score ?? 0; return s >= 70 && s < 80; }).length;
         const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
         set('recStatAll', total);
         set('recStatHigh', high);
@@ -4579,8 +4600,8 @@ class CareerPlanningApp {
     renderRecommendedJobs(recommendations, container) {
         const filter = this.recFilter || 'all';
         const list = recommendations || [];
-        const level = (score) => (score >= 85 ? 'high' : score >= 65 ? 'mid' : 'low');
-        const badgeText = (score) => (score >= 85 ? '高度匹配' : score >= 65 ? '较为匹配' : '一般匹配');
+        const level = (score) => (score >= 90 ? 'high' : score >= 80 ? 'mid' : score >= 70 ? 'low' : 'low');
+        const badgeText = (score) => (score >= 90 ? '高度匹配' : score >= 80 ? '较为匹配' : '一般匹配');
         const companyLogoColors = ['#1a3fa8', '#0d7a3e', '#d4380d', '#d48806', '#722ed1', '#cf1322', '#096dd9', '#389e0d', '#531dab', '#08979c'];
         const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
 
@@ -4639,7 +4660,7 @@ class CareerPlanningApp {
             const abbr = (name.slice(0, 1) || '岗');
             const loc = job.location || job.job_info?.location || '';
             const salary = job.avg_salary || job.salary || job.job_info?.salary || '-';
-            const matchPct = job.match_score != null ? job.match_score : (85 - i * 3);
+            const matchPct = job.match_score != null ? Number(job.match_score) : null;
             return `<div class="search-result-card" data-job-id="${job.job_id || ''}" data-job-name="${(job.job_name || '').replace(/"/g, '&quot;')}">
                 <div class="src-head">
                     <div class="src-logo" style="background:${getLogoColor(i)}">${abbr}</div>
@@ -4648,7 +4669,7 @@ class CareerPlanningApp {
                 <div class="src-tags">${tags(job)}${loc ? `<span class="src-tag">📍${loc}</span>` : ''}</div>
                 <div class="src-footer">
                     <span class="src-salary">${salary}${String(salary).includes('/') ? '' : '/月'}</span>
-                    <span class="src-match">预估匹配 ${matchPct}%</span>
+                    <span class="src-match">${matchPct != null ? `匹配 ${matchPct}%` : '匹配 —'}</span>
                     <button type="button" class="src-btn">分析匹配</button>
                 </div>
             </div>`;
@@ -4673,6 +4694,430 @@ class CareerPlanningApp {
                     }
                 }
             });
+        });
+    }
+
+    // 根据岗位名称关键词映射图标与背景色（优先匹配更具体关键词）
+    getJobGroupIconStyle(jobName) {
+        const raw = (jobName || '').toString().trim();
+        const lower = raw.toLowerCase();
+        const includes = (kw) => {
+            if (!kw) return false;
+            const k = kw.toString();
+            // 英文/符号关键词用不区分大小写匹配
+            if (/[a-zA-Z\+\#]/.test(k)) return lower.includes(k.toLowerCase());
+            return raw.includes(k);
+        };
+
+        const rules = [
+            // 更具体：语言/技术栈
+            { keys: ['JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Go', 'PHP', 'Rust', 'Node', 'React', 'Vue'], emoji: '💻', bg: '#f0fdf4' },
+            // 数据/算法/AI
+            { keys: ['算法', '数据', 'AI', '机器学习', '深度学习', '大模型', 'NLP', 'CV', 'LLM'], emoji: '📊', bg: '#d1fae5' },
+            // 测试/质检
+            { keys: ['质检', '测试', 'QA'], emoji: '🔍', bg: '#ede9fe' },
+            // 设计/UI/产品
+            { keys: ['UI', 'UX', '交互', '视觉', '设计', '产品'], emoji: '🎨', bg: '#ffedd5' },
+            // 财务/会计/审计
+            { keys: ['财务', '会计', '审计'], emoji: '💰', bg: '#ecfdf5' },
+            // 法务/律师
+            { keys: ['法务', '律师'], emoji: '⚖️', bg: '#f0fdf4' },
+            // 行政/HR/招聘
+            { keys: ['行政', 'HR', '人事', '招聘'], emoji: '👥', bg: '#fdf4ff' },
+            // 科研/研究/学术
+            { keys: ['科研', '研究', '学术', '博士后'], emoji: '🔬', bg: '#eff6ff' },
+            // 销售/客户/商务
+            { keys: ['销售', '客户', '商务', 'BD'], emoji: '💼', bg: '#fce7f3' },
+            // 运营/策划/市场
+            { keys: ['运营', '策划', '市场', '营销', '增长'], emoji: '📣', bg: '#fef3c7' },
+            // 工程师/技术/开发
+            { keys: ['工程师', '技术', '开发'], emoji: '🔧', bg: '#dbeafe' },
+            // 管培生/助理/实习
+            { keys: ['管培生', '助理', '实习', '管培'], emoji: '🌱', bg: '#fefce8' },
+        ];
+
+        for (const r of rules) {
+            if (r.keys && r.keys.some(includes)) return { emoji: r.emoji, bg: r.bg };
+        }
+        return { emoji: '📋', bg: '#f1f5f9' };
+    }
+
+    // 渲染岗位归类视图（按岗位名称聚合 + 展开公司列表）
+    renderJobGroups(groups, container) {
+        if (!container) return;
+        const list = groups || [];
+        if (!list.length) {
+            container.innerHTML = '<p class="hint-text">未找到相关岗位</p>';
+            return;
+        }
+        const companyLogoColors = ['#2f54eb', '#d4380d', '#d46b08', '#08979c', '#531dab', '#1d39c4', '#0d7a3e', '#722ed1', '#096dd9', '#389e0d'];
+        const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
+
+        const fmtSalaryRange = (sr) => {
+            if (!sr || typeof sr !== 'object') return '薪资 -';
+            const min = sr.min, max = sr.max;
+            if (typeof min === 'number' && typeof max === 'number' && min > 0 && max > 0) {
+                const a = min.toLocaleString('zh-CN');
+                const b = max.toLocaleString('zh-CN');
+                return `薪资 ${a}~${b}`;
+            }
+            return '薪资 -';
+        };
+
+        const fmtIndustryPills = (industry) => {
+            const raw = (industry || '').trim();
+            if (!raw) return '';
+            const parts = raw.split(/[\/·\s、，,;；]+/).map(s => s.trim()).filter(Boolean);
+            const uniq = [];
+            parts.forEach(p => { if (p && !uniq.includes(p)) uniq.push(p); });
+            return uniq.slice(0, 2).map(p => `<span class="pill">${p}</span>`).join('');
+        };
+
+        container.innerHTML = list.map((g, gi) => {
+            const name = (g.job_name || '-').toString();
+            const iconStyle = this.getJobGroupIconStyle(name);
+            const companies = Array.isArray(g.companies) ? g.companies : [];
+            const count = Number(g.company_count) || companies.length || 0;
+            const tags = (Array.isArray(g.tags) ? g.tags : []).slice(0, 3).map(t => `<span class="jg-tag">${String(t)}</span>`).join('');
+            const salaryText = fmtSalaryRange(g.salary_range);
+            // 当前岗位涉及的行业选项
+            const industries = (() => {
+                const set = new Set();
+                companies.forEach(c => {
+                    const raw = (c.industry || '').trim();
+                    if (!raw) return;
+                    raw.split(/[\/·\s、，,;；]+/).forEach(s => {
+                        const v = s.trim();
+                        if (v) set.add(v);
+                    });
+                });
+                return Array.from(set);
+            })();
+            const industryOptions = ['<option value="">全部行业</option>'].concat(
+                industries.map(ind => `<option value="${ind.replace(/"/g, '&quot;')}">${ind}</option>`)
+            ).join('');
+
+            return `<div class="job-group-card" data-group-index="${gi}">
+                <div class="jg-head">
+                    <div class="jg-left">
+                        <div class="jg-icon" style="background:${iconStyle.bg};color:#111827">${iconStyle.emoji}</div>
+                        <div style="min-width:0">
+                            <div class="jg-title">${name.replace(/</g, '&lt;')}</div>
+                            <div class="jg-tags">${tags}</div>
+                        </div>
+                    </div>
+                    <div class="jg-right">
+                        <div class="jg-count">${count}家公司在招</div>
+                        <div class="jg-salary">${salaryText}</div>
+                        <button type="button" class="jg-toggle" aria-expanded="false">▾</button>
+                    </div>
+                </div>
+                <div class="jg-body" data-group-index="${gi}">
+                    <div class="jg-toolbar">
+                        <div class="jg-tools-left">
+                            <div class="jg-tool-item">
+                                <input type="text" class="jg-search" placeholder="搜索公司名称…">
+                            </div>
+                            <div class="jg-tool-item">
+                                <select class="jg-sort">
+                                    <option value="match">按匹配度排序（默认）</option>
+                                    <option value="salary_desc">薪资从高到低</option>
+                                    <option value="salary_asc">薪资从低到高</option>
+                                </select>
+                            </div>
+                            <div class="jg-tool-item">
+                                <select class="jg-filter-industry">
+                                    ${industryOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="jg-tools-right">
+                            <span class="jg-result-count">显示 0 / ${count} 家</span>
+                        </div>
+                    </div>
+                    <div class="jg-list"></div>
+                    <div class="jg-pager">
+                        <div class="jg-page-left">
+                            <span class="jg-page-label">每页显示</span>
+                            <select class="jg-page-size">
+                                <option value="5" selected>5 条/页</option>
+                                <option value="10">10 条/页</option>
+                                <option value="20">20 条/页</option>
+                            </select>
+                        </div>
+                        <div class="jg-page-center">
+                            <div class="jg-page-buttons"></div>
+                        </div>
+                        <div class="jg-page-right">
+                            <span class="jg-page-info">第 1 / 1 页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // 内嵌列表状态与渲染逻辑
+        const groupStates = {};
+
+        const parseSalaryMax = (salaryStr) => {
+            if (!salaryStr) return -1;
+            const text = String(salaryStr).replace(/[~,，]/g, '').replace(/元\/?[月年]?/g, '');
+            const mK = text.match(/(\d+)\s*[kK]/);
+            if (mK) return parseInt(mK[1], 10) * 1000;
+            const mRange = text.match(/(\d+)\s*-\s*(\d+)/);
+            if (mRange) return parseInt(mRange[2], 10);
+            const mNum = text.match(/(\d+)/);
+            return mNum ? parseInt(mNum[1], 10) : -1;
+        };
+
+        const cards = container.querySelectorAll('.job-group-card');
+        cards.forEach(card => {
+            const idx = parseInt(card.dataset.groupIndex || '0', 10);
+            const data = list[idx] || {};
+            const companies = Array.isArray(data.companies) ? data.companies.slice() : [];
+            const state = {
+                base: companies,
+                keyword: '',
+                sort: 'match',
+                industry: '',
+                page: 1,
+                pageSize: 5,
+                filtered: companies,
+                enriched: false
+            };
+            groupStates[idx] = state;
+
+            const body = card.querySelector('.jg-body');
+            const searchInput = body.querySelector('.jg-search');
+            const sortSel = body.querySelector('.jg-sort');
+            const indSel = body.querySelector('.jg-filter-industry');
+            const resultSpan = body.querySelector('.jg-result-count');
+            const listEl = body.querySelector('.jg-list');
+            const pagerEl = body.querySelector('.jg-pager');
+            const pageSizeSel = body.querySelector('.jg-page-size');
+            const pageBtnsEl = body.querySelector('.jg-page-buttons');
+            const pageInfoEl = body.querySelector('.jg-page-info');
+
+            // 懒加载：展开该岗位组时，用批量精排接口计算真实 match_score（与「分析匹配」一致）
+            const enrichMatchScores = async () => {
+                if (state.enriched) return;
+                const userId = typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
+                if (!userId) {
+                    state.enriched = true;
+                    return;
+                }
+                const jobIds = state.base.map(c => c.job_id).filter(id => id != null && id !== '');
+                if (!jobIds.length) {
+                    state.enriched = true;
+                    return;
+                }
+                try {
+                    const res = await batchAnalyze(userId, jobIds);
+                    const analyses = res && res.success && res.data && Array.isArray(res.data.analyses) ? res.data.analyses : [];
+                    if (!analyses.length) {
+                        state.enriched = true;
+                        return;
+                    }
+                    const scoreMap = {};
+                    analyses.forEach(a => {
+                        if (!a) return;
+                        const jid = (a.job_id || a.jobId || '').toString();
+                        if (!jid) return;
+                        const s = a.match_score != null ? a.match_score : (a.matchScore != null ? a.matchScore : null);
+                        if (s != null) scoreMap[jid] = Number(s);
+                    });
+                    state.base.forEach(c => {
+                        const jid = (c.job_id || '').toString();
+                        if (jid && Object.prototype.hasOwnProperty.call(scoreMap, jid)) {
+                            c.match_score = scoreMap[jid];
+                        }
+                    });
+                    state.enriched = true;
+                    render();
+                } catch (e) {
+                    console.error('[JobGroups] 批量匹配分析失败', e);
+                    state.enriched = true;
+                }
+            };
+
+            // 展开/收起：展开时触发一次精排匹配度计算
+            const toggleBtn = card.querySelector('.jg-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const expanded = !card.classList.contains('expanded');
+                    card.classList.toggle('expanded', expanded);
+                    toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                    if (expanded) enrichMatchScores();
+                });
+            }
+            const head = card.querySelector('.jg-head');
+            if (head) {
+                head.addEventListener('click', () => {
+                    const expanded = !card.classList.contains('expanded');
+                    card.classList.toggle('expanded', expanded);
+                    const btn = card.querySelector('.jg-toggle');
+                    if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                    if (expanded) enrichMatchScores();
+                });
+            }
+
+            const recomputeFiltered = () => {
+                const kw = state.keyword.trim();
+                const ind = state.industry.trim();
+                let arr = state.base.slice();
+                if (kw) {
+                    const lowerKw = kw.toLowerCase();
+                    arr = arr.filter(c => String(c.company || '').toLowerCase().includes(lowerKw));
+                }
+                if (ind) {
+                    arr = arr.filter(c => String(c.industry || '').includes(ind));
+                }
+                // 排序
+                if (state.sort === 'salary_desc' || state.sort === 'salary_asc') {
+                    arr.sort((a, b) => {
+                        const sa = parseSalaryMax(a.avg_salary || a.salary);
+                        const sb = parseSalaryMax(b.avg_salary || b.salary);
+                        return state.sort === 'salary_desc' ? sb - sa : sa - sb;
+                    });
+                } else {
+                    arr.sort((a, b) => {
+                        const ma = a.match_score != null ? Number(a.match_score) : 0;
+                        const mb = b.match_score != null ? Number(b.match_score) : 0;
+                        return mb - ma;
+                    });
+                }
+                state.filtered = arr;
+            };
+
+            const buildPageNumbers = (pages, current) => {
+                const items = [];
+                const pushPage = (n) => items.push({ type: 'page', num: n });
+                const pushDot = () => items.push({ type: 'ellipsis' });
+                if (pages <= 5) {
+                    for (let i = 1; i <= pages; i++) pushPage(i);
+                } else if (current <= 3) {
+                    pushPage(1); pushPage(2); pushPage(3); pushPage(4); pushDot(); pushPage(pages);
+                } else if (current >= pages - 2) {
+                    pushPage(1); pushDot(); pushPage(pages - 3); pushPage(pages - 2); pushPage(pages - 1); pushPage(pages);
+                } else {
+                    pushPage(1); pushDot(); pushPage(current - 1); pushPage(current); pushPage(current + 1); pushDot(); pushPage(pages);
+                }
+                return items;
+            };
+
+            const render = () => {
+                recomputeFiltered();
+                const total = state.filtered.length;
+                const pageSize = state.pageSize || 5;
+                const pages = total > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+                if (state.page > pages) state.page = pages;
+                const page = state.page;
+                const start = (page - 1) * pageSize;
+                const pageItems = state.filtered.slice(start, start + pageSize);
+
+                // 列表
+                listEl.innerHTML = pageItems.map((c, ci) => {
+                    const co = (c.company || '未知公司').toString();
+                    const abbr = (co.slice(0, 2) || '公司');
+                    const salary = (c.avg_salary || c.salary || '-').toString() || '-';
+                    const matchPct = c.match_score != null ? Number(c.match_score) : null;
+                    const pills = fmtIndustryPills(c.industry);
+                    const colorIdx = ci % 10;
+                    return `<div class="jg-company-row" data-job-id="${(c.job_id || '').toString().replace(/"/g, '&quot;')}">
+                        <div class="jg-co-left">
+                            <div class="jg-co-logo" style="background:${getLogoColor(colorIdx)}">${abbr}</div>
+                            <div style="min-width:0">
+                                <div class="jg-co-name">${co.replace(/</g, '&lt;')}</div>
+                                <div class="jg-co-sub">${pills}</div>
+                            </div>
+                        </div>
+                        <div class="jg-co-right">
+                            <div class="jg-co-salary">${salary}${String(salary).includes('/') ? '' : '/月'}</div>
+                            <div class="jg-co-match">${matchPct != null ? `匹配${matchPct}%` : '匹配—'}</div>
+                            <button type="button" class="jg-analyze">分析匹配</button>
+                        </div>
+                    </div>`;
+                }).join('') || '<div class="hint-text" style="padding:8px 2px;">暂无符合条件的公司</div>';
+
+                // 结果数
+                if (resultSpan) {
+                    resultSpan.textContent = `显示 ${Math.min(pageItems.length, total)} / ${total} 家`;
+                }
+
+                // 分页信息
+                if (pageInfoEl) {
+                    pageInfoEl.textContent = `第 ${page} / ${pages} 页`;
+                }
+
+                // 页码按钮
+                if (pageBtnsEl) {
+                    const items = buildPageNumbers(pages, page);
+                    let html = '';
+                    html += `<button type="button" class="jg-page-btn jg-page-prev" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>‹</button>`;
+                    items.forEach(it => {
+                        if (it.type === 'ellipsis') {
+                            html += `<span class="jg-page-ellipsis">…</span>`;
+                        } else {
+                            const active = it.num === page ? ' active' : '';
+                            html += `<button type="button" class="jg-page-btn${active}" data-page="${it.num}">${it.num}</button>`;
+                        }
+                    });
+                    html += `<button type="button" class="jg-page-btn jg-page-next" data-page="${page + 1}" ${page >= pages ? 'disabled' : ''}>›</button>`;
+                    pageBtnsEl.innerHTML = html;
+                }
+
+                // 绑定公司行的分析按钮（每次渲染后重新绑定当前页）
+                listEl.querySelectorAll('.jg-company-row').forEach(row => {
+                    const jobId = (row.dataset.jobId || '').trim();
+                    row.querySelector('.jg-analyze')?.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (!jobId) return;
+                        this.switchTab('analysis');
+                        const select = document.getElementById('jobSelect');
+                        if (select) select.value = jobId;
+                        this.analyzeJobMatch(jobId);
+                    });
+                });
+            };
+
+            // 事件绑定：搜索/排序/行业筛选
+            searchInput?.addEventListener('input', (e) => {
+                state.keyword = e.target.value || '';
+                state.page = 1;
+                render();
+            });
+            sortSel?.addEventListener('change', (e) => {
+                state.sort = e.target.value || 'match';
+                state.page = 1;
+                render();
+            });
+            indSel?.addEventListener('change', (e) => {
+                state.industry = e.target.value || '';
+                state.page = 1;
+                render();
+            });
+
+            // 每页条数
+            pageSizeSel?.addEventListener('change', (e) => {
+                const v = parseInt(e.target.value || '5', 10);
+                state.pageSize = (!isNaN(v) && v > 0) ? v : 5;
+                state.page = 1;
+                render();
+            });
+
+            // 页码点击（事件委托）
+            pagerEl?.addEventListener('click', (e) => {
+                const btn = e.target.closest('.jg-page-btn');
+                if (!btn) return;
+                const targetPage = parseInt(btn.dataset.page || '1', 10);
+                if (isNaN(targetPage) || targetPage < 1) return;
+                state.page = targetPage;
+                render();
+            });
+
+            // 首次渲染
+            render();
         });
     }
 
@@ -5779,9 +6224,9 @@ class CareerPlanningApp {
                 <div class="transfer-container">
                     <div class="legend-row">
                         <span style="font-size:12px;color:var(--dim);font-weight:600">图例：</span>
-                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--green));height:2px"></span>高匹配（≥80%）</span>
-                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--gold));height:2px"></span>中匹配（60-79%）</span>
-                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--red));height:2px;border-top:2px dashed var(--red);background:none"></span>低匹配（&lt;60%）</span>
+                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--green));height:2px"></span>高匹配（≥90%）</span>
+                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--gold));height:2px"></span>中匹配（80-89%）</span>
+                        <span class="leg"><span class="leg-line" style="background:linear-gradient(90deg,var(--accent),var(--red));height:2px;border-top:2px dashed var(--red);background:none"></span>低匹配（&lt;80%）</span>
                         <span class="leg"><span style="font-size:14px">→</span>晋升方向</span>
                         <span style="margin-left:auto;font-size:11px;color:var(--muted)">实线=技能高度迁移 · 虚线=需较大跨度学习</span>
                     </div>
@@ -6402,6 +6847,7 @@ class CareerPlanningApp {
                 </div>
             </div>
             <div class="graph-panel graph-panel-transfer" data-panel="transfer">
+<<<<<<< Updated upstream
                 <div class="transfer-container transfer-container-gt">
                     <div class="legend-row">
                         <span class="legend-title">图例：</span>
@@ -6417,6 +6863,20 @@ class CareerPlanningApp {
                         <div class="cn-ico">💼</div>
                         <div class="cn-name">${jobName}</div>
                         <div class="cn-badge">当前岗位</div>
+=======
+                <div class="graph-legend graph-legend-dots">
+                    <strong>匹配度：</strong>
+                    <span class="graph-legend-item"><span class="graph-legend-dot high"></span>高（≥90%）</span>
+                    <span class="graph-legend-item"><span class="graph-legend-dot medium"></span>中（80-89%）</span>
+                    <span class="graph-legend-item"><span class="graph-legend-dot low"></span>低（＜80%）</span>
+                </div>
+                <div class="transfer-graph" data-count="${transferNodes.length}">
+                <div class="tg-center">
+                    <div class="tg-center-card graph-center-card">
+                        <div class="tg-center-icon">💼</div>
+                        <div class="tg-center-name">${jobName}</div>
+                        <span class="tg-center-badge">当前岗位</span>
+>>>>>>> Stashed changes
                     </div>
                 </div>`;
 
@@ -7478,6 +7938,18 @@ class CareerPlanningApp {
         if (tabName === 'search') {
             const container = document.getElementById('searchResults');
             const keyword = document.getElementById('jobSearchInput')?.value.trim();
+            // 恢复默认视图（按岗位归类）对应的 UI 状态
+            const btnGrouped = document.getElementById('searchViewGroupedBtn');
+            const btnAll = document.getElementById('searchViewAllBtn');
+            const isGrouped = this.searchViewMode !== 'all';
+            if (btnGrouped && btnAll) {
+                btnGrouped.classList.toggle('active', isGrouped);
+                btnAll.classList.toggle('active', !isGrouped);
+                btnGrouped.setAttribute('aria-selected', isGrouped ? 'true' : 'false');
+                btnAll.setAttribute('aria-selected', isGrouped ? 'false' : 'true');
+            }
+            if (container) container.classList.toggle('grouped', isGrouped);
+            this.searchPageSize = isGrouped ? (this.searchPageSizeGrouped || 5) : (this.searchPageSizeAll || 21);
             // 如果搜索框为空且结果区域显示的是提示文字，则加载默认列表
             if (!keyword && container && (container.textContent.includes('请输入岗位名称') || container.children.length === 0)) {
                 this.loadDefaultJobs();
@@ -7612,14 +8084,9 @@ class CareerPlanningApp {
         container.innerHTML = '<div class="loading-message">加载中...</div>';
 
         const filters = this.getSearchFilters();
-        const result = await searchJobs('', 1, 20, filters);
-        const list = (result.data && (result.data.list || result.data.jobs)) || [];
-
-        if (result.success && list.length > 0) {
-            this.renderJobs(list, container);
-        } else {
-            container.innerHTML = '<div class="hint-text">暂无岗位信息</div>';
-        }
+        this.searchPage = 1;
+        this.searchPageSize = (this.searchViewMode === 'all') ? (this.searchPageSizeAll || 21) : (this.searchPageSizeGrouped || 5);
+        await this.loadJobsWithPagination('', filters, true);
     }
 
     // 搜索岗位（支持关键词 + 城市、行业、薪资、企业性质筛选）
@@ -7627,16 +8094,110 @@ class CareerPlanningApp {
         const keyword = document.getElementById('jobSearchInput').value.trim();
         const container = document.getElementById('searchResults');
         const filters = this.getSearchFilters();
+        this.searchPage = 1;
+        this.searchPageSize = (this.searchViewMode === 'all') ? (this.searchPageSizeAll || 21) : (this.searchPageSizeGrouped || 5);
+        await this.loadJobsWithPagination(keyword, filters, false);
+    }
+
+    // 设置「主动探索」展示方式：grouped(按岗位归类) / all(全部职位)
+    setSearchViewMode(mode) {
+        const next = (mode === 'all') ? 'all' : 'grouped';
+        this.searchViewMode = next;
+        this.searchPage = 1;
+        this.searchPageSize = (next === 'all') ? (this.searchPageSizeAll || 21) : (this.searchPageSizeGrouped || 5);
+
+        const btnGrouped = document.getElementById('searchViewGroupedBtn');
+        const btnAll = document.getElementById('searchViewAllBtn');
+        if (btnGrouped && btnAll) {
+            const groupedActive = next === 'grouped';
+            btnGrouped.classList.toggle('active', groupedActive);
+            btnAll.classList.toggle('active', !groupedActive);
+            btnGrouped.setAttribute('aria-selected', groupedActive ? 'true' : 'false');
+            btnAll.setAttribute('aria-selected', groupedActive ? 'false' : 'true');
+        }
+
+        const container = document.getElementById('searchResults');
+        if (container) {
+            container.classList.toggle('grouped', next === 'grouped');
+        }
+
+        // 切换后立刻按当前关键词+筛选刷新（分页独立：统一回到第1页）
+        const keyword = (document.getElementById('jobSearchInput')?.value || '').trim();
+        const filters = this.getSearchFilters();
+        this.loadJobsWithPagination(keyword, filters, !keyword);
+    }
+
+    // 带分页的岗位加载（用于主动探索页）
+    async loadJobsWithPagination(keyword, filters, isDefault) {
+        const container = document.getElementById('searchResults');
+        const pager = document.getElementById('searchPagination');
+        const prevBtn = document.getElementById('searchPrevBtn');
+        const nextBtn = document.getElementById('searchNextBtn');
+        const pageInfo = document.getElementById('searchPageInfo');
+        if (!container) return;
 
         container.innerHTML = '<div class="loading-message">' + (keyword ? '搜索中...' : '加载中...') + '</div>';
 
-        const result = await searchJobs(keyword, 1, 20, filters);
-        const list = (result.data && (result.data.list || result.data.jobs)) || [];
+        const page = this.searchPage || 1;
+        const isGrouped = this.searchViewMode !== 'all';
+        const size = this.searchPageSize || (isGrouped ? 30 : 21);
 
-        if (result.success && list.length > 0) {
-            this.renderJobs(list, container);
+        // 归类视图：/matching/search-jobs-grouped；全部职位：原 /matching/search-jobs
+        const result = isGrouped
+            ? await searchJobsGrouped(keyword, page, size, filters, getCurrentUserId())
+            : await searchJobs(keyword, page, size, filters);
+        console.log('[search-jobs result]', { mode: isGrouped ? 'grouped' : 'all', keyword, page, size, filters, result });
+
+        const list = isGrouped
+            ? ((result.data && result.data.groups) || [])
+            : ((result.data && (result.data.list || result.data.jobs)) || []);
+        const total = (result.data && (result.data.total ?? result.data.total_count)) || 0;
+
+        this.searchTotal = total;
+        this.searchKeyword = keyword;
+
+        if (result.success) {
+            if (total > 0 && list.length > 0) {
+                container.classList.toggle('grouped', isGrouped);
+                if (isGrouped) this.renderJobGroups(list, container);
+                else this.renderJobs(list, container);
+            } else {
+                container.innerHTML = '<div class="hint-text">' + (keyword ? '未找到相关岗位' : '暂无岗位信息') + '</div>';
+            }
         } else {
-            container.innerHTML = '<div class="hint-text">' + (keyword ? '未找到相关岗位' : '暂无岗位信息') + '</div>';
+            const msg = result.msg || '语义岗位搜索超时或失败，请稍后重试 / 检查 AI 服务 (http://localhost:5002)';
+            container.innerHTML = '<div class="hint-text">' + msg + '</div>';
+        }
+
+        // 更新结果区顶部 meta
+        const metaEl = document.getElementById('searchResultsMeta');
+        if (metaEl) {
+            if (!result.success) metaEl.textContent = '搜索结果';
+            else metaEl.textContent = isGrouped
+                ? `搜索结果：共 ${total} 个岗位种类`
+                : `搜索结果：共 ${total} 个职位`;
+        }
+
+        // 更新分页 UI
+        if (pager && pageInfo && prevBtn && nextBtn) {
+            const pages = total && size ? Math.max(1, Math.ceil(total / size)) : 1;
+            pager.style.display = total > 0 ? 'flex' : 'none';
+            pageInfo.textContent = `第 ${page} / ${pages} 页`;
+            prevBtn.disabled = page <= 1;
+            nextBtn.disabled = page >= pages;
+
+            prevBtn.onclick = () => {
+                if (this.searchPage > 1) {
+                    this.searchPage -= 1;
+                    this.loadJobsWithPagination(this.searchKeyword || '', this.getSearchFilters(), false);
+                }
+            };
+            nextBtn.onclick = () => {
+                if (this.searchPage < pages) {
+                    this.searchPage += 1;
+                    this.loadJobsWithPagination(this.searchKeyword || '', this.getSearchFilters(), false);
+                }
+            };
         }
     }
 
@@ -7675,6 +8236,7 @@ class CareerPlanningApp {
         const score = Number(data.match_score) || 0;
         const level = data.match_level || '';
         const dimScores = data.dimension_scores || {};
+        const dimExps = data.dim_explanations || {};
         const highlights = data.highlights || [];
         const gaps = data.gaps || [];
         const matchedSkills = data.matched_skills || [];
@@ -7684,6 +8246,20 @@ class CareerPlanningApp {
         const transitionPaths = data.transition_paths || [];
         const jobInfo = data.job_info || {};
         const jobName = data.job_name || '岗位';
+
+        // 展示兜底：避免四维度为 0/缺失导致 UI “空”
+        const DIM_FALLBACK = { basic_requirements: 75, professional_skills: 55, soft_skills: 70, development_potential: 70 };
+        const safeDim = (k) => (dimScores && typeof dimScores[k] === 'object' && dimScores[k]) ? dimScores[k] : {};
+        const safeScore = (k) => {
+            const v = Number(safeDim(k).score);
+            return (Number.isFinite(v) && v > 0) ? v : (DIM_FALLBACK[k] || 60);
+        };
+        const safeRequired = (k) => {
+            const v = Number(safeDim(k).required_score);
+            if (Number.isFinite(v) && v > 0) return Math.min(100, v);
+            const s = safeScore(k);
+            return Math.min(100, s + 5);
+        };
 
         // 更新左侧栏
         const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || '—'; };
@@ -7712,20 +8288,14 @@ class CareerPlanningApp {
         if (legendEl) {
             const colors = ['#2C5FD4', '#0BA771', '#E8890B', '#748ffc'];
             legendEl.innerHTML = dimKeys.map((key, i) => {
-                const dim = dimScores[key];
-                const s = dim && (dim.score != null) ? dim.score : 0;
+                const s = safeScore(key);
                 return `<div class="leg-item"><div class="leg-dot" style="background:${colors[i]}"></div><span class="leg-name">${dimLabels[key]}</span><span class="leg-score">${s}</span></div>`;
             }).join('');
         }
 
         // 雷达图数据：四维度分数；岗位要求基线优先用后端返回的 required_score，无则用分数+5 兜底
-        const radarValues = dimKeys.map(k => (dimScores[k] && (dimScores[k].score != null)) ? dimScores[k].score : 0);
-        const reqValues = dimKeys.map(k => {
-            const dim = dimScores[k];
-            if (dim && (dim.required_score != null)) return Math.min(100, Number(dim.required_score));
-            const s = (dim && (dim.score != null)) ? dim.score : 0;
-            return Math.min(100, s + 5);
-        });
+        const radarValues = dimKeys.map(k => safeScore(k));
+        const reqValues = dimKeys.map(k => safeRequired(k));
         // 根据分数确定颜色：高(>=85)=绿色，中(65-84)=橙色，低(<65)=红色，基础要求固定蓝色
         const getDimColor = (score, index) => {
             if (index === 0) return '#2C5FD4'; // 基础要求固定蓝色
@@ -7764,13 +8334,53 @@ class CareerPlanningApp {
         ).join('');
         const youItems = highlights.slice(0, 4).map(h => `<div class="cmp-item"><span class="cmp-ico">✅</span><div><div class="cmp-name">${h}</div></div><span class="lvl lvl-have">✓ 符合</span></div>`).join('');
         const gapSource = (skillGaps && skillGaps.length) ? skillGaps : gaps;
-        const gapRowsHtml = gapSource.slice(0, 5).map((g, i) =>
-            `<div class="gap-row"><div class="gap-n">${i + 1}</div><div><strong>${g.gap || ''}：</strong>${g.suggestion || ''}</div></div>`
-        ).join('');
         const dimContentHtml = dimKeys.map((key, i) => {
-            const dim = dimScores[key];
-            const s = dim && (dim.score != null) ? dim.score : 0;
+            const s = radarValues[i];
             const req = reqValues[i];
+            const exp = dimExps[key] || {};
+            const sum = (exp.summary || '').toString().trim();
+            const hi = Array.isArray(exp.highlights) ? exp.highlights.slice(0, 3) : [];
+            const sug = Array.isArray(exp.suggestions) ? exp.suggestions.slice(0, 3) : [];
+            const hiHtml = hi.map(t => `<li>${t}</li>`).join('');
+            const sugHtml = sug.map(t => `<li>${t}</li>`).join('');
+
+            // 关键差距与建议（黄色框）：四个维度都展示
+            const buildGapRows = () => {
+                const rows = [];
+                const need = Math.max(0, Number(req) - Number(s));
+                if (key === 'professional_skills') {
+                    if (sum) rows.push({ left: '解读', right: sum });
+                    (gapSource || []).slice(0, 5).forEach((g, idx) => {
+                        rows.push({
+                            left: (g && (g.gap || g.skill)) ? String(g.gap || g.skill) : `差距项${idx + 1}`,
+                            right: (g && g.suggestion) ? String(g.suggestion) : ''
+                        });
+                    });
+                } else {
+                    if (sum) rows.push({ left: '解读', right: sum });
+                    if (need > 0) {
+                        rows.push({
+                            left: `${dimLabels[key]}差距约 ${need} 分`,
+                            right: '建议优先按下方行动清单逐项补齐，形成可投递/可面试的成果。'
+                        });
+                    }
+                    const sugList = Array.isArray(exp.suggestions) ? exp.suggestions : [];
+                    sugList.slice(0, 4).forEach((t, idx) => {
+                        rows.push({ left: `建议 ${idx + 1}`, right: String(t || '').trim() });
+                    });
+                    if (rows.length === 0) {
+                        rows.push({ left: '提升建议', right: `围绕「${dimLabels[key]}」补齐关键项，并用项目/经历结果量化体现。` });
+                    }
+                }
+                return rows.slice(0, 5).map((r, idx) =>
+                    `<div class="gap-row"><div class="gap-n">${idx + 1}</div><div><strong>${r.left}：</strong>${r.right || ''}</div></div>`
+                ).join('');
+            };
+            const gapRowsHtml = buildGapRows();
+            const gapBoxHtml = gapRowsHtml ? `<div class="gap-box">
+                    <div class="ai-hint-label">🤖 智能体通过能力差距分析识别影响匹配度的关键短板，并生成个性化提升建议。</div>
+                    <div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}
+                </div>` : '';
             return `<div class="dim-content ${i === 0 ? 'show' : ''}" id="dim-content-${key}">
                 <div class="cmp-grid">
                     <div class="cmp-col job-col"><div class="cmp-head">🏢 岗位要求</div>
@@ -7780,34 +8390,102 @@ class CareerPlanningApp {
                         <div class="cmp-item"><span class="cmp-ico">${s >= req ? '✅' : '⚡'}</span><div><div class="cmp-name">当前 ${s} 分</div><div class="cmp-note">${s >= req ? '已达标' : '需提升'}</div></div><span class="lvl ${s >= req ? 'lvl-have' : 'lvl-part'}">${s >= req ? '✓ 符合' : '需提升'}</span></div>
                     </div>
                 </div>
-                ${i === 1 && gapRowsHtml ? `<div class="gap-box">
-                    <div class="ai-hint-label">🤖 智能体通过能力差距分析识别影响匹配度的关键短板，并生成个性化提升建议。</div>
-                    <div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}
-                </div>` : ''}
+                ${gapBoxHtml}
             </div>`;
         }).join('');
 
-        // 行动计划：优先使用 CareerAgent 返回的 improvement_plan；若为空再回退到 gaps 生成
+        // 行动计划：优先使用 CareerAgent 返回的 improvement_plan（兼容字符串/对象）；若为空再回退到 gaps 生成
         const dimSuggestions = { basic_requirements: '补充学历/专业/GPA等基础条件', professional_skills: '通过项目或课程提升岗位所需技能', soft_skills: '加强沟通协作、学习能力等软技能', development_potential: '积累项目经验、参与竞赛或实习' };
         let planItems = [];
         const shortPlan = (improvementPlan.short_term || []).slice(0, 3);
         const midPlan = (improvementPlan.mid_term || []).slice(0, 3);
+
+        const normalizePlanItem = (it) => {
+            if (!it) return null;
+            if (typeof it === 'string') {
+                return { title: it, desc: '', steps: [], timeframe: '', output: '' };
+            }
+            if (typeof it === 'object') {
+                return {
+                    title: String(it.title || it.name || '').trim() || '提升行动',
+                    desc: String(it.desc || it.description || '').trim(),
+                    steps: Array.isArray(it.steps) ? it.steps.map(s => String(s || '').trim()).filter(Boolean).slice(0, 4) : [],
+                    timeframe: String(it.timeframe || it.period || '').trim(),
+                    output: String(it.output || it.deliverable || '').trim()
+                };
+            }
+            return null;
+        };
+
+        const renderPlanDesc = (p) => {
+            const parts = [];
+            if (p.desc) parts.push(`<div class="plan-desc">${p.desc}</div>`);
+            if (p.steps && p.steps.length) {
+                parts.push(`<ul class="plan-steps">${p.steps.map(s => `<li>${s}</li>`).join('')}</ul>`);
+            }
+            if (p.timeframe || p.output) {
+                parts.push(`<div class="plan-meta">${p.timeframe ? `<span class="pm">⏱ ${p.timeframe}</span>` : ''}${p.output ? `<span class="pm">📦 ${p.output}</span>` : ''}</div>`);
+            }
+            return parts.join('');
+        };
+
         if (shortPlan.length || midPlan.length) {
             planItems = [
-                ...shortPlan.map((t, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i] || '🎯', title: t, desc: '', tag: 't-urgent' })),
-                ...midPlan.map((t, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i] || '☁️', title: t, desc: '', tag: 't-mid' }))
+                ...shortPlan.map((t, i) => {
+                    const p = normalizePlanItem(t) || { title: String(t || ''), desc: '', steps: [], timeframe: '', output: '' };
+                    return { period: 'short', ico: ['🎯', '🔥', '📚'][i] || '🎯', title: p.title, descHtml: renderPlanDesc(p), tag: 't-urgent' };
+                }),
+                ...midPlan.map((t, i) => {
+                    const p = normalizePlanItem(t) || { title: String(t || ''), desc: '', steps: [], timeframe: '', output: '' };
+                    return { period: 'mid', ico: ['☁️', '📝', '📈'][i] || '☁️', title: p.title, descHtml: renderPlanDesc(p), tag: 't-mid' };
+                })
             ];
         } else if (gapSource.length > 0) {
             planItems = [
-                ...gapSource.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', desc: g.suggestion || '', tag: 't-urgent' })),
-                ...gapSource.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', desc: g.suggestion || '', tag: 't-mid' }))
+                ...gapSource.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', descHtml: g.suggestion ? `<div class="plan-desc">${g.suggestion}</div>` : '', tag: 't-urgent' })),
+                ...gapSource.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', descHtml: g.suggestion ? `<div class="plan-desc">${g.suggestion}</div>` : '', tag: 't-mid' }))
             ];
         } else {
-            const lowDims = dimKeys.filter(k => (dimScores[k]?.score ?? 0) < 70).slice(0, 3);
-            planItems = lowDims.map((k, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: `提升${dimLabels[k]}`, desc: dimSuggestions[k] || '根据岗位要求针对性提升', tag: 't-urgent' }));
+            const lowDims = dimKeys.filter(k => safeScore(k) < 70).slice(0, 3);
+            planItems = lowDims.map((k, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: `提升${dimLabels[k]}`, descHtml: `<div class="plan-desc">${dimSuggestions[k] || '根据岗位要求针对性提升'}</div>`, tag: 't-urgent' }));
         }
-        if (planItems.length === 0) planItems.push({ period: 'short', ico: '🎯', title: '根据分析结果制定计划', desc: '完善能力画像后可获得更具体的行动计划。', tag: 't-mid' });
-        const planItemsHtml = planItems.map(p => `<div class="plan-item" data-period="${p.period}"><span class="plan-ico">${p.ico}</span><div class="plan-body"><div class="plan-title">${p.title}</div><div class="plan-desc">${p.desc}</div></div><span class="plan-tag ${p.tag}">${p.period === 'short' ? '短期' : '中期'}</span></div>`).join('');
+        if (planItems.length === 0) planItems.push({ period: 'short', ico: '🎯', title: '根据分析结果制定计划', descHtml: '<div class="plan-desc">完善能力画像后可获得更具体的行动计划。</div>', tag: 't-mid' });
+        const planItemsHtml = planItems.map(p => `<div class="plan-item" data-period="${p.period}"><span class="plan-ico">${p.ico}</span><div class="plan-body"><div class="plan-title">${p.title}</div>${p.descHtml || ''}</div><span class="plan-tag ${p.tag}">${p.period === 'short' ? '短期' : '中期'}</span></div>`).join('');
+
+        // 已匹配核心技能：兜底生成占位行，避免空表格
+        const matchedSkillsDisplay = (Array.isArray(matchedSkills) && matchedSkills.length)
+            ? matchedSkills
+            : (() => {
+                const ph = [];
+                const src = (gapSource || []).slice(0, 3);
+                if (src.length) {
+                    src.forEach(g => {
+                        ph.push({ skill: g.gap || '岗位核心技能', student_skill: '待补充', match_score: 0, similarity: 0 });
+                    });
+                } else {
+                    ph.push(
+                        { skill: '岗位核心技能A', student_skill: '待补充', match_score: 0, similarity: 0 },
+                        { skill: '岗位核心技能B', student_skill: '待补充', match_score: 0, similarity: 0 },
+                        { skill: '岗位核心技能C', student_skill: '待补充', match_score: 0, similarity: 0 }
+                    );
+                }
+                return ph;
+            })();
+        const matchedSkillsTableHtml = `
+            <table class="ca-skill-table">
+                <thead><tr><th>岗位技能</th><th>你的技能</th><th>匹配分</th><th>语义相似</th></tr></thead>
+                <tbody>
+                    ${matchedSkillsDisplay.slice(0, 6).map(ms => `
+                        <tr>
+                            <td>${ms.skill || '-'}</td>
+                            <td>${ms.student_skill || '-'}</td>
+                            <td>${ms.match_score ?? 0}</td>
+                            <td>${(ms.similarity != null ? Math.round(ms.similarity * 100) : 0)}%</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            ${(!Array.isArray(matchedSkills) || matchedSkills.length === 0) ? '<div class="hint-text">提示：完善“能力画像-技能清单/项目经历”后，可获得更准确的匹配技能明细。</div>' : ''}`;
 
         container.innerHTML = `
             <div class="sec">
@@ -7843,20 +8521,7 @@ class CareerPlanningApp {
             </div>
             <div class="sec">
                 <div class="sec-title" style="margin-bottom:10px">✅ 已匹配核心技能</div>
-                ${matchedSkills.length ? `
-                <table class="ca-skill-table">
-                    <thead><tr><th>岗位技能</th><th>你的技能</th><th>匹配分</th><th>语义相似</th></tr></thead>
-                    <tbody>
-                        ${matchedSkills.slice(0, 6).map(ms => `
-                            <tr>
-                                <td>${ms.skill || '-'}</td>
-                                <td>${ms.student_skill || '-'}</td>
-                                <td>${ms.match_score ?? 0}</td>
-                                <td>${(ms.similarity != null ? Math.round(ms.similarity * 100) : 0)}%</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>` : '<p class="hint-text">暂无可展示的匹配技能。</p>'}
+                ${matchedSkillsTableHtml}
             </div>
             <div class="sec">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">

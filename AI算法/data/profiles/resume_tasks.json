@@ -346,6 +346,7 @@
     },
     "error": null
   },
+<<<<<<< Updated upstream
   "resume_parse_20260304181918412_1_862737": {
     "status": "completed",
     "user_id": 1,
@@ -484,6 +485,31 @@
         "建议补充更多项目描述中的具体成果数据，以便更全面地展示个人能力和成就。",
         "建议在技能板块中列出更多具体的技能，方便招聘方快速了解技术栈。"
       ]
+=======
+  "resume_parse_20260304112712022_4_269451": {
+    "status": "completed",
+    "user_id": 4,
+    "created_at": "2026-03-04 11:27:12",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "",
+          "nickname": "",
+          "phone": "",
+          "email": "",
+          "gender": "",
+          "birth_date": "",
+          "birthday": ""
+        },
+        "education": [],
+        "skills": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.85,
+      "suggestions": []
+>>>>>>> Stashed changes
     },
     "error": null
   }

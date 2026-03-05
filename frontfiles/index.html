@@ -920,10 +920,18 @@
                     <p class="page-subtitle">基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
                 </div>
 
+                <!-- 智能体筛选过程说明（不影响逻辑，仅说明性展示） -->
+                <div class="ai-hint ai-hint-blue" style="margin-bottom: 12px;">
+                    <div>共 9958 条岗位</div>
+                    <div style="font-size:12px;margin-top:4px;">
+                        系统先从海量岗位中快速找出与你背景相关的候选岗位，再从“基础条件、专业技能、职业素养、发展潜力”四个维度综合评分，推荐最适合你的 TopN 岗位。
+                    </div>
+                </div>
+
                 <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="recommend">🎯 推荐岗位 <span class="tab-badge" id="recBadge">0</span></button>
-                    <button class="tab-btn" data-tab="search">🔍 搜索岗位</button>
-                    <button class="tab-btn" data-tab="analysis">📊 匹配分析 <span class="tab-badge" id="anaBadge" style="display:none">1</span></button>
+                    <button class="tab-btn active" data-tab="recommend">🤖 智能推荐 <span class="tab-badge" id="recBadge">0</span></button>
+                    <button class="tab-btn" data-tab="search">🔎 主动探索</button>
+                    <button class="tab-btn" data-tab="analysis">📊 智能决策分析 <span class="tab-badge" id="anaBadge" style="display:none">1</span></button>
                 </div>
 
                 <!-- 推荐岗位 -->
@@ -938,17 +946,17 @@
                             <div class="stat-tile high" data-filter="high">
                                 <div class="stat-tile-num" id="recStatHigh">0</div>
                                 <div class="stat-tile-label">高度匹配</div>
-                                <div class="stat-tile-sub">匹配度 ≥ 85%</div>
+                                <div class="stat-tile-sub">匹配度 ≥ 90%</div>
                             </div>
                             <div class="stat-tile mid" data-filter="mid">
                                 <div class="stat-tile-num" id="recStatMid">0</div>
                                 <div class="stat-tile-label">较为匹配</div>
-                                <div class="stat-tile-sub">匹配度 65–84%</div>
+                                <div class="stat-tile-sub">匹配度 80–89%</div>
                             </div>
                             <div class="stat-tile low" data-filter="low">
                                 <div class="stat-tile-num" id="recStatLow">0</div>
                                 <div class="stat-tile-label">一般匹配</div>
-                                <div class="stat-tile-sub">匹配度 &lt; 65%</div>
+                                <div class="stat-tile-sub">匹配度 70–79%</div>
                             </div>
                         </div>
                         <div class="cards-area">
@@ -960,19 +968,22 @@
                                 </div>
                             </div>
                             <div class="ai-hint ai-hint-blue">
-                                🤖 智能体综合技能匹配度、行业需求趋势与成长潜力，为你推荐最具发展潜力的岗位。
+                                🤖 智能体从 9958 条岗位中综合技能相似度、行业趋势与成长潜力筛选出以下推荐结果。
                             </div>
                             <div class="cards-grid" id="recommendedJobs">
                                 <div class="loading-message">加载推荐岗位中...</div>
                             </div>
                         </div>
                     </div>
+                    <div style="font-size:11px;color:#7e93c0;margin-top:10px;">
+                        匹配等级（高度匹配 / 较为匹配 / 一般匹配）由智能体匹配分级机制自动生成。
+                    </div>
                 </div>
 
                 <!-- 搜索岗位 -->
                 <div class="tab-content" id="searchTab">
                     <div class="search-bar-wrap">
-                        <h2>搜索岗位</h2>
+                        <h2>🔎 主动探索</h2>
                         <div class="search-input-row">
                             <input type="text" id="jobSearchInput" class="search-input" placeholder="输入岗位名称、技能、公司…">
                             <button type="button" id="searchJobBtn" class="search-btn">🔍 搜索</button>
@@ -984,8 +995,20 @@
                             <div class="filter-group"><span class="filter-label">企业性质</span><select id="searchFilterCompanyType" class="filter-sel"><option value="">不限</option><option value="国企">国企</option><option value="私企">私企</option><option value="外资">外资</option></select></div>
                         </div>
                     </div>
+                    <div class="search-results-topbar">
+                        <div class="search-results-meta" id="searchResultsMeta">搜索结果</div>
+                        <div class="search-view-toggle" role="tablist" aria-label="岗位展示方式切换">
+                            <button type="button" id="searchViewGroupedBtn" class="sv-btn active" aria-selected="true">🗂 按岗位归类</button>
+                            <button type="button" id="searchViewAllBtn" class="sv-btn" aria-selected="false">☰ 全部职位</button>
+                        </div>
+                    </div>
                     <div class="search-results-grid" id="searchResults">
                         <p class="hint-text">请输入岗位名称进行搜索</p>
+                    </div>
+                    <div class="pagination" id="searchPagination" style="display:none;">
+                        <button type="button" id="searchPrevBtn">上一页</button>
+                        <span id="searchPageInfo">第 1 页</span>
+                        <button type="button" id="searchNextBtn">下一页</button>
                     </div>
                 </div>
 
@@ -994,7 +1017,10 @@
                     <div id="anaEmpty" style="text-align:center;padding:80px 20px;color:#8a97b5;">
                         <div style="font-size:48px;margin-bottom:16px;">🎯</div>
                         <div style="font-size:16px;font-weight:600;color:#4e5e80;margin-bottom:8px;">还没有选择要分析的岗位</div>
-                        <div style="font-size:13px;margin-bottom:20px;">前往「推荐岗位」点击任意岗位的「分析匹配」按钮，或下方选择岗位后开始分析</div>
+                        <div style="font-size:13px;margin-bottom:10px;">前往「智能推荐」点击任意岗位的「分析匹配」按钮，或下方选择岗位后开始分析</div>
+                        <div style="font-size:12px;color:#7e93c0;margin-bottom:20px;">
+                            智能体基于能力差距分析与行业发展趋势生成个性化职业路径规划。
+                        </div>
                         <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
                             <select id="jobSelect" class="sort-sel" style="min-width:200px;"><option value="">选择一个岗位进行分析</option></select>
                             <button id="analyzeBtn" class="search-btn">开始分析</button>

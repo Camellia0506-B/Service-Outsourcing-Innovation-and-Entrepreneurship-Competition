@@ -142,7 +142,7 @@ def agent_parse_job_profile_requirement():
         parsed = None
         try:
             # 优先尝试使用大模型解析
-            model_name = (rag_conf or {}).get("chat_model_name", "qwen3-max")
+            model_name = (rag_conf or {}).get("chat_model_name", "qwen-max")
             model = ChatTongyi(model=model_name)
             template = PromptTemplate.from_template(
                 _JOB_AGENT_SYSTEM_PROMPT
@@ -431,7 +431,7 @@ def get_real_data():
 ]}}
 请按上述格式生成{size}条，每条字段完整。"""
             response = Generation.call(
-                model="qwen3-max",
+                model="qwen-max",
                 messages=[{"role": "user", "content": prompt}],
                 result_format="message",
             )
@@ -1118,7 +1118,7 @@ abilities 必须包含以上6项且顺序不变，level_type 只能是 high/medi
     try:
         from dashscope import Generation
         response = Generation.call(
-            model="qwen3-max",
+            model="qwen-max",
             messages=[{"role": "user", "content": prompt}],
             result_format="message",
             stream=True,
