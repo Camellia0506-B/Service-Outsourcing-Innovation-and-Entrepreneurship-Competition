@@ -68,10 +68,19 @@ def recommend_jobs():
         if page_size > 50:
             return error_response(400, "pageSize 参数应在1-50之间")
 
-        service = get_job_matching_service()
         # 为减少一次性计算量，仅取到当前页为止的 TopK
         top_n = page_num * page_size
-        result = service.recommend_jobs(user_id, top_n, filters, ability_profile=ability_profile)
+        try:
+            service = get_job_matching_service()
+            result = service.recommend_jobs(user_id, top_n, filters, ability_profile=ability_profile)
+        except Exception as svc_err:
+            logger.warning(f"[API] /matching/recommend-jobs 匹配服务不可用，返回空列表: {svc_err}")
+            return success_response({
+                "total_count": 0,
+                "page_num": page_num,
+                "page_size": page_size,
+                "jobs": [],
+            })
 
         recs = result.get("recommendations") or result.get("jobs") or []
         total = int(result.get("total_matched", len(recs)))
@@ -87,11 +96,10 @@ def recommend_jobs():
         }
 
         logger.info(f"[API] 为用户{user_id}推荐岗位：page={page_num}, size={page_size}, total={total}")
-        
         return success_response(data)
 
     except ValueError as e:
-        return error_response(404, str(e))
+        return error_response(400, str(e))
     except Exception as e:
         logger.error(f"[API] /matching/recommend-jobs 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")

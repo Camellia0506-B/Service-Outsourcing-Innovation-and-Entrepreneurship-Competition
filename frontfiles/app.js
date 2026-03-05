@@ -6597,11 +6597,25 @@ class CareerPlanningApp {
                 }
                 this.renderJobRelationGraph(result.data, graphContainer);
             } else {
+                // relation-graph 返回 404/失败时，按岗位名回退加载（仅用 career-path-ai + career-graph），避免一直“加载图谱中…”
+                const jobName = (document.getElementById('graphJobName')?.value || '').trim() || this._graphJobName || '算法工程师';
+                const is404 = result.code === 404 || (result.msg && String(result.msg).indexOf('404') !== -1);
+                if (jobName && is404) {
+                    console.warn('relation-graph 不可用，按岗位名回退加载:', jobName);
+                    this.loadJobRelationGraphByJobNameOnly(jobName);
+                    return;
+                }
                 graphContainer.innerHTML = '<div class="hint-text">图谱数据加载失败，请确认 AI 服务 (http://localhost:5002) 已启动</div>';
             }
         } catch (e) {
             console.error('loadJobRelationGraph:', e);
             const isTimeout = e && e.message === '请求超时';
+            const jobName = (document.getElementById('graphJobName')?.value || '').trim() || this._graphJobName;
+            if (jobName) {
+                console.warn('relation-graph 异常，按岗位名回退加载:', jobName);
+                this.loadJobRelationGraphByJobNameOnly(jobName);
+                return;
+            }
             const msg = isTimeout
                 ? '请求超时，请检查网络或确认 AI 服务 (http://localhost:5002) 已启动'
                 : '图谱数据加载失败，请确认 AI 服务 (http://localhost:5002) 已启动';
