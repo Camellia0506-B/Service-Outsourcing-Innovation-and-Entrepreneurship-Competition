@@ -269,8 +269,6 @@ class AssessmentService:
                 report = self._generate_report_with_ai(user_id, assessment_id, answers, scores)
                 # 2.5 用后端计分覆盖能力分析、兴趣匹配度（保证能力有区分度、兴趣匹配度基于 Holland）
                 report = self._inject_scores_into_report(report, scores)
-                # 2.55 能力详细分析：AI 生成每项能力的文字描述（不写死）
-                report = self._generate_ability_descriptions(report)
                 # 2.6 注入计算机相关岗位推荐（适合职业领域 + 最匹配职业，来自数据集 + Holland/MBTI）
                 try:
                     from assessment.career_recommender import inject_career_recommendations
@@ -301,6 +299,118 @@ class AssessmentService:
 
         logger.info(f"[Assessment] 答案提交成功，触发报告生成 report_id={report_id}")
         return {"report_id": report_id, "status": "processing"}
+
+    def _ability_level(self, score: int) -> str:
+        """能力等级：用于报告展示（不影响计分）"""
+        s = int(score) if isinstance(score, (int, float, str)) else 0
+        if s >= 85:
+            return "优秀"
+        if s >= 75:
+            return "良好"
+        if s >= 65:
+            return "一般"
+        return "待提升"
+
+    def _ability_narrative(self, ability: str, score: int) -> dict:
+        """
+        为单项能力生成差异化文案（不依赖大模型，避免报告生成过久与套话）。
+        返回 { description: str, suggestions: [str] }（suggestions 可为空）
+        """
+        name = (ability or "").strip()
+        s = int(score) if isinstance(score, (int, float, str)) else 0
+        band = "high" if s >= 80 else ("mid" if s >= 70 else ("low" if s >= 60 else "very_low"))
+
+        def pack(desc: str, sug: Optional[List[str]] = None):
+            return {"description": desc, "suggestions": [x for x in (sug or []) if x]}
+
+        if "学习" in name:
+            if band == "high":
+                return pack("你能快速吸收新知识并迁移到实际任务中，上手新技术的速度较快，适合在迭代频繁的岗位持续成长。")
+            if band == "mid":
+                return pack("学习节奏稳定，能完成从理解到应用的迁移；若能增加输出与复盘频率，提升会更明显。", [
+                    "每周设定 1 个可交付的小成果（Demo/笔记/复盘），用输出倒逼输入。",
+                    "对新知识点做 3 次复用：练习题→小项目→真实项目改造。"
+                ])
+            return pack("学习过程容易停留在“看懂”，落地与复盘不足会拖慢进步速度。", [
+                "用“目标-拆解-实践-复盘”四步学习法：每次学习必须配 1 个可运行的练习。",
+                "建立错题/踩坑清单，周末统一复盘并补齐知识盲区。"
+            ])
+
+        if "逻辑" in name or "分析" in name:
+            if band == "high":
+                return pack("你擅长把复杂问题拆解为可验证的子问题，能基于数据或事实进行推理与决策，分析质量稳定。")
+            if band == "mid":
+                return pack("具备基本的拆解与归因能力，但在信息不完整场景下的假设验证还可以更系统。", [
+                    "遇到问题先写“问题定义/约束/假设/验证方式”，再开始动手。",
+                    "用 5Why + 复盘模板记录 3 次真实问题的分析过程。"
+                ])
+            return pack("分析容易被表象带偏，缺少结构化拆解会导致定位耗时。", [
+                "练习把问题写成“输入-处理-输出”，并列出 3 个可验证假设。",
+                "对日志/指标做最小闭环：提出假设→验证→结论→行动。"
+            ])
+
+        if "执行" in name:
+            if band == "high":
+                return pack("你能把目标拆解为可落地的行动项，并保持推进节奏，交付可靠，适合承担关键任务的推进角色。")
+            if band == "mid":
+                return pack("能完成任务但节奏波动，容易受优先级切换影响；如果能强化计划与复盘，效率会显著提升。", [
+                    "用看板管理：待办/进行中/已完成，限制“进行中”不超过 2 项。",
+                    "每天只抓 3 件最重要的事，晚上用 5 分钟做复盘。"
+                ])
+            return pack("任务推进缺少里程碑与反馈点，容易出现拖延或返工。", [
+                "把任务拆成 1-2 天可完成的小块，并设定明确验收标准。",
+                "每次交付前做一次自检清单，减少低级返工。"
+            ])
+
+        if "创新" in name:
+            if band == "high":
+                return pack("你愿意尝试新方法并能提出可行方案，在方案对比与取舍上更主动，具备较好的探索与改进意识。")
+            if band == "mid":
+                return pack("有一定改进意识，但更多停留在“想到”，推进到“验证”的频率不够高。", [
+                    "每周做 1 次小实验：提出改进点→设计对照→验证效果→记录结论。",
+                    "用“方案A/方案B/成本/收益/风险”对比表强化取舍能力。"
+                ])
+            return pack("更偏向沿用既有做法，缺少低成本试错，会限制方案质量的上限。", [
+                "从“微创新”开始：每次项目至少提出 1 个流程或工具改进点并落地。",
+                "积累 10 个常用模式（性能优化、抽象复用、自动化脚本），在项目中按需套用。"
+            ])
+
+        if "沟通" in name or "表达" in name:
+            if band == "high":
+                return pack("你能清晰表达观点并对齐目标，沟通中能抓住关键信息，减少误解与返工，协作效率高。")
+            if band == "mid":
+                return pack("沟通基本顺畅，但在“需求澄清/风险预警/共识沉淀”上可以更结构化。", [
+                    "关键沟通用“三段式”：背景-目标-结论/请求，减少来回确认。",
+                    "每次讨论后输出 5 行会议纪要：结论/待办/负责人/截止时间/风险点。"
+                ])
+            return pack("表达不够聚焦，需求理解与反馈闭环不足会影响协作质量。", [
+                "先复述对方需求并确认边界，再给方案；避免“我以为”。",
+                "用模板写反馈：现状/影响/建议/下一步，把信息压缩成可执行项。"
+            ])
+
+        return pack("该项能力目前表现一般，建议结合真实场景持续训练并形成可复用的方法。", [
+            "把能力训练嵌入项目：明确目标→刻意练习→复盘总结→再次应用。"
+        ])
+
+    def _build_ability_detail(self, abilities: dict) -> list:
+        """生成 5 项能力的详细卡片数据（能力名、分数、等级、差异化描述/建议）。"""
+        abilities = abilities or {}
+        order = ["学习能力", "执行能力", "创新能力", "逻辑分析能力", "沟通表达能力"]
+        detail = []
+        for name in order:
+            score = abilities.get(name)
+            if score is None:
+                continue
+            score_i = int(score) if isinstance(score, (int, float, str)) else 0
+            text = self._ability_narrative(name, score_i)
+            detail.append({
+                "ability": name,
+                "score": score_i,
+                "level": self._ability_level(score_i),
+                "description": text.get("description", ""),
+                "suggestions": text.get("suggestions", []),
+            })
+        return detail
 
     def _calculate_scores(self, assessment_id: str, answers: List[dict]) -> dict:
         """
@@ -466,15 +576,34 @@ class AssessmentService:
         for name, score in abilities.items():
             item = {"ability": name, "score": score}
             if score >= 75:
-                strengths.append({**item, "description": "该项能力表现突出"})
+                strengths.append({**item, "description": ""})
             elif score < 70:
-                areas_to_improve.append({**item, "suggestions": ["可通过练习与项目实践持续提升"]})
+                areas_to_improve.append({**item, "suggestions": []})
         strengths.sort(key=lambda x: -x["score"])
         areas_to_improve.sort(key=lambda x: x["score"])
         if "ability_analysis" not in report:
             report["ability_analysis"] = {}
+        # 生成能力详细分析（5项全覆盖，带差异化描述/建议）
+        ability_detail = self._build_ability_detail(abilities)
+
+        # 回填 strengths/areas 的文案，避免千篇一律
+        detail_by_ability = {d.get("ability"): d for d in ability_detail if d.get("ability")}
+        for s in strengths:
+            d = detail_by_ability.get(s.get("ability"))
+            if d and d.get("description"):
+                s["description"] = d["description"]
+            elif not s.get("description"):
+                s["description"] = "该项能力表现较好，可在职业发展中持续发挥。"
+        for a in areas_to_improve:
+            d = detail_by_ability.get(a.get("ability"))
+            if d and d.get("suggestions"):
+                a["suggestions"] = d["suggestions"]
+            elif not a.get("suggestions"):
+                a["suggestions"] = ["建议结合真实项目场景进行针对性训练与复盘。"]
+
         report["ability_analysis"]["strengths"] = strengths
         report["ability_analysis"]["areas_to_improve"] = areas_to_improve
+        report["ability_analysis"]["ability_detail"] = ability_detail
 
         # 2) 性格特质：始终用后端计分覆盖五项，最低 20 分（避免 AI 或旧数据出现 0 分）
         trait_scores = scores.get("traits") or {}
@@ -623,7 +752,7 @@ class AssessmentService:
             )
             chain = prompt | model | StrOutputParser()
 
-            # 调用模型（限时 60 秒，超时则走本地模板，避免报告生成卡死）
+            # 调用模型（限时 35 秒，超时则走本地模板，避免报告生成卡死）
             invoke_args = {
                 "user_profile": user_profile,
                 "answers_data": json.dumps(answers, ensure_ascii=False, indent=2),
@@ -632,9 +761,9 @@ class AssessmentService:
             with ThreadPoolExecutor(max_workers=1) as ex:
                 future = ex.submit(chain.invoke, invoke_args)
                 try:
-                    raw_output = future.result(timeout=60)
+                    raw_output = future.result(timeout=35)
                 except FuturesTimeoutError:
-                    raise TimeoutError("报告生成超时(60s)，使用本地模板")
+                    raise TimeoutError("报告生成超时(35s)，使用本地模板")
 
             # 解析JSON
             report_data = _extract_json(raw_output)

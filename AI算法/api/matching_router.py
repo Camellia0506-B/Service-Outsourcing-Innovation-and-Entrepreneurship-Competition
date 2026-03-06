@@ -80,6 +80,9 @@ def recommend_jobs():
             t2 = time.time()
             result = service.recommend_jobs(user_id, top_n, filters, ability_profile=ability_profile)
             logger.info("[API] recommend_jobs 计算耗时 %.2fs", time.time() - t2)
+        except ValueError as ve:
+            logger.info("[API] /matching/recommend-jobs 业务校验: %s", ve)
+            return error_response(400, str(ve))
         except Exception as svc_err:
             logger.warning(f"[API] /matching/recommend-jobs 匹配服务不可用，返回空列表: {svc_err}")
             return success_response({

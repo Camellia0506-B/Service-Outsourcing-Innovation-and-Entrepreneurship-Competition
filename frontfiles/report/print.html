@@ -98,7 +98,7 @@
         }
         function safeAbilityScore(n) {
             var v = Number(n);
-            return (typeof v === 'number' && isFinite(v)) ? Math.max(60, Math.min(100, v)) : 60;
+            return (typeof v === 'number' && isFinite(v)) ? Math.max(0, Math.min(100, v)) : 0;
         }
         function safeTraitScore(n) {
             var v = Number(n);
@@ -121,14 +121,20 @@
             var careers = rec.suitable_careers || [];
             var suggestions = rec.development_suggestions || [];
             var genTime = formatDateTime(data.created_at || data.assessment_date);
-            var allAbilitiesRaw = (strengths || []).concat(areas || []);
-            var uniqueAbilities = [];
-            var seen = {};
-            allAbilitiesRaw.forEach(function(a) {
-                var key = a.ability || a.name || '';
-                if (key && !seen[key]) { seen[key] = true; uniqueAbilities.push(a); }
-            });
-            var allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
+            var abilityDetail = ability.ability_detail;
+            var allAbilities;
+            if (Array.isArray(abilityDetail) && abilityDetail.length) {
+                allAbilities = abilityDetail;
+            } else {
+                var allAbilitiesRaw = (strengths || []).concat(areas || []);
+                var uniqueAbilities = [];
+                var seen = {};
+                allAbilitiesRaw.forEach(function(a) {
+                    var key = a.ability || a.name || '';
+                    if (key && !seen[key]) { seen[key] = true; uniqueAbilities.push(a); }
+                });
+                allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
+            }
             var sortedByScore = allAbilities.slice().sort(function(a, b) { return (Number(b.score) || 0) - (Number(a.score) || 0); });
             var topAbility = sortedByScore[0] || null;
             var secondAbility = sortedByScore[1] || null;
@@ -156,7 +162,7 @@
                 var levelTag = score >= 70 ? 'report-level-high' : score >= 50 ? 'report-level-mid' : 'report-level-low';
                 var desc = (a.description || '').trim();
                 var sugg = Array.isArray(a.suggestions) ? a.suggestions.filter(Boolean).join(' ') : '';
-                var textBlock = desc || sugg;
+                var textBlock = desc || sugg || '可通过练习与项目实践持续提升';
                 var descHtml = textBlock ? '<div class="report-ability-desc">' + String(textBlock).replace(/</g, '&lt;') + '</div>' : '';
                 abilityCardsHtml += '<div class="report-ability-card"><div class="report-ability-name">' + (a.ability || '') + '</div><div class="report-ability-score-row"><span class="report-ability-score" style="color:' + color + '">' + score + '分</span><span class="report-level-tag ' + levelTag + '">' + level + '</span></div><div class="report-ability-bar-bg"><div class="report-ability-bar" style="width:' + score + '%; background:linear-gradient(90deg,' + color + ',' + color + '99)"></div></div>' + descHtml + '</div>';
             });

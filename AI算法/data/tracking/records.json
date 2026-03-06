@@ -1,0 +1,60 @@
+{
+  "track_20260306171247704_1": {
+    "record_id": "track_20260306171247704_1",
+    "user_id": 1,
+    "job_id": "job_apply_1772788367698",
+    "job_title": "Java",
+    "company_name": "字节跳动",
+    "apply_date": "2026-03-14",
+    "source": "system_recommend",
+    "current_stage": "written_test",
+    "result": "failed",
+    "created_at": "2026-03-06 17:12:47",
+    "updated_at": "2026-03-06 17:13:26",
+    "timeline": [
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-14",
+        "notes": ""
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "written_test",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      }
+    ],
+    "has_failure_report": false
+  },
+  "track_20260306171307500_1": {
+    "record_id": "track_20260306171307500_1",
+    "user_id": 1,
+    "job_id": "job_apply_1772788387497",
+    "job_title": "前端",
+    "company_name": "阿里巴巴",
+    "apply_date": "2026-02-25",
+    "source": "self_found",
+    "current_stage": "applied",
+    "result": "pending",
+    "created_at": "2026-03-06 17:13:07",
+    "updated_at": "2026-03-06 17:13:07",
+    "timeline": [
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-02-25",
+        "notes": ""
+      }
+    ],
+    "has_failure_report": false
+  }
+}

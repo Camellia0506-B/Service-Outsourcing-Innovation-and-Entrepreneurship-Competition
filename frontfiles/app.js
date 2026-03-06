@@ -4850,13 +4850,19 @@ class CareerPlanningApp {
         this.currentRecommendations = Array.isArray(recommendations) ? recommendations : [];
         this.recFilter = 'all';
 
-        if (result.success && this.currentRecommendations.length) {
+        if (result.success && this.currentRecommendations.length > 0) {
+            // 真实匹配结果：使用算法返回的推荐列表与 match_score
             this.updateRecStats(this.currentRecommendations);
             this.renderRecommendedJobs(this.currentRecommendations, container);
             this.bindRecStatTiles();
             this.bindRecCardClicks();
+        } else if (result.success && this.currentRecommendations.length === 0) {
+            // 接口成功但无推荐：能力画像已参与计算，无匹配或未加载岗位数据，不展示演示数据
+            const hint = '暂无推荐岗位。请先完善能力画像并生成岗位画像（系统管理 → 生成岗位画像 或 配置岗位 CSV），再刷新本页获取基于算法的真实推荐。';
+            container.innerHTML = '<div class="hint-text">' + hint + '</div>';
+            this.updateRecStats([]);
         } else {
-            // 服务不可用或超时时，用兜底演示数据保证页面能正常显示匹配内容
+            // 服务不可用或超时：用兜底演示数据保证页面可浏览，并提示启动服务以获取真实匹配
             const fallbackList = this._getRecommendedJobsFallback();
             if (fallbackList.length > 0) {
                 this.currentRecommendations = fallbackList;
@@ -11524,38 +11530,20 @@ class CareerPlanningApp {
         const safePct = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
         // 性格特质展示：最低 20 分，不出现零分或过低分（仅影响展示与进度条）
         const safeTraitScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(20, Math.min(100, v)) : 20; };
-        // 能力分：总分 100，最低 60，避免出现 0 分或超过 100
-        const safeAbilityScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(60, Math.min(100, v)) : 60; };
-        // 能力详细分析：优先使用智能评分接口返回的四维度（学习/逻辑/执行/创新），否则用报告中的 strengths/areas
-        let allAbilities;
-        if (this._lastAbilityScores && this._lastAbilityScores.suggestions) {
-            const sug = this._lastAbilityScores.suggestions;
-            const order = ['learning', 'logic', 'execution', 'innovation'];
-            allAbilities = order.map(key => {
-                const s = sug[key];
-                if (!s) return null;
-                return { ability: s.name, name: s.name, score: s.score, description: s.advice, level: s.level };
-            }).filter(Boolean);
-        }
-        if (!allAbilities || allAbilities.length === 0) {
+        // 能力分：总分 100，展示真实分数（仅做边界保护）
+        const safeAbilityScore = (n) => { const v = Number(n); return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 0; };
+        // 能力详细分析：优先使用后端报告中的 ability_detail（5项、含差异化文案），否则回退 strengths/areas
+        let allAbilities = [];
+        const abilityDetail = data.ability_analysis && data.ability_analysis.ability_detail;
+        if (Array.isArray(abilityDetail) && abilityDetail.length) {
+            allAbilities = abilityDetail;
+        } else {
             const allAbilitiesRaw = strengths.concat(areas);
             const uniqueAbilities = [...new Map(allAbilitiesRaw.map(a => [a.ability || a.name || '', a])).values()].filter(a => a.ability || a.name);
             allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
         }
         const abilityLabels = allAbilities.map(a => a.ability || a.name);
-        let abilityValues = allAbilities.map(a => safeAbilityScore(a.score));
-        // 所有能力打分相同时，使用前端预设的错落分数，塑造合理区分度
-        const allSameScore = abilityValues.length > 0 && abilityValues.every(v => v === abilityValues[0]);
-        const ABILITY_PRESET_SCORES = { '学习能力': 74, '执行能力': 62, '创新能力': 66, '逻辑分析能力': 82, '沟通表达能力': 68, '沟通表达': 68 };
-        if (allSameScore && allAbilities.length) {
-            allAbilities.forEach((a, i) => {
-                const name = (a.ability || a.name || '').trim();
-                const preset = ABILITY_PRESET_SCORES[name];
-                if (preset != null) a.score = preset;
-                else a.score = [74, 68, 62, 82, 66][i % 5];
-            });
-            abilityValues = allAbilities.map(a => safeAbilityScore(a.score));
-        }
+        const abilityValues = allAbilities.map(a => safeAbilityScore(a.score));
         // 优势能力卡片：无 strengths[0] 时从能力详细分析中取分数最高的两项
         const sortedByScore = allAbilities.length ? [...allAbilities].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0)) : [];
         const topAbility = sortedByScore[0] || null;
@@ -11651,8 +11639,8 @@ class CareerPlanningApp {
                             const iconMap = { '学习能力':'📚', '沟通表达':'💬', '沟通表达能力':'💬', '执行能力':'⚡', '逻辑分析':'🧩', '逻辑分析能力':'🧩', '创新能力':'💡', '抗压能力':'🔥', '团队协作':'🤝', '领导力':'👤' };
                             const getIcon = (name) => iconMap[name] || (name && name.indexOf('学习') >= 0 ? '📚' : name && name.indexOf('沟通') >= 0 ? '💬' : name && name.indexOf('执行') >= 0 ? '⚡' : name && name.indexOf('逻辑') >= 0 ? '🧩' : name && name.indexOf('创新') >= 0 ? '💡' : name && name.indexOf('抗压') >= 0 ? '🔥' : '📊');
                             return allAbilities.map(a => {
-                                const isCalculated = !!(a.level && (a.level === '优秀' || a.level === '一般' || a.level === '较弱'));
-                                const score = isCalculated ? Math.max(0, Math.min(100, Number(a.score) || 60)) : safeAbilityScore(a.score);
+                                const isCalculated = !!(a && a.level);
+                                const score = safeAbilityScore(a && a.score);
                                 const level = isCalculated ? a.level : (score >= 80 ? '优秀' : score >= 70 ? '良好' : score >= 60 ? '一般' : '待提升');
                                 const themeClass = score >= 80 ? 'theme-green' : score >= 70 ? 'theme-blue' : score >= 60 ? 'theme-orange' : 'theme-red';
                                 const desc = (a.description || '').trim();
