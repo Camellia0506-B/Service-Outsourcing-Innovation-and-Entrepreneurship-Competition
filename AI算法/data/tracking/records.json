@@ -56,5 +56,139 @@
       }
     ],
     "has_failure_report": false
+  },
+  "track_20260306174144301_3": {
+    "record_id": "track_20260306174144301_3",
+    "user_id": 3,
+    "job_id": "job_apply_1772790104284",
+    "job_title": "后端开发工程师",
+    "company_name": "字节跳动",
+    "apply_date": "2026-02-27",
+    "source": "self_found",
+    "current_stage": "rejected",
+    "result": "rejected",
+    "created_at": "2026-03-06 17:41:44",
+    "updated_at": "2026-03-06 18:23:39",
+    "timeline": [
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-02-27",
+        "notes": ""
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "interview_1",
+        "result": "passed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "interview_2",
+        "result": "passed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "passed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "pending",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": "面试官人很好"
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "failed",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "rejected",
+        "result": "rejected",
+        "stage_date": "2026-03-06",
+        "self_evaluation": {},
+        "notes": ""
+      }
+    ],
+    "has_failure_report": true
   }
 }

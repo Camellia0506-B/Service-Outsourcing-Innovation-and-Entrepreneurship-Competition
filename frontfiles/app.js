@@ -425,6 +425,8 @@ class CareerPlanningApp {
         this.trackingOverviewSummary = null;
         this.trackingOverviewRecords = [];
         this.trackingReportsCache = {};   // report_id -> report
+        this.trackingReportsByKey = {};  // "job||company" -> [report...]
+        this.trackingFailureAnalysisCache = {}; // record_id -> { skill:[], resume:[], interview:[], raw, ts }
         // 岗位画像流式请求状态（用于防止并发请求串流导致内容错乱、卡顿）
         this._jobProfileStreamController = null; // AbortController 实例
         this._jobProfileStreamReqId = 0;         // 递增请求编号，始终只接受最新一次点击的结果
@@ -750,6 +752,9 @@ class CareerPlanningApp {
         // Tab1 创建：清空 / 确认创建（内联表单）
         document.getElementById('trackingCreateClear')?.addEventListener('click', () => this.clearTrackingCreateForm());
         document.getElementById('trackingCreateConfirm')?.addEventListener('click', () => this.handleCreateTrackingRecord());
+
+        // Tab1 投递日期：统一展示 YYYY/MM/DD，底层仍用原生 date 保存 YYYY-MM-DD
+        this._initTrackingApplyDateInput();
 
         // Tab2 更新进展：左侧列表委托、推进/淘汰/保存备注
         const trackingUpdateJobList = document.getElementById('trackingUpdateJobList');
@@ -1560,7 +1565,7 @@ class CareerPlanningApp {
         // 首页仅取总数（pageSize=1），推荐岗位接口失败时容错，不阻塞仪表盘
         try {
             const matchingResult = await getRecommendedJobs(userId, 1, 1);
-            if (matchingResult.success && matchingResult.data) {
+        if (matchingResult.success && matchingResult.data) {
                 matchedCount = matchingResult.data.total_count ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? matchingResult.data.recommendations?.length ?? 0;
             }
         } catch (_) {
@@ -2710,19 +2715,19 @@ class CareerPlanningApp {
                 const reportIdToFetch = this.currentReportId;
                 if (reportIdToFetch) {
                     const reportRes = await getAssessmentReport(userId, reportIdToFetch);
-                    if (reportRes.success && reportRes.data && reportRes.data.status === 'completed') {
-                        const d = reportRes.data;
+                if (reportRes.success && reportRes.data && reportRes.data.status === 'completed') {
+                    const d = reportRes.data;
                         if (d.created_at || d.assessment_date) {
                             latestDate = this.formatDateTime(d.created_at || d.assessment_date).replace(/\s*\d{2}:\d{2}$/, '').trim() || '—';
                         }
-                        const aa = d.ability_analysis || {};
-                        const list = (aa.strengths || []).concat(aa.areas_to_improve || []);
-                        if (list.length > 0) {
+                    const aa = d.ability_analysis || {};
+                    const list = (aa.strengths || []).concat(aa.areas_to_improve || []);
+                    if (list.length > 0) {
                             const sum = list.reduce((acc, x) => acc + (x && (x.score != null) ? Number(x.score) : 0), 0);
                             if (sum > 0 || list.some(x => x && (x.score != null))) {
-                                abilityAvg = Math.round(sum / list.length) + ' 分';
-                            }
-                        }
+                        abilityAvg = Math.round(sum / list.length) + ' 分';
+                    }
+                }
                         if (abilityAvg === '—') {
                             const computed = this.computeComprehensiveAbilityScore(d);
                             if (computed != null) abilityAvg = computed + ' 分';
@@ -2832,14 +2837,14 @@ class CareerPlanningApp {
         const result = await getAssessmentReport(userId, reportId);
         if (result.success && result.data) {
             if (result.data.status === 'completed') {
-                this.currentReportId = reportId;
+            this.currentReportId = reportId;
                 try {
                     sessionStorage.setItem('print_report_' + reportId, JSON.stringify(result.data));
                 } catch (e) { /* ignore */ }
-                this.renderReportContent(result.data, contentEl);
-                document.getElementById('btnGoToCareerPlan')?.addEventListener('click', () => {
-                    this.navigateTo('report');
-                });
+            this.renderReportContent(result.data, contentEl);
+            document.getElementById('btnGoToCareerPlan')?.addEventListener('click', () => {
+                this.navigateTo('report');
+            });
                 return;
             }
             if (result.data.status === 'processing') {
@@ -3085,7 +3090,7 @@ class CareerPlanningApp {
             if (userIdForSave) _storage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
             this.showToast('测评提交成功，正在生成报告...', 'success');
             this.setViewReportButtonState('generating');
-
+            
             // 轮询获取报告（首次延迟 2.5 秒，之后每 2 秒轮询，减少等待感）
             setTimeout(() => {
                 this.pollAssessmentReport();
@@ -3321,9 +3326,11 @@ class CareerPlanningApp {
 
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         const stageLabel = { applied: '已投递', written_test: '笔试', interview_1: '一面', interview_2: '二面', final: '终面', offer: 'Offer', rejected: '已拒绝' };
+        // 兼容：后端可能用 result=rejected/failed 或 current_stage=rejected 标记淘汰
+        const isRejectedRecord = (r) => (r && (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected'));
         const statusDotClass = (r) => {
-            if (r.result === 'offer') return 'tracking-sd-ok';
-            if (r.result === 'rejected' || r.result === 'failed') return 'tracking-sd-err';
+            if (r.result === 'offer' || r.current_stage === 'offer') return 'tracking-sd-ok';
+            if (isRejectedRecord(r)) return 'tracking-sd-err';
             if (r.current_stage === 'applied') return 'tracking-sd-blue';
             return 'tracking-sd-warn';
         };
@@ -3352,14 +3359,18 @@ class CareerPlanningApp {
             } else {
                 jobList.innerHTML = records.map(r => {
                     const label = stageLabel[r.current_stage] || '进行中';
-                    const status = r.result === 'offer' ? '已拿Offer 🎉' : (r.result === 'rejected' || r.result === 'failed') ? label + '淘汰' : '进行中';
+                    const status = (r.result === 'offer' || r.current_stage === 'offer')
+                        ? '已拿Offer 🎉'
+                        : isRejectedRecord(r)
+                            ? (label + '淘汰')
+                            : '进行中';
                     const sel = r.record_id === this.trackingSelectedRecordId ? ' sel' : '';
                     return `<div class="tracking-job-item${sel}" data-record-id="${esc(r.record_id)}"><h4>${esc(r.job_title || '未命名岗位')}</h4><p>${esc(r.company_name || '')} · ${status}</p></div>`;
                 }).join('');
             }
         }
 
-        const failRecords = records.filter(r => r.result === 'rejected' || r.result === 'failed');
+        const failRecords = records.filter(r => isRejectedRecord(r));
         const failList = document.getElementById('trackingFailList');
         if (failList) {
             if (!failRecords.length) {
@@ -3443,8 +3454,18 @@ class CareerPlanningApp {
         if (!container) return;
         const list = Array.isArray(data.list) ? data.list : [];
         this.trackingReportsCache = {};
+        this.trackingReportsByKey = {};
         list.forEach(item => {
             if (item.report_id) this.trackingReportsCache[item.report_id] = item;
+            const key = this._trackingReportKey(item);
+            if (key) {
+                if (!this.trackingReportsByKey[key]) this.trackingReportsByKey[key] = [];
+                this.trackingReportsByKey[key].push(item);
+            }
+        });
+        // 尽量按时间倒序（created_at 可能为空，做保守排序）
+        Object.keys(this.trackingReportsByKey).forEach(k => {
+            this.trackingReportsByKey[k].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
         });
         if (!list.length) {
             container.innerHTML = '<div class="hint-text">暂无反馈优化报告。当某次求职失败并完成 AI 复盘后，会出现在这里。</div>';
@@ -3505,12 +3526,61 @@ class CareerPlanningApp {
 
     // Tab1 创建：清空表单
     clearTrackingCreateForm() {
-        ['trackingJobTitle', 'trackingCompanyName', 'trackingApplyDate', 'trackingCreateNotes'].forEach(id => {
+        ['trackingJobTitle', 'trackingCompanyName', 'trackingApplyDate', 'trackingApplyDateText', 'trackingCreateNotes'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
         const src = document.getElementById('trackingSource');
         if (src) src.value = 'system_recommend';
+    }
+
+    _initTrackingApplyDateInput() {
+        const native = document.getElementById('trackingApplyDate');
+        const text = document.getElementById('trackingApplyDateText');
+        const btn = document.getElementById('trackingApplyDatePickerBtn');
+        if (!native || !text || !btn) return;
+
+        const format = (iso) => {
+            if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+            const [y, mo, d] = iso.split('-');
+            return `${y}年${mo}月${d}日`;
+        };
+        const toISO = (s) => {
+            const v = String(s || '').trim();
+            if (!v) return '';
+            const norm = v
+                .replace(/\s+/g, '')
+                .replace(/[．。.]/g, '/')
+                .replace(/-/g, '/')
+                .replace(/年/g, '/')
+                .replace(/月/g, '/')
+                .replace(/日/g, '');
+            const m = norm.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+            if (!m) return '';
+            const y = m[1];
+            const mo = String(m[2]).padStart(2, '0');
+            const d = String(m[3]).padStart(2, '0');
+            return `${y}-${mo}-${d}`;
+        };
+
+        const syncFromNative = () => { text.value = format(native.value); };
+        syncFromNative();
+
+        native.addEventListener('change', syncFromNative);
+        btn.addEventListener('click', () => {
+            try {
+                if (typeof native.showPicker === 'function') native.showPicker();
+                else native.click();
+            } catch (_) {
+                native.focus();
+            }
+        });
+        text.addEventListener('blur', () => {
+            const iso = toISO(text.value);
+            if (!iso) return;
+            native.value = iso;
+            syncFromNative();
+        });
     }
 
     async handleCreateTrackingRecord() {
@@ -3719,7 +3789,8 @@ class CareerPlanningApp {
                     }
                     if (payload.chunk && streamEl) {
                         bufferText += payload.chunk;
-                        streamEl.textContent = bufferText;
+                        streamEl.innerHTML = this._renderStreamingMarkdown(bufferText);
+                        streamEl.scrollTop = streamEl.scrollHeight;
                     }
                     if (payload.report_id) {
                         doneReportId = payload.report_id;
@@ -3732,11 +3803,260 @@ class CareerPlanningApp {
                 this.showToast('复盘报告生成完成', 'success');
                 await this.loadTrackingData();
             }
+            // 无论是否拿到 report_id，都把当前流式分析缓存下来回填到 Tab3（三列面板）
+            try {
+                const recordId = record.record_id;
+                this._cacheTrackingFailureAnalysis(recordId, bufferText);
+                // 若当前 Tab3 正在查看这条记录，立即刷新面板内容
+                if (this.trackingSelectedFailureRecordId === recordId) {
+                    this.renderTrackingFailureAnalysis(recordId);
+                }
+            } catch (_) {}
         } catch (e) {
             console.error('失败复盘分析异常:', e);
             if (statusEl) statusEl.textContent = '分析失败：' + (e.message || '网络错误');
             this.showToast('求职失败分析接口异常', 'error');
         }
+    }
+
+    _trackingReportKey(itemOrRecord) {
+        const job = (itemOrRecord && (itemOrRecord.job_title || itemOrRecord.jobTitle)) || '';
+        const co = (itemOrRecord && (itemOrRecord.company_name || itemOrRecord.companyName)) || '';
+        const j = String(job || '').trim();
+        const c = String(co || '').trim();
+        if (!j && !c) return '';
+        return `${j}||${c}`;
+    }
+
+    _getLatestFailureReportForRecord(record) {
+        if (!record) return null;
+        // 1) 优先按 record_id（如果后端返回这个字段）
+        const byId = Object.values(this.trackingReportsCache || {}).find(r => r && r.record_id && r.record_id === record.record_id);
+        if (byId) return byId;
+        // 2) 退化：按 job_title + company_name 匹配最近一条
+        const key = this._trackingReportKey(record);
+        const arr = key ? (this.trackingReportsByKey?.[key] || []) : [];
+        return arr.length ? arr[0] : null;
+    }
+
+    _getCachedRawForReport(report) {
+        if (!report) return '';
+        // 1) 优先用 report.record_id（如果有）
+        const rid = report.record_id;
+        if (rid && this.trackingFailureAnalysisCache?.[rid]?.raw) return this.trackingFailureAnalysisCache[rid].raw;
+
+        // 2) 退化：按 job_title + company_name 匹配到 overview 中的记录，再取其缓存
+        const key = this._trackingReportKey(report);
+        if (!key) return '';
+        const rec = (this.trackingOverviewRecords || []).find(r => this._trackingReportKey(r) === key);
+        const recId = rec && rec.record_id;
+        if (recId && this.trackingFailureAnalysisCache?.[recId]?.raw) return this.trackingFailureAnalysisCache[recId].raw;
+        return '';
+    }
+
+    _extractFailureSectionsFromText(raw) {
+        const md = this._normalizeStreamingText(raw);
+        const lines = md.replace(/\r/g, '').split('\n').map(s => s.trim()).filter(Boolean);
+        const bullets = [];
+        for (const ln of lines) {
+            const t = ln.replace(/^data:\s*/i, '').trim();
+            const m1 = t.match(/^[-*•]\s+(.*)$/);
+            const m2 = t.match(/^\d+\.\s+(.*)$/);         // 1. xxx
+            const m3 = t.match(/^\d+[、]\s*(.*)$/);       // 1、xxx
+            const m4 = t.match(/^\(?\d+\)?[)）]\s*(.*)$/); // 1) xxx / 1）xxx / (1) xxx
+            if (m1) bullets.push(m1[1].trim());
+            else if (m2) bullets.push(m2[1].trim());
+            else if (m3) bullets.push(m3[1].trim());
+            else if (m4) bullets.push(m4[1].trim());
+        }
+        // 若没有明显列表，按分号/顿号等拆句兜底
+        const fallback = bullets.length
+            ? bullets
+            : md.split(/[；;。\n]/).map(s => s.trim()).filter(Boolean);
+
+        // 按标题关键词切分（有就更准，没有就按段落切）
+        const sec = { skill: [], resume: [], interview: [] };
+        let cur = '';
+        const pushLine = (s) => {
+            const v = String(s || '').trim();
+            if (!v) return;
+            if (cur === 'skill') sec.skill.push(v);
+            else if (cur === 'resume') sec.resume.push(v);
+            else if (cur === 'interview') sec.interview.push(v);
+        };
+        for (const ln of lines) {
+            const t = ln.replace(/^#+\s*/, '').trim().toLowerCase();
+            if (/技能|gap|能力差距/.test(t)) { cur = 'skill'; continue; }
+            if (/简历|履历|项目描述|优化点/.test(t)) { cur = 'resume'; continue; }
+            if (/面试|沟通|表达|准备/.test(t)) { cur = 'interview'; continue; }
+            // 只收集“像条目”的内容，避免把长段落全塞进列表
+            const m1 = ln.match(/^[-*•]\s+(.*)$/);
+            const m2 = ln.match(/^\d+\.\s+(.*)$/);
+            const m3 = ln.match(/^\d+[、]\s*(.*)$/);
+            const m4 = ln.match(/^\(?\d+\)?[)）]\s*(.*)$/);
+            if (m1 || m2 || m3 || m4) pushLine((m1 || m2 || m3 || m4)[1]);
+        }
+
+        // 进一步把“长段落”切成更多可读要点（不新增内容，只做句子切分）
+        const baseFlat = fallback.map(s => s.replace(/\*\*/g, '').replace(/`/g, '').trim()).filter(Boolean);
+        const splitLong = (s) => {
+            const t = String(s || '').trim();
+            if (!t) return [];
+            // 已经是条目/短句就不拆
+            if (t.length <= 48) return [t];
+            // 先按强分隔拆：；。！？?
+            const strong = t.split(/[；。！？?]/).map(x => x.trim()).filter(Boolean);
+            const out = [];
+            for (const seg of (strong.length ? strong : [t])) {
+                if (seg.length > 80) {
+                    // 很长的再按逗号粗拆（避免过碎）
+                    const weak = seg.split(/[，,]/).map(x => x.trim()).filter(Boolean);
+                    weak.forEach(x => { if (x) out.push(x); });
+                } else {
+                    out.push(seg);
+                }
+            }
+            return out.filter(x => x.length >= 6);
+        };
+        const flat = baseFlat.flatMap(splitLong).filter(Boolean);
+        const classify = (s) => {
+            const t = String(s || '').trim();
+            if (!t) return '';
+            if (/简历|履历|项目|经历|表述|描述|量化|成果|STAR|匹配|投递|关键词/i.test(t)) return 'resume';
+            if (/面试|沟通|表达|回答|复盘|题|准备|案例/i.test(t)) return 'interview';
+            if (/技能|技术|框架|基础|深度|实践|算法|原理|工程/i.test(t)) return 'skill';
+            return '';
+        };
+
+        // 若某一块为空，先尝试用关键词把条目归类补齐（比纯切片更靠谱）
+        if (!sec.resume.length || !sec.skill.length || !sec.interview.length) {
+            for (const it of flat) {
+                const c = classify(it);
+                if (c === 'resume' && !sec.resume.includes(it)) sec.resume.push(it);
+                else if (c === 'skill' && !sec.skill.includes(it)) sec.skill.push(it);
+                else if (c === 'interview' && !sec.interview.includes(it)) sec.interview.push(it);
+            }
+        }
+
+        // 兜底分配：即使只识别出某一块，也保证另外两块有内容
+        const used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
+        const pool = flat.filter(s => !used.has(String(s).trim()));
+        const take = (n) => pool.splice(0, n);
+
+        // 默认每栏至少给 6 条（可滚动展示），让信息更充实
+        if (!sec.skill.length) sec.skill = take(6);
+        if (!sec.resume.length) sec.resume = take(6);
+        if (!sec.interview.length) sec.interview = take(6);
+
+        // 若仍为空（极端情况下 md 很短），就按原 flat 切片兜底
+        // 注意：允许跨区复用，保证“看得见内容”优先
+        if (!sec.skill.length) sec.skill = flat.slice(0, 6);
+        if (!sec.resume.length) sec.resume = flat.slice(0, 6);
+        if (!sec.interview.length) sec.interview = flat.slice(0, 6);
+
+        // 去重+限长，避免太啰嗦
+        // 每栏展示更多要点；面板本身可滚动，不会撑坏布局
+        const uniq = (arr) => Array.from(new Set(arr.map(s => String(s).trim()).filter(Boolean))).slice(0, 20);
+        sec.skill = uniq(sec.skill);
+        sec.resume = uniq(sec.resume);
+        sec.interview = uniq(sec.interview);
+        return { ...sec, raw: md };
+    }
+
+    _cacheTrackingFailureAnalysis(recordId, rawText) {
+        if (!recordId) return;
+        const parsed = this._extractFailureSectionsFromText(rawText);
+        this.trackingFailureAnalysisCache[recordId] = {
+            ...parsed,
+            ts: Date.now()
+        };
+    }
+
+    _renderStreamingMarkdown(raw) {
+        const md = this._normalizeStreamingText(raw);
+        return `<div class="tracking-md">${this._simpleMarkdownToHtml(md)}</div>`;
+    }
+
+    _normalizeStreamingText(raw) {
+        let s = raw == null ? '' : String(raw);
+        // SSE 流可能返回 literal "\\n" 而不是换行
+        s = s.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\\t/g, '    ');
+        // 常见的多余引号包裹
+        if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith('“') && s.endsWith('”'))) {
+            s = s.slice(1, -1);
+        }
+        return s;
+    }
+
+    _simpleMarkdownToHtml(md) {
+        const esc = (x) => String(x == null ? '' : x)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        const renderInline = (s) => {
+            let out = esc(s);
+            // inline code
+            out = out.replace(/`([^`]+?)`/g, '<code>$1</code>');
+            // bold
+            out = out.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+            return out;
+        };
+
+        const parts = String(md || '').split('```');
+        let html = '';
+        for (let i = 0; i < parts.length; i++) {
+            const chunk = parts[i] || '';
+            if (i % 2 === 1) {
+                html += `<pre><code>${esc(chunk.trim())}</code></pre>`;
+                continue;
+            }
+            const lines = chunk.replace(/\r/g, '').split('\n');
+            let inUl = false;
+            let inOl = false;
+            const closeLists = () => {
+                if (inUl) { html += '</ul>'; inUl = false; }
+                if (inOl) { html += '</ol>'; inOl = false; }
+            };
+            for (const line0 of lines) {
+                const line = line0 || '';
+                const t = line.trim();
+                if (!t) {
+                    closeLists();
+                    html += '<div class="md-spacer"></div>';
+                    continue;
+                }
+                const h3 = t.match(/^###\s+(.*)$/);
+                const h2 = t.match(/^##\s+(.*)$/);
+                const h1 = t.match(/^#\s+(.*)$/);
+                if (h1 || h2 || h3) {
+                    closeLists();
+                    const text = renderInline((h3 || h2 || h1)[1]);
+                    const tag = h1 ? 'h2' : h2 ? 'h3' : 'h4';
+                    html += `<${tag}>${text}</${tag}>`;
+                    continue;
+                }
+                const ul = t.match(/^[-*]\s+(.*)$/);
+                if (ul) {
+                    if (inOl) { html += '</ol>'; inOl = false; }
+                    if (!inUl) { html += '<ul>'; inUl = true; }
+                    html += `<li>${renderInline(ul[1])}</li>`;
+                    continue;
+                }
+                const ol = t.match(/^(\d+)\.\s+(.*)$/);
+                if (ol) {
+                    if (inUl) { html += '</ul>'; inUl = false; }
+                    if (!inOl) { html += '<ol>'; inOl = true; }
+                    html += `<li>${renderInline(ol[2])}</li>`;
+                    continue;
+                }
+                closeLists();
+                html += `<p>${renderInline(t)}</p>`;
+            }
+            closeLists();
+        }
+        return html;
     }
 
     // Tab2：选中一条求职记录，渲染步骤条与备注
@@ -3825,9 +4145,11 @@ class CareerPlanningApp {
             this.showToast('请先在左侧选择一条求职记录', 'error');
             return;
         }
-        const stage = record.current_stage || 'applied';
+        // 兼容后端：淘汰既可能通过 result 标识，也可能通过 stage 标识
+        // 这里同时写入 stage=rejected 与 result=rejected，确保总览/失败列表都能正确识别
+        const stage = 'rejected';
         this.showLoading();
-        const res = await updateTrackingRecord(recordId, { user_id: userId, stage, result: 'failed' });
+        const res = await updateTrackingRecord(recordId, { user_id: userId, stage, result: 'rejected' });
         this.hideLoading();
         if (res && res.success) {
             this.showToast('已标记为淘汰', 'success');
@@ -3872,7 +4194,7 @@ class CareerPlanningApp {
     renderTrackingFailureAnalysis(recordId) {
         const titleEl = document.getElementById('trackingAnalysisTitle');
         const record = this.trackingRecordsCache?.[recordId];
-        const report = Object.values(this.trackingReportsCache || {}).find(r => r.record_id === recordId);
+        const report = this._getLatestFailureReportForRecord(record);
         const skillEl = document.getElementById('trackingAnalysisSkillGap');
         const resumeEl = document.getElementById('trackingAnalysisResume');
         const interviewEl = document.getElementById('trackingAnalysisInterview');
@@ -3885,12 +4207,15 @@ class CareerPlanningApp {
             return;
         }
         if (titleEl) titleEl.textContent = `🤖 AI 失败分析 · ${esc(record.company_name)} ${record.job_title || '未命名岗位'}`;
-        const kw = (report && report.key_weakness) ? report.key_weakness : '';
-        const lines = kw ? kw.split(/[；\n]/).map(s => s.trim()).filter(Boolean) : [];
+        const kw = (report && report.key_weakness) ? String(report.key_weakness) : '';
+        const cached = this.trackingFailureAnalysisCache?.[recordId];
+        // 优先使用“流式完整分析”（内容更全），没有时再用报告 key_weakness
+        const source = (cached && cached.raw) ? cached.raw : kw;
+        const parsed = this._extractFailureSectionsFromText(source);
         const toLi = (arr) => arr.length ? arr.map(x => `<li>${esc(x)}</li>`).join('') : '<li class="hint-text">暂无内容，可点击「重新生成AI分析」</li>';
-        if (skillEl) skillEl.innerHTML = toLi(lines.slice(0, 4));
-        if (resumeEl) resumeEl.innerHTML = toLi(lines.slice(4, 8));
-        if (interviewEl) interviewEl.innerHTML = toLi(lines.slice(8, 12));
+        if (skillEl) skillEl.innerHTML = toLi(parsed.skill || []);
+        if (resumeEl) resumeEl.innerHTML = toLi(parsed.resume || []);
+        if (interviewEl) interviewEl.innerHTML = toLi(parsed.interview || []);
     }
 
     trackingOpenFailureModalForRegen() {
@@ -3905,7 +4230,7 @@ class CareerPlanningApp {
     openTrackingFullAnalysisModal() {
         const recordId = this.trackingSelectedFailureRecordId;
         const record = this.trackingRecordsCache?.[recordId];
-        const report = Object.values(this.trackingReportsCache || {}).find(r => r.record_id === recordId);
+        const report = this._getLatestFailureReportForRecord(record);
         const modal = document.getElementById('trackingFullAnalysisModal');
         const subEl = document.getElementById('trackingFullAnalysisSubtitle');
         const skillEl = document.getElementById('trackingFullAnalysisSkillGap');
@@ -3917,12 +4242,14 @@ class CareerPlanningApp {
         }
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
         if (subEl) subEl.textContent = `${record.company_name || ''} · ${record.job_title || ''} · ${report ? (report.created_at || '') : ''}`;
-        const kw = (report && report.key_weakness) ? report.key_weakness : '';
-        const lines = kw ? kw.split(/[；\n]/).map(s => s.trim()).filter(Boolean) : [];
+        const kw = (report && report.key_weakness) ? String(report.key_weakness) : '';
+        const cached = this.trackingFailureAnalysisCache?.[recordId];
+        const source = (cached && cached.raw) ? cached.raw : kw;
+        const parsed = this._extractFailureSectionsFromText(source);
         const toLi = (arr) => arr.length ? arr.map(x => `<li>${esc(x)}</li>`).join('') : '<li>暂无</li>';
-        if (skillEl) skillEl.innerHTML = toLi(lines.slice(0, 6));
-        if (resumeEl) resumeEl.innerHTML = toLi(lines.slice(6, 12));
-        if (interviewEl) interviewEl.innerHTML = toLi(lines.slice(12, 18));
+        if (skillEl) skillEl.innerHTML = toLi(parsed.skill || []);
+        if (resumeEl) resumeEl.innerHTML = toLi(parsed.resume || []);
+        if (interviewEl) interviewEl.innerHTML = toLi(parsed.interview || []);
         if (modal) modal.classList.remove('hidden');
     }
 
@@ -3946,14 +4273,17 @@ class CareerPlanningApp {
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
         const title = `${report.job_title || ''} · ${report.company_name || ''} 失败复盘`;
         const sub = `${report.company_name || ''} · ${report.job_title || ''} · ${report.failure_stage || '—'} · ${report.created_at || ''} 生成`;
-        const lines = (report.key_weakness || '').split(/[；\n]/).map(s => s.trim()).filter(Boolean);
-        const toUl = (arr) => arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>—</li></ul>';
+        // 与 Tab3 同步：优先用“流式完整分析缓存”，没有再用报告摘要 key_weakness
+        const cachedRaw = this._getCachedRawForReport(report);
+        const source = cachedRaw || String(report.key_weakness || '');
+        const parsed = this._extractFailureSectionsFromText(source);
+        const toUl = (arr) => arr && arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>—</li></ul>';
         detailEl.innerHTML = `
             <h3>${esc(title)}</h3>
             <p class="tracking-rpt-detail-sub">${esc(sub)}</p>
-            <div class="tracking-detail-section"><h4>🔍 技能 Gap 分析</h4>${toUl(lines.slice(0, 5))}</div>
-            <div class="tracking-detail-section"><h4>📄 简历优化建议</h4>${toUl(lines.slice(5, 10))}</div>
-            <div class="tracking-detail-section"><h4>🗣️ 面试准备行动计划</h4>${toUl(lines.slice(10, 15))}</div>
+            <div class="tracking-detail-section"><h4>🔍 技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
+            <div class="tracking-detail-section"><h4>📄 简历优化建议</h4>${toUl(parsed.resume)}</div>
+            <div class="tracking-detail-section"><h4>🗣️ 面试准备行动计划</h4>${toUl(parsed.interview)}</div>
         `;
     }
 
@@ -4010,7 +4340,7 @@ class CareerPlanningApp {
             records.forEach(r => {
                 const res = r.result || 'pending';
                 if (res === 'offer') stageCount.offer++;
-                else if (res === 'rejected' || res === 'failed') stageCount.rejected++;
+                else if (res === 'rejected' || res === 'failed' || r.current_stage === 'rejected') stageCount.rejected++;
                 else if (r.current_stage === 'applied') stageCount.applied++;
                 else stageCount.inProgress++;
             });
@@ -4891,7 +5221,7 @@ class CareerPlanningApp {
                                 ? '推荐岗位服务暂不可用（请确认已启动 AI 服务 http://localhost:5002）'
                                 : '暂无推荐岗位。请先完善能力画像；若已完善，请确认已加载岗位数据（系统管理 → 生成岗位画像 或 配置 CSV）')));
                 container.innerHTML = '<div class="hint-text">' + hint + '</div>';
-                this.updateRecStats([]);
+            this.updateRecStats([]);
             }
         }
     }
@@ -7178,19 +7508,19 @@ class CareerPlanningApp {
                 match: Number.isFinite(Number(n.match)) ? Math.max(0, Math.min(100, Math.round(Number(n.match)))) : 75,
             }));
         } else {
-            const edges = data.transfer_graph?.edges || [];
-            const nodesMap = {};
-            (data.transfer_graph?.nodes || []).forEach(n => { nodesMap[n.job_id] = n; });
+        const edges = data.transfer_graph?.edges || [];
+        const nodesMap = {};
+        (data.transfer_graph?.nodes || []).forEach(n => { nodesMap[n.job_id] = n; });
             list = edges.slice(0, 8).map(e => {
-                const to = nodesMap[e.to] || { job_name: e.to, job_id: e.to };
-                const score = e.relevance_score ?? e.match_score ?? e.matchScore ?? to.match_score ?? to.matchScore ?? 75;
-                const numScore = Number(score);
-                return {
-                    job_name: to.job_name,
-                    match: Number.isFinite(numScore) ? Math.max(0, Math.min(100, Math.round(numScore))) : 75,
-                    difficulty: e.difficulty || '中',
-                    time: e.time || '6-12个月',
-                };
+            const to = nodesMap[e.to] || { job_name: e.to, job_id: e.to };
+            const score = e.relevance_score ?? e.match_score ?? e.matchScore ?? to.match_score ?? to.matchScore ?? 75;
+            const numScore = Number(score);
+            return {
+                job_name: to.job_name,
+                match: Number.isFinite(numScore) ? Math.max(0, Math.min(100, Math.round(numScore))) : 75,
+                difficulty: e.difficulty || '中',
+                time: e.time || '6-12个月',
+            };
             });
         }
         const count = list.length;
@@ -7273,10 +7603,10 @@ class CareerPlanningApp {
                 </div>
                 <div class="graph-svg-wrap" id="graphWrap">
                     <svg class="graph-svg" id="svgLayer"></svg>
-                </div>
-                </div>
-            </div>
-            </div>`;
+                    </div>
+                    </div>
+                    </div>
+                </div>`;
 
         container._transferNodes = transferNodes;
         container.innerHTML = html;
@@ -7311,7 +7641,7 @@ class CareerPlanningApp {
                 if (panelEl) panelEl.classList.add('active');
                 if (panelId === 'transfer') {
                     requestAnimationFrame(() => {
-                        requestAnimationFrame(() => this._layoutTransferGraphCircle(container));
+                    requestAnimationFrame(() => this._layoutTransferGraphCircle(container));
                     });
                 }
             });
@@ -8410,7 +8740,7 @@ class CareerPlanningApp {
             const graphJobName = (document.getElementById('graphJobName')?.value || '').trim();
             // 仅当图谱区域已渲染（存在 careerPathContainer 或 .career-path）时再加载晋升路径，避免未点击「加载图谱」时的控制台警告
             if (document.getElementById('careerPathContainer') || document.querySelector('#jobProfileGraph .career-path')) {
-                this.loadCareerPath(graphJobName || '算法工程师');
+            this.loadCareerPath(graphJobName || '算法工程师');
             }
         }
     }
@@ -8437,11 +8767,11 @@ class CareerPlanningApp {
         let jobId = this.selectedGraphJobId;
         if (!jobId) {
             try {
-                const result = await getJobProfiles(1, 20, keyword, '', '');
+            const result = await getJobProfiles(1, 20, keyword, '', '');
                 if (result.success && result.data && result.data.list && result.data.list.length > 0) {
-                    const first = result.data.list[0];
-                    const exact = result.data.list.find(j => (j.job_name || '').trim() === keyword);
-                    jobId = (exact || first).job_id;
+            const first = result.data.list[0];
+            const exact = result.data.list.find(j => (j.job_name || '').trim() === keyword);
+            jobId = (exact || first).job_id;
                 }
             } catch (e) {
                 console.warn('getJobProfiles 失败，将按岗位名加载图谱:', e);
@@ -8590,8 +8920,8 @@ class CareerPlanningApp {
                 container.classList.toggle('grouped', isGrouped);
                 if (isGrouped) this.renderJobGroups(list, container);
                 else this.renderJobs(list, container);
-            } else {
-                container.innerHTML = '<div class="hint-text">' + (keyword ? '未找到相关岗位' : '暂无岗位信息') + '</div>';
+        } else {
+            container.innerHTML = '<div class="hint-text">' + (keyword ? '未找到相关岗位' : '暂无岗位信息') + '</div>';
             }
         } else {
             const msg = result.msg || '语义岗位搜索超时或失败，请稍后重试 / 检查 AI 服务 (http://localhost:5002)';
@@ -11538,8 +11868,8 @@ class CareerPlanningApp {
         if (Array.isArray(abilityDetail) && abilityDetail.length) {
             allAbilities = abilityDetail;
         } else {
-            const allAbilitiesRaw = strengths.concat(areas);
-            const uniqueAbilities = [...new Map(allAbilitiesRaw.map(a => [a.ability || a.name || '', a])).values()].filter(a => a.ability || a.name);
+        const allAbilitiesRaw = strengths.concat(areas);
+        const uniqueAbilities = [...new Map(allAbilitiesRaw.map(a => [a.ability || a.name || '', a])).values()].filter(a => a.ability || a.name);
             allAbilities = uniqueAbilities.length ? uniqueAbilities : allAbilitiesRaw;
         }
         const abilityLabels = allAbilities.map(a => a.ability || a.name);
@@ -12085,7 +12415,7 @@ function showAgentWelcomeIfEmpty() {
     var delayMs = 38;
     function streamNext() {
         if (idx >= chars.length) {
-            setTimeout(function() { agentScrollToBottom(); }, 50);
+    setTimeout(function() { agentScrollToBottom(); }, 50);
             return;
         }
         var chunk = chars[idx];

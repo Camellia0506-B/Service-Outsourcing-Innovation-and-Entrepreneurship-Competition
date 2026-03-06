@@ -1540,12 +1540,67 @@ body::before {
     overflow-y: auto;
     padding: 12px;
     border-radius: 10px;
-    background: #0f172a;
-    color: #e5e7eb;
+    background: #ffffff;
+    color: #18243f;
     font-size: 13px;
     line-height: 1.6;
-    white-space: pre-wrap;
+    white-space: normal;
+    border: 1px solid rgba(79,124,255,0.12);
 }
+
+/* SSE 流式 Markdown 排版 */
+.tracking-failure-stream .tracking-md {
+    font-family: var(--font-body);
+    color: inherit;
+}
+.tracking-failure-stream .tracking-md h2,
+.tracking-failure-stream .tracking-md h3,
+.tracking-failure-stream .tracking-md h4 {
+    margin: 10px 0 6px;
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+}
+.tracking-failure-stream .tracking-md h2 { font-size: 16px; font-weight: 800; }
+.tracking-failure-stream .tracking-md h3 { font-size: 14px; font-weight: 800; color: #1a3fa8; }
+.tracking-failure-stream .tracking-md h4 { font-size: 13px; font-weight: 700; color: #2d5be3; }
+.tracking-failure-stream .tracking-md p {
+    margin: 6px 0;
+    color: #4e5e80;
+}
+.tracking-failure-stream .tracking-md ul,
+.tracking-failure-stream .tracking-md ol {
+    margin: 6px 0 8px 18px;
+    padding: 0;
+    color: #4e5e80;
+}
+.tracking-failure-stream .tracking-md li { margin: 4px 0; }
+.tracking-failure-stream .tracking-md strong { color: #18243f; }
+.tracking-failure-stream .tracking-md code {
+    background: rgba(79,124,255,0.08);
+    border: 1px solid rgba(79,124,255,0.12);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    color: #1e4cb8;
+}
+.tracking-failure-stream .tracking-md pre {
+    margin: 8px 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #0f172a;
+    color: #e5e7eb;
+    overflow: auto;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+.tracking-failure-stream .tracking-md pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: 12px;
+}
+.tracking-failure-stream .tracking-md .md-spacer { height: 8px; }
 
 .tracking-failure-subtitle {
     font-size: 12px;
@@ -1657,6 +1712,45 @@ body::before {
     outline: none;
     font-family: inherit;
     background: var(--light-blue-bg);
+}
+
+/* 求职跟踪：投递日期（统一展示 YYYY/MM/DD） */
+.tracking-date-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.tracking-date-input input[type="text"] {
+    width: 100%;
+    padding-right: 42px;
+}
+.tracking-date-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border-color);
+    background: rgba(45, 91, 227, 0.04)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 3V6' stroke='%236b7a99' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M17 3V6' stroke='%236b7a99' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M4 9H20' stroke='%236b7a99' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M6 5H18C19.1046 5 20 5.89543 20 7V19C20 20.1046 19.1046 21 18 21H6C4.89543 21 4 20.1046 4 19V7C4 5.89543 4.89543 5 6 5Z' stroke='%236b7a99' stroke-width='2'/%3E%3C/svg%3E")
+        no-repeat center;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.tracking-date-btn:hover {
+    border-color: rgba(45, 91, 227, 0.35);
+    background-color: rgba(45, 91, 227, 0.08);
+}
+.tracking-date-btn:active {
+    transform: translateY(-50%) scale(0.98);
+}
+.tracking-date-native {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 .tracking-form-item.full { grid-column: 1 / -1; }
 .tracking-form-item textarea { resize: none; height: 56px; }
@@ -1810,6 +1904,32 @@ body::before {
 .tracking-sline.done { background: var(--primary-color); }
 
 .tracking-step-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* 求职跟踪：淘汰按钮（危险次按钮，更符合整体风格） */
+#trackingPage .tracking-step-actions .tracking-reject-btn {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1.5px solid rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.06);
+    color: #b91c1c;
+    transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+}
+#trackingPage .tracking-step-actions .tracking-reject-btn:hover {
+    background: rgba(239, 68, 68, 0.10);
+    border-color: rgba(239, 68, 68, 0.55);
+    box-shadow: 0 10px 26px rgba(239, 68, 68, 0.12);
+    transform: translateY(-1px);
+}
+#trackingPage .tracking-step-actions .tracking-reject-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+#trackingPage .tracking-step-actions .tracking-reject-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
+}
 .tracking-note-area {
     background: var(--light-blue-bg);
     border-radius: 12px;
@@ -1868,10 +1988,13 @@ body::before {
 .tracking-analysis-card .tracking-card-title { margin-bottom: 10px; }
 .tracking-an-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     flex: 1;
     min-height: 0;
+    /* 关键：当变为 2 列/1 列时，第三块落到下一行，也能在卡片内滚动看到 */
+    overflow-y: auto;
+    padding-right: 4px;
 }
 .tracking-an-section {
     background: var(--light-blue-bg);
@@ -1879,6 +2002,13 @@ body::before {
     padding: 14px;
     border: 1px solid var(--border-color);
     overflow-y: auto;
+    min-width: 0;
+}
+
+/* 确保分析卡片在布局中可伸缩，不裁切内部网格 */
+.tracking-analysis-card {
+    min-height: 0;
+    height: 100%;
 }
 .tracking-an-section h4 {
     font-size: 13px;
@@ -1904,6 +2034,14 @@ body::before {
     color: var(--primary-color);
     font-weight: 700;
     flex-shrink: 0;
+}
+
+/* Tab3 三列面板响应式：避免窄屏被裁切 */
+@media (max-width: 1100px) {
+    .tracking-an-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+    .tracking-an-grid { grid-template-columns: 1fr; }
 }
 
 /* Tab4 总览 */

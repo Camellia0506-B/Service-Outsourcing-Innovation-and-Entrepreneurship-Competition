@@ -1103,7 +1103,14 @@
                                 <div class="tracking-form-grid">
                                     <div class="tracking-form-item"><label>岗位名称</label><input type="text" id="trackingJobTitle" placeholder="如：后端开发工程师（实习）"></div>
                                     <div class="tracking-form-item"><label>目标公司</label><input type="text" id="trackingCompanyName" placeholder="如：字节跳动"></div>
-                                    <div class="tracking-form-item"><label>投递日期</label><input type="date" id="trackingApplyDate"></div>
+                                    <div class="tracking-form-item">
+                                        <label for="trackingApplyDateText">投递日期</label>
+                                        <div class="tracking-date-input">
+                                            <input type="text" id="trackingApplyDateText" placeholder="年/月/日" inputmode="numeric" autocomplete="off">
+                                            <button type="button" class="tracking-date-btn" id="trackingApplyDatePickerBtn" aria-label="选择日期"></button>
+                                            <input type="date" id="trackingApplyDate" class="tracking-date-native" tabindex="-1" aria-hidden="true">
+                                        </div>
+                                    </div>
                                     <div class="tracking-form-item"><label>投递渠道</label>
                                         <select id="trackingSource">
                                             <option value="system_recommend">系统推荐</option>
