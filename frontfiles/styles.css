@@ -7,7 +7,7 @@
     --light-blue-bg: #eef3ff;
     --light-blue-border: rgba(45, 91, 227, 0.12);
     --cyan-accent: #3dd6c8;
-    --page-bg: #f7f9ff;
+    --page-bg: #f7f6f2;
     --primary-blue: #2d5be3;
     --sky-blue: #4f79f6;
     --indigo-blue: #6b7cff;
@@ -21,8 +21,8 @@
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
     --card-bg: #ffffff;
-    --text-primary: var(--deep-blue);
-    --text-secondary: var(--gray-blue);
+    --text-primary: #1c1c18;
+    --text-secondary: #5a5a52;
     --border-color: var(--light-blue-border);
     --shadow: 0 2px 8px rgba(26, 63, 168, 0.06);
     --shadow-lg: 0 12px 28px rgba(26, 63, 168, 0.12);
@@ -74,22 +74,6 @@ body {
     z-index: 0;
 }
 
-/* 背景网格纹理 */
-body::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        linear-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-}
-
 /* 漂移光晕 */
 .blob {
     position: absolute;
@@ -102,7 +86,7 @@ body::before {
 .blob-1 {
     width: 400px;
     height: 400px;
-    background: rgba(37, 99, 235, 0.13);
+    background: transparent;
     top: -100px;
     left: -100px;
     animation: drift 20s ease-in-out infinite alternate;
@@ -111,7 +95,7 @@ body::before {
 .blob-2 {
     width: 300px;
     height: 300px;
-    background: rgba(14, 165, 233, 0.10);
+    background: transparent;
     bottom: -50px;
     right: -50px;
     animation: drift 15s ease-in-out infinite alternate-reverse;
@@ -120,7 +104,7 @@ body::before {
 .blob-3 {
     width: 250px;
     height: 250px;
-    background: rgba(79, 70, 229, 0.07);
+    background: transparent;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -11036,16 +11020,9 @@ body::before {
     z-index: 0;
 }
 
-/* 背景特效 - 上浮粒子 */
+/* 背景特效 - 上浮粒子（已关闭） */
 .bg-particles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 0;
+    display: none !important;
 }
 
 .bg-particle {
@@ -12808,10 +12785,8 @@ body::before {
     position: absolute;
     z-index: 0;
     inset: 0;
-    background-image: radial-gradient(circle, rgba(45,91,227,0.06) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: none;
     pointer-events: none;
-    mask-image: radial-gradient(ellipse 120% 120% at 50% 40%, black 30%, transparent 100%);
 }
 
 @keyframes heroFloat1 {
@@ -13241,8 +13216,9 @@ body::before {
     cursor: not-allowed;
 }
 
-/* 粒子Canvas */
+/* 粒子Canvas - 已关闭背景悬浮粒子效果 */
 #particles {
+    display: none !important;
     position: absolute;
     top: 0;
     left: 0;
@@ -13974,56 +13950,103 @@ body.on-login-page #agentAssistant { display: none !important; }
 
 
 /* ģ������ģ����ʽ */
-.mock-interview-page {
+/* 模拟面试页面样式（参考 mock_interview_ui.html，仅作用于 #mockInterviewPage） */
+#mockInterviewPage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+    max-width: none;
+    width: 100%;
+    padding: 24px 40px;
+    box-sizing: border-box;
     min-height: 100vh;
-    background: var(--page-bg);
-    padding: 24px 20px 60px;
-}
-
-.mock-interview-container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.mock-interview-tabs {
     display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    background: var(--card-bg);
-    padding: 8px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    flex-direction: column;
 }
 
-.mock-interview-tabs .tab-item {
+#mockInterviewPage .mock-interview-container,
+#mockInterviewPage .matching-container { max-width: none; width: 100%; margin: 0 auto; }
+/* 面试进行 tab 全屏：容器全宽、占满视口高度 */
+#mockInterviewPage.interview-tab-active .matching-container {
+    max-width: none;
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
     flex: 1;
-    padding: 12px 16px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#mockInterviewPage.interview-tab-active .mock-interview-tab-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#mockInterviewPage.interview-tab-active { padding: 16px; }
+#mockInterviewPage #interviewTab.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+#mockInterviewPage #interviewTab.active .mock-interview-layout { flex: 1; min-height: 0; display: flex; flex-direction: column; width: 100%; }
+
+/* 问题1：页面标题在模拟面试页内改为绿色/灰配色，不影响其他页面 */
+#mockInterviewPage .page-title-bar { background: #5e8c65; }
+#mockInterviewPage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
+#mockInterviewPage .page-subtitle { color: #a0a098; }
+#mockInterviewPage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
+
+/* 问题2：Tab 索引栏样式 */
+#mockInterviewPage .matching-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    background: transparent;
+    padding: 0;
+    border-bottom: 1px solid #e8e6df;
+}
+#mockInterviewPage .matching-tabs .tab-btn {
+    padding: 10px 18px;
+    border-radius: 0;
+    font-size: 13px;
     font-weight: 500;
-    color: var(--text-secondary);
-    transition: all 0.2s;
-    font-size: 14px;
+    color: #a0a098;
+    cursor: pointer;
+    transition: color 0.12s;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    white-space: nowrap;
 }
+#mockInterviewPage .matching-tabs .tab-btn:hover { background: none; color: #1c1c18; }
+#mockInterviewPage .matching-tabs .tab-btn.active { background: none; color: #1c1c18; font-weight: 600; border-bottom: 2px solid #1c1c18; }
 
-.mock-interview-tabs .tab-item:hover {
-    background: var(--light-blue-bg);
-    color: var(--primary-color);
+#mockInterviewPage .mock-interview-tab-content .tab-content { display: none; }
+#mockInterviewPage .mock-interview-tab-content .tab-content.active { display: block; }
+/* 创建会话 Tab：顶部对齐，避免上方空白过多 */
+#mockInterviewPage #createInterviewTab.active {
+    display: flex !important;
+    min-height: calc(100vh - 280px);
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 48px;
 }
-
-.mock-interview-tabs .tab-item.active {
-    background: var(--primary-color);
-    color: white;
-}
-
-.mock-interview-tab-content .tab-content {
-    display: none;
-}
-
-.mock-interview-tab-content .tab-content.active {
-    display: block;
-}
+#mockInterviewPage #createInterviewTab .mock-start-grid { width: 100%; }
 
 /* ������������ */
 .create-interview-area {
@@ -14080,7 +14103,8 @@ body.on-login-page #agentAssistant { display: none !important; }
     font-size: 14px;
 }
 
-.create-interview-form .form-group select {
+.create-interview-form .form-group select,
+.create-interview-form .form-group input[type="text"] {
     width: 100%;
     padding: 12px 16px;
     border: 1px solid var(--border-color);
@@ -14088,12 +14112,17 @@ body.on-login-page #agentAssistant { display: none !important; }
     font-size: 14px;
     background: white;
     color: var(--text-primary);
-    cursor: pointer;
     transition: all 0.2s;
 }
 
+.create-interview-form .form-group select {
+    cursor: pointer;
+}
+
 .create-interview-form .form-group select:hover,
-.create-interview-form .form-group select:focus {
+.create-interview-form .form-group select:focus,
+.create-interview-form .form-group input[type="text"]:hover,
+.create-interview-form .form-group input[type="text"]:focus {
     border-color: var(--primary-color);
     outline: none;
 }
@@ -14406,4 +14435,254 @@ body.on-login-page #agentAssistant { display: none !important; }
     .interview-message {
         max-width: 95%;
     }
+}
+
+/* ========== 模拟面试新布局样式（参考 mock_interview_ui.html，仅 #mockInterviewPage） ========== */
+#mockInterviewPage .mock-start-grid {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 20px;
+    align-items: start;
+    width: 100%;
+}
+#mockInterviewPage .mock-start-grid .mock-card {
+    width: 100%;
+    max-width: 100%;
+}
+#mockInterviewPage .mock-card {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+}
+#mockInterviewPage .mock-card-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--mock-line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#mockInterviewPage .mock-card-title { font-size: 15px; font-weight: 600; color: var(--mock-ink); }
+#mockInterviewPage .mock-card-body { padding: 24px 28px; }
+#mockInterviewPage .mock-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+#mockInterviewPage .mock-form-row-full { grid-template-columns: 1fr; }
+#mockInterviewPage .mock-form-group { display: flex; flex-direction: column; gap: 6px; }
+#mockInterviewPage .mock-form-label { font-size: 12px; font-weight: 600; color: var(--mock-ink-2); letter-spacing: 0.3px; text-transform: uppercase; }
+#mockInterviewPage .mock-form-control {
+    padding: 11px 14px;
+    border: 1px solid var(--mock-line);
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    color: var(--mock-ink);
+    background: var(--mock-bg);
+    outline: none;
+    appearance: none;
+    transition: border-color 0.12s, background 0.12s;
+}
+#mockInterviewPage .mock-form-control:focus { border-color: var(--mock-sage); }
+#mockInterviewPage .mock-btn { padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: all 0.15s; }
+#mockInterviewPage .mock-btn-primary { background: var(--mock-ink); color: #fff; width: 100%; margin-top: 8px; }
+#mockInterviewPage .mock-btn-primary:hover { background: var(--mock-ink); color: #fff; }
+#mockInterviewPage .mock-btn-outline { background: none; border: 1.5px solid var(--mock-line); color: var(--mock-ink-2); }
+#mockInterviewPage .mock-btn-outline:hover { border-color: var(--mock-ink); color: var(--mock-ink); }
+#mockInterviewPage .mock-tip-card { background: var(--mock-white); border: 1px solid var(--mock-line); border-radius: var(--mock-radius); padding: 16px 18px; margin-bottom: 16px; }
+#mockInterviewPage .mock-tip-card-title { font-size: 13px; font-weight: 600; color: var(--mock-ink); margin-bottom: 10px; }
+#mockInterviewPage .mock-tip-list { list-style: none; display: flex; flex-direction: column; gap: 7px; padding: 0; margin: 0; }
+#mockInterviewPage .mock-tip-list li { font-size: 13px; color: var(--mock-ink-2); display: flex; align-items: flex-start; gap: 8px; }
+#mockInterviewPage .mock-tip-list li::before { content: '·'; color: var(--mock-sage); font-weight: 700; margin-top: -1px; }
+#mockInterviewPage .mock-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 0; }
+#mockInterviewPage .mock-stat-box { background: var(--mock-bg); border-radius: 10px; padding: 12px; text-align: center; }
+#mockInterviewPage .mock-stat-num { font-size: 22px; font-weight: 700; color: var(--mock-sage); font-family: 'DM Serif Display', serif; }
+#mockInterviewPage .mock-stat-label { font-size: 11px; color: var(--mock-ink-3); margin-top: 2px; }
+#mockInterviewPage .mock-interview-layout { display: block; width: 100%; }
+#mockInterviewPage .mock-chat-card { display: flex; flex-direction: column; min-height: 520px; width: 100%; }
+#mockInterviewPage .mock-chat-card-full { width: 100%; max-width: none; }
+#mockInterviewPage #interviewTab.active .mock-chat-card { flex: 1; min-height: 0; }
+#mockInterviewPage #interviewTab.active .mock-chat-body { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+#mockInterviewPage .mock-chat-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--mock-line); }
+#mockInterviewPage .mock-interviewer-info { display: flex; align-items: center; gap: 12px; }
+#mockInterviewPage .mock-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--mock-sage-soft); color: var(--mock-sage); border: 1px solid var(--mock-sage-mid); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+#mockInterviewPage .mock-avatar.user-avatar { background: var(--mock-ink); color: #fff; border: none; font-size: 14px; font-weight: 700; }
+#mockInterviewPage .mock-interviewer-name { font-weight: 600; font-size: 14px; }
+#mockInterviewPage .mock-interviewer-sub { font-size: 12px; color: var(--mock-ink-3); }
+#mockInterviewPage .mock-progress-pills { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#mockInterviewPage .mock-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--mock-bg); color: var(--mock-ink-2); }
+#mockInterviewPage .mock-pill.mock-pill-blue { background: var(--mock-sage-soft); color: var(--mock-sage); }
+#mockInterviewPage .mock-pill.mock-pill-green { background: var(--mock-sage-soft); color: var(--mock-sage); }
+#mockInterviewPage .mock-chat-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 340px; max-height: 420px; overflow-y: auto; }
+#mockInterviewPage .mock-chat-body::-webkit-scrollbar { width: 4px; }
+#mockInterviewPage .mock-chat-body::-webkit-scrollbar-thumb { background: var(--mock-line); border-radius: 2px; }
+#mockInterviewPage .mock-msg { display: flex; gap: 12px; }
+#mockInterviewPage .mock-msg.user { flex-direction: row-reverse; }
+#mockInterviewPage .mock-msg-bubble { max-width: 68%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
+#mockInterviewPage .mock-msg-bubble.ai { background: var(--mock-white); border: 1px solid var(--mock-line); color: var(--mock-ink); border-radius: 4px 14px 14px 14px; }
+#mockInterviewPage .mock-msg-bubble.user { background: var(--mock-sage); color: #fff; border-radius: 14px 4px 14px 14px; }
+#mockInterviewPage .mock-chat-footer { padding: 16px 20px; border-top: 1px solid var(--mock-line); display: flex; flex-direction: column; gap: 10px; }
+#mockInterviewPage .mock-chat-input { width: 100%; min-height: 72px; resize: none; padding: 12px 16px; border: 1.5px solid var(--mock-line); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--mock-ink); outline: none; }
+#mockInterviewPage .mock-chat-input:focus { border-color: var(--mock-sage); }
+#mockInterviewPage .mock-chat-actions { display: flex; justify-content: flex-end; gap: 10px; }
+#mockInterviewPage .mock-btn-send { background: var(--mock-sage); color: #fff; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+#mockInterviewPage .mock-btn-end { background: none; border: 1.5px solid var(--mock-line); color: var(--mock-ink-3); padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+#mockInterviewPage .mock-btn-end:hover { border-color: var(--mock-red); color: var(--mock-red); }
+/* 报告区域（#reportArea 在 mockInterviewPage 内） */
+#mockInterviewPage #reportArea .mock-report-header { background: var(--mock-white); border-radius: var(--mock-radius); border: 1px solid var(--mock-line); padding: 28px 32px; margin-bottom: 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; }
+#mockInterviewPage #reportArea .mock-report-score-circle { width: 90px; height: 90px; border-radius: 50%; background: var(--mock-sage-soft); color: var(--mock-sage); border: 1px solid var(--mock-sage-mid); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#mockInterviewPage #reportArea .mock-report-score-num { font-size: 30px; font-weight: 700; color: #fff; font-family: 'DM Serif Display', serif; line-height: 1; }
+#mockInterviewPage #reportArea .mock-report-score-label { font-size: 10px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+#mockInterviewPage #reportArea .mock-report-meta-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--mock-ink); margin-bottom: 6px; }
+#mockInterviewPage #reportArea .mock-report-meta-sub { font-size: 13px; color: var(--mock-ink-3); }
+#mockInterviewPage #reportArea .mock-report-meta-tags { display: flex; gap: 8px; margin-top: 10px; }
+#mockInterviewPage #reportArea .mock-tag { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+#mockInterviewPage #reportArea .mock-tag-blue { background: var(--mock-sage-soft); color: var(--mock-sage); }
+#mockInterviewPage #reportArea .mock-tag-green { background: var(--mock-sage-soft); color: var(--mock-sage); }
+#mockInterviewPage #reportArea .mock-tag-amber { background: var(--mock-amber-soft); color: var(--mock-amber); }
+#mockInterviewPage #reportArea .mock-grade-badge { padding: 8px 20px; background: var(--mock-sage-soft); border: 1px solid var(--mock-sage-mid); border-radius: 10px; font-size: 20px; font-weight: 700; color: var(--mock-sage); font-family: 'Noto Sans SC', sans-serif; text-align: center; }
+#mockInterviewPage #reportArea .mock-grade-sub { font-size: 11px; color: var(--mock-sage); font-family: 'Noto Sans SC', sans-serif; font-weight: 400; margin-top: 2px; }
+#mockInterviewPage #reportArea .mock-dimensions-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+#mockInterviewPage #reportArea .mock-dim-card { background: var(--mock-white); border: 1px solid var(--mock-line); border-radius: var(--mock-radius); padding: 16px; text-align: center; }
+#mockInterviewPage #reportArea .mock-dim-score { font-size: 26px; font-weight: 700; font-family: 'DM Serif Display', serif; margin-bottom: 4px; }
+#mockInterviewPage #reportArea .mock-dim-label { font-size: 12px; color: var(--mock-ink-3); margin-bottom: 10px; }
+#mockInterviewPage #reportArea .mock-dim-bar-bg { height: 4px; background: var(--mock-line); border-radius: 2px; }
+#mockInterviewPage #reportArea .mock-dim-bar { height: 4px; border-radius: 2px; transition: width 0.6s ease; }
+#mockInterviewPage #reportArea .mock-report-content-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+#mockInterviewPage #reportArea .mock-report-section-title { font-size: 13px; font-weight: 600; color: var(--mock-ink-2); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+#mockInterviewPage #reportArea .mock-bullet-list { display: flex; flex-direction: column; gap: 8px; }
+#mockInterviewPage #reportArea .mock-bullet-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--mock-ink-2); line-height: 1.5; }
+#mockInterviewPage #reportArea .mock-bullet-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+#mockInterviewPage #reportArea .mock-dot-green { background: var(--mock-sage); }
+#mockInterviewPage #reportArea .mock-dot-amber { background: var(--mock-amber); }
+#mockInterviewPage #reportArea .mock-dot-blue { background: var(--mock-sage); }
+#mockInterviewPage #reportArea .mock-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+#mockInterviewPage #reportArea .mock-plan-card { background: var(--mock-bg); border-radius: 10px; padding: 16px; }
+#mockInterviewPage #reportArea .mock-plan-period { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+#mockInterviewPage #reportArea .mock-plan-period.blue { color: var(--mock-sage); }
+#mockInterviewPage #reportArea .mock-plan-period.green { color: var(--mock-sage); }
+#mockInterviewPage #reportArea .mock-plan-period.amber { color: var(--mock-amber); }
+#mockInterviewPage #reportArea .mock-plan-content { font-size: 13px; color: var(--mock-ink-2); line-height: 1.6; }
+#mockInterviewPage #reportArea .mock-report-footer { background: var(--mock-white); border: 1px solid var(--mock-line); border-radius: var(--mock-radius); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+#mockInterviewPage #reportArea .mock-footer-hint { font-size: 13px; color: var(--mock-ink-3); }
+#mockInterviewPage #reportArea .mock-footer-hint span { color: var(--mock-ink); font-weight: 600; }
+#mockInterviewPage #reportArea .mock-footer-actions { display: flex; gap: 10px; }
+/* 面试报告加载/错误状态（#reportArea 内） */
+#mockInterviewPage #reportArea .mock-report-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+    padding: 32px;
+    color: var(--mock-ink-3);
+    font-size: 14px;
+}
+#mockInterviewPage #reportArea .mock-report-loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--mock-line);
+    border-top-color: var(--mock-sage);
+    border-radius: 50%;
+    animation: mock-report-spin 0.8s linear infinite;
+    margin-bottom: 16px;
+}
+#mockInterviewPage #reportArea .mock-report-loading-text { color: var(--mock-ink-2); }
+#mockInterviewPage #reportArea .mock-report-loading-error .mock-report-loading-text { color: var(--mock-ink-3); max-width: 360px; text-align: center; line-height: 1.6; }
+@keyframes mock-report-spin { to { transform: rotate(360deg); } }
+/* 全屏加载遮罩（面试报告请求中） */
+.report-load-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+.report-view-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--mock-line, #e5e7eb);
+    border-top-color: var(--mock-sage, #0caa6e);
+    border-radius: 50%;
+    animation: mock-report-spin 0.8s linear infinite;
+}
+.report-view-text { font-size: 14px; color: var(--mock-ink-2, #374151); }
+/* 历史记录表格 */
+#mockInterviewPage .mock-history-wrap { margin-bottom: 16px; }
+#mockInterviewPage .mock-history-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--mock-ink); margin-bottom: 16px; }
+#mockInterviewPage .mock-history-table { background: var(--mock-white); border: 1px solid var(--mock-line); border-radius: var(--mock-radius); overflow: hidden; }
+#mockInterviewPage .mock-history-table-head { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px 80px; padding: 12px 20px; background: var(--mock-bg); border-bottom: 1px solid var(--mock-line); font-size: 11px; font-weight: 700; color: var(--mock-ink-3); letter-spacing: 0.5px; text-transform: uppercase; gap: 12px; }
+#mockInterviewPage .mock-history-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px 80px; padding: 14px 20px; border-bottom: 1px solid var(--mock-line); align-items: center; font-size: 13px; gap: 12px; transition: background 0.1s; }
+#mockInterviewPage .mock-history-row:last-child { border-bottom: none; }
+#mockInterviewPage .mock-history-row:hover { background: var(--mock-bg); }
+#mockInterviewPage .mock-history-job { font-weight: 600; color: var(--mock-ink); }
+#mockInterviewPage .mock-history-date { color: var(--mock-ink-3); }
+#mockInterviewPage .mock-score-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 700; font-size: 13px; }
+#mockInterviewPage .mock-score-good { background: var(--mock-sage-soft); color: var(--mock-sage); }
+#mockInterviewPage .mock-score-mid { background: var(--mock-amber-soft); color: var(--mock-amber); }
+#mockInterviewPage .mock-score-bad { background: var(--mock-red-soft); color: var(--mock-red); }
+#mockInterviewPage .mock-btn-sm { padding: 5px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--mock-line); background: none; color: var(--mock-ink-2); cursor: pointer; }
+#mockInterviewPage .mock-btn-sm:hover { border-color: var(--mock-sage); color: var(--mock-sage); }
+/* 问题3.3：右侧提示栏 */
+#mockInterviewPage .mock-side-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+#mockInterviewPage .mock-side-tip-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    border-radius: var(--mock-radius);
+    padding: 16px 18px;
+}
+#mockInterviewPage .mock-side-tip-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mock-ink-2);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#mockInterviewPage .mock-side-tip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mock-sage);
+    flex-shrink: 0;
+}
+#mockInterviewPage .mock-side-tip-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+#mockInterviewPage .mock-side-tip-list li {
+    font-size: 12.5px;
+    color: var(--mock-ink-3);
+    padding-left: 10px;
+    position: relative;
+    line-height: 1.5;
+    list-style: none;
+}
+#mockInterviewPage .mock-side-tip-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--mock-line);
+    font-size: 10px;
+    top: 2px;
+}
+@media (max-width: 900px) {
+    #mockInterviewPage .mock-start-grid { grid-template-columns: 1fr; }
+    #mockInterviewPage #reportArea .mock-dimensions-grid { grid-template-columns: repeat(2, 1fr); }
+    #mockInterviewPage #reportArea .mock-report-content-grid { grid-template-columns: 1fr; }
+    #mockInterviewPage #reportArea .mock-plan-grid { grid-template-columns: 1fr; }
+    #mockInterviewPage .mock-history-table-head,
+    #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
+}
+kInterviewPage .mock-history-table-head,
+    #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
 }

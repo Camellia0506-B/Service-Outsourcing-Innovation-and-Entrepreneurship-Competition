@@ -1,0 +1,105 @@
+{
+  "bc569f9c-c42f-4993-bdce-a30e8d414b8e": {
+    "interview_id": "bc569f9c-c42f-4993-bdce-a30e8d414b8e",
+    "user_id": 1,
+    "target_position": "算法工程师",
+    "interview_type": "technical",
+    "difficulty": "easy",
+    "duration": 30,
+    "created_at": "2026-03-07T21:01:12.972935",
+    "status": "completed",
+    "current_question_index": 1,
+    "messages": [
+      {
+        "role": "interviewer",
+        "content": "你好！我是AI面试官，今天将负责你算法工程师岗位的面试。\n\n我们将进行大约30分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。",
+        "timestamp": 1772888472975
+      },
+      {
+        "role": "user",
+        "content": "我刷了100道leetcode 在校期间多次担任项目算法负责人",
+        "timestamp": "2026-03-07T13:01:32.556Z"
+      },
+      {
+        "role": "interviewer",
+        "content": "很高兴听到你在LeetCode上有如此丰富的练习经历，并且在校期间还承担了项目算法负责人的角色。可以具体分享一下，在担任项目算法负责人时，你遇到了哪些挑战？以及你是如何克服这些挑战的？",
+        "timestamp": 1772888493888
+      },
+      {
+        "role": "user",
+        "content": "ai异常无法调用 数据不够好 模型搭建有缺陷等 diaoyon",
+        "timestamp": "2026-03-07T13:01:59.668Z"
+      },
+      {
+        "role": "interviewer",
+        "content": "听起来你在项目中遇到了不少实际问题。可以具体描述一下“AI异常无法调用”这个问题吗？比如，是调用API时遇到的问题还是代码执行过程中出现了错误？你又是如何定位并解决这个问题的呢？",
+        "timestamp": 1772888521319
+      },
+      {
+        "role": "user",
+        "content": "询问大模型 debug 查看控制台等",
+        "timestamp": "2026-03-07T13:02:17.620Z"
+      },
+      {
+        "role": "interviewer",
+        "content": "了解了，通过询问大模型、debug以及查看控制台日志来定位问题是一种很实用的方法。在这个过程中，你是否使用了一些特定的工具或技术来辅助调试？例如，是否有用到像Postman这样的API测试工具，或者是一些特定的日志分析工具呢？另外，解决这个问题后，你是如何确保类似的问题不再发生的？",
+        "timestamp": 1772888539075
+      }
+    ],
+    "interviewer_persona": {
+      "background": "10年以上相关行业经验，曾任职于多家知名企业",
+      "name": "AI面试官",
+      "style": "专业、严谨、注重细节",
+      "title": "算法工程师面试官"
+    },
+    "interview_plan": {
+      "duration_minutes": 30,
+      "question_types": [
+        "自我介绍",
+        "岗位认知",
+        "项目经验",
+        "技术能力",
+        "职业规划"
+      ],
+      "total_questions": 5
+    },
+    "total_score": 65,
+    "target_job_title": "算法工程师"
+  },
+  "d4ce5247-33b5-4296-b8eb-23fa151f33df": {
+    "interview_id": "d4ce5247-33b5-4296-b8eb-23fa151f33df",
+    "user_id": 1,
+    "target_job_title": "java",
+    "interview_type": "comprehensive",
+    "difficulty": "medium",
+    "duration_minutes": 30,
+    "started_at": "2026-03-07T21:45:15.582677",
+    "status": "completed",
+    "current_question_index": 0,
+    "messages": [
+      {
+        "role": "interviewer",
+        "content": "你好！我是AI面试官，今天将负责你java岗位的面试。\n\n我们将进行大约30分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。",
+        "timestamp": "2026-03-07T21:45:15.582677"
+      }
+    ],
+    "interviewer_persona": {
+      "name": "AI面试官",
+      "title": "java面试官",
+      "style": "专业、严谨、注重细节",
+      "background": "10年以上相关行业经验，曾任职于多家知名企业"
+    },
+    "interview_plan": {
+      "total_questions": 5,
+      "duration_minutes": 30,
+      "question_types": [
+        "自我介绍",
+        "岗位认知",
+        "项目经验",
+        "技术能力",
+        "职业规划"
+      ]
+    },
+    "total_score": 85
+  }
+}

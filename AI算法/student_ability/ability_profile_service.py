@@ -432,72 +432,8 @@ class AIAbilityProfileGenerator:
             "注意事项：只根据简历真实信息填写，没有的字段用\"待补充\"；证据必须来自简历。\n"
         )
 
-【简历内容】
-{resume_text[:8000]}
-
-请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
-
-{{
-  "basic_info": {{
-    "education": "本科/硕士/博士",
-    "major": "专业名称",
-    "school": "学校名称",
-    "gpa": "X.X/4.0",
-    "expected_graduation": "YYYY-MM"
-  }},
-  "professional_skills": {{
-    "programming_languages": [
-      { "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }
-      { "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }
-    ],
-    "frameworks_tools": [...],
-    "domain_knowledge": [...]
-  },
-  "certificates": { "items": [{ "name": "证书名称", "level": "级别", "issue_date": "YYYY-MM" }] },
-  "innovation_ability": {
-    "projects": [{ "name": "项目名称", "innovation_points": ["创新点"], "impact": "影响" }],
-    "competitions": [{ "name": "竞赛名称", "award": "获奖等级" }]
-  },
-  "learning_ability": {
-  },
-  "certificates": { "items": [{ "name": "证书名称", "level": "级别", "issue_date": "YYYY-MM" }] },
-  "innovation_ability": {
-    "projects": [{ "name": "项目名称", "innovation_points": ["创新点"], "impact": "影响" }],
-    "competitions": [{ "name": "竞赛名称", "award": "获奖等级" }]
-  },
-  "learning_ability": {
-    "indicators": [
-      { "indicator": "GPA", "value": 3.8, "percentile": 85 },
-      { "indicator": "自学新技术", "evidence": ["证据"] }
-      { "indicator": "GPA", "value": 3.8, "percentile": 85 },
-      { "indicator": "自学新技术", "evidence": ["证据"] }
-    ]
-  },
-  "pressure_resistance": { "evidence": ["抗压证据"] },
-  "communication_ability": {
-    "teamwork": { "evidence": ["团队协作证据"] },
-    "presentation": { "evidence": ["演讲展示证据"] }
-  },
-  "practical_experience": {
-    "internships": [{ "company": "公司", "position": "职位", "duration": "X个月", "achievements": ["成就"] }],
-    "projects": [{ "name": "项目", "role": "角色", "complexity": "高/中/低" }]
-  }
-}"""
-  },
-  "pressure_resistance": { "evidence": ["抗压证据"] },
-  "communication_ability": {
-    "teamwork": { "evidence": ["团队协作证据"] },
-    "presentation": { "evidence": ["演讲展示证据"] }
-  },
-  "practical_experience": {
-    "internships": [{ "company": "公司", "position": "职位", "duration": "X个月", "achievements": ["成就"] }],
-    "projects": [{ "name": "项目", "role": "角色", "complexity": "高/中/低" }]
-  }
-}"""
-    
     def _build_generation_prompt(self, profile_data: dict) -> str:
         """构造生成Prompt"""
-        schema = self._ability_profile_output_schema()
         schema = self._ability_profile_output_schema()
         return f"""你是一位资深的HR和职业规划顾问。请根据以下学生档案，生成**学生就业能力画像**。
         
@@ -886,7 +822,6 @@ class StudentAbilityProfileService:
             profile_updated_at = ""
         
         # 检查能力画像是否存在，以及是否需要更新
-        if existing_profile:
         if existing_profile:
             ability_updated_at = existing_profile.get("updated_at", existing_profile.get("generated_at", ""))
             

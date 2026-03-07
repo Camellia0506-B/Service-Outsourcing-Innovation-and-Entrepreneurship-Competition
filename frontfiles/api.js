@@ -26,6 +26,9 @@ const API_CONFIG = {
     mockMode: false  // true=模拟数据；false=连接真实后端（Java:5000 / AI:5002）
 };
 
+// 5002 未启动时统一提示（岗位匹配、主动探索、岗位列表等）
+const AI_SERVICE_START_HINT = 'AI 服务 (5002) 未连接，请先启动：在项目根目录运行 start_ai_service.ps1 或 cd AI算法 && python app.py。';
+
 // 规范化 baseURL：若缺少 host（如 http://:5002）或非 http(s) 则补全为 localhost，避免 404
 function normalizeBaseURL(url, defaultOrigin) {
     const def = defaultOrigin || 'http://127.0.0.1:5002/api/v1';
@@ -194,7 +197,13 @@ class API {
             return { success: false, msg: result.msg, code: result.code };
         } catch (error) {
             clearTimeout(timeoutId);
-            console.error('API请求错误(AI):', { endpoint, url, timeoutMs, error });
+            // 有自动回退的接口（如 recommend-jobs）仅打一行 warn，避免控制台刷屏报错
+            const hasFallback = endpoint.startsWith('/matching/recommend-jobs');
+            if (hasFallback) {
+                console.warn('[AI]', endpoint, '不可用，将尝试备用服务或演示数据');
+            } else {
+                console.error('API请求错误(AI):', { endpoint, url, timeoutMs, error });
+            }
             const msg = error.name === 'AbortError'
                 ? '请求超时，请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常'
                 : (error.message && error.message.toLowerCase().includes('fetch'))
@@ -242,7 +251,8 @@ class API {
         }
 
         // 为避免网络/防火墙导致 fetch 长时间挂起，这里为所有请求加超时控制
-        const timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
+        let timeoutMs = options.timeout != null ? options.timeout : (API_CONFIG.timeout || 30000);
+        if (options.timeout == null && endpoint.startsWith('/career/report')) timeoutMs = 90000;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         try {
@@ -1592,10 +1602,93 @@ class API {
             strengths: ['岗位匹配分析详细准确', '行动计划具体可执行', '职业路径规划清晰']
         };
     }
+
+    // 模拟面试：创建会话（供 app.js 调用，避免 api.createMockInterview is not a function）
+    async createMockInterview(userId, targetPosition, interviewType, difficulty, duration) {
+        if (API_CONFIG.mockMode) {
+            const interviewId = 'int_' + Date.now();
+            const newInterview = {
+                interview_id: interviewId,
+                user_id: userId,
+                target_position: targetPosition,
+                interview_type: interviewType,
+                difficulty: difficulty,
+                duration: duration,
+                created_at: new Date().toISOString(),
+                status: 'in_progress',
+                current_question_index: 0,
+                messages: [
+                    { role: 'interviewer', content: '你好！欢迎参加本次模拟面试。我是AI面试官，我们将围绕' + targetPosition + '岗位进行' + duration + '分钟的面试。准备好了吗？', timestamp: Date.now() }
+                ]
+            };
+            if (!this.mockInterviews) this.mockInterviews = [];
+            this.mockInterviews.unshift(newInterview);
+            this.saveMockInterviews();
+            return { success: true, data: newInterview };
+        }
+        try {
+            const url = `${API_CONFIG.assessmentBaseURL}/mock-interview/session/create`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, target_job_title: targetPosition, interview_type: interviewType, difficulty: difficulty, duration_minutes: duration })
+            });
+            const result = await response.json();
+            if (result.code === 200) {
+                const interview = {
+                    interview_id: result.data.interview_id,
+                    user_id: userId,
+                    target_position: targetPosition,
+                    interview_type: interviewType,
+                    difficulty: difficulty,
+                    duration: duration,
+                    created_at: result.data.started_at,
+                    status: 'in_progress',
+                    current_question_index: 0,
+                    messages: [{ role: 'interviewer', content: result.data.opening_message, timestamp: Date.now() }],
+                    interviewer_persona: result.data.interviewer_persona,
+                    interview_plan: result.data.interview_plan
+                };
+                if (!this.mockInterviews) this.mockInterviews = [];
+                this.mockInterviews.unshift(interview);
+                this.saveMockInterviews();
+                return { success: true, data: interview };
+            }
+            return { success: false, msg: result.msg || '创建面试失败' };
+        } catch (e) {
+            console.error('[MockInterview] 创建面试异常:', e);
+            return { success: false, msg: '创建面试失败，请确认 AI 服务 (http://localhost:5002) 已启动。错误: ' + e.message, error: e };
+        }
+    }
+
+    // 模拟面试：获取历史记录（供 app.js 调用）
+    async getInterviewHistory(userId, page = 1, size = 10) {
+        if (API_CONFIG.mockMode) {
+            if (!this.mockInterviews) this.mockInterviews = [];
+            const userInterviews = this.mockInterviews.filter(i => i.user_id === userId);
+            return { success: true, data: { total: userInterviews.length, list: userInterviews.slice((page - 1) * size, page * size) } };
+        }
+        try {
+            const url = new URL(`${API_CONFIG.assessmentBaseURL}/mock-interview/history`);
+            url.searchParams.append('user_id', userId);
+            url.searchParams.append('page', page);
+            url.searchParams.append('size', size);
+            const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+            const result = await response.json();
+            if (result.code === 200) return { success: true, data: result.data };
+            return { success: false, msg: result.msg || '获取历史记录失败' };
+        } catch (e) {
+            console.error('[MockInterview] 获取历史记录异常:', e);
+            return { success: false, msg: '获取历史记录失败，请确认 AI 服务 (http://localhost:5002) 已启动。错误: ' + e.message, error: e };
+        }
+    }
 }
 
 // 创建API实例
 const api = new API();
+// 绑定方法，避免 app.js 以 createFn = api.createMockInterview; createFn() 调用时 this 为 undefined
+api.createMockInterview = api.createMockInterview.bind(api);
+api.getInterviewHistory = api.getInterviewHistory.bind(api);
 
 // ==================== 身份认证模块 ====================
 
@@ -1783,7 +1876,7 @@ async function getJobProfiles(page = 1, size = 20, keyword = '', industry = '', 
     } catch (err) {
         console.error('岗位列表接口请求错误:', err);
         const isRefused = (err && (err.message || '').toLowerCase().includes('fetch')) || (err && (err.message || '').includes('CONNECTION_REFUSED'));
-        const msg = isRefused ? '请先启动 AI 服务 (http://localhost:5002)' : (err && err.message ? err.message : '网络错误或服务未启动');
+        const msg = isRefused ? AI_SERVICE_START_HINT : (err && err.message ? err.message : '网络错误或服务未启动');
         return { success: false, msg, data: null };
     }
 }
@@ -2072,11 +2165,21 @@ async function searchJobsGrouped(keyword, page = 1, size = 5, filters = null, us
         filters: filters || {}
     };
     if (userId != null) body.user_id = userId;
-    const res = await api.requestToAI('/matching/search-jobs-grouped', {
-        method: 'POST',
-        body,
-        timeout: 180000
-    });
+    let res;
+    try {
+        res = await api.requestToAI('/matching/search-jobs-grouped', {
+            method: 'POST',
+            body,
+            timeout: 180000
+        });
+    } catch (e) {
+        const isConnection = (e && String(e.message || '').toLowerCase().includes('fetch'));
+        return {
+            success: false,
+            data: { groups: [], total: 0, page, size, pages: 0 },
+            msg: isConnection ? AI_SERVICE_START_HINT : (e && e.message) || '岗位归类搜索异常'
+        };
+    }
     if (res && res.success && res.data && Array.isArray(res.data.groups)) {
         return {
             success: true,
@@ -2089,16 +2192,12 @@ async function searchJobsGrouped(keyword, page = 1, size = 5, filters = null, us
             }
         };
     }
+    const msg = (res && res.msg) || '岗位归类搜索接口异常';
+    const useStartHint = msg.includes('无法连接') || msg.includes('请确认已启动') || (msg.toLowerCase && msg.toLowerCase().includes('fetch'));
     return {
         success: false,
-        data: {
-            groups: [],
-            total: 0,
-            page,
-            size,
-            pages: 0
-        },
-        msg: (res && res.msg) || '岗位归类搜索接口异常'
+        data: { groups: [], total: 0, page, size, pages: 0 },
+        msg: useStartHint ? AI_SERVICE_START_HINT : msg
     };
 }
 
@@ -2126,28 +2225,53 @@ async function updateAbilityProfile(userId, updates) {
 async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = {}) {
     const body = { user_id: userId, pageNum, pageSize, top_n: pageSize };
     if (filters && Object.keys(filters).length) body.filters = filters;
+    const connectionError = (r) => {
+        if (!r || !r.msg) return false;
+        const m = String(r.msg).toLowerCase();
+        return m.includes('无法连接') || m.includes('failed to fetch') || m.includes('connection refused') || m.includes('网络');
+    };
     try {
         let result = await api.requestToAI('/matching/recommend-jobs', {
             method: 'POST',
             body,
             timeout: 90000
         });
+        const aiConnectionFailed = !result.success && connectionError(result);
         // AI 服务不可用（未启动、连接重置、超时、404）时回退到 Java 后端
         if (!result.success) {
-            result = await api.postToJava('/matching/recommend-jobs', body);
+            const javaResult = await api.postToJava('/matching/recommend-jobs', body);
+            // 若先连 5002 失败，Java 又返回“能力画像”类错误，优先提示启动 AI 服务（根因多为 5002 未启动）
+            if (aiConnectionFailed && !javaResult.success && String(javaResult.msg || '').includes('能力画像')) {
+                return {
+                    success: false,
+                    msg: AI_SERVICE_START_HINT + '若已启动仍无推荐，请完善能力画像。',
+                    code: javaResult.code
+                };
+            }
+            result = javaResult;
         }
         return result;
     } catch (e) {
-        // 若 requestToAI 抛错（少见），也尝试 Java 回退
+        const throwIsConnection = (err) => (err && (String(err.message || '').includes('Failed to fetch') || String(err.message || '').includes('Load failed')));
         try {
-            return await api.postToJava('/matching/recommend-jobs', body);
+            const javaResult = await api.postToJava('/matching/recommend-jobs', body);
+            if (!javaResult.success && throwIsConnection(e) && String(javaResult.msg || '').includes('能力画像')) {
+                return {
+                    success: false,
+                    msg: AI_SERVICE_START_HINT + '若已启动仍无推荐，请完善能力画像。',
+                    code: javaResult.code
+                };
+            }
+            return javaResult;
         } catch (e2) {
             console.error('[getRecommendedJobs] 请求异常:', e2);
             return {
                 success: false,
                 msg: (e2 && e2.name === 'AbortError')
                     ? '请求超时，请确认后端服务已启动（Java 5000 或 AI 5002）'
-                    : (e2 && e2.message) || '推荐岗位服务暂不可用，请稍后重试'
+                    : (throwIsConnection(e) || throwIsConnection(e2))
+                        ? AI_SERVICE_START_HINT
+                        : ((e2 && e2.message) || '推荐岗位服务暂不可用，请稍后重试')
             };
         }
     }
@@ -2447,77 +2571,53 @@ async function restoreMockInterview(interview) {
 }
 
 // 10.2 发送面试回答（支持SSE流式响应）
-async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null) {
+async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, onNextQuestion = null) {
     if (API_CONFIG.mockMode) {
         const interview = api.mockInterviews.find(i => i.interview_id === interviewId);
         if (!interview) {
             return { success: false, msg: '面试会话不存在' };
         }
-        
-        const questions = [
+        // 按模块统计：每模块 2 轮用户回答后进入下一模块，与后端一致
+        const MODULE_QUESTIONS = [
             '请介绍一下你自己？',
             '你为什么想应聘这个岗位？',
             '请分享一个你参与过的项目经历？',
             '你遇到过的最大挑战是什么？你是如何解决的？',
             '你对未来3-5年的职业规划是什么？'
         ];
-        
-        const nextQuestionIndex = interview.current_question_index + 1;
-        interview.current_question_index = nextQuestionIndex;
-        
-        let nextQuestion = '';
-        let isComplete = false;
-        
-        if (nextQuestionIndex < questions.length) {
-            nextQuestion = questions[nextQuestionIndex];
-        } else {
-            nextQuestion = '面试到此结束，感谢你的参与！';
+        const EXCHANGES_PER_MODULE = 2;
+        const userCount = (interview.messages || []).filter(m => m.role === 'user').length;
+        const currentModuleIndex = Math.min(5, Math.floor(userCount / EXCHANGES_PER_MODULE));
+        interview.current_question_index = currentModuleIndex;
+        const isComplete = currentModuleIndex >= 5;
+        const isStartOfModule = (userCount > 0 && userCount % EXCHANGES_PER_MODULE === 0);
+        let nextQuestion = isComplete
+            ? '面试到此结束，感谢你的参与！'
+            : (isStartOfModule ? MODULE_QUESTIONS[currentModuleIndex] : '请再具体说说。');
+        if (isComplete) {
             interview.status = 'completed';
             interview.total_score = Math.floor(Math.random() * 30) + 70;
-            isComplete = true;
         }
-        
         const delay = Math.random() * 2000 + 1500;
         await new Promise(resolve => setTimeout(resolve, delay));
-        
         if (onChunk) {
             for (let i = 0; i < nextQuestion.length; i += 3) {
                 onChunk(nextQuestion.substring(i, i + 3));
                 await new Promise(r => setTimeout(r, 50));
             }
         }
-        
         if (!onChunk) {
             interview.messages.push({
                 role: 'interviewer',
                 content: nextQuestion,
-                timestamp: Date.now(),
-                score: !isComplete ? {
-                    overall: Math.floor(Math.random() * 30) + 70,
-                    dimensions: {
-                        expression: Math.floor(Math.random() * 30) + 70,
-                        logic: Math.floor(Math.random() * 30) + 70,
-                        content: Math.floor(Math.random() * 30) + 70
-                    },
-                    suggestions: ['表达可以更清晰', '逻辑结构可以更有条理', '可以多举一些具体例子']
-                } : null
+                timestamp: Date.now()
             });
-        } else {
-            const lastMessage = interview.messages[interview.messages.length - 1];
-            if (lastMessage && lastMessage.role === 'interviewer') {
-                lastMessage.score = !isComplete ? {
-                    overall: Math.floor(Math.random() * 30) + 70,
-                    dimensions: {
-                        expression: Math.floor(Math.random() * 30) + 70,
-                        logic: Math.floor(Math.random() * 30) + 70,
-                        content: Math.floor(Math.random() * 30) + 70
-                    },
-                    suggestions: ['表达可以更清晰', '逻辑结构可以更有条理', '可以多举一些具体例子']
-                } : null;
-            }
         }
-        
         api.saveMockInterviews();
+        if (onNextQuestion) {
+            const remaining = isComplete ? 0 : (5 - currentModuleIndex - 1);
+            onNextQuestion(currentModuleIndex, remaining);
+        }
         return { 
             success: true, 
             data: { 
@@ -2579,7 +2679,6 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null) 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let fullResponse = '';
-            let scoreData = null;
             let isComplete = false;
             
             while (true) {
@@ -2598,17 +2697,26 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null) 
                     console.log('[MockInterview] 处理SSE行:', line);
                     
                     if (line.startsWith('data:')) {
+                        const payload = line.substring(5).trim();
+                        if (payload === '[DONE]') continue;
                         try {
-                            const data = JSON.parse(line.substring(5).trim());
+                            const data = JSON.parse(payload);
                             console.log('[MockInterview] 解析的data:', data);
                             
                             if (data.chunk && onChunk) {
                                 fullResponse += data.chunk;
                                 onChunk(data.chunk);
-                            } else if (data.event === 'score_update') {
-                                scoreData = data;
-                            } else if (data.event === 'next_question' && data.remaining_questions === 0) {
-                                isComplete = true;
+                            }
+                            if (data.event === 'next_question') {
+                                if (data.remaining_questions === 0) isComplete = true;
+                                const totalQuestions = 5;
+                                const currentIndex = data.current_question_index != null
+                                    ? data.current_question_index
+                                    : (totalQuestions - 1 - (data.remaining_questions || 0));
+                                if (currentIndex >= 0 && currentIndex <= totalQuestions) {
+                                    interview.current_question_index = currentIndex;
+                                    if (onNextQuestion) onNextQuestion(currentIndex, data.remaining_questions);
+                                }
                             }
                         } catch (e) {
                             console.error('[MockInterview] 解析SSE数据失败:', e, '行内容:', line);
@@ -2617,24 +2725,13 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null) 
                 }
             }
             
+            // 仅保存 AI 回复文本，不保存评分（评分只在结束面试后展示）
             if (!onChunk) {
                 interview.messages.push({
                     role: 'interviewer',
                     content: fullResponse,
-                    timestamp: Date.now(),
-                    score: scoreData ? {
-                        overall: scoreData.overall_score,
-                        dimensions: scoreData.dimension_scores
-                    } : null
+                    timestamp: Date.now()
                 });
-            } else {
-                const lastMessage = interview.messages[interview.messages.length - 1];
-                if (lastMessage && lastMessage.role === 'interviewer') {
-                    lastMessage.score = scoreData ? {
-                        overall: scoreData.overall_score,
-                        dimensions: scoreData.dimension_scores
-                    } : null;
-                }
             }
             
             if (isComplete) {
@@ -2673,16 +2770,18 @@ async function getInterviewReport(interviewId, userId) {
         if (!interview) {
             return { success: false, msg: '面试会话不存在' };
         }
+        var roundCount = (interview.messages && interview.messages.filter(function(m){ return m.role === 'user'; }).length) || 0;
         const report = {
             interview_id: interviewId,
             target_job: interview.target_position,
             overall_score: interview.total_score || 80,
+            round_count: roundCount,
             dimension_scores: {
-                professional_ability: { score: Math.floor(Math.random() * 30) + 70, weight: 0.3, benchmark: 80 },
-                communication_skills: { score: Math.floor(Math.random() * 30) + 70, weight: 0.2, benchmark: 75 },
-                logical_thinking: { score: Math.floor(Math.random() * 30) + 70, weight: 0.15, benchmark: 75 },
-                stress_resistance: { score: Math.floor(Math.random() * 30) + 70, weight: 0.2, benchmark: 70 },
-                cultural_fit: { score: Math.floor(Math.random() * 30) + 70, weight: 0.15, benchmark: 75 }
+                expression: Math.floor(Math.random() * 30) + 70,
+                logic: Math.floor(Math.random() * 30) + 70,
+                content: Math.floor(Math.random() * 30) + 70,
+                stress_resistance: 75,
+                cultural_fit: 80
             },
             strengths: ['专业知识扎实', '沟通表达清晰', '逻辑思维能力强'],
             weaknesses: ['项目经验可以更丰富', '压力下的表现还有提升空间'],
@@ -2714,6 +2813,7 @@ async function getInterviewReport(interviewId, userId) {
                 interview_id: interviewId
             })
         });
+        console.log('[MockInterview] 获取报告 响应已返回 status:', response.status, response.statusText);
         
         // 如果会话不存在，尝试恢复会话
         if (response.status === 404 && interview) {
@@ -2733,7 +2833,19 @@ async function getInterviewReport(interviewId, userId) {
         }
         
         console.log('[MockInterview] 响应状态:', response.status, response.statusText);
-        const result = await response.json();
+        var result;
+        try {
+            var text = await response.text();
+            try {
+                result = text ? JSON.parse(text) : {};
+            } catch (parseErr) {
+                console.error('[MockInterview] 响应非JSON, text前200字:', text ? text.slice(0, 200) : '');
+                return { success: false, msg: '服务返回格式错误，请检查后端是否正常。status=' + response.status };
+            }
+        } catch (e) {
+            console.error('[MockInterview] 读取响应体异常:', e);
+            return { success: false, msg: '读取响应失败: ' + (e && e.message ? e.message : '') };
+        }
         console.log('[MockInterview] 响应数据:', result);
         
         if (result.code === 200) {
@@ -2756,8 +2868,8 @@ async function getInterviewReport(interviewId, userId) {
     }
 }
 
-// 10.4 获取历史记录
-async function getInterviewHistory(userId, page = 1, size = 10) {
+// 10.4 获取历史记录（默认每页 50 条，避免只显示少量记录）
+async function getInterviewHistory(userId, page = 1, size = 50) {
     if (API_CONFIG.mockMode) {
         const userInterviews = api.mockInterviews.filter(i => i.user_id === userId);
         return { 
