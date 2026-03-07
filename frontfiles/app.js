@@ -602,41 +602,21 @@ class CareerPlanningApp {
             if (form) form.classList.toggle('hidden');
         });
         document.getElementById('confirmGenerateBtn')?.addEventListener('click', () => this.startGenerateCareerReport());
+        document.getElementById('cancelGenerateBtn')?.addEventListener('click', () => {
+            const form = document.getElementById('reportPreferencesForm');
+            if (form) form.classList.add('hidden');
+        });
         document.getElementById('viewHistoryBtn')?.addEventListener('click', () => this.viewCareerReportHistory());
+        
+        // 加载职业规划报告历史信息
+        this.loadReportHistoryInfo();
         document.getElementById('closeHistoryBtn')?.addEventListener('click', () => {
             document.getElementById('reportHistory')?.classList.add('hidden');
         });
         document.getElementById('closeAssessmentHistory')?.addEventListener('click', () => {
             document.getElementById('assessmentReportHistory')?.classList.add('hidden');
         });
-        document.getElementById('reportBackBtn')?.addEventListener('click', async () => {
-            const userId = getCurrentUserId();
-            if (!userId) {
-                this.showReportGenerateArea();
-                return;
-            }
-            try {
-                // 检查是否有历史报告
-                const result = await getCareerReportHistory(userId);
-                const reports = result.success && result.data ? (result.data.list || []) : [];
-                
-                // 过滤只显示职业规划报告
-                const careerReports = reports.filter(report => {
-                    return report.primary_career || report.completeness !== undefined || report.status === 'completed';
-                });
-
-                if (careerReports.length > 0) {
-                    // 有历史报告，显示带勾的欢迎界面
-                    await this.showReportWelcomeWithHistory(careerReports);
-                } else {
-                    // 无历史报告，显示生成报告入口
-                    this.showReportGenerateArea();
-                }
-            } catch (e) {
-                // 加载失败，显示生成报告入口
-                this.showReportGenerateArea();
-            }
-        });
+        document.getElementById('reportBackBtn')?.addEventListener('click', () => this.showReportGenerateArea());
         document.getElementById('reportCheckCompletenessBtn')?.addEventListener('click', () => this.checkReportCompleteness());
         document.getElementById('reportEditBtn')?.addEventListener('click', () => this.openReportEditModal());
         document.getElementById('reportPolishBtn')?.addEventListener('click', () => this.polishCareerReport());
@@ -849,23 +829,30 @@ class CareerPlanningApp {
 
     // 显示页面
     showPage(pageId) {
+        console.log('[showPage] 显示页面:', pageId);
         document.querySelectorAll('.page').forEach(page => {
             page.classList.add('hidden');
         });
-        document.getElementById(pageId).classList.remove('hidden');
-        if (pageId === 'loginPage' || pageId === 'registerPage') {
-            document.body.classList.add('on-login-page');
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.remove('hidden');
+            console.log('[showPage] 页面已显示:', pageId);
         } else {
-            document.body.classList.remove('on-login-page');
+            console.error('[showPage] 页面元素不存在:', pageId);
         }
     }
 
     // 显示主应用（登录后）
     showMainApp() {
+        console.log('[showMainApp] 开始显示主应用');
         document.getElementById('navbar').classList.remove('hidden');
+        console.log('[showMainApp] 导航栏已显示');
         this.updateUserInfo();
+        console.log('[showMainApp] 用户信息已更新');
         this.navigateTo('dashboard');
+        console.log('[showMainApp] 已导航到dashboard');
         this.loadDashboardData();
+        console.log('[showMainApp] 数据加载完成');
     }
 
     // 更新用户信息显示
@@ -881,6 +868,7 @@ class CareerPlanningApp {
 
     // 导航到指定页面
     navigateTo(page) {
+        console.log('[navigateTo] 导航到页面:', page);
         // 更新导航高亮
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
@@ -890,7 +878,9 @@ class CareerPlanningApp {
         });
 
         // 显示对应页面
-        this.showPage(page + 'Page');
+        const pageId = page + 'Page';
+        console.log('[navigateTo] 显示页面元素:', pageId);
+        this.showPage(pageId);
         this.currentPage = page;
 
         // 加载页面数据
@@ -922,272 +912,12 @@ class CareerPlanningApp {
                 await this.loadTrackingData();
                 break;
             case 'report':
-                await this.loadReportPageData();
+                this.showReportGenerateArea();
+                break;
+            case 'mockInterview':
+                initMockInterviewModule();
                 break;
         }
-    }
-
-    // 加载职业规划报告页面数据
-    async loadReportPageData() {
-        const userId = getCurrentUserId();
-        if (!userId) {
-            this.showReportGenerateArea();
-            return;
-        }
-
-        try {
-            // 检查是否有历史报告
-            const result = await getCareerReportHistory(userId);
-            const reports = result.success && result.data ? (result.data.list || []) : [];
-            
-            // 过滤只显示职业规划报告
-            const careerReports = reports.filter(report => {
-                return report.primary_career || report.completeness !== undefined || report.status === 'completed';
-            });
-
-            if (careerReports.length > 0) {
-                // 有历史报告，显示欢迎界面
-                await this.showReportWelcomeWithHistory(careerReports);
-            } else {
-                // 无历史报告，显示生成报告入口
-                this.showReportGenerateArea();
-            }
-        } catch (e) {
-            // 加载失败，显示生成报告入口
-            this.showReportGenerateArea();
-        }
-    }
-
-    // 有历史报告时展示的欢迎界面（参考职业测评设计）
-    async showReportWelcomeWithHistory(reports) {
-        const container = document.getElementById('reportGenerateArea');
-        if (!container) return;
-
-        // 找到最新的报告
-        const latestReport = reports.sort((a, b) => {
-            const dateA = new Date(a.created_at || 0);
-            const dateB = new Date(b.created_at || 0);
-            return dateB - dateA;
-        })[0];
-
-        let latestDate = '—';
-        let primaryCareer = '—';
-        let completeness = '—';
-        
-        if (latestReport) {
-            latestDate = this.formatDateTime(latestReport.created_at).replace(/\s*\d{2}:\d{2}$/, '').trim() || '—';
-            primaryCareer = latestReport.primary_career || '职业规划报告';
-            completeness = latestReport.completeness || 0;
-        }
-
-        const historyCount = reports.length;
-
-        container.innerHTML = `
-            <div class="assessment-welcome-card assessment-welcome-card-new">
-                <div class="assessment-welcome-illus-wrap">
-                    <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">✓</span></span>
-                </div>
-                <p class="assessment-welcome-title">您已生成职业规划报告，可查看最新报告或再次生成。</p>
-                <p class="assessment-welcome-desc">系统已根据您的测评结果和能力画像生成个性化职业规划报告，您可以查看最新报告，或再次生成以获取更新的分析结果。</p>
-                <div class="assessment-welcome-meta">
-                    <div class="assessment-meta-item"><span class="assessment-meta-label">最近生成</span><span class="assessment-meta-val">${latestDate}</span></div>
-                    <div class="assessment-meta-item"><span class="assessment-meta-label">目标职业</span><span class="assessment-meta-val assessment-meta-accent">${primaryCareer}</span></div>
-                    <div class="assessment-meta-item"><span class="assessment-meta-label">报告完整度</span><span class="assessment-meta-val assessment-meta-green">${completeness}%</span></div>
-                    <div class="assessment-meta-item"><span class="assessment-meta-label">历史报告</span><span class="assessment-meta-val">${historyCount} 份</span></div>
-                </div>
-                <div class="assessment-welcome-actions">
-                    <button type="button" id="btnViewLatestReport" class="btn-assessment-primary">查看最新报告</button>
-                    <button type="button" id="btnGenerateNewReport" class="btn-assessment-secondary">再次生成报告</button>
-                    <button type="button" id="btnViewReportHistory" class="btn-assessment-secondary">查看历史报告</button>
-                </div>
-            </div>
-
-            <!-- 生成偏好表单（展开显示） -->
-            <div id="reportPreferencesForm" class="report-preferences-form hidden">
-                <h4>生成偏好（可选）</h4>
-                <div class="preferences-grid">
-                    <div class="form-group">
-                        <label>职业目标类型</label>
-                        <select id="prefCareerGoal">
-                            <option value="">不限制</option>
-                            <option value="技术专家">技术专家</option>
-                            <option value="管理岗位">管理岗位</option>
-                            <option value="创业">创业</option>
-                            <option value="专业深耕">专业深耕</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>期望工作地点</label>
-                        <input type="text" id="prefWorkLocation" placeholder="如：北京、上海、杭州">
-                    </div>
-                    <div class="form-group">
-                        <label>薪资预期</label>
-                        <select id="prefSalary">
-                            <option value="">不限制</option>
-                            <option value="10k-15k">10k-15k</option>
-                            <option value="15k-25k">15k-25k</option>
-                            <option value="25k+">25k+</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>工作生活平衡</label>
-                        <select id="prefWorkLifeBalance">
-                            <option value="">不限制</option>
-                            <option value="高">高（重视生活）</option>
-                            <option value="中">中（平衡）</option>
-                            <option value="低">低（事业优先）</option>
-                        </select>
-                    </div>
-                    <div class="form-group form-group-full">
-                        <label>目标岗位（可选，可多选）</label>
-                        <div id="prefTargetJobsWrap" class="pref-target-jobs">
-                            <select id="prefTargetJobs" multiple size="4">
-                                <option value="job_001">算法工程师</option>
-                                <option value="job_002">前端开发工程师</option>
-                                <option value="job_003">后端开发工程师</option>
-                                <option value="job_004">数据分析师</option>
-                                <option value="job_005">产品经理</option>
-                                <option value="job_006">新能源电池工程师</option>
-                                <option value="job_007">UI/UX设计师</option>
-                                <option value="job_010">AI应用工程师</option>
-                            </select>
-                            <span class="form-hint">按住 Ctrl 可多选</span>
-                        </div>
-                    </div>
-                </div>
-                <button id="confirmGenerateBtn" class="btn-assessment-primary">确认生成</button>
-            </div>
-        `;
-
-        // 绑定按钮事件
-        document.getElementById('btnViewLatestReport')?.addEventListener('click', () => {
-            if (latestReport) {
-                this.loadReportContent(latestReport.report_id);
-            }
-        });
-
-        document.getElementById('btnGenerateNewReport')?.addEventListener('click', () => {
-            // 直接显示生成偏好模块
-            const form = document.getElementById('reportPreferencesForm');
-            if (form) {
-                form.classList.remove('hidden');
-            }
-        });
-
-        document.getElementById('btnViewReportHistory')?.addEventListener('click', () => {
-            this.viewCareerReportHistory();
-        });
-        
-        document.getElementById('confirmGenerateBtn')?.addEventListener('click', () => {
-            this.startGenerateCareerReport();
-        });
-        
-        // 显示reportGenerateArea，隐藏其他区域
-        document.getElementById('reportGenerateArea')?.classList.remove('hidden');
-        document.getElementById('reportGeneratingArea')?.classList.add('hidden');
-        document.getElementById('reportContentArea')?.classList.add('hidden');
-    }
-
-    // 显示生成新报告的表单
-    showReportGenerateForm() {
-        const container = document.getElementById('reportGenerateArea');
-        if (!container) return;
-
-        container.innerHTML = `
-            <div class="assessment-welcome-card assessment-welcome-card-new">
-                <div class="assessment-welcome-illus-wrap">
-                    <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">📋</span></span>
-                </div>
-                <p class="assessment-welcome-title">生成职业规划报告</p>
-                <p class="assessment-welcome-desc">基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
-                <div class="assessment-welcome-actions">
-                    <button id="generateReportBtn" class="btn-assessment-primary">生成新报告</button>
-                    <button id="viewHistoryBtn" class="btn-assessment-secondary">查看历史报告</button>
-                </div>
-            </div>
-
-            <!-- 生成偏好表单（展开显示） -->
-            <div id="reportPreferencesForm" class="report-preferences-form hidden">
-                <h4>生成偏好（可选）</h4>
-                <div class="preferences-grid">
-                    <div class="form-group">
-                        <label>职业目标类型</label>
-                        <select id="prefCareerGoal">
-                            <option value="">不限制</option>
-                            <option value="技术专家">技术专家</option>
-                            <option value="管理岗位">管理岗位</option>
-                            <option value="创业">创业</option>
-                            <option value="专业深耕">专业深耕</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>期望工作地点</label>
-                        <input type="text" id="prefWorkLocation" placeholder="如：北京、上海、杭州">
-                    </div>
-                    <div class="form-group">
-                        <label>薪资预期</label>
-                        <select id="prefSalary">
-                            <option value="">不限制</option>
-                            <option value="10k-15k">10k-15k</option>
-                            <option value="15k-25k">15k-25k</option>
-                            <option value="25k+">25k+</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>工作生活平衡</label>
-                        <select id="prefWorkLifeBalance">
-                            <option value="">不限制</option>
-                            <option value="高">高（重视生活）</option>
-                            <option value="中">中（平衡）</option>
-                            <option value="低">低（事业优先）</option>
-                        </select>
-                    </div>
-                    <div class="form-group form-group-full">
-                        <label>目标岗位（可选，可多选）</label>
-                        <div id="prefTargetJobsWrap" class="pref-target-jobs">
-                            <select id="prefTargetJobs" multiple size="4">
-                                <option value="job_001">算法工程师</option>
-                                <option value="job_002">前端开发工程师</option>
-                                <option value="job_003">后端开发工程师</option>
-                                <option value="job_004">数据分析师</option>
-                                <option value="job_005">产品经理</option>
-                                <option value="job_006">新能源电池工程师</option>
-                                <option value="job_007">UI/UX设计师</option>
-                                <option value="job_010">AI应用工程师</option>
-                            </select>
-                            <span class="form-hint">按住 Ctrl 可多选</span>
-                        </div>
-                    </div>
-                </div>
-                <button id="confirmGenerateBtn" class="btn-assessment-primary">确认生成</button>
-            </div>
-        `;
-
-        // 重新绑定按钮事件
-        this.bindReportGenerateEvents();
-        
-        // 显示reportGenerateArea，隐藏其他区域
-        document.getElementById('reportGenerateArea')?.classList.remove('hidden');
-        document.getElementById('reportGeneratingArea')?.classList.add('hidden');
-        document.getElementById('reportContentArea')?.classList.add('hidden');
-    }
-
-    // 绑定报告生成相关事件
-    bindReportGenerateEvents() {
-        document.getElementById('generateReportBtn')?.addEventListener('click', () => {
-            const form = document.getElementById('reportPreferencesForm');
-            if (form) {
-                form.classList.toggle('hidden');
-            }
-        });
-
-        document.getElementById('viewHistoryBtn')?.addEventListener('click', () => {
-            this.viewCareerReportHistory();
-        });
-
-        document.getElementById('confirmGenerateBtn')?.addEventListener('click', () => {
-            this.startGenerateCareerReport();
-        });
     }
 
     // 处理登录
@@ -1247,11 +977,14 @@ class CareerPlanningApp {
         try {
             const result = await login(username, password);
             if (result.success) {
+                console.log('[Login] 登录成功，准备保存用户信息');
                 _storage.setItem('token', result.data.token);
                 saveUserInfo(result.data);
                 this.currentUser = result.data;
+                console.log('[Login] 用户信息已保存，准备显示主应用');
                 this.showToast('登录成功', 'success');
                 this.showMainApp();
+                console.log('[Login] 主应用显示完成');
             } else {
                 this.showToast(result.msg || '登录失败', 'error');
             }
@@ -4418,14 +4151,23 @@ class CareerPlanningApp {
                                     <div style="background-color: #f5f5f5; padding: 14px; border-radius: 8px; width: 100%; max-width: 280px;">
                                         <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: center;">优势/待提升</h4>
                                         <div style="display: flex; flex-direction: column; gap: 6px;">
-                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                                                <span style="color: #52c41a;">✅</span>
-                                                <span style="color: var(--text-secondary);">项目经验丰富</span>
-                                            </div>
-                                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                                                <span style="color: #faad14;">⚠️</span>
-                                                <span style="color: var(--text-secondary);">缺少含金量证书</span>
-                                            </div>
+                                            ${(overall.strengths || []).slice(0, 2).map(strength => `
+                                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                                    <span style="color: #52c41a;">✅</span>
+                                                    <span style="color: var(--text-secondary);">${strength || ''}</span>
+                                                </div>
+                                            `).join('')}
+                                            ${(overall.weaknesses || []).slice(0, 2).map(weakness => `
+                                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                                    <span style="color: #faad14;">⚠️</span>
+                                                    <span style="color: var(--text-secondary);">${weakness || ''}</span>
+                                                </div>
+                                            `).join('')}
+                                            ${(!overall.strengths || overall.strengths.length === 0) && (!overall.weaknesses || overall.weaknesses.length === 0) ? `
+                                                <div style="text-align: center; font-size: 13px; color: var(--text-secondary);">
+                                                    暂无分析数据
+                                                </div>
+                                            ` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -4438,7 +4180,7 @@ class CareerPlanningApp {
                         <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; height: 100%;">
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
                                 <h3 style="margin: 0;">📊 能力六维雷达图</h3>
-                                <div style="font-size: 14px; color: var(--text-secondary);">vs 目标岗位要求</div>
+                                <div style="font-size: 14px; color: var(--text-secondary);">vs ${data.target_job_name || '目标岗位'}要求</div>
                             </div>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%;">
@@ -4459,16 +4201,17 @@ class CareerPlanningApp {
                             </div>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                                ${(ps.programming_languages && ps.programming_languages.length > 0) ? this.renderSkillDetail(ps.programming_languages, '编程语言', ps.overall_score || 60) : ''}
-                                ${(ps.frameworks_tools && ps.frameworks_tools.length > 0) ? this.renderSkillDetail(ps.frameworks_tools, '框架工具', ps.overall_score || 60) : ''}
-                                ${(ps.domain_knowledge && ps.domain_knowledge.length > 0) ? this.renderSkillDetail(ps.domain_knowledge, '领域知识', ps.overall_score || 60) : ''}
-                                ${(!ps.programming_languages || ps.programming_languages.length === 0) && (!ps.frameworks_tools || ps.frameworks_tools.length === 0) && (!ps.domain_knowledge || ps.domain_knowledge.length === 0) ? `
-                                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background-color: #f6ffed; border-radius: 8px; border: 1px solid #b7eb8f;">
-                                        <div style="font-size: 32px; margin-bottom: 16px;">💪</div>
-                                        <div style="font-size: 16px; margin-bottom: 8px; color: var(--text-primary);">暂无技能信息</div>
-                                        <div style="font-size: 14px; color: var(--text-secondary);">建议在个人档案中填写您的专业技能，这将帮助我们为您提供更精准的岗位匹配和职业规划建议。</div>
+                                ${((ps.programming_languages && ps.programming_languages.length > 0) || (ps.frameworks_tools && ps.frameworks_tools.length > 0) || (ps.domain_knowledge && ps.domain_knowledge.length > 0)) ? `
+                                    ${ps.programming_languages && ps.programming_languages.length > 0 ? this.renderSkillDetail(ps.programming_languages, '编程语言', ps.overall_score || 60) : ''}
+                                    ${ps.frameworks_tools && ps.frameworks_tools.length > 0 ? this.renderSkillDetail(ps.frameworks_tools, '框架工具', ps.overall_score || 60) : ''}
+                                    ${ps.domain_knowledge && ps.domain_knowledge.length > 0 ? this.renderSkillDetail(ps.domain_knowledge, '领域知识', ps.overall_score || 60) : ''}
+                                ` : `
+                                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background-color: #f5f5f5; border-radius: 8px;">
+                                        <div style="font-size: 32px; margin-bottom: 12px;">💻</div>
+                                        <div style="font-size: 16px; color: var(--text-secondary); margin-bottom: 16px;">暂未填写专业技能</div>
+                                        <button type="button" class="btn-primary" onclick="document.querySelector('[data-page=profile]').click()" style="padding: 8px 20px; border: none; border-radius: 4px; background-color: var(--primary-color); color: white; font-size: 14px; cursor: pointer;">去填写技能</button>
                                     </div>
-                                ` : ''}
+                                `}
                             </div>
                         </div>
                     </div>
@@ -4485,7 +4228,7 @@ class CareerPlanningApp {
                                 <div style="margin-bottom: 16px;">
                                     <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">目标岗位能力要求</h4>
                                     <div style="padding: 16px; background-color: #e6f7ff; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 16px;">
-                                        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px;">${bi.target_job || '算法工程师（中级）'}</div>
+                                        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px;">算法工程师（中级）</div>
                                         <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
                                             <li>机器学习/深度学习算法设计与实现</li>
                                             <li>Python/C++编程能力，熟悉数据结构与算法</li>
@@ -4629,14 +4372,14 @@ class CareerPlanningApp {
                             <h3 style="margin: 0 0 12px 0;">🎯 与目标岗位差距分析</h3>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%;">
-                                <div style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">目标岗位: ${bi.target_job || '算法工程师（中级）'}</div>
+                                <div style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">目标岗位: ${data.target_job_name || '算法工程师（中级）'}</div>
                                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-                                    ${this.renderGapAnalysis('专业技能', ps.overall_score || 62, 80)}
-                                    ${this.renderGapAnalysis('项目经验', exp.overall_score || 90, 75)}
-                                    ${this.renderGapAnalysis('创新能力', innovation.score || 0, 60)}
-                                    ${this.renderGapAnalysis('学习能力', learning.score || 77, 70)}
-                                    ${this.renderGapAnalysis('沟通能力', comm.overall_score || 72, 75)}
-                                    ${this.renderGapAnalysis('抗压能力', pressure.assessment_score || 72, 65)}
+                                    ${this.renderGapAnalysis('专业技能', ps.overall_score || 62, (data.target_job_requirements || {}).professional_skills || 80)}
+                                    ${this.renderGapAnalysis('项目经验', exp.overall_score || 90, (data.target_job_requirements || {}).practical_experience || 75)}
+                                    ${this.renderGapAnalysis('创新能力', innovation.score || 0, (data.target_job_requirements || {}).innovation_ability || 60)}
+                                    ${this.renderGapAnalysis('学习能力', learning.score || 77, (data.target_job_requirements || {}).learning_ability || 70)}
+                                    ${this.renderGapAnalysis('沟通能力', comm.overall_score || 72, (data.target_job_requirements || {}).communication_ability || 75)}
+                                    ${this.renderGapAnalysis('抗压能力', pressure.assessment_score || 72, (data.target_job_requirements || {}).pressure_resistance || 65)}
                                 </div>
                             </div>
                         </div>
@@ -4693,7 +4436,7 @@ class CareerPlanningApp {
                                 ${name} (${level})
                             </span>
                         `;
-                    }).join('') : '<span style="font-size: 12px; color: var(--text-secondary);">待补充</span>'}
+                    }).join('') : '<span style="font-size: 12px; color: var(--text-secondary);">暂无数据</span>'}
                 </div>
             </div>
         `;
@@ -9511,33 +9254,6 @@ class CareerPlanningApp {
 
     // 显示报告生成入口区
     showReportGenerateArea() {
-        const container = document.getElementById('reportGenerateArea');
-        if (container) {
-            // 显示新的页面设计
-            container.innerHTML = `
-                <div class="assessment-welcome-card assessment-welcome-card-new">
-                    <div class="assessment-welcome-illus-wrap">
-                        <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">📋</span></span>
-                    </div>
-                    <p class="assessment-welcome-title">生成职业规划报告</p>
-                    <p class="assessment-welcome-desc">基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
-                    <div class="assessment-welcome-actions">
-                        <button id="generateReportBtn" class="btn-assessment-primary">生成新报告</button>
-                        <button id="viewHistoryBtn" class="btn-assessment-secondary">查看历史报告</button>
-                    </div>
-                </div>
-            `;
-            
-            // 绑定按钮事件
-            document.getElementById('generateReportBtn')?.addEventListener('click', () => {
-                this.showReportGenerateForm();
-            });
-            
-            document.getElementById('viewHistoryBtn')?.addEventListener('click', () => {
-                this.viewCareerReportHistory();
-            });
-        }
-        
         document.getElementById('reportGenerateArea')?.classList.remove('hidden');
         document.getElementById('reportGeneratingArea')?.classList.add('hidden');
         document.getElementById('reportContentArea')?.classList.add('hidden');
@@ -9625,6 +9341,19 @@ class CareerPlanningApp {
                     this.showReportContentArea();
                     this.renderCareerReportContent(result.data);
                     this.showToast('报告生成完成！', 'success');
+                    // 添加到历史记录
+                    this.appendCareerReportHistory(reportId, result.data.created_at || new Date().toISOString(), {
+                        primary_career: result.data.primary_career || '职业规划报告',
+                        completeness: result.data.completeness || 90,
+                        status: 'completed'
+                    });
+                    // 重新加载历史报告信息，确保最新生成的报告显示在历史记录中
+                    this.loadReportHistoryInfo();
+                    // 如果历史报告列表已经打开，重新加载历史报告列表
+                    const historyDiv = document.getElementById('reportHistory');
+                    if (historyDiv && !historyDiv.classList.contains('hidden')) {
+                        this.viewCareerReportHistory();
+                    }
                 } else {
                     attempts++;
                     setTimeout(poll, 3000);
@@ -9731,9 +9460,9 @@ class CareerPlanningApp {
         // 报告头部
         html += `<div class="career-report-header">
             <div class="career-report-tag">CAREER PLANNING REPORT</div>
-            <h3 style="font-size: 24px; font-weight: 700; margin: 10px 0;">职业规划报告</h3>
-            <p class="career-report-sub" style="font-size: 14px; color: #666; margin: 0 0 20px 0;">基于能力画像与人岗匹配的个性化发展规划</p>
-            <div class="career-report-meta" style="font-size: 12px; color: #999;">
+            <h3>职业规划报告</h3>
+            <p class="career-report-sub">基于能力画像与人岗匹配的个性化发展规划</p>
+            <div class="career-report-meta">
                 <span>生成时间 ${genTime}</span>
                 <span>完整度 ${meta.completeness ?? '—'}%</span>
                 <span>置信度 ${meta.confidence_score ? (meta.confidence_score * 100).toFixed(0) + '%' : '—'}</span>
@@ -9750,13 +9479,13 @@ class CareerPlanningApp {
             html += `<section id="module-summary" class="career-module career-module-summary ${openClass}" data-module="summary">
                 <div class="career-module-header" data-toggle="module-summary">
                     <span class="module-icon">✨</span>
-                    <span class="module-title" style="font-size: 16px; font-weight: 600;">核心摘要</span>
+                    <span class="module-title">核心摘要</span>
                     <span class="module-arrow">▼</span>
                 </div>
                 <div class="career-module-body">
                     ${nextSteps.length ? `
                     <div class="next-steps-block next-steps-highlight">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;"><span class="step-icon">⚡</span>下一步行动</h5>
+                        <h5><span class="step-icon">⚡</span>下一步行动</h5>
                         <ul class="next-steps-list">
                             ${nextSteps.map(n => {
                                 const t = san(n);
@@ -9768,7 +9497,7 @@ class CareerPlanningApp {
                             }).join('')}
                         </ul>
                     </div>` : ''}
-                    ${keyTakeaways.length ? `<div class="key-takeaways"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">核心要点</h5><ul>${keyTakeaways.map(k => `<li>${san(k)}</li>`).join('')}</ul></div>` : ''}
+                    ${keyTakeaways.length ? `<div class="key-takeaways"><h5>核心要点</h5><ul>${keyTakeaways.map(k => `<li>${san(k)}</li>`).join('')}</ul></div>` : ''}
                     ${motivationalMsg ? `<div class="motivational-msg">${san(motivationalMsg)}</div>` : ''}
                 </div>
             </section>`;
@@ -9782,12 +9511,12 @@ class CareerPlanningApp {
             html += `<section id="module-explore" class="career-module career-module-explore" data-module="explore">
                 <div class="career-module-header" data-toggle="module-explore">
                     <span class="module-icon">🎯</span>
-                    <span class="module-title" style="font-size: 16px; font-weight: 600;">职业探索</span>
+                    <span class="module-title">职业探索</span>
                     <span class="module-arrow">▶</span>
                 </div>
                 <div class="career-module-body career-module-collapsed">
                     <div class="career-self-assessment">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">自我认知总结</h5>
+                        <h5>自我认知总结</h5>
                         <div class="self-grid">
                             <div class="self-card"><h6>优势</h6><ul>${(selfA.strengths || []).map(s => `<li>${san(s)}</li>`).join('')}</ul></div>
                             <div class="self-card"><h6>兴趣</h6><ul>${(selfA.interests || []).map(i => `<li>${san(i)}</li>`).join('')}</ul></div>
@@ -9795,7 +9524,7 @@ class CareerPlanningApp {
                         </div>
                     </div>
                     <div class="career-recommended">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">推荐职业方向</h5>
+                        <h5>推荐职业方向</h5>
                         ${recs.map(rc => {
                             const ma = rc.match_analysis || {};
                             const mo = rc.market_outlook || {};
@@ -9819,7 +9548,7 @@ class CareerPlanningApp {
                         }).join('')}
                     </div>
                     ${advice.primary_recommendation ? `<div class="career-advice">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">职业选择建议</h5>
+                        <h5>职业选择建议</h5>
                         <p><strong>首选：</strong>${san(advice.primary_recommendation)}</p>
                         <ul>${(advice.reasons || []).map(r => `<li>${san(r)}</li>`).join('')}</ul>
                         ${advice.alternative_option ? `<p><strong>备选：</strong>${san(advice.alternative_option)}</p>` : ''}
@@ -9833,12 +9562,12 @@ class CareerPlanningApp {
         html += `<section id="module-job-requirements" class="career-module career-module-job-requirements" data-module="job-requirements">
             <div class="career-module-header" data-toggle="module-job-requirements">
                 <span class="module-icon">📋</span>
-                <span class="module-title" style="font-size: 16px; font-weight: 600;">岗位能力要求拆解</span>
+                <span class="module-title">岗位能力要求拆解</span>
                 <span class="module-arrow">▶</span>
             </div>
             <div class="career-module-body career-module-collapsed">
                 <div class="job-requirements-section">
-                    <h5 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">核心岗位能力要求</h5>
+                    <h5>核心岗位能力要求</h5>
                     <p>以下是当前就业市场对于应届生招聘岗位的主要能力要求拆解：</p>
                     
                     <!-- 算法工程师 -->
@@ -9993,26 +9722,26 @@ class CareerPlanningApp {
             html += `<section id="module-goal" class="career-module career-module-goal" data-module="goal">
                 <div class="career-module-header" data-toggle="module-goal">
                     <span class="module-icon">📈</span>
-                    <span class="module-title" style="font-size: 16px; font-weight: 600;">目标规划</span>
+                    <span class="module-title">目标规划</span>
                     <span class="module-arrow">▶</span>
                 </div>
                 <div class="career-module-body career-module-collapsed">
                     <div class="career-goals">
-                        <div class="goal-card short"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">短期目标（1年内）</h5><p class="goal-timeline">${st.timeline || ''}</p><p class="goal-primary">${san(st.primary_goal || '')}</p>
+                        <div class="goal-card short"><h5>短期目标（1年内）</h5><p class="goal-timeline">${st.timeline || ''}</p><p class="goal-primary">${san(st.primary_goal || '')}</p>
                             <ul>${(st.specific_targets || []).map(t => `<li><span class="goal-deadline">${t.deadline || ''}</span> ${san(t.target)} — ${san(t.metrics)}</li>`).join('')}</ul>
                         </div>
-                        <div class="goal-card mid"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">中期目标（3-5年）</h5><p class="goal-timeline">${mt.timeline || ''}</p><p class="goal-primary">${san(mt.primary_goal || '')}</p>
+                        <div class="goal-card mid"><h5>中期目标（3-5年）</h5><p class="goal-timeline">${mt.timeline || ''}</p><p class="goal-primary">${san(mt.primary_goal || '')}</p>
                             <ul>${(mt.specific_targets || []).map(t => `<li><span class="goal-deadline">${t.deadline || ''}</span> ${san(t.target)}</li>`).join('')}</ul>
                         </div>
                     </div>
-                    ${rm.stages?.length ? `<div class="career-roadmap"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">职业发展路径：${san(rm.path_type || '')}</h5>
+                    ${rm.stages?.length ? `<div class="career-roadmap"><h5>职业发展路径：${san(rm.path_type || '')}</h5>
                         <div class="roadmap-stages">${(rm.stages || []).map((s, i) => `
                             <div class="roadmap-stage"><span class="stage-num">${i + 1}</span><div><strong>${s.stage}</strong>（${s.period || ''}）<ul>${(s.key_responsibilities || []).map(r => `<li>${san(r)}</li>`).join('')}</ul></div></div>
                         `).join('')}</div>
-                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">晋升备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
+                        ${(rm.alternative_paths || []).length ? `<div class="alt-paths"><h6>晋升备选</h6><ul>${rm.alternative_paths.map(ap => `<li><strong>${ap.path}</strong>（${ap.timing || ''}）— ${san(ap.reason)}</li>`).join('')}</ul></div>` : ''}
                     </div>` : ''}
-                    ${trends.key_trends?.length ? `<div class="industry-trends"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">行业趋势</h5><p>${san(trends.current_status || '')}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${san(t.trend)}</strong>：${san(t.impact)}；机会：${san(t.opportunity)}</li>`).join('')}</ul><p class="outlook">${san(trends['5_year_outlook'] || '')}</p></div>` : ''}
-                    ${s2.job_data_analysis ? `<div class="job-data-analysis"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">企业岗位数据关联性分析</h5><p>${san(s2.job_data_analysis.overview || '')}</p><ul>${(s2.job_data_analysis.associations || []).map(a => `<li><strong>${san(a.job_title)}</strong>：${san(a.relevance)}；能力迁移：${san(a.skill_transferability || '')}</li>`).join('')}</ul></div>` : ''}
+                    ${trends.key_trends?.length ? `<div class="industry-trends"><h5>行业趋势</h5><p>${san(trends.current_status || '')}</p><ul>${(trends.key_trends || []).map(t => `<li><strong>${san(t.trend)}</strong>：${san(t.impact)}；机会：${san(t.opportunity)}</li>`).join('')}</ul><p class="outlook">${san(trends['5_year_outlook'] || '')}</p></div>` : ''}
+                    ${s2.job_data_analysis ? `<div class="job-data-analysis"><h5>企业岗位数据关联性分析</h5><p>${san(s2.job_data_analysis.overview || '')}</p><ul>${(s2.job_data_analysis.associations || []).map(a => `<li><strong>${san(a.job_title)}</strong>：${san(a.relevance)}；能力迁移：${san(a.skill_transferability || '')}</li>`).join('')}</ul></div>` : ''}
                 </div>
             </section>`;
         }
@@ -10027,12 +9756,12 @@ class CareerPlanningApp {
             html += `<section id="module-action" class="career-module career-module-action" data-module="action">
                 <div class="career-module-header" data-toggle="module-action">
                     <span class="module-icon">📋</span>
-                    <span class="module-title" style="font-size: 16px; font-weight: 600;">行动计划</span>
+                    <span class="module-title">行动计划</span>
                     <span class="module-arrow">▶</span>
                 </div>
                 <div class="career-module-body career-module-collapsed">
                     <div class="career-action-plan">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">短期行动计划：${stp.period || ''}</h5>
+                        <h5>短期行动计划：${stp.period || ''}</h5>
                         <p class="plan-goal">${san(stp.goal || '')}</p>
                         ${mp.map(m => `
                             <div class="monthly-plan">
@@ -10044,7 +9773,7 @@ class CareerPlanningApp {
                     </div>
                     ${skills.length ? `
                     <div class="learning-path">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">学习路径</h5>
+                        <h5>学习路径</h5>
                         <div class="skill-progress-list">
                             ${skills.map(sk => {
                                 const tl = sk.timeline || '';
@@ -10056,8 +9785,8 @@ class CareerPlanningApp {
                             }).join('')}
                         </div>
                     </div>` : ''}
-                    ${ash.portfolio_building ? `<div class="achievement-showcase"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${k}</h6><p>${san(v.goal || '')}</p><ul>${(v.actions || []).map(a => `<li>${san(a)}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
-                    ${s3.evaluation_metrics ? `<div class="evaluation-metrics"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">评估指标与调整机制</h5><p>${san(s3.evaluation_metrics.overview || '')}</p><ul>${(s3.evaluation_metrics.metrics || []).map(m => `<li><strong>${san(m.metric)}</strong>：${san(m.description)}；目标值：${san(m.target_value || '')}；评估周期：${san(m.evaluation_cycle || '')}</li>`).join('')}</ul><p class="adjustment-note">${san(s3.evaluation_metrics.adjustment_mechanism || '')}</p></div>` : ''}
+                    ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${san(v.goal || '')}</p><ul>${(v.actions || []).map(a => `<li>${san(a)}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
+                    ${s3.evaluation_metrics ? `<div class="evaluation-metrics"><h5>评估指标与调整机制</h5><p>${san(s3.evaluation_metrics.overview || '')}</p><ul>${(s3.evaluation_metrics.metrics || []).map(m => `<li><strong>${san(m.metric)}</strong>：${san(m.description)}；目标值：${san(m.target_value || '')}；评估周期：${san(m.evaluation_cycle || '')}</li>`).join('')}</ul><p class="adjustment-note">${san(s3.evaluation_metrics.adjustment_mechanism || '')}</p></div>` : ''}
                 </div>
             </section>`;
         }
@@ -10071,7 +9800,7 @@ class CareerPlanningApp {
             html += `<section id="module-eval" class="career-module career-module-eval" data-module="eval">
                 <div class="career-module-header" data-toggle="module-eval">
                     <span class="module-icon">🔄</span>
-                    <span class="module-title" style="font-size: 16px; font-weight: 600;">评估调整</span>
+                    <span class="module-title">评估调整</span>
                     <span class="module-arrow">▶</span>
                 </div>
                 <div class="career-module-body career-module-collapsed">
@@ -10080,14 +9809,14 @@ class CareerPlanningApp {
                         ${ev.quarterly_review ? `<div class="eval-item"><span>${ev.quarterly_review.frequency || ''}</span> ${san((ev.quarterly_review.review_items || []).join('；'))}</div>` : ''}
                         ${ev.annual_review ? `<div class="eval-item"><span>${ev.annual_review.frequency || ''}</span> ${san((ev.annual_review.review_items || []).join('；'))}</div>` : ''}
                     </div>
-                    ${adj.length ? `<div class="adjustment-scenarios"><h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">调整场景</h5>${adj.map(a => `<div class="adj-card"><h6 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${san(a.scenario)}</h6><p>可能原因：${(a.possible_reasons || []).map(san).join('、')}</p><p>应对：${(a.adjustment_plan?.immediate_actions || []).map(san).join('；')}</p></div>`).join('')}</div>` : ''}
+                    ${adj.length ? `<div class="adjustment-scenarios"><h5>调整场景</h5>${adj.map(a => `<div class="adj-card"><h6>${san(a.scenario)}</h6><p>可能原因：${(a.possible_reasons || []).map(san).join('、')}</p><p>应对：${(a.adjustment_plan?.immediate_actions || []).map(san).join('；')}</p></div>`).join('')}</div>` : ''}
                     ${(rm.identified_risks?.length || contingencyPlans.length) ? `
                     <div class="risk-decision-tree">
-                        <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">风险预案与备选路径</h5>
+                        <h5>风险预案与备选路径</h5>
                         ${rm.identified_risks?.length ? `<div class="risk-list"><ul>${(rm.identified_risks || []).map(r => `<li><span class="risk-dot">●</span> ${san(r.risk)} → ${san(r.mitigation)}</li>`).join('')}</ul></div>` : ''}
                         ${contingencyPlans.length ? `
                         <div class="contingency-priority">
-                            <h6 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">优先级备选方案</h6>
+                            <h6>优先级备选方案</h6>
                             <ol class="priority-list">
                                 ${contingencyPlans.map((p, i) => {
                                     const txt = typeof p === 'string' ? p.replace(/^plan\s*[A-Z]\s*[:：]\s*/i, '') : p;
@@ -10104,12 +9833,12 @@ class CareerPlanningApp {
         html += `<section id="module-painpoints" class="career-module career-module-painpoints" data-module="painpoints">
             <div class="career-module-header" data-toggle="module-painpoints">
                 <span class="module-icon">🎯</span>
-                <span class="module-title" style="font-size: 16px; font-weight: 600;">痛点解决方案</span>
+                <span class="module-title">痛点解决方案</span>
                 <span class="module-arrow">▶</span>
             </div>
             <div class="career-module-body career-module-collapsed">
                 <div class="painpoint-solution">
-                    <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">自我认知与定位</h5>
+                    <h5>自我认知与定位</h5>
                     <p>避免从众规划误区，建立个性化职业定位：</p>
                     <ul>
                         <li>定期进行自我评估，关注自身兴趣、能力和价值观的变化</li>
@@ -10118,7 +9847,7 @@ class CareerPlanningApp {
                     </ul>
                 </div>
                 <div class="painpoint-solution">
-                    <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">职业信息获取</h5>
+                    <h5>职业信息获取</h5>
                     <p>建立系统的职业信息渠道，避免认知片面：</p>
                     <ul>
                         <li>通过行业报告、官方网站等权威渠道了解行业和岗位信息</li>
@@ -10128,7 +9857,7 @@ class CareerPlanningApp {
                     </ul>
                 </div>
                 <div class="painpoint-solution">
-                    <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">外部支持体系</h5>
+                    <h5>外部支持体系</h5>
                     <p>构建多元化的职业指导网络：</p>
                     <ul>
                         <li>积极参与高校的生涯规划课程和活动，获取理论基础</li>
@@ -10138,7 +9867,7 @@ class CareerPlanningApp {
                     </ul>
                 </div>
                 <div class="painpoint-solution">
-                    <h5 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0;">规划落地与实践</h5>
+                    <h5>规划落地与实践</h5>
                     <p>通过实践验证和动态调整，确保规划的可行性：</p>
                     <ul>
                         <li>制定分阶段的行动计划，通过实习、项目等方式验证规划</li>
@@ -11684,29 +11413,6 @@ class CareerPlanningApp {
         contentClone.style.padding = '20px';
         contentClone.style.backgroundColor = '#fff';
         contentClone.style.color = '#000';
-        contentClone.style.height = 'auto';
-        contentClone.style.minHeight = '2000px';
-        contentClone.style.overflow = 'visible';
-        contentClone.style.position = 'relative';
-        contentClone.style.zIndex = '9999';
-        
-        // 展开所有模块
-        const modules = contentClone.querySelectorAll('.career-module');
-        modules.forEach(module => {
-            module.classList.remove('career-module-collapsed');
-            module.classList.add('career-module-open');
-            // 确保模块内容可见
-            const body = module.querySelector('.career-module-body');
-            if (body) {
-                body.style.display = 'block';
-                body.style.height = 'auto';
-                body.style.overflow = 'visible';
-            }
-        });
-        
-        // 计算内容高度并设置
-        const computedHeight = contentClone.scrollHeight;
-        contentClone.style.height = computedHeight + 'px';
         
         // 将克隆内容添加到页面
         document.body.appendChild(contentClone);
@@ -11717,13 +11423,7 @@ class CareerPlanningApp {
                 scale: 2, // 提高清晰度
                 useCORS: true,
                 logging: false,
-                letterRendering: true,
-                allowTaint: true,
-                scrollX: 0,
-                scrollY: 0,
-                windowWidth: contentClone.scrollWidth,
-                windowHeight: contentClone.scrollHeight,
-                height: contentClone.scrollHeight
+                letterRendering: true
             });
             
             // 创建PDF文档
@@ -11755,23 +11455,8 @@ class CareerPlanningApp {
     exportToWord(reportId) {
         const reportContent = document.getElementById('reportContent');
         
-        // 克隆内容以避免修改原始DOM
-        const contentClone = reportContent.cloneNode(true);
-        
-        // 展开所有模块
-        const modules = contentClone.querySelectorAll('.career-module');
-        modules.forEach(module => {
-            module.classList.remove('career-module-collapsed');
-            module.classList.add('career-module-open');
-            // 确保模块内容可见
-            const body = module.querySelector('.career-module-body');
-            if (body) {
-                body.style.display = 'block';
-            }
-        });
-        
         // 提取报告内容
-        const reportHtml = contentClone.innerHTML;
+        const reportHtml = reportContent.innerHTML;
         
         // 使用Turndown将HTML转换为Markdown
         const turndownService = new TurndownService();
@@ -12113,52 +11798,7 @@ class CareerPlanningApp {
         const btn = document.getElementById('reportExportPdfDirectBtn');
         if (btn) { btn.disabled = true; btn.textContent = '导出中...'; }
         try {
-            // 克隆内容以避免修改原始DOM
-            const contentClone = el.cloneNode(true);
-            
-            // 设置克隆内容的样式
-            contentClone.style.width = '1000px';
-            contentClone.style.maxWidth = '1000px';
-            contentClone.style.padding = '20px';
-            contentClone.style.backgroundColor = '#fff';
-            contentClone.style.color = '#000';
-            contentClone.style.height = 'auto';
-            contentClone.style.minHeight = '2000px';
-            contentClone.style.overflow = 'visible';
-            contentClone.style.position = 'relative';
-            contentClone.style.zIndex = '9999';
-            
-            // 展开所有模块
-            const modules = contentClone.querySelectorAll('.career-module');
-            modules.forEach(module => {
-                module.classList.remove('career-module-collapsed');
-                module.classList.add('career-module-open');
-                // 确保模块内容可见
-                const body = module.querySelector('.career-module-body');
-                if (body) {
-                    body.style.display = 'block';
-                    body.style.height = 'auto';
-                    body.style.overflow = 'visible';
-                }
-            });
-            
-            // 计算内容高度并设置
-            const computedHeight = contentClone.scrollHeight;
-            contentClone.style.height = computedHeight + 'px';
-            
-            // 将克隆内容添加到页面
-            document.body.appendChild(contentClone);
-            
-            const canvas = await html2canvas(contentClone, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                scrollX: 0,
-                scrollY: 0,
-                windowWidth: contentClone.scrollWidth,
-                windowHeight: contentClone.scrollHeight,
-                height: contentClone.scrollHeight
-            });
+            const canvas = await html2canvas(el, { scale: 2, useCORS: true });
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
             const pdf = new JsPDF('p', 'mm', 'a4');
             const pdfW = pdf.internal.pageSize.getWidth();
@@ -12170,29 +11810,130 @@ class CareerPlanningApp {
             console.error('exportReportPdfDirect', e);
             this.showToast('导出失败，请重试', 'error');
         } finally {
-            // 移除克隆内容
-            if (contentClone) {
-                document.body.removeChild(contentClone);
-            }
             if (btn) { btn.disabled = false; btn.textContent = '导出 PDF'; }
         }
     }
 
-    // 查看职业规划历史报告（仅职业规划报告，API 7.7 获取历史报告列表，与测评报告历史分离）
+    // 添加职业规划报告历史记录
+    appendCareerReportHistory(reportId, created_at, extra = {}) {
+        let userId = getCurrentUserId();
+        // 如果没有用户ID，使用默认值
+        if (!userId) userId = 'default';
+        if (!reportId) return;
+        const key = 'career_report_history_' + userId;
+        let list = [];
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw) list = JSON.parse(raw);
+            if (!Array.isArray(list)) list = [];
+        } catch (e) {
+            console.error('Failed to load career report history:', e);
+        }
+        const created = created_at || new Date().toISOString();
+        const entry = { report_id: reportId, created_at: created, ...extra };
+        const exists = list.some(item => (item.report_id || item.id) === reportId);
+        if (!exists) list.unshift(entry);
+        try {
+            localStorage.setItem(key, JSON.stringify(list));
+            console.log('Career report history saved:', entry);
+        } catch (e) {
+            console.error('Failed to save career report history:', e);
+        }
+    }
+
+    // 加载职业规划报告历史信息
+    async loadReportHistoryInfo() {
+        let userId = getCurrentUserId();
+        // 如果没有用户ID，使用默认值
+        if (!userId) userId = 'default';
+        
+        // 从localStorage加载历史报告
+        const key = 'career_report_history_' + userId;
+        let list = [];
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw) list = JSON.parse(raw);
+            if (!Array.isArray(list)) list = [];
+        } catch (e) {
+            console.error('Failed to load career report history info:', e);
+        }
+        
+        // 更新历史报告数量
+        const historyCount = list.length;
+        const historyReportCountEl = document.getElementById('historyReportCount');
+        if (historyReportCountEl) historyReportCountEl.textContent = `${historyCount} 份`;
+        
+        // 更新最近报告日期
+        if (list.length > 0) {
+            // 按生成时间降序排序
+            list.sort((a, b) => new Date(b.created_at || b.create_time || 0) - new Date(a.created_at || a.create_time || 0));
+            const latestReport = list[0];
+            const date = latestReport.created_at || latestReport.create_time;
+            if (date) {
+                const formattedDate = new Date(date).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                const latestReportDateEl = document.getElementById('latestReportDate');
+                if (latestReportDateEl) latestReportDateEl.textContent = formattedDate;
+            }
+        }
+
+        // 检查能力画像状态
+        try {
+            const abilityResult = await getAbilityProfile(userId);
+            const abilityProfileStatusEl = document.getElementById('abilityProfileStatus');
+            if (abilityProfileStatusEl) {
+                if (abilityResult.success && abilityResult.data) {
+                    abilityProfileStatusEl.textContent = '已生成';
+                } else {
+                    abilityProfileStatusEl.textContent = '未生成';
+                }
+            }
+        } catch (e) {
+            const abilityProfileStatusEl = document.getElementById('abilityProfileStatus');
+            if (abilityProfileStatusEl) abilityProfileStatusEl.textContent = '未生成';
+        }
+
+        // 检查人岗匹配状态
+        try {
+            const matchingResult = await getJobMatching(userId);
+            const jobMatchingStatusEl = document.getElementById('jobMatchingStatus');
+            if (jobMatchingStatusEl) {
+                if (matchingResult.success && matchingResult.data) {
+                    jobMatchingStatusEl.textContent = '已分析';
+                } else {
+                    jobMatchingStatusEl.textContent = '未分析';
+                }
+            }
+        } catch (e) {
+            const jobMatchingStatusEl = document.getElementById('jobMatchingStatus');
+            if (jobMatchingStatusEl) jobMatchingStatusEl.textContent = '未分析';
+        }
+    }
+
+    // 查看职业规划历史报告（仅职业规划报告，从localStorage加载，与测评报告历史分离）
     async viewCareerReportHistory() {
-        const userId = getCurrentUserId();
+        let userId = getCurrentUserId();
+        // 如果没有用户ID，使用默认值
+        if (!userId) userId = 'default';
         const historyDiv = document.getElementById('reportHistory');
         const listDiv = document.getElementById('historyList');
         if (!historyDiv || !listDiv) return;
-        if (!userId) {
-            this.showToast('请先登录', 'error');
-            return;
-        }
         historyDiv.classList.remove('hidden');
         listDiv.innerHTML = '<div class="loading-message">加载历史报告中...</div>';
         try {
-            const result = await getCareerReportHistory(userId);
-            const list = result.success && result.data ? (result.data.list || []) : [];
+            // 从localStorage加载历史报告
+            const key = 'career_report_history_' + userId;
+            let list = [];
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) list = JSON.parse(raw);
+                if (!Array.isArray(list)) list = [];
+            } catch (e) {
+                console.error('Failed to load career report history:', e);
+            }
+            
+            // 按生成时间降序排序，确保最新的报告显示在最前面
+            list.sort((a, b) => new Date(b.created_at || b.create_time || 0) - new Date(a.created_at || a.create_time || 0));
+            
             if (list.length > 0) {
                 this.renderCareerReportHistory(list);
                 this.showToast('已加载 ' + list.length + ' 条历史报告', 'success');
@@ -12200,6 +11941,7 @@ class CareerPlanningApp {
                 listDiv.innerHTML = '<div class="hint-text">暂无职业规划历史报告</div>';
             }
         } catch (e) {
+            console.error('Error viewing career report history:', e);
             listDiv.innerHTML = '<div class="hint-text">加载失败，请稍后重试</div>';
         }
     }
@@ -12212,10 +11954,9 @@ class CareerPlanningApp {
         // 过滤只显示职业规划报告，排除测评报告
         const careerReports = reports.filter(report => {
             // 职业规划报告通常包含以下特征：
-            // 1. 有 primary_career 字段
-            // 2. 有 completeness 字段
-            // 3. 状态为 completed
-            return report.primary_career || report.completeness !== undefined || report.status === 'completed';
+            // 1. 有 report_id 字段
+            // 2. 不是测评报告
+            return report.report_id && !report.assessment_id;
         });
         
         if (careerReports.length === 0) {
@@ -12306,6 +12047,418 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========== 合并：悬浮聊天智能体初始化（与图谱共存） ==========
     initFloatingAgent();
 });
+
+// ==================== 模拟面试模块 ====================
+let currentInterview = null;
+let mockInterviewInitialized = false;
+
+function initMockInterviewModule() {
+    if (mockInterviewInitialized) return;
+    
+    initMockInterviewTabs();
+    initMockInterviewForm();
+    loadInterviewHistory();
+    mockInterviewInitialized = true;
+}
+
+function initMockInterviewTabs() {
+    const tabs = document.querySelectorAll('.matching-tabs .tab-btn');
+    const tabContents = document.querySelectorAll('.mock-interview-tab-content .tab-content');
+    
+    tabs.forEach(tab => {
+        tab.onclick = () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            
+            tab.classList.add('active');
+            const tabId = tab.dataset.tab;
+            const targetTab = document.getElementById(tabId + 'Tab');
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            if (tabId === 'history') {
+                loadInterviewHistory();
+            }
+        };
+    });
+}
+
+function initMockInterviewForm() {
+    const form = document.getElementById('createInterviewForm');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const targetPosition = document.getElementById('targetPosition').value;
+            const interviewType = document.getElementById('interviewType').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const userId = getCurrentUserId();
+            
+            if (!targetPosition) {
+                alert('请选择目标岗位');
+                return;
+            }
+            
+            if (!userId) {
+                alert('请先登录');
+                return;
+            }
+            
+            const result = await createMockInterview(userId, targetPosition, interviewType, difficulty, duration);
+            
+            if (result.success) {
+                currentInterview = result.data;
+                switchToInterviewTab();
+                renderInterviewMessages();
+                updateInterviewStats();
+            } else {
+                alert(result.msg || '创建面试失败');
+            }
+        };
+    }
+    
+    const sendBtn = document.getElementById('sendAnswerBtn');
+    if (sendBtn) {
+        sendBtn.onclick = submitInterviewAnswer;
+    }
+    
+    const endBtn = document.getElementById('endInterviewBtn');
+    if (endBtn) {
+        endBtn.onclick = endInterview;
+    }
+    
+    const answerInput = document.getElementById('answerInput');
+    if (answerInput) {
+        answerInput.onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitInterviewAnswer();
+            }
+        };
+    }
+}
+
+function switchToInterviewTab() {
+    const tabs = document.querySelectorAll('.matching-tabs .tab-btn');
+    const tabContents = document.querySelectorAll('.mock-interview-tab-content .tab-content');
+    
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    
+    tabs[1].classList.add('active');
+    document.getElementById('interviewTab').classList.add('active');
+}
+
+function renderInterviewMessages() {
+    const chatContainer = document.getElementById('interviewChat');
+    if (!chatContainer || !currentInterview) return;
+    
+    chatContainer.innerHTML = '';
+    
+    currentInterview.messages.forEach(msg => {
+        const messageEl = document.createElement('div');
+        messageEl.className = `interview-message ${msg.role}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'interview-message-avatar';
+        avatar.textContent = msg.role === 'interviewer' ? '🤖' : '👤';
+        
+        const content = document.createElement('div');
+        content.className = 'interview-message-content';
+        content.innerHTML = msg.content.replace(/\n/g, '<br>');
+        
+        messageEl.appendChild(avatar);
+        messageEl.appendChild(content);
+        
+        if (msg.score && msg.role === 'interviewer') {
+            const scoreEl = document.createElement('div');
+            scoreEl.className = 'interview-score';
+            scoreEl.innerHTML = `
+                <h5>本次回答评分：${msg.score.overall}分</h5>
+                <ul>
+                    <li>表达能力：${msg.score.dimensions.expression}分</li>
+                    <li>逻辑思维：${msg.score.dimensions.logic}分</li>
+                    <li>内容质量：${msg.score.dimensions.content}分</li>
+                </ul>
+            `;
+            content.appendChild(scoreEl);
+        }
+        
+        chatContainer.appendChild(messageEl);
+    });
+    
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function updateInterviewStats() {
+    if (!currentInterview) return;
+    
+    const questionCount = currentInterview.messages.filter(m => m.role === 'interviewer').length;
+    const answerCount = currentInterview.messages.filter(m => m.role === 'user').length;
+    
+    const questionCountEl = document.getElementById('questionCount');
+    const answerCountEl = document.getElementById('answerCount');
+    const durationEl = document.getElementById('interviewDuration');
+    
+    if (questionCountEl) questionCountEl.textContent = questionCount;
+    if (answerCountEl) answerCountEl.textContent = answerCount;
+    if (durationEl) durationEl.textContent = currentInterview.duration + '分钟';
+}
+
+async function submitInterviewAnswer() {
+    const answerInput = document.getElementById('answerInput');
+    const sendBtn = document.getElementById('sendAnswerBtn');
+    
+    if (!answerInput || !sendBtn || !currentInterview) return;
+    
+    const answer = answerInput.value.trim();
+    if (!answer) {
+        alert('请输入你的回答');
+        return;
+    }
+    
+    const userId = getCurrentUserId();
+    
+    sendBtn.disabled = true;
+    answerInput.disabled = true;
+    answerInput.value = '';
+    
+    currentInterview.messages.push({
+        role: 'user',
+        content: answer,
+        timestamp: new Date().toISOString()
+    });
+    renderInterviewMessages();
+    updateInterviewStats();
+    
+    sendBtn.textContent = 'AI思考中...';
+    
+    let aiMessageIndex = -1;
+    
+    const result = await sendInterviewAnswer(
+        currentInterview.interview_id, 
+        userId, 
+        answer,
+        (chunk) => {
+            if (aiMessageIndex === -1) {
+                aiMessageIndex = currentInterview.messages.length;
+                currentInterview.messages.push({
+                    role: 'interviewer',
+                    content: chunk,
+                    timestamp: Date.now()
+                });
+            } else {
+                currentInterview.messages[aiMessageIndex].content += chunk;
+            }
+            renderInterviewMessages();
+        }
+    );
+    
+    sendBtn.disabled = false;
+    answerInput.disabled = false;
+    sendBtn.textContent = '发送回答';
+    
+    if (result.success) {
+        currentInterview.status = result.data.interview.status;
+        currentInterview.current_question_index = result.data.interview.current_question_index;
+        if (result.data.interview.total_score) {
+            currentInterview.total_score = result.data.interview.total_score;
+        }
+        updateInterviewStats();
+        
+        if (result.data.is_complete) {
+            setTimeout(() => {
+                loadInterviewReport(currentInterview.interview_id);
+            }, 1500);
+        }
+    } else {
+        alert(result.msg || '发送回答失败');
+    }
+}
+
+async function endInterview() {
+    if (!currentInterview) return;
+    
+    if (confirm('确定要结束本次面试吗？')) {
+        currentInterview.status = 'completed';
+        currentInterview.total_score = Math.floor(Math.random() * 30) + 70;
+        api.saveMockInterviews();
+        loadInterviewReport(currentInterview.interview_id);
+    }
+}
+
+async function loadInterviewReport(interviewId) {
+    const userId = getCurrentUserId();
+    const result = await getInterviewReport(interviewId, userId);
+    
+    if (result.success) {
+        renderInterviewReport(result.data);
+        
+        const tabs = document.querySelectorAll('.matching-tabs .tab-btn');
+        const tabContents = document.querySelectorAll('.mock-interview-tab-content .tab-content');
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        tabs[2].classList.add('active');
+        document.getElementById('reportTab').classList.add('active');
+    } else {
+        alert(result.msg || '加载面试报告失败');
+    }
+}
+
+function renderInterviewReport(report) {
+    const reportArea = document.getElementById('reportArea');
+    if (!reportArea) return;
+    
+    reportArea.innerHTML = `
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h3 style="font-family: var(--font-heading); font-size: 28px; color: var(--text-primary); margin: 0 0 8px 0;">
+                面试表现报告
+            </h3>
+            <p style="color: var(--text-secondary); margin: 0;">
+                ${new Date(report.created_at).toLocaleString('zh-CN')}
+            </p>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--indigo-blue)); color: white; font-size: 48px; font-weight: 700;">
+                ${report.overall_score}
+            </div>
+            <p style="margin-top: 12px; font-size: 16px; color: var(--text-secondary);">综合评分</p>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 16px 0;">维度评分</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                ${Object.entries(report.dimension_scores).map(([key, score]) => `
+                    <div style="background: var(--light-blue-bg); padding: 16px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 4px;">${score}</div>
+                        <div style="font-size: 13px; color: var(--text-secondary);">
+                            ${key === 'expression' ? '表达能力' : 
+                              key === 'logic' ? '逻辑思维' : 
+                              key === 'content' ? '内容质量' : 
+                              key === 'stress_resistance' ? '抗压能力' : '文化适配'}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px;">
+            <div>
+                <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">💪 优势</h4>
+                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                    ${report.strengths.map(s => `<li>${s}</li>`).join('')}
+                </ul>
+            </div>
+            <div>
+                <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">📝 待提升</h4>
+                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                    ${report.weaknesses.map(w => `<li>${w}</li>`).join('')}
+                </ul>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 32px;">
+            <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">💡 改进建议</h4>
+            <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                ${report.suggestions.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+        </div>
+        
+        <div>
+            <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">📋 提升计划</h4>
+            <div style="background: var(--light-blue-bg); padding: 20px; border-radius: 12px; color: var(--text-secondary); line-height: 1.8; margin: 0;">
+                <h5 style="margin: 0 0 12px 0; color: var(--text-primary); font-size: 15px;">短期行动计划：</h5>
+                <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+                    ${report.improvement_plan.short_term.map(plan => `<li>${plan}</li>`).join('')}
+                </ul>
+                <p style="margin: 0; font-weight: 600; color: var(--primary-color);">
+                    💡 建议 ${report.improvement_plan.suggested_retry_days || 14} 天后再次进行模拟面试
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+async function loadInterviewHistory() {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+    
+    const result = await getInterviewHistory(userId);
+    
+    if (result.success) {
+        renderInterviewHistory(result.data.interviews);
+    }
+}
+
+function renderInterviewHistory(interviews) {
+    const historyList = document.getElementById('historyList');
+    if (!historyList) return;
+    
+    if (!interviews || interviews.length === 0) {
+        historyList.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                <p>暂无面试记录</p>
+                <p style="font-size: 14px; margin-top: 8px;">开始你的第一次模拟面试吧！</p>
+            </div>
+        `;
+        return;
+    }
+    
+    historyList.innerHTML = interviews.map(interview => `
+        <div class="history-item" data-interview-id="${interview.interview_id}">
+            <div class="history-item-info">
+                <h4>${interview.target_position}</h4>
+                <p>
+                    ${interview.interview_type === 'behavioral' ? '行为面试' : 
+                      interview.interview_type === 'technical' ? '技术面试' : 
+                      interview.interview_type === 'comprehensive' ? '综合面试' : '模拟面试'} · 
+                    ${interview.difficulty === 'easy' ? '简单' : 
+                      interview.difficulty === 'medium' ? '中等' : 
+                      interview.difficulty === 'hard' ? '困难' : '中等'} · 
+                    ${new Date(interview.created_at).toLocaleString('zh-CN')}
+                </p>
+            </div>
+            <div class="history-item-score">
+                ${interview.status === 'completed' ? `
+                    <span class="score-value">${interview.total_score || '-'}</span>
+                    <span class="score-label">综合评分</span>
+                ` : `
+                    <span class="score-value" style="color: var(--warning-color);">进行中</span>
+                    <span class="score-label">-</span>
+                `}
+            </div>
+            ${interview.status === 'completed' ? `
+                <button class="btn-secondary" style="padding: 8px 16px; font-size: 14px;" onclick="viewInterviewReport('${interview.interview_id}')">
+                    查看报告
+                </button>
+            ` : `
+                <button class="btn-primary" style="padding: 8px 16px; font-size: 14px;" onclick="resumeInterview('${interview.interview_id}')">
+                    继续面试
+                </button>
+            `}
+        </div>
+    `).join('');
+}
+
+function viewInterviewReport(interviewId) {
+    loadInterviewReport(interviewId);
+}
+
+function resumeInterview(interviewId) {
+    const interview = api.mockInterviews.find(i => i.interview_id === interviewId);
+    if (interview) {
+        currentInterview = interview;
+        switchToInterviewTab();
+        renderInterviewMessages();
+        updateInterviewStats();
+    }
+}
 
 // ==================== 悬浮聊天智能体模块（从历史智能体版本合并，独立于图谱逻辑） ====================
 var _agentHistory = [];

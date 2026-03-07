@@ -412,19 +412,20 @@ class AIAbilityProfileGenerator:
             "注意事项：只根据简历真实信息填写，没有的字段用\"待补充\"；证据必须来自简历。\n"
         )
 
-    @staticmethod
-    def _ability_profile_output_schema() -> str:
-        """能力画像输出 JSON 结构（纯文本模板，插入到 Prompt 中）"""
-        return """{
-  "basic_info": {
+【简历内容】
+{resume_text[:8000]}
+
+请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
+
+{{
+  "basic_info": {{
     "education": "本科/硕士/博士",
     "major": "专业名称",
     "school": "学校名称",
     "gpa": "X.X/4.0",
-    "expected_graduation": "YYYY-MM",
-    "target_job": "推荐的目标岗位"
-  },
-  "professional_skills": {
+    "expected_graduation": "YYYY-MM"
+  }},
+  "professional_skills": {{
     "programming_languages": [
       { "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }
     ],
@@ -479,7 +480,91 @@ class AIAbilityProfileGenerator:
         
 请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
         
-{schema}
+{{
+  "basic_info": {{
+    "education": "本科/硕士/博士",
+    "major": "专业名称",
+    "school": "学校名称",
+    "gpa": "X.X/4.0",
+    "expected_graduation": "YYYY-MM"
+  }},
+  "professional_skills": {{
+    "programming_languages": [
+      {{
+        "skill": "技能名称",
+        "level": "精通/熟练/熟悉/了解",
+        "evidence": ["证据1", "证据2"]
+      }}
+    ],
+    "frameworks_tools": [...],
+    "domain_knowledge": [...]
+  }},
+  "certificates": {{
+    "items": [
+      {{
+        "name": "证书名称",
+        "level": "级别",
+        "issue_date": "YYYY-MM"
+      }}
+    ]
+  }},
+  "innovation_ability": {{
+    "projects": [
+      {{
+        "name": "项目名称",
+        "innovation_points": ["创新点1", "创新点2"],
+        "impact": "影响描述"
+      }}
+    ],
+    "competitions": [
+      {{
+        "name": "竞赛名称",
+        "award": "获奖等级"
+      }}
+    ]
+  }},
+  "learning_ability": {{
+    "indicators": [
+      {{
+        "indicator": "GPA",
+        "value": 3.8,
+        "percentile": 85
+      }},
+      {{
+        "indicator": "自学新技术",
+        "evidence": ["证据1", "证据2"]
+      }}
+    ]
+  }},
+  "pressure_resistance": {{
+    "evidence": ["抗压证据1", "证据2"]
+  }},
+  "communication_ability": {{
+    "teamwork": {{
+      "evidence": ["团队协作证据1", "证据2"]
+    }},
+    "presentation": {{
+      "evidence": ["演讲展示证据1", "证据2"]
+    }}
+  }},
+  "practical_experience": {{
+    "internships": [
+      {{
+        "company": "公司名称",
+        "position": "职位",
+        "duration": "X个月",
+        "achievements": ["成就1", "成就2"]
+      }}
+    ],
+    "projects": [
+      {{
+        "name": "项目名称",
+        "role": "角色",
+        "complexity": "高/中/低"
+      }}
+    ]
+  }}
+}}
         
 注意事项：
 1. 如果档案某个字段为空，不要编造，标记为"待补充"
@@ -512,36 +597,6 @@ class AIAbilityProfileGenerator:
                 {"indicator": "GPA", "value": gpa_val, "percentile": 80}
             )
 
-        # 处理技能数据
-        skills = profile_data.get("skills", []) or []
-        programming_languages = []
-        frameworks_tools = []
-        domain_knowledge = []
-        
-        for skill_item in skills:
-            if isinstance(skill_item, dict):
-                category = skill_item.get("category", "").strip()
-                items = skill_item.get("items", []) or []
-                
-                # 转换技能数据为能力画像所需格式
-                if category in ["编程语言", "编程", "coding", "programming"]:
-                    for item in items:
-                        if isinstance(item, str) and item.strip():
-                            programming_languages.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
-                elif category in ["框架工具", "框架", "工具", "frameworks", "tools"]:
-                    for item in items:
-                        if isinstance(item, str) and item.strip():
-                            frameworks_tools.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
-                elif category in ["领域知识", "领域", "知识", "domain", "knowledge"]:
-                    for item in items:
-                        if isinstance(item, str) and item.strip():
-                            domain_knowledge.append({"domain": item.strip(), "level": "熟悉", "evidence": []})
-                else:
-                    # 其他技能分类，默认添加到框架工具中
-                    for item in items:
-                        if isinstance(item, str) and item.strip():
-                            frameworks_tools.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
-        
         profile = {
             "basic_info": {
                 "education": basic.get("education", "待补充"),
@@ -549,12 +604,12 @@ class AIAbilityProfileGenerator:
                 "school": basic.get("school", "待补充"),
                 "gpa": gpa_raw or "待补充",
                 "expected_graduation": basic.get("expected_graduation", "待补充"),
-                "target_job": "算法工程师（中级）",
             },
             "professional_skills": {
-                "programming_languages": programming_languages,
-                "frameworks_tools": frameworks_tools,
-                "domain_knowledge": domain_knowledge,
+                # 规则兜底模式下不给具体评分，只占位，评分由 AbilityScorer 决定（可能为 0）
+                "programming_languages": [],
+                "frameworks_tools": [],
+                "domain_knowledge": [],
             },
             "certificates": {
                 "items": [],
@@ -656,20 +711,6 @@ class AIAbilityProfileGenerator:
         # 8. 综合评分
         profile["overall_assessment"] = self._calculate_overall_assessment(profile)
         
-        # 9. 推荐目标岗位
-        try:
-            from matching.matching_service import JobMatchingService
-            matching_service = JobMatchingService()
-            recommendations = matching_service.recommend_jobs(0, top_n=1, ability_profile=profile)
-            if recommendations.get("recommendations"):
-                top_job = recommendations["recommendations"][0]
-                profile["basic_info"]["target_job"] = top_job.get("job_name", "算法工程师（中级）")
-            else:
-                profile["basic_info"]["target_job"] = "算法工程师（中级）"
-        except Exception as e:
-            logger.warning(f"[AbilityProfile] 目标岗位推荐失败，使用默认值: {e}")
-            profile["basic_info"]["target_job"] = "算法工程师（中级）"
-        
         return profile
     
     def _calculate_overall_assessment(self, profile: dict) -> dict:
@@ -757,7 +798,6 @@ class StudentAbilityProfileService:
     def get_ability_profile(self, user_id: int) -> Optional[dict]:
         """
         5.1 获取学生能力画像
-        检查个人档案是否有更新，如果有更新则重新生成能力画像
         """
         profile_id = f"profile_{user_id}"
 

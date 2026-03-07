@@ -45,6 +45,7 @@
                         <a href="#" class="nav-link" data-page="matching">岗位匹配</a>
                         <a href="#" class="nav-link" data-page="tracking">求职跟踪</a>
                         <a href="#" class="nav-link" data-page="report">职业规划报告</a>
+                        <a href="#" class="nav-link" data-page="mockInterview">模拟面试</a>
                     </div>
                 </div>
                 <div class="nav-user">
@@ -1268,12 +1269,18 @@
 
                 <!-- 生成报告入口区 -->
                 <div id="reportGenerateArea" class="report-generate-area">
-                    <div class="assessment-welcome-card assessment-welcome-card-new">
+                    <div class="report-generate-card assessment-welcome-card assessment-welcome-card-new">
                         <div class="assessment-welcome-illus-wrap">
-                            <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">📋</span></span>
+                            <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">🎯</span></span>
                         </div>
-                        <p class="assessment-welcome-title">生成职业规划报告</p>
-                        <p class="assessment-welcome-desc">基于测评结果、能力画像与人岗匹配，AI 将为您生成专属职业发展规划</p>
+                        <h3 class="assessment-welcome-title">生成专属职业规划报告</h3>
+                        <p class="assessment-welcome-desc">基于您的职业测评结果、能力画像与人岗匹配分析，AI 将为您生成个性化的职业发展规划，助您找到最适合的职业路径。</p>
+                        <div class="assessment-welcome-meta">
+                            <div class="assessment-meta-item"><span class="assessment-meta-label">最近报告</span><span class="assessment-meta-val" id="latestReportDate">暂无</span></div>
+                            <div class="assessment-meta-item"><span class="assessment-meta-label">历史报告</span><span class="assessment-meta-val assessment-meta-accent" id="historyReportCount">0 份</span></div>
+                            <div class="assessment-meta-item"><span class="assessment-meta-label">能力画像</span><span class="assessment-meta-val assessment-meta-green" id="abilityProfileStatus">已生成</span></div>
+                            <div class="assessment-meta-item"><span class="assessment-meta-label">人岗匹配</span><span class="assessment-meta-val" id="jobMatchingStatus">已分析</span></div>
+                        </div>
                         <div class="assessment-welcome-actions">
                             <button id="generateReportBtn" class="btn-assessment-primary">生成新报告</button>
                             <button id="viewHistoryBtn" class="btn-assessment-secondary">查看历史报告</button>
@@ -1282,69 +1289,72 @@
 
                     <!-- 生成偏好表单（展开显示） -->
                     <div id="reportPreferencesForm" class="report-preferences-form hidden">
-                        <h4>生成偏好（可选）</h4>
-                        <div class="preferences-grid">
-                            <div class="form-group">
-                                <label>职业目标类型</label>
-                                <select id="prefCareerGoal">
-                                    <option value="">不限制</option>
-                                    <option value="技术专家">技术专家</option>
-                                    <option value="管理岗位">管理岗位</option>
-                                    <option value="创业">创业</option>
-                                    <option value="专业深耕">专业深耕</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>期望工作地点</label>
-                                <input type="text" id="prefWorkLocation" placeholder="如：北京、上海、杭州">
-                            </div>
-                            <div class="form-group">
-                                <label>薪资预期</label>
-                                <select id="prefSalary">
-                                    <option value="">不限制</option>
-                                    <option value="10k-15k">10k-15k</option>
-                                    <option value="15k-25k">15k-25k</option>
-                                    <option value="25k+">25k+</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>工作生活平衡</label>
-                                <select id="prefWorkLifeBalance">
-                                    <option value="">不限制</option>
-                                    <option value="高">高（重视生活）</option>
-                                    <option value="中">中（平衡）</option>
-                                    <option value="低">低（事业优先）</option>
-                                </select>
-                            </div>
-                            <div class="form-group form-group-full">
-                                <label>目标岗位（可选，可多选）</label>
-                                <div id="prefTargetJobsWrap" class="pref-target-jobs">
-                                    <select id="prefTargetJobs" multiple size="4">
-                                        <option value="job_001">算法工程师</option>
-                                        <option value="job_002">前端开发工程师</option>
-                                        <option value="job_003">后端开发工程师</option>
-                                        <option value="job_004">数据分析师</option>
-                                        <option value="job_005">产品经理</option>
-                                        <option value="job_006">新能源电池工程师</option>
-                                        <option value="job_007">UI/UX设计师</option>
-                                        <option value="job_010">AI应用工程师</option>
+                        <div class="preferences-card">
+                            <h4>生成偏好（可选）</h4>
+                            <div class="preferences-grid">
+                                <div class="form-group">
+                                    <label>职业目标类型</label>
+                                    <select id="prefCareerGoal">
+                                        <option value="">不限制</option>
+                                        <option value="技术专家">技术专家</option>
+                                        <option value="管理岗位">管理岗位</option>
+                                        <option value="创业">创业</option>
+                                        <option value="专业深耕">专业深耕</option>
                                     </select>
-                                    <span class="form-hint">按住 Ctrl 可多选</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>期望工作地点</label>
+                                    <input type="text" id="prefWorkLocation" placeholder="如：北京、上海、杭州">
+                                </div>
+                                <div class="form-group">
+                                    <label>薪资预期</label>
+                                    <select id="prefSalary">
+                                        <option value="">不限制</option>
+                                        <option value="10k-15k">10k-15k</option>
+                                        <option value="15k-25k">15k-25k</option>
+                                        <option value="25k+">25k+</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>工作生活平衡</label>
+                                    <select id="prefWorkLifeBalance">
+                                        <option value="">不限制</option>
+                                        <option value="高">高（重视生活）</option>
+                                        <option value="中">中（平衡）</option>
+                                        <option value="低">低（事业优先）</option>
+                                    </select>
+                                </div>
+                                <div class="form-group form-group-full">
+                                    <label>目标岗位（可选，可多选）</label>
+                                    <div id="prefTargetJobsWrap" class="pref-target-jobs">
+                                        <select id="prefTargetJobs" multiple size="4">
+                                            <option value="job_001">算法工程师</option>
+                                            <option value="job_002">前端开发工程师</option>
+                                            <option value="job_003">后端开发工程师</option>
+                                            <option value="job_004">数据分析师</option>
+                                            <option value="job_005">产品经理</option>
+                                            <option value="job_006">新能源电池工程师</option>
+                                            <option value="job_007">UI/UX设计师</option>
+                                            <option value="job_010">AI应用工程师</option>
+                                        </select>
+                                        <span class="form-hint">按住 Ctrl 可多选</span>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="preferences-actions">
+                                <button id="confirmGenerateBtn" class="btn-assessment-primary">确认生成</button>
+                                <button id="cancelGenerateBtn" class="btn-assessment-secondary">取消</button>
+                            </div>
                         </div>
-                        <button id="confirmGenerateBtn" class="btn-assessment-primary">确认生成</button>
                     </div>
                 </div>
 
                 <!-- 生成中状态 -->
                 <div id="reportGeneratingArea" class="report-generating-area hidden">
-                    <div class="assessment-welcome-card assessment-welcome-card-new">
-                        <div class="assessment-welcome-illus-wrap">
-                            <span class="assessment-welcome-illus-circle"><span class="assessment-welcome-illus-check">⏳</span></span>
-                        </div>
-                        <p class="assessment-welcome-title">AI 正在生成您的职业规划报告</p>
-                        <p class="assessment-welcome-desc">预计需要 30 秒，请稍候，不要关闭页面</p>
+                    <div class="report-generating-card">
+                        <div class="report-generating-spinner"></div>
+                        <p>AI 正在生成您的职业规划报告，预计需要 30 秒</p>
+                        <span class="report-generating-hint">请稍候，不要关闭页面</span>
                     </div>
                 </div>
 
@@ -1549,6 +1559,158 @@
                     </div>
                     <div id="historyList" class="report-history-list"></div>
                 </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模拟面试页面 -->
+        <div id="mockInterviewPage" class="page hidden">
+            <div class="matching-container">
+                <div class="page-header">
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">模拟面试</span>
+                    </div>
+                    <p class="page-subtitle">AI面试官助你提升面试能力，实时评估回答质量，生成面试表现报告与改进建议</p>
+                </div>
+
+                <!-- 模拟面试Tab导航 -->
+                <div class="matching-tabs">
+                    <button class="tab-btn active" data-tab="create">🚀 开始面试</button>
+                    <button class="tab-btn" data-tab="interview">💬 面试进行</button>
+                    <button class="tab-btn" data-tab="report">📊 面试报告</button>
+                    <button class="tab-btn" data-tab="history">📋 历史记录</button>
+                </div>
+
+                <!-- Tab内容区域 -->
+                <div class="mock-interview-tab-content">
+                    
+                    <!-- Tab 1: 开始面试 (10.1 创建模拟面试会话) -->
+                    <div id="createInterviewTab" class="tab-content active">
+                        <div class="create-interview-area">
+                            <div class="create-interview-card">
+                                <h3>创建模拟面试会话</h3>
+                                <p class="create-interview-desc">选择目标岗位、面试类型和难度，开始你的模拟面试之旅</p>
+                                
+                                <form id="createInterviewForm" class="create-interview-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>目标岗位</label>
+                                            <select id="targetPosition">
+                                                <option value="">请选择目标岗位</option>
+                                                <option value="算法工程师">算法工程师</option>
+                                                <option value="前端开发工程师">前端开发工程师</option>
+                                                <option value="后端开发工程师">后端开发工程师</option>
+                                                <option value="AI产品经理">AI产品经理</option>
+                                                <option value="数据分析师">数据分析师</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>面试类型</label>
+                                            <select id="interviewType">
+                                                <option value="comprehensive">综合面试</option>
+                                                <option value="technical">技术面试</option>
+                                                <option value="behavioral">行为面试</option>
+                                                <option value="case_study">案例分析</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>难度</label>
+                                            <select id="difficulty">
+                                                <option value="easy">简单</option>
+                                                <option value="medium" selected>中等</option>
+                                                <option value="hard">困难</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>面试时长（分钟）</label>
+                                            <select id="duration">
+                                                <option value="15">15分钟</option>
+                                                <option value="30" selected>30分钟</option>
+                                                <option value="45">45分钟</option>
+                                                <option value="60">60分钟</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="submit" id="startInterviewBtn" class="btn-primary">开始面试</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: 面试进行 (10.2 发送面试回答) -->
+                    <div id="interviewTab" class="tab-content">
+                        <div class="interview-area">
+                            <!-- 面试信息栏 -->
+                            <div class="interview-header">
+                                <div class="interview-info">
+                                    <div class="interviewer-info">
+                                        <span class="interviewer-avatar">🎯</span>
+                                        <div class="interviewer-details">
+                                            <h4 id="interviewerName">面试官</h4>
+                                            <p id="interviewerRole">面试官角色</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="interview-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">问题数</span>
+                                        <span class="stat-value" id="questionCount">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">回答数</span>
+                                        <span class="stat-value" id="answerCount">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">时长</span>
+                                        <span class="stat-value" id="interviewDuration">30分钟</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 面试对话区域 -->
+                            <div class="interview-chat" id="interviewChat">
+                            </div>
+
+                            <!-- 回答输入区域 -->
+                            <div class="interview-input-area">
+                                <div class="interview-input-wrapper">
+                                    <textarea id="answerInput" placeholder="请输入你的回答..."></textarea>
+                                    <div class="interview-input-actions">
+                                        <button id="sendAnswerBtn" class="btn-primary">发送回答</button>
+                                        <button id="endInterviewBtn" class="btn-secondary">结束面试</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: 面试报告 (10.3 结束模拟面试并获取报告) -->
+                    <div id="reportTab" class="tab-content">
+                        <div class="report-area" id="reportArea">
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: 历史记录 (10.4 获取历史面试记录) -->
+                    <div id="historyTab" class="tab-content">
+                        <div class="history-area">
+                            <div class="history-header">
+                                <h3>历史面试记录</h3>
+                            </div>
+                            <div id="historyList" class="history-list">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

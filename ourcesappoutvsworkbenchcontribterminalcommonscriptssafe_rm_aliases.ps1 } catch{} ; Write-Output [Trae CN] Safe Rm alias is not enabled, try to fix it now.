@@ -1,0 +1,122 @@
+warning: in the working copy of 'frontfiles/api.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontfiles/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontfiles/styles.css', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/frontfiles/api.js b/frontfiles/api.js[m
+[1mindex c549122e..6c9bc858 100644[m
+[1m--- a/frontfiles/api.js[m
+[1m+++ b/frontfiles/api.js[m
+[36m@@ -58,6 +58,31 @@[m [mclass API {[m
+     constructor() {[m
+         this.baseURL = API_CONFIG.baseURL;[m
+         this.aiBaseURL = API_CONFIG.assessmentBaseURL || this.baseURL;[m
+[32m+[m[32m        // 从localStorage加载mock职业规划报告[m
+[32m+[m[32m        const storedReports = localStorage.getItem('mockCareerReports');[m
+[32m+[m[32m        if (storedReports) {[m
+[32m+[m[32m            try {[m
+[32m+[m[32m                this.mockCareerReports = JSON.parse(storedReports);[m
+[32m+[m[32m            } catch (e) {[m
+[32m+[m[32m                console.error('Failed to parse stored reports:', e);[m
+[32m+[m[32m                this.mockCareerReports = this.getDefaultMockCareerReports();[m
+[32m+[m[32m            }[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            this.mockCareerReports = this.getDefaultMockCareerReports();[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    // 获取默认的mock职业规划报告[m
+[32m+[m[32m    getDefaultMockCareerReports() {[m
+[32m+[m[32m        return [[m
+[32m+[m[32m            { report_id: 'report_career_001', created_at: new Date().toISOString(), status: 'completed', primary_career: '算法工程师', completeness: 95, last_viewed: new Date().toISOString() },[m
+[32m+[m[32m            { report_id: 'report_career_002', created_at: new Date(Date.now()-86400000).toISOString(), status: 'archived', primary_career: '后端开发工程师', completeness: 88 }[m
+[32m+[m[32m        ];[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    // 保存mock职业规划报告到localStorage[m
+[32m+[m[32m    saveMockCareerReports() {[m
+[32m+[m[32m        localStorage.setItem('mockCareerReports', JSON.stringify(this.mockCareerReports));[m
+     }[m
+ [m
+     // 请求 AI 服务（测评、岗位画像），与 request 相同协议 { code, msg, data }，带超时避免一直加载[m
+[36m@@ -386,16 +411,88 @@[m [mclass API {[m
+             case '/matching/analyze':[m
+                 const jobId = options.body?.job_id || options.body?.job_name;[m
+                 return { success: true, data: this.mockMatchAnalysis(jobId) };[m
+[31m-            case '/career/generate-report':[m
+[31m-                return { success: true, data: { report_id: 'report_career_' + Date.now(), status: 'processing' }, msg: '报告生成中，预计需要30秒...' };[m
+[32m+[m[32m            case '/career/generate-report': {[m
+[32m+[m[32m                const reportId = 'report_career_' + Date.now();[m
+[32m+[m[32m                const userId = options.body?.user_id;[m
+[32m+[m[32m                const preferences = options.body?.preferences || {};[m
+[32m+[m[32m                const target_jobs = options.body?.target_jobs || [];[m
+[32m+[m[32m                // 保存用户参数到 localStorage，供后续生成报告时使用[m
+[32m+[m[32m                if (userId) {[m
+[32m+[m[32m                    try {[m
+[32m+[m[32m                        _storage.setItem('career_report_params_' + userId, JSON.stringify({ preferences, target_jobs }));[m
+[32m+[m[32m                    } catch (_) {}[m
+[32m+[m[32m                }[m
+[32m+[m[32m                // 创建新的mock报告[m
+[32m+[m[32m                const newReport = {[m
+[32m+[m[32m                    report_id: reportId,[m
+[32m+[m[32m                    created_at: new Date().toISOString(),[m
+[32m+[m[32m                    status: 'completed',[m
+[32m+[m[32m                    primary_career: '职业规划报告',[m
+[32m+[m[32m                    completeness: 90,[m
+[32m+[m[32m                    last_viewed: new Date().toISOString(),[m
+[32m+[m[32m                    preferences,[m
+[32m+[m[32m                    target_jobs[m
+[32m+[m[32m                };[m
+[32m+[m[32m                // 添加到mock报告数组[m
+[32m+[m[32m                this.mockCareerReports.unshift(newReport);[m
+[32m+[m[32m                // 保存到localStorage[m
+[32m+[m[32m                this.saveMockCareerReports();[m
+[32m+[m[32m                // 同时保存到 career_report_history_{userId}[m
+[32m+[m[32m                if (userId) {[m
+[32m+[m[32m                    const historyKey = 'career_report_history_' + userId;[m
+[32m+[m[32m                    let historyList = [];[m
+[32m+[m[32m                    try {[m
+[32m+[m[32m                        const raw = _storage.getItem(historyKey);[m
+[32m+[m[32m                        if (raw) historyList = JSON.parse(raw);[m
+[32m+[m[32m                        if (!Array.isArray(historyList)) historyList = [];[m
+[32m+[m[32m                    } catch (_) {}[m
+[32m+[m[32m                    const exists = historyList.some(item => (item.report_id || item.id) === reportId);[m
+[32m+[m[32m                    if (!exists) {[m
+[32m+[m[32m                        historyList.unshift({[m
+[32m+[m[32m                            report_id: reportId,[m
+[32m+[m[32m                            created_at: newReport.created_at,[m
+[32m+[m[32m                            primary_career: newReport.primary_career,[m
+[32m+[m[32m                            completeness: newReport.completeness,[m
+[32m+[m[32m                            status: newReport.status,[m
+[32m+[m[32m                            preferences,[m
+[32m+[m[32m                            target_jobs[m
+[32m+[m[32m                        });[m
+[32m+[m[32m                        try {[m
+[32m+[m[32m                            _storage.setItem(historyKey, JSON.stringify(historyList));[m
+[32m+[m[32m                        } catch (_) {}[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                }[m
+[32m+[m[32m                return { success: true, data: { report_id: reportId, status: 'processing' }, msg: '报告生成中，预计需要30秒...' };[m
+[32m+[m[32m            }[m
+             case '/career/report':[m
+[31m-            case '/career/view-report':[m
+[31m-                return { success: true, data: this.mockCareerReportFull() };[m
+[32m+[m[32m            case '/career/view-report': {[m
+[32m+[m[32m                const userId = data?.user_id;[m
+[32m+[m[32m                let preferences = {};[m
+[32m+[m[32m                let target_jobs = [];[m
+[32m+[m[32m                // 尝试从 localStorage 读取用户参数[m
+[32m+[m[32m                if (userId) {[m
+[32m+[m[32m                    try {[m
+[32m+[m[32m                        const raw = _storage.getItem('career_report_params_' + userId);[m
+[32m+[m[32m                        if (raw) {[m
+[32m+[m[32m                            const params = JSON.parse(raw);[m
+[32m+[m[32m                            preferences = params.preferences || {};[m
+[32m+[m[32m                            target_jobs = params.target_jobs || [];[m
+[32m+[m[32m                        }[m
+[32m+[m[32m                    } catch (_) {}[m
+[32m+[m[32m                }[m
+[32m+[m[32m                return { success: true, data: this.mockCareerReportFull(preferences, target_jobs) };[m
+[32m+[m[32m            }[m
+             case '/career/report-history':[m
+[31m-                return { success: true, data: { total: 2, list: [[m
+[31m-                    { report_id: 'report_career_001', created_at: new Date().toISOString(), status: 'completed', primary_career: '算法工程师', completeness: 95, last_viewed: new Date().toISOString() },[m
+[31m-                    { report_id: 'report_car
