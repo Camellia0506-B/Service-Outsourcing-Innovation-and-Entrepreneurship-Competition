@@ -1,0 +1,37 @@
+{
+  "standard": "A",
+  "generated_at": "2026-03-07 16:23:10",
+  "ai_base_url": "http://127.0.0.1:5002/api/v1",
+  "mysql": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "db": "gradquest",
+    "user": "gradquest",
+    "driver": "pymysql"
+  },
+  "sample_user_ids": [
+    22,
+    6,
+    24
+  ],
+  "per_student": [
+    {
+      "user_id": 22,
+      "error": "recommend-jobs returned empty list",
+      "accuracy": 0.0
+    },
+    {
+      "user_id": 6,
+      "error": "recommend-jobs returned empty list",
+      "accuracy": 0.0
+    },
+    {
+      "user_id": 24,
+      "error": "recommend-jobs returned empty list",
+      "accuracy": 0.0
+    }
+  ],
+  "average_accuracy": 0.0,
+  "pass_threshold": 0.8,
+  "passed": false
+}

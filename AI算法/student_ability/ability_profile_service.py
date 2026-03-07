@@ -331,6 +331,16 @@ class AIAbilityProfileGenerator:
             ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return ability_profile
 
+        # 如果未配置大模型 Key，则直接降级为规则画像（避免网络重试/超时导致接口长时间无响应）
+        if (self.model is None) or (not os.environ.get("DASHSCOPE_API_KEY")):
+            logger.warning("[AbilityProfile] 未检测到 DASHSCOPE_API_KEY，使用规则画像降级生成 user_id=%s", user_id)
+            ability_profile = self._build_rule_based_profile(user_id, profile_data)
+            ability_profile = self._score_profile(ability_profile)
+            ability_profile["user_id"] = user_id
+            ability_profile["profile_id"] = f"profile_{user_id}"
+            ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return ability_profile
+
         # 构造Prompt
         prompt = self._build_generation_prompt(profile_data)
         
@@ -373,6 +383,16 @@ class AIAbilityProfileGenerator:
         输出：7维度能力画像
         """
         logger.info(f"[AbilityProfile] 开始生成用户{user_id}的能力画像（数据源：简历）")
+        
+        if (self.model is None) or (not os.environ.get("DASHSCOPE_API_KEY")):
+            logger.warning("[AbilityProfile] 未检测到 DASHSCOPE_API_KEY，简历画像生成改用规则画像降级 user_id=%s", user_id)
+            ability_profile = self._build_rule_based_profile(user_id, {})
+            ability_profile = self._score_profile(ability_profile)
+            ability_profile["user_id"] = user_id
+            ability_profile["profile_id"] = f"profile_{user_id}"
+            ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return ability_profile
+
         
         if (self.model is None) or (not os.environ.get("DASHSCOPE_API_KEY")):
             logger.warning("[AbilityProfile] 未检测到 DASHSCOPE_API_KEY，简历画像生成改用规则画像降级 user_id=%s", user_id)
@@ -428,6 +448,7 @@ class AIAbilityProfileGenerator:
   "professional_skills": {{
     "programming_languages": [
       { "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }
+      { "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }
     ],
     "frameworks_tools": [...],
     "domain_knowledge": [...]
@@ -438,7 +459,16 @@ class AIAbilityProfileGenerator:
     "competitions": [{ "name": "竞赛名称", "award": "获奖等级" }]
   },
   "learning_ability": {
+  },
+  "certificates": { "items": [{ "name": "证书名称", "level": "级别", "issue_date": "YYYY-MM" }] },
+  "innovation_ability": {
+    "projects": [{ "name": "项目名称", "innovation_points": ["创新点"], "impact": "影响" }],
+    "competitions": [{ "name": "竞赛名称", "award": "获奖等级" }]
+  },
+  "learning_ability": {
     "indicators": [
+      { "indicator": "GPA", "value": 3.8, "percentile": 85 },
+      { "indicator": "自学新技术", "evidence": ["证据"] }
       { "indicator": "GPA", "value": 3.8, "percentile": 85 },
       { "indicator": "自学新技术", "evidence": ["证据"] }
     ]
@@ -453,9 +483,21 @@ class AIAbilityProfileGenerator:
     "projects": [{ "name": "项目", "role": "角色", "complexity": "高/中/低" }]
   }
 }"""
+  },
+  "pressure_resistance": { "evidence": ["抗压证据"] },
+  "communication_ability": {
+    "teamwork": { "evidence": ["团队协作证据"] },
+    "presentation": { "evidence": ["演讲展示证据"] }
+  },
+  "practical_experience": {
+    "internships": [{ "company": "公司", "position": "职位", "duration": "X个月", "achievements": ["成就"] }],
+    "projects": [{ "name": "项目", "role": "角色", "complexity": "高/中/低" }]
+  }
+}"""
     
     def _build_generation_prompt(self, profile_data: dict) -> str:
         """构造生成Prompt"""
+        schema = self._ability_profile_output_schema()
         schema = self._ability_profile_output_schema()
         return f"""你是一位资深的HR和职业规划顾问。请根据以下学生档案，生成**学生就业能力画像**。
         
@@ -805,8 +847,23 @@ class StudentAbilityProfileService:
         existing_profile = self.profiles_store.get(profile_id)
 
         # 获取个人档案数据（用于判断是否需要更新）
+
+        # 若画像已存在，允许直接返回（即使档案模块不可用/未完善）
+        existing_profile = self.profiles_store.get(profile_id)
+
+        # 获取个人档案数据（用于判断是否需要更新）
         profile_data = self._get_user_profile_data(user_id)
         if not profile_data:
+            if existing_profile:
+                logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，返回已存在画像: {profile_id}")
+                return existing_profile
+            # 档案不存在时也给一个规则画像兜底，避免前端“看不见能力画像”
+            logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，生成规则画像兜底: {profile_id}")
+            resolved_profile = self._adapt_profile_for_generator({})
+            ability_profile = self.generator.generate_from_profile(user_id, resolved_profile)
+            self.profiles_store[profile_id] = ability_profile
+            _save_profiles_store(self.profiles_store)
+            return ability_profile
             if existing_profile:
                 logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，返回已存在画像: {profile_id}")
                 return existing_profile
@@ -829,6 +886,7 @@ class StudentAbilityProfileService:
             profile_updated_at = ""
         
         # 检查能力画像是否存在，以及是否需要更新
+        if existing_profile:
         if existing_profile:
             ability_updated_at = existing_profile.get("updated_at", existing_profile.get("generated_at", ""))
             
@@ -881,6 +939,9 @@ class StudentAbilityProfileService:
             if not profile_data:
                 profile_data = self._get_user_profile_data(user_id)
             if not profile_data:
+                # 档案不存在时也允许生成一个兜底规则画像，避免流程被硬阻塞
+                logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，画像生成将使用空档案兜底")
+                profile_data = {}
                 # 档案不存在时也允许生成一个兜底规则画像，避免流程被硬阻塞
                 logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，画像生成将使用空档案兜底")
                 profile_data = {}
