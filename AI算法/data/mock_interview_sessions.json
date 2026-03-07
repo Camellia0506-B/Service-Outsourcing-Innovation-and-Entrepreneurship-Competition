@@ -101,5 +101,152 @@
       ]
     },
     "total_score": 85
+  },
+  "4708cb8d-c822-4bf6-89c2-b7128d57bbf3": {
+    "interview_id": "4708cb8d-c822-4bf6-89c2-b7128d57bbf3",
+    "user_id": 1,
+    "target_job_title": "Java",
+    "interview_type": "comprehensive",
+    "difficulty": "medium",
+    "duration_minutes": 30,
+    "started_at": "2026-03-07T22:04:17.202808",
+    "status": "in_progress",
+    "current_question_index": 0,
+    "messages": [
+      {
+        "role": "interviewer",
+        "content": "你好！我是AI面试官，今天将负责你Java岗位的面试。\n\n我们将进行大约30分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。",
+        "timestamp": "2026-03-07T22:04:17.202808"
+      },
+      {
+        "role": "user",
+        "content": "你好",
+        "timestamp": "2026-03-07T22:04:31.299126"
+      },
+      {
+        "role": "interviewer",
+        "content": "你好！很高兴见到你。请先简单介绍一下你自己吧，包括你的教育背景、工作经历以及为什么对Java开发感兴趣。期待你的分享。",
+        "timestamp": "2026-03-07T22:04:33.749511"
+      }
+    ],
+    "interviewer_persona": {
+      "name": "AI面试官",
+      "title": "Java面试官",
+      "style": "专业、严谨、注重细节",
+      "background": "10年以上相关行业经验，曾任职于多家知名企业"
+    },
+    "interview_plan": {
+      "total_questions": 5,
+      "duration_minutes": 30,
+      "question_types": [
+        "自我介绍",
+        "岗位认知",
+        "项目经验",
+        "技术能力",
+        "职业规划"
+      ]
+    }
+  },
+  "5b46ae7a-e676-4772-9f70-8d349f4e0a35": {
+    "interview_id": "5b46ae7a-e676-4772-9f70-8d349f4e0a35",
+    "user_id": 1,
+    "target_job_title": "Java",
+    "interview_type": "comprehensive",
+    "difficulty": "medium",
+    "duration_minutes": 30,
+    "started_at": "2026-03-07T22:08:01.718088",
+    "status": "completed",
+    "current_question_index": 1,
+    "messages": [
+      {
+        "role": "interviewer",
+        "content": "你好！我是AI面试官，今天将负责你Java岗位的面试。\n\n我们将进行大约30分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。",
+        "timestamp": "2026-03-07T22:08:01.718088"
+      },
+      {
+        "role": "user",
+        "content": "你好",
+        "timestamp": "2026-03-07T22:08:07.449742"
+      },
+      {
+        "role": "interviewer",
+        "content": "你好，请先简单介绍一下你自己。可以包括你的教育背景、工作经历以及你认为自己最擅长的技术领域或项目经验。",
+        "timestamp": "2026-03-07T22:08:09.820174"
+      },
+      {
+        "role": "user",
+        "content": "我很厉害",
+        "timestamp": "2026-03-07T22:08:56.745837"
+      },
+      {
+        "role": "interviewer",
+        "content": "很高兴听到你对自己能力的自信。可以具体分享一下你的教育背景和工作经历吗？另外，能否谈谈你在过去的工作或学习中，遇到过哪些具体的挑战，以及你是如何克服这些挑战的？这样可以帮助我更全面地了解你的专业能力和经验。",
+        "timestamp": "2026-03-07T22:09:00.992617"
+      }
+    ],
+    "interviewer_persona": {
+      "name": "AI面试官",
+      "title": "Java面试官",
+      "style": "专业、严谨、注重细节",
+      "background": "10年以上相关行业经验，曾任职于多家知名企业"
+    },
+    "interview_plan": {
+      "total_questions": 5,
+      "duration_minutes": 30,
+      "question_types": [
+        "自我介绍",
+        "岗位认知",
+        "项目经验",
+        "技术能力",
+        "职业规划"
+      ]
+    },
+    "total_score": 20
+  },
+  "28a3e341-7b34-4ced-8be6-d5b95d494422": {
+    "interview_id": "28a3e341-7b34-4ced-8be6-d5b95d494422",
+    "user_id": 1,
+    "target_job_title": "硬件测试师",
+    "interview_type": "comprehensive",
+    "difficulty": "hard",
+    "duration_minutes": 30,
+    "started_at": "2026-03-07T22:10:14.451296",
+    "status": "completed",
+    "current_question_index": 0,
+    "messages": [
+      {
+        "role": "interviewer",
+        "content": "你好！我是AI面试官，今天将负责你硬件测试师岗位的面试。\n\n我们将进行大约30分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。",
+        "timestamp": "2026-03-07T22:10:14.451296"
+      },
+      {
+        "role": "user",
+        "content": "我来自计算机专业 擅长硬件处理 也会制作项目 有组织能力 实习经历",
+        "timestamp": "2026-03-07T22:10:35.944346"
+      },
+      {
+        "role": "interviewer",
+        "content": "感谢你的介绍。可以具体谈谈你在硬件处理方面的专长吗？比如，你最擅长处理哪类硬件问题或项目？此外，能否分享一个具体的实习经历，特别是与硬件测试相关的，以及在这个过程中你遇到了什么挑战，又是如何解决的？",
+        "timestamp": "2026-03-07T22:10:41.647323"
+      }
+    ],
+    "interviewer_persona": {
+      "name": "AI面试官",
+      "title": "硬件测试师面试官",
+      "style": "专业、严谨、注重细节",
+      "background": "10年以上相关行业经验，曾任职于多家知名企业"
+    },
+    "interview_plan": {
+      "total_questions": 5,
+      "duration_minutes": 30,
+      "question_types": [
+        "自我介绍",
+        "岗位认知",
+        "项目经验",
+        "技术能力",
+        "职业规划"
+      ]
+    },
+    "total_score": 60
   }
 }

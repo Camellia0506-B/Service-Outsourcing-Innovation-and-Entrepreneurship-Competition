@@ -12212,6 +12212,8 @@ function switchToInterviewReportTab() {
 function updateInterviewerHeader() {
     const nameEl = document.getElementById('interviewerName');
     const roleEl = document.getElementById('interviewerRole');
+    const avatarEl = document.getElementById('interviewerAvatar');
+    if (avatarEl) avatarEl.textContent = '🤖';
     if (!nameEl || !roleEl || !currentInterview) return;
     const persona = currentInterview.interviewer_persona;
     nameEl.textContent = (persona && persona.name) ? persona.name : 'AI面试官';

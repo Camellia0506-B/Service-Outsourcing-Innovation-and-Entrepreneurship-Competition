@@ -14515,13 +14515,13 @@ body.on-login-page #agentAssistant { display: none !important; }
 #mockInterviewPage .mock-msg { display: flex; gap: 12px; }
 #mockInterviewPage .mock-msg.user { flex-direction: row-reverse; }
 #mockInterviewPage .mock-msg-bubble { max-width: 68%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
-#mockInterviewPage .mock-msg-bubble.ai { background: var(--mock-white); border: 1px solid var(--mock-line); color: var(--mock-ink); border-radius: 4px 14px 14px 14px; }
-#mockInterviewPage .mock-msg-bubble.user { background: var(--mock-sage); color: #fff; border-radius: 14px 4px 14px 14px; }
+#mockInterviewPage .mock-msg-bubble.ai { background: var(--mock-bg); border: 1px solid var(--mock-line); color: var(--mock-ink); border-radius: 4px 14px 14px 14px; }
+#mockInterviewPage .mock-msg-bubble.user { background: #1a1a1a; color: #fff; border: none; border-radius: 14px 4px 14px 14px; }
 #mockInterviewPage .mock-chat-footer { padding: 16px 20px; border-top: 1px solid var(--mock-line); display: flex; flex-direction: column; gap: 10px; }
 #mockInterviewPage .mock-chat-input { width: 100%; min-height: 72px; resize: none; padding: 12px 16px; border: 1.5px solid var(--mock-line); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--mock-ink); outline: none; }
 #mockInterviewPage .mock-chat-input:focus { border-color: var(--mock-sage); }
 #mockInterviewPage .mock-chat-actions { display: flex; justify-content: flex-end; gap: 10px; }
-#mockInterviewPage .mock-btn-send { background: var(--mock-sage); color: #fff; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+#mockInterviewPage .mock-btn-send { background: #1a1a1a; color: #fff; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
 #mockInterviewPage .mock-btn-end { background: none; border: 1.5px solid var(--mock-line); color: var(--mock-ink-3); padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 #mockInterviewPage .mock-btn-end:hover { border-color: var(--mock-red); color: var(--mock-red); }
 /* 报告区域（#reportArea 在 mockInterviewPage 内） */
