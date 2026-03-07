@@ -33,6 +33,23 @@ from utils.logger_handler import logger
 from model.factory import chat_model
 
 
+def _safe_float(value, default: float = 0.0):
+    """将画像中的数值或'待补充'等占位符安全转为 float，避免匹配计算跳过。"""
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = (str(value).strip() if value else "").strip()
+    if not s or s in ("待补充", "未填写", "未知", "-", "—"):
+        return default
+    try:
+        if "/" in s:
+            s = s.split("/")[0].strip()
+        return float(s)
+    except (ValueError, TypeError):
+        return default
+
+
 # ============================================================
 # 创新算法1：向量Embedding技能相似度（准确率+5%）
 # ============================================================
@@ -543,17 +560,14 @@ class FineGrainedScorer:
         
         elif sub_dim == "gpa_score":
             gpa_str = student.get("basic_info", {}).get("gpa", "3.0/4.0")
-            try:
-                gpa = float(gpa_str.split("/")[0])
-                return min(int(gpa / 4.0 * 100), 100)
-            except:
-                return 75
+            gpa = _safe_float(gpa_str, 3.0)
+            return min(int(gpa / 4.0 * 100), 100)
         
         elif sub_dim == "learning_speed":
-            return student.get("learning_ability", {}).get("score", 75)
+            return int(_safe_float(student.get("learning_ability", {}).get("score", 75), 75.0))
         
         elif sub_dim == "communication":
-            return student.get("communication_ability", {}).get("overall_score", 70)
+            return int(_safe_float(student.get("communication_ability", {}).get("overall_score", 70), 70.0))
         
         # 其他子维度默认75分
         return 75
@@ -652,10 +666,11 @@ class HighPrecisionMatchingEngine:
             for dim in dimension_scores.values()
         ])
         
-        # 步骤5：历史数据校准
+        # 步骤5：历史数据校准（GPA 可能为“待补充”，需安全转换）
+        gpa_val = _safe_float(student_profile.get("basic_info", {}).get("gpa", "0/4"), 0.0)
         features = {
             "has_internship": len(student_profile.get("practical_experience", {}).get("internships", [])) > 0,
-            "high_gpa": float(student_profile.get("basic_info", {}).get("gpa", "0/4").split("/")[0]) >= 3.5,
+            "high_gpa": gpa_val >= 3.5,
             "many_projects": len(student_profile.get("practical_experience", {}).get("projects", [])) >= 3
         }
         
@@ -686,24 +701,20 @@ class HighPrecisionMatchingEngine:
         }
     
     def _soft_skills_score_from_job(self, student: Dict, job: Dict) -> int:
-        """根据岗位软技能要求与学生能力对比计分，使职业素养维度随岗位真实要求变化（非假数据）。"""
+        """根据岗位软技能要求与学生能力对比计分；画像可能含“待补充”，需安全转为数值。"""
         job_soft = job.get("requirements", {}).get("soft_skills", {})
         req_level_to_threshold = {"高": 78, "中": 65, "低": 55}
         scores = []
-        # 创新
-        raw = student.get("innovation_ability", {}).get("score", 70)
+        raw = _safe_float(student.get("innovation_ability", {}).get("score", 70), 70.0)
         th = req_level_to_threshold.get(job_soft.get("innovation", "中"), 65)
         scores.append(min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9)))
-        # 学习
-        raw = student.get("learning_ability", {}).get("score", 75)
+        raw = _safe_float(student.get("learning_ability", {}).get("score", 75), 75.0)
         th = req_level_to_threshold.get(job_soft.get("learning", "高"), 65)
         scores.append(min(100, 55 + raw) if raw >= th else max(50, int(raw * 0.85)))
-        # 沟通
-        raw = student.get("communication_ability", {}).get("overall_score", 70)
+        raw = _safe_float(student.get("communication_ability", {}).get("overall_score", 70), 70.0)
         th = req_level_to_threshold.get(job_soft.get("communication", "中"), 65)
         scores.append(min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9)))
-        # 抗压
-        raw = student.get("pressure_resistance", {}).get("assessment_score", 75)
+        raw = _safe_float(student.get("pressure_resistance", {}).get("assessment_score", 75), 75.0)
         th = req_level_to_threshold.get(job_soft.get("pressure", "中"), 65)
         scores.append(min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9)))
         return int(np.mean(scores))
@@ -732,7 +743,7 @@ class HighPrecisionMatchingEngine:
         for skill_type in ["programming_languages", "frameworks_tools", "domain_knowledge"]:
             for job_skill in job_reqs.get(skill_type, []):
                 skill_name = job_skill.get("skill", "")
-                weight = job_skill.get("weight", 0.05)
+                weight = _safe_float(job_skill.get("weight", 0.05), 0.05)
                 importance = job_skill.get("importance", "重要")
                 
                 # 重要性加权

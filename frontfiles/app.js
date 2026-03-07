@@ -5192,37 +5192,22 @@ class CareerPlanningApp {
             container.innerHTML = '<div class="hint-text">' + hint + '</div>';
             this.updateRecStats([]);
         } else {
-            // 服务不可用或超时：用兜底演示数据保证页面可浏览，并提示启动服务以获取真实匹配
-            const fallbackList = this._getRecommendedJobsFallback();
-            if (fallbackList.length > 0) {
-                this.currentRecommendations = fallbackList;
-                this.recFilter = 'all';
-                this.updateRecStats(this.currentRecommendations);
-                this.renderRecommendedJobs(this.currentRecommendations, container);
-                this.bindRecStatTiles();
-                this.bindRecCardClicks();
-                const notice = document.createElement('div');
-                notice.className = 'hint-text';
-                notice.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#e0f2fe,#fef3c7);border-radius:10px;border:1px solid rgba(59,130,246,0.2);font-size:13px;';
-                notice.textContent = '当前为演示数据。请启动 Java 后端(5000) 或 AI 服务(5002) 以获取基于能力画像的真实推荐。';
-                container.insertBefore(notice, container.firstChild);
-            } else {
-                const msg = (result.msg || '') + '';
-                const isAbilityProfile = msg.includes('能力画像');
-                const isRouteNotFound = (result.code === 404 && msg.includes('接口不存在')) || (String(result.msg || '').includes('NOT FOUND'));
-                const isTimeout = msg.includes('超时') || msg.includes('请求超时');
-                const hint = !result.success && isTimeout
-                    ? (msg || '请求超时，请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常')
-                    : (!result.success && isAbilityProfile
-                        ? '暂无推荐岗位，请先完善个人档案并生成能力画像'
-                        : (!result.success && isRouteNotFound
-                            ? '推荐岗位接口未就绪（请用项目根目录 start_ai_service.ps1 或 cd AI算法 && python app.py 启动 AI 服务 http://localhost:5002）'
-                            : (!result.success && result.code === 404
-                                ? '推荐岗位服务暂不可用（请确认已启动 AI 服务 http://localhost:5002）'
-                                : '暂无推荐岗位。请先完善能力画像；若已完善，请确认已加载岗位数据（系统管理 → 生成岗位画像 或 配置 CSV）')));
-                container.innerHTML = '<div class="hint-text">' + hint + '</div>';
+            // 服务不可用或超时：不展示演示数据，仅显示明确提示，避免误导用户
+            const msg = (result.msg || '') + '';
+            const isAbilityProfile = msg.includes('能力画像');
+            const isRouteNotFound = (result.code === 404 && msg.includes('接口不存在')) || (String(result.msg || '').includes('NOT FOUND'));
+            const isTimeout = msg.includes('超时') || msg.includes('请求超时');
+            const hint = isTimeout
+                ? (msg || '推荐服务响应超时。请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面获取真实推荐。')
+                : (isAbilityProfile
+                    ? '暂无推荐岗位，请先完善个人档案并生成能力画像'
+                    : (isRouteNotFound
+                        ? '推荐岗位接口未就绪。请用项目根目录 start_ai_service.ps1 或 cd AI算法 && python app.py 启动 AI 服务 (http://localhost:5002) 后刷新。'
+                        : (result.code === 404
+                            ? '推荐岗位服务暂不可用。请确认已启动 AI 服务 (http://localhost:5002) 或 Java 后端(5000) 后刷新。'
+                            : '无法获取推荐岗位。请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面，即可获取基于能力画像的真实推荐。')));
+            container.innerHTML = '<div class="hint-text">' + hint + '</div>';
             this.updateRecStats([]);
-            }
         }
     }
 
@@ -9646,7 +9631,14 @@ class CareerPlanningApp {
         this.showReportContentArea();
         const result = await getCareerReport(userId || 10001, reportId);
         if (!result.success || !result.data) {
-            contentDiv.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
+            const msg = (result.msg || '未知错误') + '';
+            const isTimeout = msg.indexOf('超时') !== -1 || msg.indexOf('timeout') !== -1;
+            const hint = isTimeout
+                ? '报告加载超时。请确认 AI 服务已启动：在项目根目录运行 start_ai_service.ps1，或执行 cd AI算法 && python app.py，启动后刷新本页重试。'
+                : (msg.indexOf('5002') !== -1 || msg.indexOf('127.0.0.1') !== -1
+                    ? '无法连接报告服务。请先启动 AI 服务（start_ai_service.ps1 或 cd AI算法 && python app.py），再刷新页面。'
+                    : '加载失败：' + msg);
+            contentDiv.innerHTML = '<div class="hint-text">' + hint + '</div>';
             return;
         }
         this.currentReportId = reportId;

@@ -30,6 +30,25 @@ from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
 from model.factory import chat_model
 
+
+def _safe_float(value, default: float = 0.0):
+    """将画像中的数值或'待补充'等占位符安全转为 float，避免匹配计算跳过。"""
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = (str(value).strip() if value else "").strip()
+    if not s or s in ("待补充", "未填写", "未知", "-", "—"):
+        return default
+    try:
+        # 支持 "3.2/4.0" 形式取分子
+        if "/" in s:
+            s = s.split("/")[0].strip()
+        return float(s)
+    except (ValueError, TypeError):
+        return default
+
+
 # 集成已有模块
 from job_profile.job_profile_service import get_job_profile_service
 from job_profile.job_dataset_service import calculate_weighted_skill_match
@@ -552,12 +571,12 @@ class JobMatchingEngine:
         }
         scores.append(100 if major_match else 80)
         
-        # 3. GPA匹配
+        # 3. GPA匹配（支持画像中的“待补充”等占位符，避免 float 转换报错）
         gpa_req = job_basic_reqs.get("gpa", {})
         if gpa_req:
-            min_gpa = float(gpa_req.get("min_requirement", "3.0").split("/")[0])
+            min_gpa = _safe_float(gpa_req.get("min_requirement", "3.0"), 3.0)
             student_gpa_str = basic_info.get("gpa", "3.0/4.0")
-            student_gpa = float(student_gpa_str.split("/")[0]) if "/" in student_gpa_str else 3.0
+            student_gpa = _safe_float(student_gpa_str, 3.0)
             
             gpa_match = student_gpa >= min_gpa
             details["gpa"] = {
@@ -607,7 +626,7 @@ class JobMatchingEngine:
                 skill_name = job_skill.get("skill", "")
                 required_level = job_skill.get("level", "熟悉")
                 importance = job_skill.get("importance", "重要")
-                weight = job_skill.get("weight", 0.05)
+                weight = _safe_float(job_skill.get("weight", 0.05), 0.05)
                 
                 total_weight += weight
                 
@@ -679,10 +698,10 @@ class JobMatchingEngine:
         job_soft = job.get("requirements", {}).get("soft_skills", {})
         req_level_to_threshold = {"高": 78, "中": 65, "低": 55}
 
-        # 1. 创新能力
+        # 1. 创新能力（画像可能为“待补充”，需安全转为数值）
         innovation_req = job_soft.get("innovation", "中")
         student_innovation = student.get("innovation_ability", {})
-        raw = student_innovation.get("score", 70)
+        raw = _safe_float(student_innovation.get("score", 70), 70.0)
         th = req_level_to_threshold.get(innovation_req, 65)
         innovation_score = min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9))
         details["innovation_ability"] = {"required": innovation_req, "student": student_innovation.get("level", "中等"), "score": innovation_score}
@@ -691,7 +710,7 @@ class JobMatchingEngine:
         # 2. 学习能力
         learning_req = job_soft.get("learning", "高")
         student_learning = student.get("learning_ability", {})
-        raw = student_learning.get("score", 75)
+        raw = _safe_float(student_learning.get("score", 75), 75.0)
         th = req_level_to_threshold.get(learning_req, 65)
         learning_score = min(100, 55 + raw) if raw >= th else max(50, int(raw * 0.85))
         details["learning_ability"] = {"required": learning_req, "student": student_learning.get("level", "良好"), "score": learning_score}
@@ -700,7 +719,7 @@ class JobMatchingEngine:
         # 3. 沟通能力
         comm_req = job_soft.get("communication", "中")
         student_comm = student.get("communication_ability", {})
-        raw = student_comm.get("overall_score", 70)
+        raw = _safe_float(student_comm.get("overall_score", 70), 70.0)
         th = req_level_to_threshold.get(comm_req, 65)
         comm_score = min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9))
         details["communication_ability"] = {"required": comm_req, "student": student_comm.get("level", "良好"), "score": comm_score}
@@ -709,7 +728,7 @@ class JobMatchingEngine:
         # 4. 抗压能力
         pressure_req = job_soft.get("pressure", "中")
         student_pressure = student.get("pressure_resistance", {})
-        raw = student_pressure.get("assessment_score", 75)
+        raw = _safe_float(student_pressure.get("assessment_score", 75), 75.0)
         th = req_level_to_threshold.get(pressure_req, 65)
         pressure_score = min(100, 50 + raw) if raw >= th else max(50, int(raw * 0.9))
         details["pressure_resistance"] = {"required": pressure_req, "student": student_pressure.get("level", "良好"), "score": pressure_score}
@@ -725,9 +744,9 @@ class JobMatchingEngine:
         """
         发展潜力匹配：学生潜力与岗位层级挂钩，高级/中级岗位要求更高基线，使不同岗位得分差异化。
         """
-        learning_score = student.get("learning_ability", {}).get("score", 75)
+        learning_score = _safe_float(student.get("learning_ability", {}).get("score", 75), 75.0)
         gpa_str = student.get("basic_info", {}).get("gpa", "3.0/4.0")
-        gpa = float(gpa_str.split("/")[0]) if "/" in gpa_str else 3.0
+        gpa = _safe_float(gpa_str, 3.0)
         gpa_score = min(int((gpa / 4.0) * 100), 100)
         projects_count = len(student.get("practical_experience", {}).get("projects", []))
         project_score = min(50 + projects_count * 15, 100)

@@ -1,0 +1,32 @@
+{
+  "status": "insufficient_data",
+  "reason": "测试数据不足：候选用户中仅找到 1/10 名“匹配成功”样本（recommend-jobs 有返回）。",
+  "found": 1,
+  "expected": 10,
+  "per_student": [
+    {
+      "user_id": 1,
+      "job_id": "CC872366650J40778062914",
+      "job_name": "Java",
+      "student_degree": "本科",
+      "student_major": "计算机科学与技术",
+      "student_certificates": [],
+      "required_degree": "本科",
+      "preferred_majors": [
+        "计算机",
+        "软件工程",
+        "电子信息"
+      ],
+      "required_certificates": [],
+      "education_ok": true,
+      "major_ok": true,
+      "cert_ok": true,
+      "qualified": true,
+      "reasons": {
+        "education": "本科 >= 本科",
+        "major": "student_major='计算机科学与技术' preferred=['计算机', '软件工程', '电子信息']",
+        "cert": "岗位未给证书要求"
+      }
+    }
+  ]
+}
