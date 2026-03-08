@@ -45,6 +45,7 @@
     --dim: #5a6a8a;
     --muted: #aab4cc;
     --border: rgba(79,124,255,0.12);
+    --sidebar-w: 220px;
 }
 
 /* ══════════════════════════════════════
@@ -837,7 +838,17 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
-    position: relative;
+    display: flex;
+    height: 100vh;
+    min-height: 100vh;
+}
+
+/* 外层布局：navbar + 主内容区 */
+#app {
+    display: flex;
+    height: 100vh;
+    flex: 1;
+    min-width: 0;
 }
 
 #globalBlobs {
@@ -930,116 +941,138 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* 导航栏 */
+/* 导航栏：左侧固定侧边栏 */
 .navbar {
-    height: 64px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 1px 0 var(--light-blue-border);
-    position: sticky;
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    height: 100%;
+    background: #ffffff;
+    border-right: 1px solid #e8e6df;
+    border-bottom: none;
+    position: fixed;
     top: 0;
+    left: 0;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
 }
 
 .nav-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 24px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    justify-content: flex-start;
 }
 
 .nav-brand {
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid #e8e6df;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .nav-brand-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: #3b5bdb;
-    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: #1c1c18;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 18px;
-    font-weight: 800;
-    font-family: inherit;
+    flex-shrink: 0;
 }
 
 .nav-brand h1 {
-    font-family: var(--font-heading);
-    font-size: 20px;
+    font-size: 12.5px;
     font-weight: 700;
-    color: var(--deep-blue);
-    letter-spacing: -0.02em;
+    color: #1c1c18;
+    line-height: 1.3;
+    letter-spacing: -.1px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
 }
 
 .nav-menu {
-    display: flex;
-    align-items: center;
     flex: 1;
-    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 10px;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow-y: auto;
 }
 
 .nav-inner {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    background: #f4f5f9;
-    border-radius: 10px;
-    padding: 4px;
-    gap: 2px;
+    flex-direction: column;
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    gap: 4px;
+    width: 100%;
 }
 
 .nav-inner a {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    padding: 6px 18px;
-    font-size: 14px;
-    color: #666;
+    padding: 11px 12px;
+    font-size: 13px;
+    color: #5a5a52;
     text-decoration: none;
-    border-radius: 7px;
+    border-radius: 6px;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: background .1s, color .1s;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
 }
 
 .nav-inner a:hover {
-    color: #3b5bdb;
-    background: rgba(59, 91, 219, 0.06);
+    background: #f7f6f2;
+    color: #1c1c18;
 }
 
 .nav-inner a.active {
-    background: #ffffff;
-    color: #3b5bdb;
+    background: #eef4ee;
+    color: #5e8c65;
     font-weight: 600;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
 }
 
 .nav-user {
+    padding: 12px 14px;
+    border-top: 1px solid #e8e6df;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #eef4ee;
+    border: 1px solid #c9deca;
+    flex-shrink: 0;
     object-fit: cover;
-    background: linear-gradient(135deg, #4f79f6, #3dd6c8);
 }
 
 .nav-user #userName {
@@ -1064,10 +1097,14 @@ body {
     border-color: var(--danger-color);
 }
 
-/* 页面布局 */
+/* 页面布局：主内容区域，占满剩余空间并可滚动 */
 .page {
-    min-height: calc(100vh - 64px);
-    padding: 40px 24px;
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    padding: 36px 40px 60px;
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
 }
 
 /* 登录/注册页面 */
@@ -1085,8 +1122,7 @@ body {
     padding: 48px;
     width: 100%;
     max-width: 440px;
-    /* 登录页改为扁平风格，去除厚重阴影 */
-    box-shadow: none;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     animation: slideUp 0.4s ease;
 }
 
@@ -1882,6 +1918,7 @@ body {
 }
 
 /* 职业规划报告生成区域样式 */
+}
 
 .question-card {
     background: var(--card-bg);
@@ -11741,283 +11778,6 @@ body {
     transition: all 0.2s ease;
 }
 
-/* ══════════════════════════════════════
-   登录页 - 单卡片双栏布局（参照参考图）
-   ══════════════════════════════════════ */
-body.on-login-page {
-    font-family: 'DM Sans', system-ui, sans-serif;
-}
-
-body.on-login-page #globalBlobs { display: none; }
-
-#loginPage .login-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px 24px;
-    background: #f5f0eb;
-    position: relative;
-    overflow: hidden;
-}
-
-#loginPage .login-main-card {
-    display: flex;
-    width: 100%;
-    max-width: 1100px;
-    min-height: 640px;
-    background: #faf8f5;
-    border-radius: 28px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    overflow: hidden;
-    position: relative;
-    z-index: 1;
-}
-
-#loginPage .brand-section {
-    flex: 1;
-    padding: 56px 48px 56px 64px;
-    background: linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%);
-    position: relative;
-}
-
-#loginPage .brand-section::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60%;
-    height: 50%;
-    background: radial-gradient(ellipse at bottom left, rgba(210,228,204,0.4) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-#loginPage .brand-logo {
-    margin-bottom: 48px;
-}
-
-#loginPage .logo-square {
-    width: 44px;
-    height: 44px;
-    background: #111111;
-    color: #fff;
-    border-radius: 10px;
-    font-size: 22px;
-    font-weight: 700;
-    box-shadow: none;
-}
-
-#loginPage .brand-name h1 { display: none; }
-#loginPage .brand-name p {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 13px;
-    color: #9a8f82;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin: 8px 0 0 0;
-}
-
-#loginPage .brand-title h3 {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 14px;
-    color: #9a8f82;
-    font-weight: 400;
-    letter-spacing: 1px;
-    margin: 0 0 16px 0;
-}
-
-#loginPage .brand-title h3 .title-line {
-    display: inline-block;
-    width: 24px;
-    height: 0;
-    border-top: 1px dashed #c0b4a8;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-#loginPage .brand-title h2 {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 48px;
-    font-weight: 400;
-    color: #1f1f1f;
-    line-height: 1.2;
-    margin: 0 0 24px 0;
-}
-
-#loginPage .blue-text {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-style: italic;
-    color: #c26b43;
-}
-
-#loginPage .brand-description {
-    margin-bottom: 32px;
-}
-
-#loginPage .brand-description p {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 15px;
-    color: #5a524a;
-    line-height: 1.7;
-    margin: 0;
-}
-
-/* 悬浮状态卡片 */
-#loginPage .login-floating-card {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    margin-bottom: 40px;
-    animation: loginCardFloat 4s ease-in-out infinite;
-}
-
-@keyframes loginCardFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-}
-
-#loginPage .floating-card-progress {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: conic-gradient(#b8d4a8 0deg 270deg, #f0e7df 270deg 360deg);
-    flex-shrink: 0;
-}
-
-#loginPage .floating-card-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-#loginPage .floating-card-title {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: #1f1f1f;
-}
-
-#loginPage .floating-card-desc {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 13px;
-    color: #9a8f82;
-}
-
-/* 统计数据 - 水平排列 + 竖线分隔 */
-#loginPage .stats-section {
-    margin-top: 0;
-    padding-top: 32px;
-    border-top: 1px solid #e4d6c8;
-}
-
-#loginPage .stats-row {
-    display: flex;
-    gap: 0;
-    flex-wrap: nowrap;
-}
-
-#loginPage .stat-item {
-    flex: 1;
-    padding-left: 24px;
-    border-left: 1px solid #e0d5cc;
-}
-
-#loginPage .stat-item:first-child {
-    padding-left: 0;
-    border-left: none;
-}
-
-#loginPage .stat-number {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 28px;
-    font-weight: 400;
-    color: #1f1f1f;
-}
-
-#loginPage .stat-suffix {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 20px;
-    font-style: italic;
-    color: #9a8f82;
-}
-
-#loginPage .stat-label {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 13px;
-    color: #9a8f82;
-    margin-top: 4px;
-}
-
-/* 右侧表单区域 */
-#loginPage .form-section {
-    flex: 1;
-    padding: 56px 64px 56px 48px;
-    background: #fff;
-    min-height: auto;
-}
-
-#loginPage .career-login-card {
-    max-width: none;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-}
-
-#loginPage .career-btn-login {
-    background: #111111;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-
-#loginPage .career-btn-login:hover {
-    background: #000;
-    transform: translateY(-1px);
-}
-
-#loginPage .career-btn-register {
-    background: transparent;
-    border: 1px solid #e2d4c8;
-    color: #1f1f1f;
-}
-
-#loginPage .career-btn-register:hover {
-    background: #f7f3ef;
-    transform: translateY(-1px);
-}
-
-#loginPage .form-label { color: #1f1f1f; }
-#loginPage .career-login-form .input-icon path { stroke: #c0b4a8; }
-#loginPage .form-divider span { color: #9a8f82; background: #fff; }
-#loginPage .form-divider::before { background: linear-gradient(90deg, transparent, #e4d6c8, transparent); }
-#loginPage .remember-me label { color: #1f1f1f; }
-
-#loginPage .forgot-password {
-    color: #9a8f82;
-}
-
-#loginPage .login-terms a {
-    color: #9a8f82;
-}
-
-#loginPage .bg-grid { display: none; }
-#loginPage .bg-blobs .bg-blob-1 { background: radial-gradient(circle, rgba(242,209,176,0.35) 0%, transparent 70%); }
-#loginPage .bg-blobs .bg-blob-2 { background: radial-gradient(circle, rgba(210,228,204,0.3) 0%, transparent 70%); }
-#loginPage .bg-blobs .bg-blob-3 { background: radial-gradient(circle, rgba(245,228,213,0.35) 0%, transparent 70%); }
-#loginPage .login-bg-circles .login-circle { opacity: 0.5; }
-
-/* 登录页响应式 */
-@media (max-width: 900px) {
-    #loginPage .login-main-card { flex-direction: column; min-height: auto; }
-    #loginPage .brand-section { padding: 40px 32px; }
-    #loginPage .form-section { padding: 40px 32px; }
-    #loginPage .login-floating-card { margin-bottom: 24px; }
-}
-
 /* 职业登录界面样式 */
 .career-login-container {
     display: flex;
@@ -12118,14 +11878,13 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .bg-blob-3 {
-    width: 320px;
-    height: 320px;
-    top: 40%;
-    right: 5%;
-    /* 登录页整体去 AI 感：用暖中性色替代蓝紫渐变 */
-    background: radial-gradient(circle, #f6e5d3 0%, transparent 70%);
-    animation-duration: 18s;
-    animation-delay: 1s;
+    width: 300px;
+    height: 300px;
+    top: 50%;
+    right: 10%;
+    background: radial-gradient(circle, var(--indigo-blue), transparent 70%);
+    animation-duration: 15s;
+    animation-delay: 2s;
 }
 
 /* 背景特效 - 细网格纹理 */
@@ -12724,20 +12483,30 @@ body.on-login-page #globalBlobs { display: none; }
     width: 100%;
     max-width: 440px;
     padding: 32px 40px;
-    background: #ffffff;
-    border-radius: 24px;
-    /* 去除彩色描边与堆叠阴影，简化为细边框 */
-    box-shadow: none;
-    border: 1px solid #e6ded6;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    animation: loginFadeIn 0.5s ease-out 0.1s both;
+    background: var(--card-bg);
+    border-radius: 28px;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.08), 0 24px 64px rgba(15, 28, 63, 0.10), 0 8px 24px rgba(37, 99, 235, 0.06);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    animation: loginFadeIn 0.7s ease-out 0.2s both;
     position: relative;
     overflow: hidden;
 }
 
-/* 顶部彩色条与悬浮阴影不再使用，保持平面风格 */
-.career-login-card::before { display: none; }
-.career-login-card:hover { transform: none; box-shadow: none; }
+.career-login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue), var(--indigo-blue));
+    border-radius: 3px 3px 0 0;
+}
+
+.career-login-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 40px rgba(37, 99, 235, 0.15), 0 4px 16px rgba(37, 99, 235, 0.1);
+}
 
 .career-login-form {
     width: 100%;
@@ -12752,17 +12521,17 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .login-title {
-    font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+    font-family: var(--font-heading);
     font-size: 30px;
-    font-weight: 400;
-    color: #1f1f1f;
+    font-weight: 700;
+    color: var(--deep-navy);
     margin: 0 0 8px 0;
 }
 
 .login-subtitle {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 14px;
-    color: #8b8177;
+    font-family: var(--font-body);
+    font-size: 16px;
+    color: var(--gray-blue);
     margin: 0;
     line-height: 1.5;
 }
@@ -12905,25 +12674,25 @@ body.on-login-page #globalBlobs { display: none; }
 .career-login-form input {
     width: 100%;
     padding: 18px 20px 18px 50px;
-    border: 1px solid #e4d6cc;
-    border-radius: 18px;
+    border: 1px solid transparent;
+    border-radius: 14px;
     font-size: 16px;
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: #f7f3ef;
-    color: #1f1f1f;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    font-family: var(--font-body);
+    background: var(--bg-color);
+    color: var(--deep-navy);
+    transition: all 0.3s ease;
 }
 
 .career-login-form input::placeholder {
-    color: #b9afa6;
-    opacity: 1;
+    color: var(--gray-blue);
+    opacity: 0.8;
 }
 
 .career-login-form input:focus {
     outline: none;
-    border-color: #cfa47c;
-    box-shadow: none;
-    background: #ffffff;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    background: var(--bg-color);
 }
 
 .send-code-btn {
@@ -12977,23 +12746,24 @@ body.on-login-page #globalBlobs { display: none; }
 .career-btn-login {
     width: 100%;
     padding: 18px;
-    background: #111111;
+    background: var(--primary-blue);
     color: #fff;
     border: none;
-    border-radius: 18px;
+    border-radius: 14px;
     font-size: 17px;
     font-weight: 600;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: var(--font-body);
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    box-shadow: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
     position: relative;
     overflow: hidden;
 }
 
 .career-btn-login:hover {
     transform: translateY(-1px);
-    background: #000000;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(37, 99, 235, 0.2);
+    background: linear-gradient(135deg, var(--sky-blue), var(--indigo-blue));
 }
 
 .form-divider {
@@ -13027,21 +12797,21 @@ body.on-login-page #globalBlobs { display: none; }
     width: 100%;
     padding: 18px;
     background: transparent;
-    color: #1f1f1f;
-    border: 1px solid #e2d4c8;
-    border-radius: 18px;
+    color: var(--primary-blue);
+    border: 1px solid var(--primary-blue);
+    border-radius: 14px;
     font-size: 16px;
     font-weight: 600;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: var(--font-body);
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .career-btn-register:hover {
-    border-color: #d6c6b8;
-    background: #f7f3ef;
-    transform: translateY(-1px);
-    box-shadow: none;
+    border-color: var(--primary-blue);
+    background: rgba(37, 99, 235, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
 }
 
 /* AI登录界面样式（保留旧样式以兼容其他功能） */
@@ -13856,13 +13626,13 @@ body.on-login-page #globalBlobs { display: none; }
 
 /* 首页样式 */
 
-/* 主页面容器 */
+/* 主页面容器：不限制高度，允许内容撑开与滚动 */
 #dashboardPage.dashboard-page {
-    min-height: 100vh;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
     padding: 40px 24px 60px;
     background: transparent;
-    position: relative;
-    overflow: hidden;
     position: relative;
     z-index: 1;
     max-width: 1400px;
@@ -14684,8 +14454,11 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 /* ========== 合并：悬浮聊天智能体样式（与图谱共存，不覆盖现有样式） ========== */
-body.on-login-page #agentFab,
 body.on-login-page #agentAssistant { display: none !important; }
+
+/* 小智浮层置于所有内容之上（高于暖白背景、导航、弹窗等），避免被遮挡 */
+#agentFab { z-index: 99999 !important; }
+#agentAssistant { z-index: 99998 !important; }
 
 .agent-fab {
   position: fixed;
@@ -14701,7 +14474,7 @@ body.on-login-page #agentAssistant { display: none !important; }
   justify-content: center;
   box-shadow: 0 6px 28px rgba(79, 124, 255, 0.5);
   cursor: move;
-  z-index: 9999;
+  z-index: 99999;
   transition: transform 0.2s, box-shadow 0.2s;
   user-select: none;
 }
@@ -14798,7 +14571,7 @@ body.on-login-page #agentAssistant { display: none !important; }
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(79, 100, 200, 0.2);
-  z-index: 9996;
+  z-index: 99998;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -15009,6 +14782,7 @@ body.on-login-page #agentAssistant { display: none !important; }
 
 /* ģ������ģ����ʽ */
 /* 模拟面试页面样式（参考 mock_interview_ui.html，仅作用于 #mockInterviewPage） */
+/* 面试模块：无固定宽度限制，全宽 + border-box */
 #mockInterviewPage {
     --mock-ink: #1c1c18;
     --mock-ink-2: #5a5a52;
@@ -15030,10 +14804,10 @@ body.on-login-page #agentAssistant { display: none !important; }
     font-family: 'Noto Sans SC', sans-serif;
     background: var(--mock-bg);
     color: var(--mock-ink);
-    max-width: none;
     width: 100%;
-    padding: 24px 40px;
+    max-width: 100%;
     box-sizing: border-box;
+    padding: 24px 40px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -15741,3 +15515,356 @@ body.on-login-page #agentAssistant { display: none !important; }
     #mockInterviewPage .mock-history-table-head,
     #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
 }
+
+/* 侧边栏响应式：小屏恢复为顶部横条 */
+@media (max-width: 768px) {
+    .navbar {
+        width: 100%;
+        height: auto;
+        min-height: unset;
+        position: sticky;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid #e8e6df;
+    }
+    .nav-container {
+        flex-direction: row;
+        min-height: unset;
+        align-items: center;
+        padding: 0 16px;
+        height: 56px;
+    }
+    .nav-menu {
+        flex-direction: row;
+        padding: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .nav-inner {
+        flex-direction: row;
+        gap: 2px;
+    }
+    .nav-user { border-top: none; border-left: 1px solid #e8e6df; padding: 0 14px; }
+    .page {
+        margin-left: 0;
+        padding: 24px 20px 40px;
+    }
+}
+
+/* ========== 侧边栏 200px 与导航图标（覆盖此前侧边栏样式） ========== */
+:root {
+    --sidebar-w: 200px;
+}
+.navbar {
+    width: 200px !important;
+    min-height: 100vh;
+    height: 100%;
+    background: #ffffff !important;
+    border-right: 1px solid #e8e6df !important;
+    border-bottom: none !important;
+    position: fixed !important;
+    top: 0; left: 0;
+    z-index: 100;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+.nav-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+.nav-brand {
+    padding: 16px 16px 12px !important;
+    border-bottom: 1px solid #e8e6df;
+    flex-shrink: 0;
+}
+.nav-brand h1 {
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+    letter-spacing: -.1px !important;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif !important;
+}
+.nav-menu {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 12px 10px !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    overflow-y: auto !important;
+}
+.nav-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    background: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    gap: 6px !important;
+    width: 100% !important;
+}
+.nav-inner a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 12px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+}
+.nav-inner a.active {
+    background: #eef4ee !important;
+    color: #5e8c65 !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+.nav-inner a:hover {
+    background: #f7f6f2 !important;
+    color: #1c1c18 !important;
+}
+.nav-user {
+    padding: 10px 12px !important;
+    border-top: 1px solid #e8e6df !important;
+    flex-shrink: 0 !important;
+}
+.page {
+    margin-left: 200px !important;
+    min-height: 100vh !important;
+    padding: 32px 36px 60px !important;
+}
+
+/* 小智悬浮球定位强制修复（避免被父级 transform/filter 破坏 fixed 参考系） */
+.agent-fab {
+    position: fixed !important;
+    right: 32px !important;
+    bottom: 32px !important;
+    z-index: 99999 !important;
+    transform: none;
+}
+
+#agentAssistant {
+    position: fixed !important;
+    right: 32px !important;
+    bottom: 130px !important;
+    z-index: 99998 !important;
+}
+
+/* 覆盖导航项尺寸（参考图二，增加每项高度与间距） */
+.nav-inner a {
+    padding: 11px 12px !important;
+    font-size: 13px !important;
+    gap: 10px !important;
+    line-height: 1.45 !important;
+    min-height: 40px !important;
+}
+
+.nav-inner a svg {
+    width: 14px !important;
+    height: 14px !important;
+    flex-shrink: 0 !important;
+}
+
+.nav-section-label,
+.nav-inner > div[style] {
+    font-size: 10px !important;
+    padding-top: 14px !important;
+    padding-bottom: 8px !important;
+}
+
+.nav-brand {
+    padding: 18px 16px 14px !important;
+}
+
+.nav-brand-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+}
+
+.nav-brand h1 {
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+}
+
+.nav-user {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+}
+
+.user-avatar {
+    width: 26px !important;
+    height: 26px !important;
+}
+
+#userName {
+    font-size: 12px !important;
+}
+
+/* ══ 小智配色重置：蓝紫 → 暖绿/墨黑 ══ */
+
+/* 悬浮球 */
+.agent-fab {
+    background: #1c1c18 !important;
+    box-shadow: 0 4px 20px rgba(28,28,24,0.25) !important;
+}
+.agent-fab:hover {
+    transform: scale(1.04) !important;
+    box-shadow: 0 6px 28px rgba(28,28,24,0.32) !important;
+}
+/* 雷达扩散环改为墨绿色 */
+.agent-fab::before,
+.agent-fab::after {
+    border-color: rgba(94,140,101,0.3) !important;
+}
+@keyframes agent-fab-radar {
+    0%   { width: 80px; height: 80px; opacity: 0.6; }
+    100% { width: 136px; height: 136px; opacity: 0; }
+}
+/* 悬浮球大小收窄 */
+.agent-fab {
+    width: 52px !important;
+    height: 52px !important;
+}
+.agent-fab-icon {
+    font-size: 24px !important;
+}
+@keyframes agent-fab-radar {
+    0%   { width: 52px; height: 52px; opacity: 0.5; }
+    100% { width: 100px; height: 100px; opacity: 0; }
+}
+.agent-fab-dot {
+    top: 6px !important;
+    right: 6px !important;
+    width: 10px !important;
+    height: 10px !important;
+    background: #5e8c65 !important;
+}
+
+/* 对话面板整体 */
+.agent-assistant {
+    border-radius: 10px !important;
+    box-shadow: 0 8px 32px rgba(28,28,24,0.14) !important;
+    border: 1px solid #e8e6df !important;
+}
+
+/* 面板 header：蓝紫渐变 → 墨色 */
+.agent-header {
+    background: #1c1c18 !important;
+    padding: 12px 14px !important;
+}
+.agent-header-avatar {
+    background: rgba(255,255,255,0.12) !important;
+}
+.agent-status-dot {
+    background: #5e8c65 !important;
+}
+
+/* AI气泡：蓝底 → 暖纸白 */
+.agent-msg-bot .agent-msg-bubble {
+    background: #f7f6f2 !important;
+    color: #1c1c18 !important;
+    border: 1px solid #e8e6df !important;
+    border-radius: 3px 10px 10px 10px !important;
+}
+
+/* 用户气泡：蓝紫渐变 → 墨黑 */
+.agent-msg-user .agent-msg-bubble {
+    background: #1c1c18 !important;
+    color: #fff !important;
+    border-radius: 10px 3px 10px 10px !important;
+}
+
+/* 链接颜色 */
+.agent-msg-bubble .agent-inline-link {
+    color: #5e8c65 !important;
+    border-bottom-color: rgba(94,140,101,0.4) !important;
+}
+.agent-msg-bubble .agent-inline-link:hover {
+    color: #4a7050 !important;
+}
+
+/* 胶囊快捷按钮：蓝紫 → 墨黑/绿描边 */
+.agent-msg-bubble .agent-capsule-btn {
+    background: #1c1c18 !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+}
+.agent-msg-bubble .agent-capsule-btn-secondary {
+    background: #fff !important;
+    color: #5e8c65 !important;
+    border: 1.5px solid #5e8c65 !important;
+}
+.agent-msg-bubble .agent-capsule-btn-secondary:hover {
+    background: #eef4ee !important;
+}
+
+/* 打字动画点：蓝 → 绿 */
+.agent-typing span {
+    background: rgba(94,140,101,0.5) !important;
+}
+
+/* 快捷功能栏 */
+.agent-quick-bar {
+    background: #f7f6f2 !important;
+    border-top-color: #e8e6df !important;
+}
+.agent-quick-btn {
+    border-radius: 5px !important;
+    border-color: #e8e6df !important;
+    color: #5a5a52 !important;
+}
+.agent-quick-btn:hover {
+    background: #eef4ee !important;
+    border-color: #c9deca !important;
+    color: #5e8c65 !important;
+}
+
+/* 输入框 */
+.agent-input {
+    border-color: #e8e6df !important;
+    border-radius: 7px !important;
+    color: #1c1c18 !important;
+    background: #f7f6f2 !important;
+}
+.agent-input:focus {
+    border-color: #5e8c65 !important;
+    box-shadow: 0 0 0 2px rgba(94,140,101,0.15) !important;
+}
+
+/* 发送按钮：蓝紫渐变 → 墨黑 */
+.agent-send {
+    background: #1c1c18 !important;
+    border-radius: 7px !important;
+    width: 44px !important;
+    height: 38px !important;
+}
+.agent-send:hover { opacity: 0.8 !important; }
+
+/* tooltip */
+.agent-fab-tooltip {
+    background: #1c1c18 !important;
+    border-radius: 6px !important;
+}
+.agent-fab-tooltip::after {
+    border-top-color: #1c1c18 !important;
+}
+
+/* 登录/注册页隐藏侧边栏：依赖 .hidden class，不依赖 on-login-page */
+#navbar.hidden {
+    display: none !important;
+}
+
+/* 登录后强制显示侧边栏和小智（兜底） */
+#navbar:not(.hidden) {
+    display: flex !important;
+}
+
+/* 小智：登录页隐藏，非登录页显示（恢复原有逻辑） */
+body.on-login-page #agentFab { display: none !important; }
+body:not(.on-login-page) #agentFab { display: flex !important; }

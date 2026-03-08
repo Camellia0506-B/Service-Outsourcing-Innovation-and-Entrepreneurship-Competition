@@ -924,13 +924,36 @@ class CareerPlanningApp {
     // 显示主应用（登录后）
     showMainApp() {
         console.log('[showMainApp] 开始显示主应用');
-        document.getElementById('navbar').classList.remove('hidden');
+        // 移除登录态标记
+        document.body.classList.remove('on-login-page');
+        // 显示侧边栏
+        const navbar = document.getElementById('navbar');
+        if (navbar) {
+            navbar.classList.remove('hidden');
+            navbar.style.display = 'flex';
+        }
         console.log('[showMainApp] 导航栏已显示');
         this.updateUserInfo();
         console.log('[showMainApp] 用户信息已更新');
         this.navigateTo('dashboard');
         console.log('[showMainApp] 已导航到dashboard');
         this.loadDashboardData();
+        // 兜底：确保navbar不被on-login-page隐藏，并初始化小智悬浮球
+        setTimeout(() => {
+            document.body.classList.remove('on-login-page');
+            const nav = document.getElementById('navbar');
+            if (nav) { nav.classList.remove('hidden'); nav.style.display = 'flex'; }
+            // 确保 agentFab 存在（index.html 里已有时直接用，否则动态创建）
+            if (!document.getElementById('agentFab')) {
+                document.body.insertAdjacentHTML('beforeend',
+                    '<div id="agentFab" style="position:fixed;right:32px;bottom:32px;width:52px;height:52px;border-radius:50%;background:#1c1c18;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:999999;box-shadow:0 4px 16px rgba(0,0,0,0.25);font-size:22px;user-select:none;" title="智能体小智">🤖</div>'
+                );
+            }
+            // 重置初始化标记，保证每次登录后都能重新绑定事件
+            const fab = document.getElementById('agentFab');
+            if (fab) delete fab.dataset.agentInitialized;
+            initFloatingAgent();
+        }, 300);
         console.log('[showMainApp] 数据加载完成');
     }
 
@@ -1348,7 +1371,9 @@ class CareerPlanningApp {
                 _storage.removeItem('last_assessment_report_id_' + userId);
             }
             this.currentUser = null;
+            document.body.classList.add('on-login-page');
             document.getElementById('navbar').classList.add('hidden');
+            document.getElementById('navbar').style.display = '';
             // 清空登录表单
             const usernameInput = document.getElementById('loginUsername');
             const passwordInput = document.getElementById('loginPassword');
@@ -13032,10 +13057,21 @@ var AGENT_QUICK_BUTTON_CONTENT = {
 function initFloatingAgent() {
     var fab = document.getElementById('agentFab');
     var panel = document.getElementById('agentAssistant');
+    if (!panel || !fab) return;
+    if (fab.dataset.agentInitialized === '1') return;
+    fab.dataset.agentInitialized = '1';
+
+    var nav = document.getElementById('navbar');
+    var onLogin = document.body.classList.contains('on-login-page');
+    if (onLogin && (
+        (typeof isLoggedIn === 'function' && isLoggedIn()) ||
+        (nav && !nav.classList.contains('hidden'))
+    )) {
+        document.body.classList.remove('on-login-page');
+    }
     var closeBtn = document.getElementById('agentCloseBtn');
     var sendBtn = document.getElementById('agentFloatingSendBtn');
     var input = document.getElementById('agentInput');
-    if (!panel || !fab) return;
 
     var fabDragStartX = 0, fabDragStartY = 0, fabOffsetX = 0, fabOffsetY = 0, fabDragging = false, fabDidMove = false;
     fab.addEventListener('mousedown', function(e) {
@@ -13097,6 +13133,13 @@ function initFloatingAgent() {
             if (window.app && typeof window.app.navigateTo === 'function') window.app.navigateTo(link.dataset.agentNav);
         }
     });
+
+    setTimeout(function () {
+        var n = document.getElementById('navbar');
+        if (n && !n.classList.contains('hidden') && document.body.classList.contains('on-login-page')) {
+            document.body.classList.remove('on-login-page');
+        }
+    }, 300);
 }
 
 function showAgentWelcomeIfEmpty() {
