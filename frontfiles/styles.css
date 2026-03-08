@@ -1116,6 +1116,285 @@ body {
     background: var(--bg-color);
 }
 
+/* ══════════════════════════════════════
+   登录页 - 单卡片双栏布局（仅 #loginPage）
+   ══════════════════════════════════════ */
+body.on-login-page {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+}
+body.on-login-page #globalBlobs { display: none; }
+
+/* 登录页取消 .page 的侧边栏留白，并居中、仅保留单处滚动 */
+#loginPage.page {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#loginPage .login-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    padding: 40px 24px;
+    background: #f5f0eb;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#loginPage .login-main-card {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    max-width: 1100px;
+    min-height: 640px;
+    background: #faf8f5;
+    border-radius: 28px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+#loginPage .brand-section {
+    flex: 1;
+    padding: 56px 48px 56px 64px;
+    background: linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%);
+    position: relative;
+    min-height: auto;
+}
+#loginPage .brand-section::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60%;
+    height: 50%;
+    background: radial-gradient(ellipse at bottom left, rgba(210,228,204,0.4) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+#loginPage .brand-logo { margin-bottom: 48px; }
+#loginPage .logo-square {
+    width: 44px;
+    height: 44px;
+    background: #111111;
+    color: #fff;
+    border-radius: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    box-shadow: none;
+}
+#loginPage .brand-name h1 { display: none; }
+#loginPage .brand-name p {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #9a8f82;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 8px 0 0 0;
+}
+
+#loginPage .brand-title h3 {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: #9a8f82;
+    font-weight: 400;
+    letter-spacing: 1px;
+    margin: 0 0 16px 0;
+}
+#loginPage .brand-title h3 .title-line {
+    display: inline-block;
+    width: 24px;
+    height: 0;
+    border-top: 1px dashed #c0b4a8;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+#loginPage .brand-title h2 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 48px;
+    font-weight: 400;
+    color: #1f1f1f;
+    line-height: 1.2;
+    margin: 0 0 24px 0;
+}
+#loginPage .blue-text {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-style: italic;
+    color: #c26b43;
+}
+
+#loginPage .brand-description { margin-bottom: 32px; }
+#loginPage .brand-description p {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    color: #5a524a;
+    line-height: 1.7;
+    margin: 0;
+}
+
+#loginPage .login-floating-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 40px;
+    animation: loginCardFloat 4s ease-in-out infinite;
+}
+@keyframes loginCardFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+#loginPage .floating-card-progress {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: conic-gradient(#b8d4a8 0deg 270deg, #f0e7df 270deg 360deg);
+    flex-shrink: 0;
+}
+#loginPage .floating-card-text { display: flex; flex-direction: column; gap: 2px; }
+#loginPage .floating-card-title {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f1f1f;
+}
+#loginPage .floating-card-desc {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #9a8f82;
+}
+
+#loginPage .stats-section {
+    margin-top: 0;
+    padding-top: 32px;
+    border-top: 1px solid #e4d6c8;
+}
+#loginPage .stats-row {
+    display: flex;
+    gap: 0;
+    flex-wrap: nowrap;
+}
+#loginPage .stat-item {
+    flex: 1;
+    padding-left: 24px;
+    border-left: 1px solid #e0d5cc;
+}
+#loginPage .stat-item:first-child { padding-left: 0; border-left: none; }
+#loginPage .stat-number {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #1f1f1f;
+}
+#loginPage .stat-suffix {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px;
+    font-style: italic;
+    color: #9a8f82;
+}
+#loginPage .stat-label {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #9a8f82;
+    margin-top: 4px;
+}
+
+#loginPage .form-section {
+    flex: 1;
+    padding: 56px 64px 56px 48px;
+    background: #fff;
+    min-height: auto;
+}
+#loginPage .career-login-card {
+    max-width: none;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+#loginPage .career-login-card::before { display: none; }
+#loginPage .career-login-card:hover { transform: none; box-shadow: none; }
+
+#loginPage .login-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 30px;
+    font-weight: 400;
+    color: #1f1f1f;
+}
+#loginPage .login-subtitle {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: #8b8177;
+}
+#loginPage .form-label { color: #1f1f1f; }
+#loginPage .career-login-form .input-icon path { stroke: #c0b4a8; }
+#loginPage .career-login-form input {
+    background: #f7f3ef;
+    border: 1px solid #e4d6cc;
+    border-radius: 18px;
+    color: #1f1f1f;
+}
+#loginPage .career-login-form input:focus {
+    border-color: #cfa47c;
+    box-shadow: none;
+    background: #fff;
+}
+#loginPage .career-login-form input::placeholder { color: #b9afa6; }
+#loginPage .form-divider span { color: #9a8f82; background: #fff; }
+#loginPage .form-divider::before { background: linear-gradient(90deg, transparent, #e4d6c8, transparent); }
+#loginPage .remember-me label { color: #1f1f1f; }
+#loginPage .forgot-password { color: #9a8f82; }
+#loginPage .login-terms a { color: #9a8f82; }
+
+#loginPage .career-btn-login {
+    background: #111111;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+#loginPage .career-btn-login:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+#loginPage .career-btn-register {
+    background: transparent;
+    border: 1px solid #e2d4c8;
+    color: #1f1f1f;
+}
+#loginPage .career-btn-register:hover {
+    background: #f7f3ef;
+    transform: translateY(-1px);
+}
+
+#loginPage .bg-grid { display: none; }
+#loginPage .bg-blobs .bg-blob-1 { background: radial-gradient(circle, rgba(242,209,176,0.35) 0%, transparent 70%); }
+#loginPage .bg-blobs .bg-blob-2 { background: radial-gradient(circle, rgba(210,228,204,0.3) 0%, transparent 70%); }
+#loginPage .bg-blobs .bg-blob-3 { background: radial-gradient(circle, rgba(245,228,213,0.35) 0%, transparent 70%); }
+#loginPage .login-bg-circles .login-circle { opacity: 0.5; }
+
+@media (max-width: 900px) {
+    #loginPage .login-main-card { flex-direction: column; min-height: auto; }
+    #loginPage .brand-section { padding: 40px 32px; }
+    #loginPage .form-section { padding: 40px 32px; }
+    #loginPage .login-floating-card { margin-bottom: 24px; }
+}
+
 .login-card {
     background: var(--card-bg);
     border-radius: 16px;
