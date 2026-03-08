@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="styles.css?v=4">
     <!-- ECharts库 -->
@@ -107,31 +107,40 @@
                     <div class="bg-particle bg-particle-20"></div>
                 </div>
                 
+                <!-- 主卡片：左右两栏 -->
+                <div class="login-main-card">
                 <!-- 左侧品牌区域 -->
                 <div class="brand-section">
                     <div class="brand-logo">
                         <div class="logo-square">C</div>
                         <div class="brand-name">
-                            <h1>职业规划智能体</h1>
                             <p>CAREER INTELLIGENCE</p>
                         </div>
                     </div>
                     
                     <div class="brand-title">
                         <h3><span class="title-line"></span>从这里开始</h3>
-                        <h2>规划你的<br><span class="blue-text">职业未来</span></h2>
+                        <h2>规划你的 <span class="blue-text">职业未来</span></h2>
                     </div>
                     
                     <div class="brand-description">
-                        <p>基于 AI 深度分析，为你量身定制职业发展路径，洞察行业趋势，助你做出更明智的职业决策。</p>
-                        <p>我们提供专业的职业测评、岗位匹配和个性化规划报告，帮助你找到最适合的职业方向。</p>
+                        <p>基于AI 深度分析，为你量身定制职业发展路径，洞察行业趋势，助你做出更明智的职业决策。我们提供专业的职业测评、岗位匹配和个性化规划报告。</p>
+                    </div>
+                    
+                    <!-- 悬浮状态卡片 -->
+                    <div class="login-floating-card">
+                        <div class="floating-card-progress"></div>
+                        <div class="floating-card-text">
+                            <span class="floating-card-title">职业匹配完成</span>
+                            <span class="floating-card-desc">刚刚为你找到12个岗位</span>
+                        </div>
                     </div>
                     
                     <!-- 统计数据 -->
                     <div class="stats-section">
                         <div class="stats-row">
                             <div class="stat-item">
-                                <div class="stat-number">10000<span class="stat-suffix">+</span></div>
+                                <div class="stat-number">10,000<span class="stat-suffix">+</span></div>
                                 <div class="stat-label">条岗位数据</div>
                             </div>
                             <div class="stat-item">
@@ -150,7 +159,6 @@
                 <!-- 右侧登录表单 -->
                 <div class="form-section">
                     <div class="career-login-card">
-                            <div class="card-gradient-bar"></div>
                             <form id="loginForm" class="career-login-form">
                                 <!-- 登录标题和副标题 -->
                                 <div class="login-header">
@@ -208,6 +216,7 @@
                         </div>
                     </form>
                     </div>
+                </div>
                 </div>
             </div>
         </div>

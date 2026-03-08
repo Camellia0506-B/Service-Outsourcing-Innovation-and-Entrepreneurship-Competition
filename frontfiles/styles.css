@@ -1085,7 +1085,8 @@ body {
     padding: 48px;
     width: 100%;
     max-width: 440px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    /* 登录页改为扁平风格，去除厚重阴影 */
+    box-shadow: none;
     animation: slideUp 0.4s ease;
 }
 
@@ -1881,7 +1882,6 @@ body {
 }
 
 /* 职业规划报告生成区域样式 */
-}
 
 .question-card {
     background: var(--card-bg);
@@ -11741,6 +11741,283 @@ body {
     transition: all 0.2s ease;
 }
 
+/* ══════════════════════════════════════
+   登录页 - 单卡片双栏布局（参照参考图）
+   ══════════════════════════════════════ */
+body.on-login-page {
+    font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+body.on-login-page #globalBlobs { display: none; }
+
+#loginPage .login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+    background: #f5f0eb;
+    position: relative;
+    overflow: hidden;
+}
+
+#loginPage .login-main-card {
+    display: flex;
+    width: 100%;
+    max-width: 1100px;
+    min-height: 640px;
+    background: #faf8f5;
+    border-radius: 28px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+#loginPage .brand-section {
+    flex: 1;
+    padding: 56px 48px 56px 64px;
+    background: linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%);
+    position: relative;
+}
+
+#loginPage .brand-section::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60%;
+    height: 50%;
+    background: radial-gradient(ellipse at bottom left, rgba(210,228,204,0.4) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+#loginPage .brand-logo {
+    margin-bottom: 48px;
+}
+
+#loginPage .logo-square {
+    width: 44px;
+    height: 44px;
+    background: #111111;
+    color: #fff;
+    border-radius: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+#loginPage .brand-name h1 { display: none; }
+#loginPage .brand-name p {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #9a8f82;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 8px 0 0 0;
+}
+
+#loginPage .brand-title h3 {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: #9a8f82;
+    font-weight: 400;
+    letter-spacing: 1px;
+    margin: 0 0 16px 0;
+}
+
+#loginPage .brand-title h3 .title-line {
+    display: inline-block;
+    width: 24px;
+    height: 0;
+    border-top: 1px dashed #c0b4a8;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+#loginPage .brand-title h2 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 48px;
+    font-weight: 400;
+    color: #1f1f1f;
+    line-height: 1.2;
+    margin: 0 0 24px 0;
+}
+
+#loginPage .blue-text {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-style: italic;
+    color: #c26b43;
+}
+
+#loginPage .brand-description {
+    margin-bottom: 32px;
+}
+
+#loginPage .brand-description p {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    color: #5a524a;
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* 悬浮状态卡片 */
+#loginPage .login-floating-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 40px;
+    animation: loginCardFloat 4s ease-in-out infinite;
+}
+
+@keyframes loginCardFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+#loginPage .floating-card-progress {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: conic-gradient(#b8d4a8 0deg 270deg, #f0e7df 270deg 360deg);
+    flex-shrink: 0;
+}
+
+#loginPage .floating-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#loginPage .floating-card-title {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f1f1f;
+}
+
+#loginPage .floating-card-desc {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #9a8f82;
+}
+
+/* 统计数据 - 水平排列 + 竖线分隔 */
+#loginPage .stats-section {
+    margin-top: 0;
+    padding-top: 32px;
+    border-top: 1px solid #e4d6c8;
+}
+
+#loginPage .stats-row {
+    display: flex;
+    gap: 0;
+    flex-wrap: nowrap;
+}
+
+#loginPage .stat-item {
+    flex: 1;
+    padding-left: 24px;
+    border-left: 1px solid #e0d5cc;
+}
+
+#loginPage .stat-item:first-child {
+    padding-left: 0;
+    border-left: none;
+}
+
+#loginPage .stat-number {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: #1f1f1f;
+}
+
+#loginPage .stat-suffix {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px;
+    font-style: italic;
+    color: #9a8f82;
+}
+
+#loginPage .stat-label {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    color: #9a8f82;
+    margin-top: 4px;
+}
+
+/* 右侧表单区域 */
+#loginPage .form-section {
+    flex: 1;
+    padding: 56px 64px 56px 48px;
+    background: #fff;
+    min-height: auto;
+}
+
+#loginPage .career-login-card {
+    max-width: none;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#loginPage .career-btn-login {
+    background: #111111;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+#loginPage .career-btn-login:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+
+#loginPage .career-btn-register {
+    background: transparent;
+    border: 1px solid #e2d4c8;
+    color: #1f1f1f;
+}
+
+#loginPage .career-btn-register:hover {
+    background: #f7f3ef;
+    transform: translateY(-1px);
+}
+
+#loginPage .form-label { color: #1f1f1f; }
+#loginPage .career-login-form .input-icon path { stroke: #c0b4a8; }
+#loginPage .form-divider span { color: #9a8f82; background: #fff; }
+#loginPage .form-divider::before { background: linear-gradient(90deg, transparent, #e4d6c8, transparent); }
+#loginPage .remember-me label { color: #1f1f1f; }
+
+#loginPage .forgot-password {
+    color: #9a8f82;
+}
+
+#loginPage .login-terms a {
+    color: #9a8f82;
+}
+
+#loginPage .bg-grid { display: none; }
+#loginPage .bg-blobs .bg-blob-1 { background: radial-gradient(circle, rgba(242,209,176,0.35) 0%, transparent 70%); }
+#loginPage .bg-blobs .bg-blob-2 { background: radial-gradient(circle, rgba(210,228,204,0.3) 0%, transparent 70%); }
+#loginPage .bg-blobs .bg-blob-3 { background: radial-gradient(circle, rgba(245,228,213,0.35) 0%, transparent 70%); }
+#loginPage .login-bg-circles .login-circle { opacity: 0.5; }
+
+/* 登录页响应式 */
+@media (max-width: 900px) {
+    #loginPage .login-main-card { flex-direction: column; min-height: auto; }
+    #loginPage .brand-section { padding: 40px 32px; }
+    #loginPage .form-section { padding: 40px 32px; }
+    #loginPage .login-floating-card { margin-bottom: 24px; }
+}
+
 /* 职业登录界面样式 */
 .career-login-container {
     display: flex;
@@ -11841,13 +12118,14 @@ body {
 }
 
 .bg-blob-3 {
-    width: 300px;
-    height: 300px;
-    top: 50%;
-    right: 10%;
-    background: radial-gradient(circle, var(--indigo-blue), transparent 70%);
-    animation-duration: 15s;
-    animation-delay: 2s;
+    width: 320px;
+    height: 320px;
+    top: 40%;
+    right: 5%;
+    /* 登录页整体去 AI 感：用暖中性色替代蓝紫渐变 */
+    background: radial-gradient(circle, #f6e5d3 0%, transparent 70%);
+    animation-duration: 18s;
+    animation-delay: 1s;
 }
 
 /* 背景特效 - 细网格纹理 */
@@ -12446,30 +12724,20 @@ body {
     width: 100%;
     max-width: 440px;
     padding: 32px 40px;
-    background: var(--card-bg);
-    border-radius: 28px;
-    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.08), 0 24px 64px rgba(15, 28, 63, 0.10), 0 8px 24px rgba(37, 99, 235, 0.06);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-    animation: loginFadeIn 0.7s ease-out 0.2s both;
+    background: #ffffff;
+    border-radius: 24px;
+    /* 去除彩色描边与堆叠阴影，简化为细边框 */
+    box-shadow: none;
+    border: 1px solid #e6ded6;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: loginFadeIn 0.5s ease-out 0.1s both;
     position: relative;
     overflow: hidden;
 }
 
-.career-login-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-blue), var(--sky-blue), var(--indigo-blue));
-    border-radius: 3px 3px 0 0;
-}
-
-.career-login-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 15px 40px rgba(37, 99, 235, 0.15), 0 4px 16px rgba(37, 99, 235, 0.1);
-}
+/* 顶部彩色条与悬浮阴影不再使用，保持平面风格 */
+.career-login-card::before { display: none; }
+.career-login-card:hover { transform: none; box-shadow: none; }
 
 .career-login-form {
     width: 100%;
@@ -12484,17 +12752,17 @@ body {
 }
 
 .login-title {
-    font-family: var(--font-heading);
+    font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
     font-size: 30px;
-    font-weight: 700;
-    color: var(--deep-navy);
+    font-weight: 400;
+    color: #1f1f1f;
     margin: 0 0 8px 0;
 }
 
 .login-subtitle {
-    font-family: var(--font-body);
-    font-size: 16px;
-    color: var(--gray-blue);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: #8b8177;
     margin: 0;
     line-height: 1.5;
 }
@@ -12637,25 +12905,25 @@ body {
 .career-login-form input {
     width: 100%;
     padding: 18px 20px 18px 50px;
-    border: 1px solid transparent;
-    border-radius: 14px;
+    border: 1px solid #e4d6cc;
+    border-radius: 18px;
     font-size: 16px;
-    font-family: var(--font-body);
-    background: var(--bg-color);
-    color: var(--deep-navy);
-    transition: all 0.3s ease;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #f7f3ef;
+    color: #1f1f1f;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .career-login-form input::placeholder {
-    color: var(--gray-blue);
-    opacity: 0.8;
+    color: #b9afa6;
+    opacity: 1;
 }
 
 .career-login-form input:focus {
     outline: none;
-    border-color: var(--primary-blue);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-    background: var(--bg-color);
+    border-color: #cfa47c;
+    box-shadow: none;
+    background: #ffffff;
 }
 
 .send-code-btn {
@@ -12709,24 +12977,23 @@ body {
 .career-btn-login {
     width: 100%;
     padding: 18px;
-    background: var(--primary-blue);
+    background: #111111;
     color: #fff;
     border: none;
-    border-radius: 14px;
+    border-radius: 18px;
     font-size: 17px;
     font-weight: 600;
-    font-family: var(--font-body);
+    font-family: 'DM Sans', system-ui, sans-serif;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: none;
     position: relative;
     overflow: hidden;
 }
 
 .career-btn-login:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(37, 99, 235, 0.2);
-    background: linear-gradient(135deg, var(--sky-blue), var(--indigo-blue));
+    background: #000000;
 }
 
 .form-divider {
@@ -12760,21 +13027,21 @@ body {
     width: 100%;
     padding: 18px;
     background: transparent;
-    color: var(--primary-blue);
-    border: 1px solid var(--primary-blue);
-    border-radius: 14px;
+    color: #1f1f1f;
+    border: 1px solid #e2d4c8;
+    border-radius: 18px;
     font-size: 16px;
     font-weight: 600;
-    font-family: var(--font-body);
+    font-family: 'DM Sans', system-ui, sans-serif;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .career-btn-register:hover {
-    border-color: var(--primary-blue);
-    background: rgba(37, 99, 235, 0.05);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+    border-color: #d6c6b8;
+    background: #f7f3ef;
+    transform: translateY(-1px);
+    box-shadow: none;
 }
 
 /* AI登录界面样式（保留旧样式以兼容其他功能） */
@@ -15472,8 +15739,5 @@ body.on-login-page #agentAssistant { display: none !important; }
     #mockInterviewPage #reportArea .mock-report-content-grid { grid-template-columns: 1fr; }
     #mockInterviewPage #reportArea .mock-plan-grid { grid-template-columns: 1fr; }
     #mockInterviewPage .mock-history-table-head,
-    #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
-}
-kInterviewPage .mock-history-table-head,
     #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
 }
