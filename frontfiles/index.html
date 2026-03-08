@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="styles.css?v=4">
     <!-- ECharts库 -->
@@ -1081,14 +1082,6 @@
                     <p class="page-subtitle">基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
                 </div>
 
-                <!-- 智能体筛选过程说明（不影响逻辑，仅说明性展示） -->
-                <div class="ai-hint ai-hint-blue" style="margin-bottom: 12px;">
-                    <div>共 9958 条岗位</div>
-                    <div style="font-size:12px;margin-top:4px;">
-                        系统先从海量岗位中快速找出与你背景相关的候选岗位，再从“基础条件、专业技能、职业素养、发展潜力”四个维度综合评分，推荐最适合你的 TopN 岗位。
-                    </div>
-                </div>
-
                 <div class="matching-tabs">
                     <button class="tab-btn active" data-tab="recommend">🤖 智能推荐 <span class="tab-badge" id="recBadge">0</span></button>
                     <button class="tab-btn" data-tab="search">🔎 主动探索</button>
@@ -1129,7 +1122,7 @@
                                 </div>
                             </div>
                             <div class="ai-hint ai-hint-blue">
-                                🤖 智能体从 9958 条岗位中综合技能相似度、行业趋势与成长潜力筛选出以下推荐结果。
+                                🤖 智能体从 10000+条岗位信息综合技能相似度、行业趋势与成长潜力筛选出以下推荐结果。
                             </div>
                             <div class="cards-grid" id="recommendedJobs">
                                 <div class="loading-message">加载推荐岗位中...</div>
@@ -1409,6 +1402,37 @@
                                 <p class="tracking-rpt-detail-placeholder">左侧选择一份报告查看详情</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 右下角：应对措施/计划定制 入口（放在 wrap 外避免被 overflow 裁剪） -->
+            <button type="button" class="tracking-plan-fab" id="trackingPlanFab" title="应对措施与计划定制" aria-label="应对措施与计划定制" onclick="typeof openTrackingPlanModal==='function'&&openTrackingPlanModal()">
+                <span class="tracking-plan-fab-icon">📋</span>
+                <span class="tracking-plan-fab-text">计划定制</span>
+            </button>
+        </div>
+
+        <!-- 应对措施/计划定制 弹窗（可执行计划：学习资源、增强竞争力、项目实践） -->
+        <div id="trackingPlanModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal tracking-plan-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div>
+                        <h3>📋 应对措施与计划定制</h3>
+                        <p class="tracking-failure-subtitle">生成可执行的提升计划：学习资源、竞争力提升、项目实践，详略得当</p>
+                    </div>
+                    <button type="button" class="modal-close" id="trackingPlanModalClose" aria-label="关闭">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tracking-plan-input-row">
+                        <label for="trackingPlanPrompt">可选：补充你的目标方向或薄弱点，生成更贴合的方案</label>
+                        <textarea id="trackingPlanPrompt" rows="2" placeholder="例如：想加强算法与项目经历，目标互联网后端/算法岗…"></textarea>
+                    </div>
+                    <div class="tracking-plan-actions">
+                        <button type="button" class="btn-primary" id="trackingPlanGenerateBtn">🤖 生成可执行计划</button>
+                        <span id="trackingPlanStatus" class="tracking-failure-status-text"></span>
+                    </div>
+                    <div id="trackingPlanStream" class="tracking-plan-stream">
+                        <p class="hint-text">点击「生成可执行计划」后，将展示学习资源、竞争力提升建议与项目实践方案。</p>
                     </div>
                 </div>
             </div>
@@ -1737,10 +1761,10 @@
 
                 <!-- 模拟面试Tab导航 -->
                 <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="create">🚀 开始面试</button>
-                    <button class="tab-btn" data-tab="interview">💬 面试进行</button>
-                    <button class="tab-btn" data-tab="report">📊 面试报告</button>
-                    <button class="tab-btn" data-tab="history">📋 历史记录</button>
+                    <button class="tab-btn active" data-tab="create">开始面试</button>
+                    <button class="tab-btn" data-tab="interview">面试进行</button>
+                    <button class="tab-btn" data-tab="report">面试报告</button>
+                    <button class="tab-btn" data-tab="history">历史记录</button>
                 </div>
 
                 <!-- Tab内容区域 -->
@@ -1748,107 +1772,102 @@
                     
                     <!-- Tab 1: 开始面试 (10.1 创建模拟面试会话) -->
                     <div id="createInterviewTab" class="tab-content active">
-                        <div class="create-interview-area">
-                            <div class="create-interview-card">
-                                <h3>创建模拟面试会话</h3>
-                                <p class="create-interview-desc">选择目标岗位、面试类型和难度，开始你的模拟面试之旅</p>
-                                
-                                <form id="createInterviewForm" class="create-interview-form">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>目标岗位</label>
-                                            <select id="targetPosition">
-                                                <option value="">请选择目标岗位</option>
-                                                <option value="算法工程师">算法工程师</option>
-                                                <option value="前端开发工程师">前端开发工程师</option>
-                                                <option value="后端开发工程师">后端开发工程师</option>
-                                                <option value="AI产品经理">AI产品经理</option>
-                                                <option value="数据分析师">数据分析师</option>
-                                            </select>
+                        <div class="mock-start-grid">
+                            <div class="mock-card">
+                                <div class="mock-card-header">
+                                    <span class="mock-card-title">创建模拟面试会话</span>
+                                </div>
+                                <div class="mock-card-body">
+                                    <form id="createInterviewForm" class="mock-create-form">
+                                        <div class="mock-form-row mock-form-row-full">
+                                            <div class="mock-form-group">
+                                                <label class="mock-form-label">目标岗位</label>
+                                                <input type="text" id="targetPosition" class="mock-form-control" placeholder="例：Java后端开发工程师、算法工程师" maxlength="50" autocomplete="off">
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>面试类型</label>
-                                            <select id="interviewType">
-                                                <option value="comprehensive">综合面试</option>
-                                                <option value="technical">技术面试</option>
-                                                <option value="behavioral">行为面试</option>
-                                                <option value="case_study">案例分析</option>
-                                            </select>
+                                        <div class="mock-form-row">
+                                            <div class="mock-form-group">
+                                                <label class="mock-form-label">面试类型</label>
+                                                <select id="interviewType" class="mock-form-control">
+                                                    <option value="comprehensive">综合面试</option>
+                                                    <option value="technical">技术面试</option>
+                                                    <option value="behavioral">行为面试</option>
+                                                    <option value="case_study">案例分析</option>
+                                                </select>
+                                            </div>
+                                            <div class="mock-form-group">
+                                                <label class="mock-form-label">难度</label>
+                                                <select id="difficulty" class="mock-form-control">
+                                                    <option value="easy">简单</option>
+                                                    <option value="medium" selected>中等</option>
+                                                    <option value="hard">困难</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label>难度</label>
-                                            <select id="difficulty">
-                                                <option value="easy">简单</option>
-                                                <option value="medium" selected>中等</option>
-                                                <option value="hard">困难</option>
-                                            </select>
+                                        <div class="mock-form-row mock-form-row-full">
+                                            <div class="mock-form-group">
+                                                <label class="mock-form-label">面试时长</label>
+                                                <select id="duration" class="mock-form-control">
+                                                    <option value="15">15分钟</option>
+                                                    <option value="30" selected>30分钟</option>
+                                                    <option value="45">45分钟</option>
+                                                    <option value="60">60分钟</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label>面试时长（分钟）</label>
-                                            <select id="duration">
-                                                <option value="15">15分钟</option>
-                                                <option value="30" selected>30分钟</option>
-                                                <option value="45">45分钟</option>
-                                                <option value="60">60分钟</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-actions">
-                                        <button type="submit" id="startInterviewBtn" class="btn-primary">开始面试</button>
-                                    </div>
-                                </form>
+                                        <button type="submit" id="startInterviewBtn" class="mock-btn mock-btn-primary">开始面试 →</button>
+                                    </form>
+                                </div>
                             </div>
+                            <div class="mock-side-tips">
+    <div class="mock-side-tip-card">
+        <div class="mock-side-tip-title">
+            <span class="mock-side-tip-dot"></span>面试前准备
+        </div>
+        <ul class="mock-side-tip-list">
+            <li>确保网络稳定、环境安静</li>
+            <li>提前整理目标岗位的核心技能点</li>
+            <li>回顾简历中的项目经历</li>
+            <li>准备好常见问题的回答思路</li>
+        </ul>
+    </div>
+    <div class="mock-side-tip-card">
+        <div class="mock-side-tip-title">
+            <span class="mock-side-tip-dot"></span>回答技巧
+        </div>
+        <ul class="mock-side-tip-list">
+            <li>使用 STAR 法则组织回答</li>
+            <li>先说结论，再展开细节</li>
+            <li>技术问题先说解决思路</li>
+            <li>遇到不确定的问题诚实表达</li>
+        </ul>
+    </div>
+</div>
                         </div>
                     </div>
 
                     <!-- Tab 2: 面试进行 (10.2 发送面试回答) -->
                     <div id="interviewTab" class="tab-content">
-                        <div class="interview-area">
-                            <!-- 面试信息栏 -->
-                            <div class="interview-header">
-                                <div class="interview-info">
-                                    <div class="interviewer-info">
-                                        <span class="interviewer-avatar">🎯</span>
-                                        <div class="interviewer-details">
-                                            <h4 id="interviewerName">面试官</h4>
-                                            <p id="interviewerRole">面试官角色</p>
+                        <div class="mock-interview-layout">
+                            <div class="mock-card mock-chat-card mock-chat-card-full">
+                                <div class="mock-chat-header">
+                                    <div class="mock-interviewer-info">
+                                        <div class="mock-avatar" id="interviewerAvatar">🤖</div>
+                                        <div>
+                                            <div class="mock-interviewer-name" id="interviewerName">面试官</div>
+                                            <div class="mock-interviewer-sub" id="interviewerRole">面试官角色</div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="interview-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-label">问题数</span>
-                                        <span class="stat-value" id="questionCount">0</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">回答数</span>
-                                        <span class="stat-value" id="answerCount">0</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">时长</span>
-                                        <span class="stat-value" id="interviewDuration">30分钟</span>
+                                    <div class="mock-progress-pills">
+                                        <span class="mock-pill" id="mockPillTimer">剩余 --:--</span>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- 面试对话区域 -->
-                            <div class="interview-chat" id="interviewChat">
-                            </div>
-
-                            <!-- 回答输入区域 -->
-                            <div class="interview-input-area">
-                                <div class="interview-input-wrapper">
-                                    <textarea id="answerInput" placeholder="请输入你的回答..."></textarea>
-                                    <div class="interview-input-actions">
-                                        <button id="sendAnswerBtn" class="btn-primary">发送回答</button>
-                                        <button id="endInterviewBtn" class="btn-secondary">结束面试</button>
+                                <div class="mock-chat-body" id="interviewChat"></div>
+                                <div class="mock-chat-footer">
+                                    <textarea class="mock-chat-input" id="answerInput" placeholder="请输入你的回答..."></textarea>
+                                    <div class="mock-chat-actions">
+                                        <button type="button" id="endInterviewBtn" class="mock-btn-end">结束面试</button>
+                                        <button type="button" id="sendAnswerBtn" class="mock-btn-send">发送回答 →</button>
                                     </div>
                                 </div>
                             </div>
@@ -1863,11 +1882,18 @@
 
                     <!-- Tab 4: 历史记录 (10.4 获取历史面试记录) -->
                     <div id="historyTab" class="tab-content">
-                        <div class="history-area">
-                            <div class="history-header">
-                                <h3>历史面试记录</h3>
-                            </div>
-                            <div id="historyList" class="history-list">
+                        <div class="mock-history-wrap">
+                            <div class="mock-history-title">历史面试记录</div>
+                            <div class="mock-history-table">
+                                <div class="mock-history-table-head">
+                                    <div>岗位</div>
+                                    <div>类型</div>
+                                    <div>难度</div>
+                                    <div>日期</div>
+                                    <div>得分</div>
+                                    <div>操作</div>
+                                </div>
+                                <div id="interviewHistoryList"></div>
                             </div>
                         </div>
                     </div>
@@ -2131,97 +2157,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="api.js?v=17&t=20260305"></script>
-    <script src="app.js?v=17&t=20260305"></script>
+    <script src="api.js?v=18&t=20260307"></script>
+    <script src="app.js?v=18&t=20260307"></script>
     <link rel="stylesheet" href="styles.css?v=10&t=20260305">
     
-    <!-- 粒子效果脚本 -->
-    <script>
-        // 粒子效果
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('particles');
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            // 粒子数组
-            const particles = [];
-            const particleCount = 40;
-            
-            // 创建粒子
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.5,
-                    vy: -Math.random() * 0.5 - 0.2,
-                    size: Math.random() * 2 + 1,
-                    alpha: Math.random() * 0.5 + 0.3,
-                    pulse: Math.random() * Math.PI * 2
-                });
-            }
-            
-            // 动画循环
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // 更新和绘制粒子
-                particles.forEach((p, i) => {
-                    // 更新位置
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    
-                    // 边界检测
-                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                    if (p.y < 0) {
-                        p.y = canvas.height;
-                    }
-                    
-                    // 脉冲效果
-                    p.pulse += 0.03;
-                    p.alpha = 0.3 + Math.sin(p.pulse) * 0.2;
-                    
-                    // 绘制粒子
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(37, 99, 235, ${p.alpha})`;
-                    ctx.fill();
-                    
-                    // 绘制粒子间连线
-                    particles.forEach((otherP, j) => {
-                        if (i !== j) {
-                            const dx = p.x - otherP.x;
-                            const dy = p.y - otherP.y;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
-                            
-                            if (distance < 120) {
-                                const lineAlpha = (1 - distance / 120) * 0.2;
-                                ctx.beginPath();
-                                ctx.moveTo(p.x, p.y);
-                                ctx.lineTo(otherP.x, otherP.y);
-                                ctx.strokeStyle = `rgba(37, 99, 235, ${lineAlpha})`;
-                                ctx.lineWidth = 0.5;
-                                ctx.stroke();
-                            }
-                        }
-                    });
-                });
-                
-                requestAnimationFrame(animate);
-            }
-            
-            // 启动动画
-            animate();
-            
-            // 窗口大小调整
-            window.addEventListener('resize', function() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            });
-        });
-    </script>
+    <!-- 粒子效果已关闭，背景为纯色暖米白 -->
 
     <!-- AI 简历解析加载动画弹窗（参考 parsing-modal.html） -->
     <div class="resume-parse-overlay" id="resumeParseOverlay">

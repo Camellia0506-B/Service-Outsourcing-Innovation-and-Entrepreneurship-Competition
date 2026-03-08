@@ -845,6 +845,10 @@ class CareerPlanningApp {
         // 求职失败复盘弹窗
         document.getElementById('trackingFailureClose')?.addEventListener('click', () => this.closeTrackingFailureModal());
         document.getElementById('trackingFailureStartBtn')?.addEventListener('click', () => this.startFailureAnalysisForCurrentRecord());
+        document.getElementById('trackingPlanFab')?.addEventListener('click', () => this.openTrackingPlanModal());
+        document.getElementById('trackingPlanModalClose')?.addEventListener('click', () => this.closeTrackingPlanModal());
+        document.getElementById('trackingPlanModal')?.addEventListener('click', (e) => { if (e.target && e.target.id === 'trackingPlanModal') this.closeTrackingPlanModal(); });
+        document.getElementById('trackingPlanGenerateBtn')?.addEventListener('click', () => this.startTrackingPlanGenerate());
 
         // 查看完整分析弹窗
         document.getElementById('trackingFullAnalysisClose')?.addEventListener('click', () => this.closeTrackingFullAnalysisModal());
@@ -3093,8 +3097,14 @@ class CareerPlanningApp {
             const code = overviewRes && overviewRes.code;
             const rawMsg = (overviewRes && overviewRes.msg) || '';
             const isNotFound = code === 404 || (typeof rawMsg === 'string' && rawMsg.includes('接口不存在'));
-            const friendlyMsg = isNotFound ? '暂无记录，请左侧填写后创建' : (rawMsg || '暂无求职记录');
-            if (recentList) recentList.innerHTML = `<div class="hint-text">${friendlyMsg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+            const isConnectionError = typeof rawMsg === 'string' && (rawMsg.includes('无法连接') || rawMsg.includes('请确认已启动') || rawMsg.includes('请求超时'));
+            const friendlyMsg = isNotFound ? '暂无记录，请左侧填写后创建' : (isConnectionError ? '请先启动 AI 服务（端口 5002）后点击下方按钮重试' : (rawMsg || '暂无求职记录'));
+            if (recentList) {
+                const safeMsg = friendlyMsg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                recentList.innerHTML = `<div class="hint-text">${safeMsg}</div>` +
+                    (isConnectionError ? '<button type="button" id="trackingRetryBtn" class="btn-secondary" style="margin-top:8px;">重试</button>' : '');
+                document.getElementById('trackingRetryBtn')?.addEventListener('click', () => this.loadTrackingData());
+            }
             ['trackingTotalApplied', 'trackingWrittenRate', 'trackingOfferCount', 'trackingInProgressCount'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = id.includes('Rate') ? '0%' : '0';
@@ -3139,8 +3149,20 @@ class CareerPlanningApp {
 
     // 规划落地性跟踪：渲染求职总览与时间线
     renderTrackingOverview(data) {
-        const summary = data.summary || {};
+        let summary = data.summary || {};
         const records = Array.isArray(data.records) ? data.records : [];
+
+        const isOfferRecord = (r) => {
+            if (!r) return false;
+            const stage = (r.current_stage || r.stage || '').toString().toLowerCase();
+            return r.result === 'offer' || stage === 'offer';
+        };
+        const isRejectedRecord = (r) => (r && (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected'));
+        const offerCountFromRecords = records.filter(isOfferRecord).length;
+        const inProgressFromRecords = records.filter(r => !isOfferRecord(r) && !isRejectedRecord(r)).length;
+        const offerCount = Math.max(Number(summary.offer_count) || 0, offerCountFromRecords);
+        const inProgressCount = records.length ? inProgressFromRecords : (Number(summary.in_progress_count) || 0);
+        summary = { ...summary, offer_count: offerCount, in_progress_count: inProgressCount };
 
         const toPercent = (v) => {
             if (v == null || isNaN(v)) return '0%';
@@ -3153,10 +3175,10 @@ class CareerPlanningApp {
             if (el) el.textContent = text;
         };
 
-        setText('trackingTotalApplied', String(summary.total_applied ?? 0));
+        setText('trackingTotalApplied', String(summary.total_applied ?? records.length ?? 0));
         setText('trackingWrittenRate', toPercent(summary.written_test_pass_rate));
-        setText('trackingOfferCount', String(summary.offer_count ?? 0));
-        setText('trackingInProgressCount', String(summary.in_progress_count ?? 0));
+        setText('trackingOfferCount', String(summary.offer_count));
+        setText('trackingInProgressCount', String(summary.in_progress_count));
         const writtenSub = document.getElementById('trackingWrittenRateSub');
         if (writtenSub) writtenSub.textContent = '—';
 
@@ -3181,10 +3203,8 @@ class CareerPlanningApp {
 
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         const stageLabel = { applied: '已投递', written_test: '笔试', interview_1: '一面', interview_2: '二面', final: '终面', offer: 'Offer', rejected: '已拒绝' };
-        // 兼容：后端可能用 result=rejected/failed 或 current_stage=rejected 标记淘汰
-        const isRejectedRecord = (r) => (r && (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected'));
         const statusDotClass = (r) => {
-            if (r.result === 'offer' || r.current_stage === 'offer') return 'tracking-sd-ok';
+            if (isOfferRecord(r)) return 'tracking-sd-ok';
             if (isRejectedRecord(r)) return 'tracking-sd-err';
             if (r.current_stage === 'applied') return 'tracking-sd-blue';
             return 'tracking-sd-warn';
@@ -3213,8 +3233,8 @@ class CareerPlanningApp {
                 jobList.innerHTML = '<div class="hint-text">暂无记录</div>';
             } else {
                 jobList.innerHTML = records.map(r => {
-                    const label = stageLabel[r.current_stage] || '进行中';
-                    const status = (r.result === 'offer' || r.current_stage === 'offer')
+                    const label = stageLabel[r.current_stage || r.stage] || '进行中';
+                    const status = isOfferRecord(r)
                         ? '已拿Offer 🎉'
                         : isRejectedRecord(r)
                             ? (label + '淘汰')
@@ -3583,6 +3603,76 @@ class CareerPlanningApp {
         this.trackingFailureRecord = null;
     }
 
+    openTrackingPlanModal() {
+        const modal = document.getElementById('trackingPlanModal');
+        if (!modal) return;
+        const streamEl = document.getElementById('trackingPlanStream');
+        const statusEl = document.getElementById('trackingPlanStatus');
+        if (statusEl) statusEl.textContent = '';
+        if (streamEl) {
+            streamEl.innerHTML = '<p class="hint-text">点击「生成可执行计划」后，将展示学习资源、竞争力提升建议与项目实践方案。</p>';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingPlanModal() {
+        const modal = document.getElementById('trackingPlanModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // 应对措施/计划定制：直接展示可执行计划（本地内容），避免请求未实现的接口导致 404；后端提供 /tracking/action-plan 后可改为先请求再兜底
+    async startTrackingPlanGenerate() {
+        const userId = getCurrentUserId();
+        const statusEl = document.getElementById('trackingPlanStatus');
+        const streamEl = document.getElementById('trackingPlanStream');
+        const promptEl = document.getElementById('trackingPlanPrompt');
+        const btn = document.getElementById('trackingPlanGenerateBtn');
+        const extraPrompt = (promptEl && promptEl.value) ? String(promptEl.value).trim() : '';
+
+        if (!userId) {
+            this.showToast('请先登录', 'error');
+            return;
+        }
+        if (statusEl) statusEl.textContent = '正在生成可执行计划…';
+        if (streamEl) streamEl.textContent = '';
+        if (btn) btn.disabled = true;
+
+        try {
+            const fallback = this._getTrackingPlanFallbackContent(extraPrompt);
+            if (streamEl) streamEl.innerHTML = `<div class="tracking-md">${this._simpleMarkdownToHtml(fallback)}</div>`;
+            if (statusEl) statusEl.textContent = '生成完成';
+            this.showToast('可执行计划已生成', 'success');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    _getTrackingPlanFallbackContent(extraPrompt) {
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const userHint = extraPrompt ? `\n**针对你的补充**：${extraPrompt.slice(0, 120)}${extraPrompt.length > 120 ? '…' : ''}\n\n建议在下面三个板块中优先关注与这段话最相关的部分；如需更贴合你个人的方案，可等待后续接入 AI 生成。\n\n---\n\n` : '';
+
+        const resourcesVariants = [
+            '- **算法与笔试**：LeetCode、牛客网、CodeTop；**前端/全栈**：MDN、菜鸟教程、React 官方文档\n- **项目与社区**：GitHub、Gitee、掘金、知乎专栏、V2EX\n- **求职与行业**：拉勾、Boss、脉脉、看准网（岗位要求与面经）\n- **系统学习**：中国大学 MOOC、极客时间、慕课网、极客学院',
+            '- **技术基础**：LeetCode（算法）、牛客网（笔试/面经）、MDN / 菜鸟教程（前端/全栈）\n- **项目与开源**：GitHub、Gitee、掘金、知乎专栏\n- **行业与岗位**：拉勾、Boss、脉脉（岗位要求与趋势）\n- **系统学习**：中国大学 MOOC、极客时间、慕课网',
+            '- **刷题与面经**：LeetCode、牛客网、力扣题解；**文档与教程**：MDN、菜鸟、官方文档\n- **开源与输出**：GitHub 参与/自建项目、掘金/博客写总结\n- **招聘与情报**：Boss、拉勾、脉脉、公司官网/校招页\n- **课程**：MOOC、极客时间、Udemy、B 站优质系列'
+        ];
+        const competeVariants = [
+            '1. **技能与岗位对齐**：根据目标岗位 JD 提炼关键词，补齐缺失技能并能在简历/面试中举证。\n2. **项目经历**：优先做与岗位相关的课程设计/毕设/开源/实习项目，量化结果（性能、用户量、优化比例等）。\n3. **笔试与面试**：定期刷题、总结常考题型；整理面经，准备项目深挖与行为问题。\n4. **软实力**：沟通表达、时间管理、复盘习惯，在面试中体现学习与迭代能力。',
+            '1. **JD 拆解**：把岗位描述里的技术栈、业务词、软素质逐条列出，自评差距。\n2. **项目可讲性**：每个项目能说清背景、难点、你的角色和可量化结果。\n3. **笔试与手写**：按题型归纳（数组/链表/DP/设计），限时模拟。\n4. **面试节奏**：先结论后细节，不会的说明边界与可补充方向。',
+            '1. **能力标签化**：把“会什么”对应到岗位关键词，简历与口述一致。\n2. **项目闭环**：从需求到上线/数据，突出你负责的部分与反思。\n3. **题感与表达**：刷题重思路与边界；面试重结构（STAR/先总后分）。\n4. **复盘**：每次面试后记录被问住的问题，补强并形成话术。'
+        ];
+        const projectVariants = [
+            '1. **选题**：围绕目标岗位技术栈和业务场景，选一个小而完整的模块（如后台管理、数据看板、推荐/检索 demo）。\n2. **实现与文档**：代码结构清晰、有 README 与部署说明；可补充设计思路、难点与收获。\n3. **展示**：在简历中写清技术栈、个人职责与成果；面试前准备好「项目背景—难点—你的贡献—反思」的讲述逻辑。\n4. **持续迭代**：根据投递反馈补充技术点或新项目，形成闭环。',
+            '1. **方向**：和意向岗位技术栈一致（如后端用 Go/Java+MySQL+Redis，前端 React+Vite）。\n2. **规模**：不贪大，一个完整链路（前后端/数据/部署）即可。\n3. **简历与口述**：技术栈、职责、指标写清楚；面试能展开 2～3 分钟并应对追问。\n4. **迭代**：根据面试反馈补做小模块或新项目，形成“投递—反馈—补强”的循环。',
+            '1. **选题**：与目标岗位相关的小系统（电商/内容/工具均可），突出技术难点。\n2. **实现**：规范命名、分层清晰、有 README 和关键设计说明。\n3. **简历**：用 STAR 或“背景-难点-方案-结果”写项目，并准备深挖话术。\n4. **复盘**：根据挂掉的面试补充知识点或新项目，再投。'
+        ];
+
+        const part1 = pick(resourcesVariants);
+        const part2 = pick(competeVariants);
+        const part3 = pick(projectVariants);
+        return `${userHint}## 一、优质学习资源与网站\n\n${part1}\n\n## 二、如何增强自身竞争力\n\n${part2}\n\n## 三、怎么做项目\n\n${part3}`;
+    }
+
     // 求职失败复盘：SSE 流式调用 9.3 接口
     async startFailureAnalysisForCurrentRecord() {
         const record = this.trackingFailureRecord;
@@ -3744,12 +3834,16 @@ class CareerPlanningApp {
             if (/技能|gap|能力差距/.test(t)) { cur = 'skill'; continue; }
             if (/简历|履历|项目描述|优化点/.test(t)) { cur = 'resume'; continue; }
             if (/面试|沟通|表达|准备/.test(t)) { cur = 'interview'; continue; }
-            // 只收集“像条目”的内容，避免把长段落全塞进列表
             const m1 = ln.match(/^[-*•]\s+(.*)$/);
             const m2 = ln.match(/^\d+\.\s+(.*)$/);
             const m3 = ln.match(/^\d+[、]\s*(.*)$/);
             const m4 = ln.match(/^\(?\d+\)?[)）]\s*(.*)$/);
-            if (m1 || m2 || m3 || m4) pushLine((m1 || m2 || m3 || m4)[1]);
+            if (m1 || m2 || m3 || m4) {
+                pushLine((m1 || m2 || m3 || m4)[1]);
+            } else if (cur && ln.length > 20 && !/^#|^[\d一二三四五六七八九十]+[、.．)]\s*$/.test(ln)) {
+                // 非列表的长句也按当前区块收集（按句号/分号拆成多条）
+                ln.split(/[；。！？?]/).map(s => s.trim()).filter(s => s.length >= 6).forEach(pushLine);
+            }
         }
 
         // 进一步把“长段落”切成更多可读要点（不新增内容，只做句子切分）
@@ -3783,35 +3877,105 @@ class CareerPlanningApp {
             return '';
         };
 
-        // 若某一块为空，先尝试用关键词把条目归类补齐（比纯切片更靠谱）
-        if (!sec.resume.length || !sec.skill.length || !sec.interview.length) {
-            for (const it of flat) {
-                const c = classify(it);
-                if (c === 'resume' && !sec.resume.includes(it)) sec.resume.push(it);
-                else if (c === 'skill' && !sec.skill.includes(it)) sec.skill.push(it);
-                else if (c === 'interview' && !sec.interview.includes(it)) sec.interview.push(it);
-            }
+        // 始终用关键词把 flat 条目归类，让三栏分布更均衡（不只在某块为空时）
+        for (const it of flat) {
+            const c = classify(it);
+            const str = String(it).trim();
+            if (!str) continue;
+            if (c === 'resume' && !sec.resume.includes(it)) sec.resume.push(it);
+            else if (c === 'skill' && !sec.skill.includes(it)) sec.skill.push(it);
+            else if (c === 'interview' && !sec.interview.includes(it)) sec.interview.push(it);
         }
 
-        // 兜底分配：即使只识别出某一块，也保证另外两块有内容
-        const used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
-        const pool = flat.filter(s => !used.has(String(s).trim()));
+        // 兜底分配：某块为空时从 pool 取
+        let used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
+        let pool = flat.filter(s => !used.has(String(s).trim()));
         const take = (n) => pool.splice(0, n);
 
-        // 默认每栏至少给 6 条（可滚动展示），让信息更充实
-        if (!sec.skill.length) sec.skill = take(6);
-        if (!sec.resume.length) sec.resume = take(6);
-        if (!sec.interview.length) sec.interview = take(6);
+        const TARGET_PER_BOX = 10;
+        if (!sec.skill.length) sec.skill = take(TARGET_PER_BOX);
+        if (!sec.resume.length) sec.resume = take(TARGET_PER_BOX);
+        if (!sec.interview.length) sec.interview = take(TARGET_PER_BOX);
 
-        // 若仍为空（极端情况下 md 很短），就按原 flat 切片兜底
-        // 注意：允许跨区复用，保证“看得见内容”优先
-        if (!sec.skill.length) sec.skill = flat.slice(0, 6);
-        if (!sec.resume.length) sec.resume = flat.slice(0, 6);
-        if (!sec.interview.length) sec.interview = flat.slice(0, 6);
+        if (!sec.skill.length) sec.skill = flat.slice(0, TARGET_PER_BOX);
+        if (!sec.resume.length) sec.resume = flat.slice(0, TARGET_PER_BOX);
+        if (!sec.interview.length) sec.interview = flat.slice(0, TARGET_PER_BOX);
 
-        // 去重+限长，避免太啰嗦
-        // 每栏展示更多要点；面板本身可滚动，不会撑坏布局
-        const uniq = (arr) => Array.from(new Set(arr.map(s => String(s).trim()).filter(Boolean))).slice(0, 20);
+        // 补足稀疏栏：每栏至少 TARGET_PER_BOX 条，从 pool 补充（优先关键词匹配）
+        used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
+        pool = flat.filter(s => !used.has(String(s).trim()));
+        const topUp = (key) => {
+            while (sec[key].length < TARGET_PER_BOX && pool.length) {
+                let idx = pool.findIndex(p => classify(p) === key);
+                if (idx < 0) idx = 0;
+                const item = pool.splice(idx, 1)[0];
+                if (item && !sec[key].includes(item)) {
+                    sec[key].push(item);
+                    used.add(String(item).trim());
+                }
+            }
+        };
+        topUp('resume');
+        topUp('interview');
+        topUp('skill');
+
+        // 去重：简历/面试栏若与技能栏完全重复则去掉
+        const skillSet = new Set(sec.skill.map(s => String(s).trim()));
+        sec.resume = sec.resume.filter(s => !skillSet.has(String(s).trim()));
+        sec.interview = sec.interview.filter(s => !skillSet.has(String(s).trim()));
+        if (!sec.resume.length) sec.resume = sec.skill.slice(0, TARGET_PER_BOX);
+        if (!sec.interview.length) sec.interview = sec.skill.slice(0, TARGET_PER_BOX);
+
+        // 每栏补足到约 10 条：用可执行建议填充，避免只罗列缺点
+        const ACTIONABLE_SKILL = [
+            '针对岗位 JD 补 1～2 门关键技术，并用小项目或笔记验证',
+            '用 LeetCode/牛客等巩固算法与手写题，按题型归纳思路',
+            '梳理已做项目的技术难点、优化点与数据结果，便于面试深挖',
+            '学习目标岗位常用中间件/框架的官方文档与最佳实践',
+            '找一段与目标技术栈一致的开源或课程项目做精读与改造',
+            '建立技术知识体系：基础原理 → 应用场景 → 踩坑与优化',
+            '参与或主导一个可量化的技术改进（性能、稳定性、可观测）',
+            '对简历上每项技术能讲清原理、使用场景和与岗位的关联',
+            '定期做技术总结与输出（博客/内部分享），形成可讲的故事',
+            '明确与岗位的差距点并制定 2～3 个月可落地的学习计划'
+        ];
+        const ACTIONABLE_RESUME = [
+            '用 STAR 法则写项目经历：情境、任务、行动、可量化结果',
+            '成果尽量量化：性能提升 x%、用户量、QPS、节省成本等',
+            '简历关键词与岗位 JD 对齐，技能与项目描述一致',
+            '与岗位最相关的 1～2 个项目放前并写清技术栈与职责',
+            '补充与岗位匹配的技能关键词，避免空洞的“了解/熟悉”',
+            '教育/实习时间线清晰，经历按时间倒序排列',
+            '控制篇幅：一页为主，重点突出与岗位匹配的部分',
+            '每段经历都有“做了什么 + 用了什么技术 + 结果如何”',
+            '删去与岗位无关或过于陈旧的内容，保持信息密度',
+            '请他人或 AI 从 HR/技术视角帮你做一遍简历审阅'
+        ];
+        const ACTIONABLE_INTERVIEW = [
+            '准备 2～3 个可深挖的项目：背景、难点、你的贡献、反思',
+            '梳理常见算法题型与思路，限时手写 1～2 道练手',
+            '准备 1～2 个行为面试案例：冲突解决、协作、失败复盘',
+            '对简历每一条都能展开讲 2～3 分钟，并预判追问',
+            '模拟面试：计时自述、让同学/朋友做面试官提问',
+            '技术问题先答思路再答细节，不清楚的说明边界与可补充点',
+            '准备“为什么选我们/职业规划”等通用问题的简洁回答',
+            '面试前再看一遍岗位 JD，把要求与自己的经历做对应',
+            '记录每次面试被问住的问题，事后补强并形成话术',
+            '面试结尾可主动问 1～2 个与团队/业务相关的问题'
+        ];
+        const fillToTarget = (key, list) => {
+            const existing = new Set(sec[key].map(s => String(s).trim()));
+            for (const tip of list) {
+                if (sec[key].length >= TARGET_PER_BOX) break;
+                const t = String(tip).trim();
+                if (!existing.has(t)) { sec[key].push(tip); existing.add(t); }
+            }
+        };
+        fillToTarget('skill', ACTIONABLE_SKILL);
+        fillToTarget('resume', ACTIONABLE_RESUME);
+        fillToTarget('interview', ACTIONABLE_INTERVIEW);
+
+        const uniq = (arr) => Array.from(new Set(arr.map(s => String(s).trim()).filter(Boolean))).slice(0, 25);
         sec.skill = uniq(sec.skill);
         sec.resume = uniq(sec.resume);
         sec.interview = uniq(sec.interview);
@@ -3980,11 +4144,22 @@ class CareerPlanningApp {
             this.showToast('已是最终阶段', 'info');
             return;
         }
+        // 推进到 Offer 阶段时必须传 result='offer'，总览里的「Offer 数量」才会计入
+        const result = next === 'offer' ? 'offer' : 'passed';
         this.showLoading();
-        const res = await updateTrackingRecord(recordId, { user_id: userId, stage: next, result: 'passed' });
+        const res = await updateTrackingRecord(recordId, { user_id: userId, stage: next, result });
         this.hideLoading();
         if (res && res.success) {
             this.showToast('进展已更新', 'success');
+            // 乐观更新：先改缓存与列表，再拉取，避免到达 Offer 后仍显示「进行中」
+            const updated = { ...record, current_stage: next, result };
+            this.trackingRecordsCache[recordId] = updated;
+            const recs = this.trackingOverviewRecords || [];
+            const idx = recs.findIndex(r => r && r.record_id === recordId);
+            if (idx >= 0) {
+                recs[idx] = { ...recs[idx], current_stage: next, result };
+                this.renderTrackingOverview({ summary: this.trackingOverviewSummary || {}, records: recs, agent_insight: null });
+            }
             await this.loadTrackingData();
             this.renderTrackingSteps(this.trackingRecordsCache?.[recordId]);
         } else {
@@ -4127,7 +4302,6 @@ class CareerPlanningApp {
         }
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
         const title = `${report.job_title || ''} · ${report.company_name || ''} 失败复盘`;
-        const sub = `${report.company_name || ''} · ${report.job_title || ''} · ${report.failure_stage || '—'} · ${report.created_at || ''} 生成`;
         // 与 Tab3 同步：优先用“流式完整分析缓存”，没有再用报告摘要 key_weakness
         const cachedRaw = this._getCachedRawForReport(report);
         const source = cachedRaw || String(report.key_weakness || '');
@@ -4135,7 +4309,6 @@ class CareerPlanningApp {
         const toUl = (arr) => arr && arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>—</li></ul>';
         detailEl.innerHTML = `
             <h3>${esc(title)}</h3>
-            <p class="tracking-rpt-detail-sub">${esc(sub)}</p>
             <div class="tracking-detail-section"><h4>🔍 技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
             <div class="tracking-detail-section"><h4>📄 简历优化建议</h4>${toUl(parsed.resume)}</div>
             <div class="tracking-detail-section"><h4>🗣️ 面试准备行动计划</h4>${toUl(parsed.interview)}</div>
@@ -4192,10 +4365,10 @@ class CareerPlanningApp {
         const pieDom = document.getElementById('trackingPieChart');
         if (pieDom) {
             const stageCount = { offer: 0, rejected: 0, inProgress: 0, applied: 0 };
+            const isOffer = (r) => r.result === 'offer' || ((r.current_stage || r.stage || '').toString().toLowerCase() === 'offer');
             records.forEach(r => {
-                const res = r.result || 'pending';
-                if (res === 'offer') stageCount.offer++;
-                else if (res === 'rejected' || res === 'failed' || r.current_stage === 'rejected') stageCount.rejected++;
+                if (isOffer(r)) stageCount.offer++;
+                else if (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected') stageCount.rejected++;
                 else if (r.current_stage === 'applied') stageCount.applied++;
                 else stageCount.inProgress++;
             });
@@ -5012,82 +5185,71 @@ class CareerPlanningApp {
         return html;
     }
 
-    // 加载推荐岗位（含 try/catch + 超时，确保异常或超时时也会结束加载状态并显示提示）
+    // 加载推荐岗位（含超时、失败自动重试一次，便于服务刚启动时能加载出来）
     async loadRecommendedJobs() {
         const userId = getCurrentUserId();
         const container = document.getElementById('recommendedJobs');
         if (!container) return;
 
         container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
-        let result;
-        const REC_TIMEOUT_MS = 28000; // 28 秒未返回则显示超时提示，避免一直“加载中”
-        try {
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('REC_TIMEOUT')), REC_TIMEOUT_MS)
-            );
-            result = await Promise.race([
-                getRecommendedJobs(userId, 1, 36),
-                timeoutPromise
-            ]);
-        } catch (e) {
-            if ((e && e.message) === 'REC_TIMEOUT') {
-                result = { success: false, msg: '推荐服务响应超时，请确认 Java 后端(5000) 或 AI 服务(5002) 已启动后重试' };
-            } else {
+        const REC_TIMEOUT_MS = 70000; // 70 秒，与接口 90s 超时配合，给后端足够响应时间
+        const tryOnce = async () => {
+            try {
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('REC_TIMEOUT')), REC_TIMEOUT_MS)
+                );
+                const result = await Promise.race([
+                    getRecommendedJobs(userId, 1, 36),
+                    timeoutPromise
+                ]);
+                return result && typeof result === 'object' ? result : { success: false, msg: '服务返回异常' };
+            } catch (e) {
+                if ((e && e.message) === 'REC_TIMEOUT') {
+                    return { success: false, msg: '推荐服务响应超时，请确认 Java 后端(5000) 或 AI 服务(5002) 已启动后重试' };
+                }
                 console.error('[loadRecommendedJobs] 请求异常:', e);
-                result = { success: false, msg: (e && e.message) || '网络或服务异常，请稍后重试' };
+                return { success: false, msg: (e && e.message) || '网络或服务异常，请稍后重试' };
             }
+        };
+        let result = await tryOnce();
+        const shouldRetry = !result.success && (result.msg || '').match(/超时|无法连接|网络|请求超时/);
+        if (shouldRetry) {
+            container.innerHTML = '<div class="loading-message">首次请求未就绪，正在重试...</div>';
+            await new Promise(r => setTimeout(r, 3000));
+            result = await tryOnce();
         }
-        if (!result || typeof result !== 'object') {
-            result = { success: false, msg: '服务返回异常' };
-        }
-        // 不再按匹配度做前端过滤，直接展示后端返回的推荐结果（兼容 data.jobs 与 data.recommendations）
         const recommendations = (result.data && (result.data.jobs ?? result.data.recommendations)) || [];
         this.currentRecommendations = Array.isArray(recommendations) ? recommendations : [];
         this.recFilter = 'all';
 
         if (result.success && this.currentRecommendations.length > 0) {
-            // 真实匹配结果：使用算法返回的推荐列表与 match_score
             this.updateRecStats(this.currentRecommendations);
             this.renderRecommendedJobs(this.currentRecommendations, container);
             this.bindRecStatTiles();
             this.bindRecCardClicks();
         } else if (result.success && this.currentRecommendations.length === 0) {
-            // 接口成功但无推荐：能力画像已参与计算，无匹配或未加载岗位数据，不展示演示数据
             const hint = '暂无推荐岗位。请先完善能力画像并生成岗位画像（系统管理 → 生成岗位画像 或 配置岗位 CSV），再刷新本页获取基于算法的真实推荐。';
             container.innerHTML = '<div class="hint-text">' + hint + '</div>';
             this.updateRecStats([]);
         } else {
-            // 服务不可用或超时：用兜底演示数据保证页面可浏览，并提示启动服务以获取真实匹配
-            const fallbackList = this._getRecommendedJobsFallback();
-            if (fallbackList.length > 0) {
-                this.currentRecommendations = fallbackList;
-                this.recFilter = 'all';
-                this.updateRecStats(this.currentRecommendations);
-                this.renderRecommendedJobs(this.currentRecommendations, container);
-                this.bindRecStatTiles();
-                this.bindRecCardClicks();
-                const notice = document.createElement('div');
-                notice.className = 'hint-text';
-                notice.style.cssText = 'margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#e0f2fe,#fef3c7);border-radius:10px;border:1px solid rgba(59,130,246,0.2);font-size:13px;';
-                notice.textContent = '当前为演示数据。请启动 Java 后端(5000) 或 AI 服务(5002) 以获取基于能力画像的真实推荐。';
-                container.insertBefore(notice, container.firstChild);
-            } else {
-                const msg = (result.msg || '') + '';
-                const isAbilityProfile = msg.includes('能力画像');
-                const isRouteNotFound = (result.code === 404 && msg.includes('接口不存在')) || (String(result.msg || '').includes('NOT FOUND'));
-                const isTimeout = msg.includes('超时') || msg.includes('请求超时');
-                const hint = !result.success && isTimeout
-                    ? (msg || '请求超时，请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常')
-                    : (!result.success && isAbilityProfile
+            const msg = (result.msg || '') + '';
+            const isConnectionHint = msg.includes('AI 服务 (5002) 未连接') || msg.includes('请先启动 AI 服务');
+            const isAbilityProfile = !isConnectionHint && msg.includes('能力画像');
+            const isRouteNotFound = (result.code === 404 && msg.includes('接口不存在')) || (String(result.msg || '').includes('NOT FOUND'));
+            const isTimeout = msg.includes('超时') || msg.includes('请求超时');
+            const hint = isConnectionHint
+                ? msg
+                : (isTimeout
+                    ? (msg || '推荐服务响应超时。请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面获取真实推荐。')
+                    : (isAbilityProfile
                         ? '暂无推荐岗位，请先完善个人档案并生成能力画像'
-                        : (!result.success && isRouteNotFound
-                            ? '推荐岗位接口未就绪（请用项目根目录 start_ai_service.ps1 或 cd AI算法 && python app.py 启动 AI 服务 http://localhost:5002）'
-                            : (!result.success && result.code === 404
-                                ? '推荐岗位服务暂不可用（请确认已启动 AI 服务 http://localhost:5002）'
-                                : '暂无推荐岗位。请先完善能力画像；若已完善，请确认已加载岗位数据（系统管理 → 生成岗位画像 或 配置 CSV）')));
-                container.innerHTML = '<div class="hint-text">' + hint + '</div>';
+                        : (isRouteNotFound
+                            ? '推荐岗位接口未就绪。请用项目根目录 start_ai_service.ps1 或 cd AI算法 && python app.py 启动 AI 服务 (http://localhost:5002) 后刷新。'
+                            : (result.code === 404
+                                ? '推荐岗位服务暂不可用。请确认已启动 AI 服务 (http://localhost:5002) 或 Java 后端(5000) 后刷新。'
+                                : (msg || '无法获取推荐岗位。请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面，即可获取基于能力画像的真实推荐。')))));
+            container.innerHTML = '<div class="hint-text">' + hint + '</div>';
             this.updateRecStats([]);
-            }
         }
     }
 
@@ -9488,16 +9650,32 @@ class CareerPlanningApp {
         poll();
     }
 
-    // 加载职业规划报告内容（仅用于职业规划页历史列表点击，只渲染职业规划报告，绝不混入测评报告）
+    // 加载职业规划报告内容（失败时自动重试一次，并已延长接口超时，便于加载出来）
     async loadReportContent(reportId) {
         const contentDiv = document.getElementById('reportContent');
         if (!contentDiv) return;
         const userId = getCurrentUserId();
         contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
         this.showReportContentArea();
-        const result = await getCareerReport(userId || 10001, reportId);
+        let result = await getCareerReport(userId || 10001, reportId);
         if (!result.success || !result.data) {
-            contentDiv.innerHTML = '<div class="hint-text">加载失败: ' + (result.msg || '未知错误') + '</div>';
+            const msg = (result.msg || '') + '';
+            const canRetry = /超时|无法连接|网络|请求超时/.test(msg);
+            if (canRetry) {
+                contentDiv.innerHTML = '<div class="loading-message">首次加载未就绪，正在重试...</div>';
+                await new Promise(r => setTimeout(r, 2500));
+                result = await getCareerReport(userId || 10001, reportId);
+            }
+        }
+        if (!result.success || !result.data) {
+            const msg = (result.msg || '未知错误') + '';
+            const isTimeout = msg.indexOf('超时') !== -1 || msg.indexOf('timeout') !== -1;
+            const hint = isTimeout
+                ? '报告加载超时。请确认 AI 服务已启动：在项目根目录运行 start_ai_service.ps1，或执行 cd AI算法 && python app.py，启动后刷新本页重试。'
+                : (msg.indexOf('5002') !== -1 || msg.indexOf('127.0.0.1') !== -1
+                    ? '无法连接报告服务。请先启动 AI 服务（start_ai_service.ps1 或 cd AI算法 && python app.py），再刷新页面。'
+                    : '加载失败：' + msg);
+            contentDiv.innerHTML = '<div class="hint-text">' + hint + '</div>';
             return;
         }
         this.currentReportId = reportId;
@@ -12155,9 +12333,26 @@ class CareerPlanningApp {
     }
 }
 
+// 全局：计划定制弹窗入口（供内联 onclick 与委托点击使用）
+function openTrackingPlanModal() {
+    if (window.app && typeof window.app.openTrackingPlanModal === 'function') {
+        window.app.openTrackingPlanModal();
+    }
+}
+
 // 页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new CareerPlanningApp();
+    window.openTrackingPlanModal = openTrackingPlanModal;
+
+    // 计划定制按钮：文档级委托，确保点击一定能触发（避免被遮挡或绑定丢失）
+    document.addEventListener('click', function planFabDelegate(e) {
+        if (e.target && e.target.closest && e.target.closest('#trackingPlanFab')) {
+            openTrackingPlanModal();
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 
     // 初始化日期输入框（即使没有加载档案数据）
     if (window.app && typeof window.app.initDateInput === 'function') {
@@ -12172,6 +12367,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== 模拟面试模块 ====================
 let currentInterview = null;
+var _interviewReportLoading = false;
 let mockInterviewInitialized = false;
 
 function initMockInterviewModule() {
@@ -12179,26 +12375,34 @@ function initMockInterviewModule() {
     
     initMockInterviewTabs();
     initMockInterviewForm();
+    initMockInterviewHistoryDelegation();
     loadInterviewHistory();
     mockInterviewInitialized = true;
 }
 
 function initMockInterviewTabs() {
-    const tabs = document.querySelectorAll('.matching-tabs .tab-btn');
-    const tabContents = document.querySelectorAll('.mock-interview-tab-content .tab-content');
-    
+    const container = document.getElementById('mockInterviewPage');
+    const tabs = container ? container.querySelectorAll('.matching-tabs .tab-btn') : document.querySelectorAll('.matching-tabs .tab-btn');
+    const tabContents = container ? container.querySelectorAll('.mock-interview-tab-content .tab-content') : document.querySelectorAll('.mock-interview-tab-content .tab-content');
+    // data-tab="create" 对应 id="createInterviewTab"，其余为 tabId + 'Tab'
+    const tabToContentId = (tabId) => (tabId === 'create' ? 'createInterviewTab' : tabId + 'Tab');
+
     tabs.forEach(tab => {
         tab.onclick = () => {
             tabs.forEach(t => t.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
-            
+
             tab.classList.add('active');
             const tabId = tab.dataset.tab;
-            const targetTab = document.getElementById(tabId + 'Tab');
+            const targetTab = document.getElementById(tabToContentId(tabId));
             if (targetTab) {
                 targetTab.classList.add('active');
             }
-            
+            if (container) {
+                if (tabId === 'interview') container.classList.add('interview-tab-active');
+                else container.classList.remove('interview-tab-active');
+            }
+
             if (tabId === 'history') {
                 loadInterviewHistory();
             }
@@ -12218,8 +12422,9 @@ function initMockInterviewForm() {
             const duration = parseInt(document.getElementById('duration').value);
             const userId = getCurrentUserId();
             
-            if (!targetPosition) {
-                alert('请选择目标岗位');
+            const positionTrim = (targetPosition || '').trim();
+            if (!positionTrim) {
+                alert('请输入目标岗位');
                 return;
             }
             
@@ -12228,13 +12433,21 @@ function initMockInterviewForm() {
                 return;
             }
             
-            const result = await createMockInterview(userId, targetPosition, interviewType, difficulty, duration);
+            const createFn = (typeof api !== 'undefined' && typeof api.createMockInterview === 'function')
+                ? api.createMockInterview
+                : (typeof createMockInterview === 'function' ? createMockInterview : null);
+            if (!createFn) {
+                alert('功能加载异常，请刷新页面后重试');
+                return;
+            }
+            const result = await createFn(userId, positionTrim, interviewType, difficulty, duration);
             
             if (result.success) {
                 currentInterview = result.data;
                 switchToInterviewTab();
                 renderInterviewMessages();
                 updateInterviewStats();
+                startInterviewTimer();
             } else {
                 alert(result.msg || '创建面试失败');
             }
@@ -12263,70 +12476,171 @@ function initMockInterviewForm() {
 }
 
 function switchToInterviewTab() {
-    const tabs = document.querySelectorAll('.matching-tabs .tab-btn');
-    const tabContents = document.querySelectorAll('.mock-interview-tab-content .tab-content');
+    const container = document.getElementById('mockInterviewPage');
+    const tabs = container ? container.querySelectorAll('.matching-tabs .tab-btn') : document.querySelectorAll('.matching-tabs .tab-btn');
+    const tabContents = container ? container.querySelectorAll('.mock-interview-tab-content .tab-content') : document.querySelectorAll('.mock-interview-tab-content .tab-content');
     
     tabs.forEach(t => t.classList.remove('active'));
     tabContents.forEach(c => c.classList.remove('active'));
     
     tabs[1].classList.add('active');
     document.getElementById('interviewTab').classList.add('active');
+    if (container) container.classList.add('interview-tab-active');
+}
+
+/** 切换到「开始面试」tab */
+function switchToCreateInterviewTab() {
+    const container = document.getElementById('mockInterviewPage');
+    const tabs = container ? container.querySelectorAll('.matching-tabs .tab-btn') : document.querySelectorAll('.matching-tabs .tab-btn');
+    const tabContents = container ? container.querySelectorAll('.mock-interview-tab-content .tab-content') : document.querySelectorAll('.mock-interview-tab-content .tab-content');
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    if (tabs[0]) tabs[0].classList.add('active');
+    const createTab = document.getElementById('createInterviewTab');
+    if (createTab) createTab.classList.add('active');
+    if (container) container.classList.remove('interview-tab-active');
+}
+
+/** 切换到「面试报告」tab（在获取报告成功后调用） */
+function switchToInterviewReportTab() {
+    const container = document.getElementById('mockInterviewPage');
+    const tabs = container ? container.querySelectorAll('.matching-tabs .tab-btn') : document.querySelectorAll('.matching-tabs .tab-btn');
+    const tabContents = container ? container.querySelectorAll('.mock-interview-tab-content .tab-content') : document.querySelectorAll('.mock-interview-tab-content .tab-content');
+    
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    
+    tabs[2].classList.add('active');
+    document.getElementById('reportTab').classList.add('active');
+    if (container) container.classList.remove('interview-tab-active');
+}
+
+function updateInterviewerHeader() {
+    const nameEl = document.getElementById('interviewerName');
+    const roleEl = document.getElementById('interviewerRole');
+    const avatarEl = document.getElementById('interviewerAvatar');
+    if (avatarEl) avatarEl.textContent = '🤖';
+    if (!nameEl || !roleEl || !currentInterview) return;
+    const persona = currentInterview.interviewer_persona;
+    nameEl.textContent = (persona && persona.name) ? persona.name : 'AI面试官';
+    roleEl.textContent = (persona && persona.title) ? persona.title : '面试官角色';
 }
 
 function renderInterviewMessages() {
     const chatContainer = document.getElementById('interviewChat');
     if (!chatContainer || !currentInterview) return;
     
+    updateInterviewerHeader();
     chatContainer.innerHTML = '';
     
     currentInterview.messages.forEach(msg => {
         const messageEl = document.createElement('div');
-        messageEl.className = `interview-message ${msg.role}`;
+        messageEl.className = 'mock-msg ' + (msg.role === 'user' ? 'user' : '');
         
         const avatar = document.createElement('div');
-        avatar.className = 'interview-message-avatar';
-        avatar.textContent = msg.role === 'interviewer' ? '🤖' : '👤';
+        avatar.className = 'mock-avatar' + (msg.role === 'user' ? ' user-avatar' : '');
+        avatar.textContent = msg.role === 'interviewer' ? '🤖' : (msg.role === 'user' ? '你' : '');
         
         const content = document.createElement('div');
-        content.className = 'interview-message-content';
-        content.innerHTML = msg.content.replace(/\n/g, '<br>');
+        content.className = 'mock-msg-bubble ' + (msg.role === 'user' ? 'user' : 'ai');
+        content.innerHTML = (msg.content || '').replace(/\n/g, '<br>');
         
         messageEl.appendChild(avatar);
         messageEl.appendChild(content);
-        
-        if (msg.score && msg.role === 'interviewer') {
-            const scoreEl = document.createElement('div');
-            scoreEl.className = 'interview-score';
-            scoreEl.innerHTML = `
-                <h5>本次回答评分：${msg.score.overall}分</h5>
-                <ul>
-                    <li>表达能力：${msg.score.dimensions.expression}分</li>
-                    <li>逻辑思维：${msg.score.dimensions.logic}分</li>
-                    <li>内容质量：${msg.score.dimensions.content}分</li>
-                </ul>
-            `;
-            content.appendChild(scoreEl);
-        }
-        
         chatContainer.appendChild(messageEl);
     });
     
     chatContainer.scrollTop = chatContainer.scrollHeight;
+    updateInterviewFooterState();
 }
+
+/** 根据面试状态更新底部输入区：已结束时禁用输入并显示「查看报告」 */
+function updateInterviewFooterState() {
+    const inputEl = document.getElementById('answerInput');
+    const sendBtn = document.getElementById('sendAnswerBtn');
+    const endBtn = document.getElementById('endInterviewBtn');
+    if (!inputEl || !sendBtn || !endBtn) return;
+    var isCompleted = currentInterview && currentInterview.status === 'completed';
+    if (isCompleted) {
+        inputEl.disabled = true;
+        inputEl.placeholder = '面试已结束，请查看报告';
+        inputEl.style.display = 'none';
+        sendBtn.style.display = 'none';
+        endBtn.textContent = '查看报告';
+        endBtn.onclick = function () { if (currentInterview && currentInterview.interview_id) loadInterviewReport(currentInterview.interview_id); else switchToInterviewReportTab(); };
+    } else {
+        inputEl.disabled = false;
+        inputEl.placeholder = '请输入你的回答...';
+        inputEl.style.display = '';
+        sendBtn.style.display = '';
+        endBtn.textContent = '结束面试';
+        endBtn.onclick = endInterview;
+    }
+}
+
+let interviewTimerRemaining = 0;
+let interviewTimerInterval = null;
+
+function startInterviewTimer() {
+    if (!currentInterview || interviewTimerInterval) return;
+    const durationMins = typeof currentInterview.duration === 'number' ? currentInterview.duration : (parseInt(currentInterview.duration, 10) || 30);
+    interviewTimerRemaining = durationMins * 60;
+    if (interviewTimerInterval) clearInterval(interviewTimerInterval);
+    interviewTimerInterval = setInterval(function () {
+        interviewTimerRemaining--;
+        updateInterviewTimerDisplay();
+        if (interviewTimerRemaining <= 0) {
+            if (interviewTimerInterval) clearInterval(interviewTimerInterval);
+            interviewTimerInterval = null;
+            endInterview();
+        }
+    }, 1000);
+    updateInterviewTimerDisplay();
+}
+
+function stopInterviewTimer() {
+    if (interviewTimerInterval) {
+        clearInterval(interviewTimerInterval);
+        interviewTimerInterval = null;
+    }
+    interviewTimerRemaining = 0;
+    updateInterviewTimerDisplay();
+}
+
+function updateInterviewTimerDisplay() {
+    const el = document.getElementById('interviewTimerDisplay');
+    const pill = document.getElementById('mockPillTimer');
+    const m = Math.floor(interviewTimerRemaining / 60);
+    const s = interviewTimerRemaining % 60;
+    const text = interviewTimerRemaining > 0 ? (m + ':' + (s < 10 ? '0' : '') + s) : '0:00';
+    if (el) el.textContent = text;
+    if (pill) pill.textContent = '剩余 ' + (interviewTimerRemaining > 0 ? text : '0:00');
+}
+
+function renderInterviewProgressTrack() {
+    const container = document.getElementById('interviewProgressTrack');
+    if (!container || !currentInterview) return;
+    const plan = currentInterview.interview_plan;
+    const types = (plan && plan.question_types) ? plan.question_types : MOCK_MODULE_NAMES;
+    const current = currentInterview.current_question_index != null ? currentInterview.current_question_index : 0;
+    container.innerHTML = types.map(function (label, idx) {
+        const done = idx < current;
+        const active = idx === current;
+        const dotClass = done ? 'done' : (active ? 'active' : '');
+        const itemClass = done ? 'done' : (active ? 'active' : '');
+        const textClass = active ? 'progress-text active' : 'progress-text';
+        return '<div class="mock-progress-item ' + itemClass + '">' +
+            '<div class="mock-progress-dot ' + dotClass + '"></div>' +
+            '<div class="' + textClass + '">' + (label || ('题目' + (idx + 1))) + '</div></div>';
+    }).join('');
+}
+
+var MOCK_MODULE_NAMES = ['自我介绍', '岗位认知', '项目经验', '技术能力', '职业规划'];
 
 function updateInterviewStats() {
     if (!currentInterview) return;
-    
-    const questionCount = currentInterview.messages.filter(m => m.role === 'interviewer').length;
-    const answerCount = currentInterview.messages.filter(m => m.role === 'user').length;
-    
-    const questionCountEl = document.getElementById('questionCount');
-    const answerCountEl = document.getElementById('answerCount');
-    const durationEl = document.getElementById('interviewDuration');
-    
-    if (questionCountEl) questionCountEl.textContent = questionCount;
-    if (answerCountEl) answerCountEl.textContent = answerCount;
-    if (durationEl) durationEl.textContent = currentInterview.duration + '分钟';
+    updateInterviewTimerDisplay();
+    renderInterviewProgressTrack();
 }
 
 async function submitInterviewAnswer() {
@@ -12375,6 +12689,11 @@ async function submitInterviewAnswer() {
                 currentInterview.messages[aiMessageIndex].content += chunk;
             }
             renderInterviewMessages();
+        },
+        (currentIndex, remainingQuestions) => {
+            if (currentInterview == null) return;
+            currentInterview.current_question_index = currentIndex;
+            updateInterviewStats();
         }
     );
     
@@ -12384,17 +12703,10 @@ async function submitInterviewAnswer() {
     
     if (result.success) {
         currentInterview.status = result.data.interview.status;
-        currentInterview.current_question_index = result.data.interview.current_question_index;
-        if (result.data.interview.total_score) {
-            currentInterview.total_score = result.data.interview.total_score;
+        if (result.data.interview.current_question_index != null) {
+            currentInterview.current_question_index = result.data.interview.current_question_index;
         }
         updateInterviewStats();
-        
-        if (result.data.is_complete) {
-            setTimeout(() => {
-                loadInterviewReport(currentInterview.interview_id);
-            }, 1500);
-        }
     } else {
         alert(result.msg || '发送回答失败');
     }
@@ -12404,30 +12716,80 @@ async function endInterview() {
     if (!currentInterview) return;
     
     if (confirm('确定要结束本次面试吗？')) {
-        currentInterview.status = 'completed';
-        currentInterview.total_score = Math.floor(Math.random() * 30) + 70;
-        api.saveMockInterviews();
-        loadInterviewReport(currentInterview.interview_id);
+        const endBtn = document.getElementById('endInterviewBtn');
+        if (endBtn) {
+            endBtn.disabled = true;
+            endBtn.textContent = '生成报告中...';
+        }
+        try {
+            stopInterviewTimer();
+            currentInterview.status = 'completed';
+            if (typeof api !== 'undefined' && api.saveMockInterviews) api.saveMockInterviews();
+            updateInterviewFooterState();
+            await loadInterviewReport(currentInterview.interview_id);
+        } finally {
+            if (endBtn) endBtn.disabled = false;
+            updateInterviewFooterState();
+        }
     }
 }
 
 async function loadInterviewReport(interviewId) {
-    const userId = getCurrentUserId();
-    const result = await getInterviewReport(interviewId, userId);
+    if (_interviewReportLoading) return;
+    _interviewReportLoading = true;
+    switchToInterviewReportTab();
+    var reportArea = document.getElementById('reportArea');
+    if (reportArea) {
+        reportArea.innerHTML = '<div class="mock-report-loading"><div class="mock-report-loading-spinner"></div><div class="mock-report-loading-text">加载报告中...</div></div>';
+    }
+    var userId = getCurrentUserId();
+    var result;
+    try {
+        result = await getInterviewReport(interviewId, userId);
+        console.log('[历史Debug] 获取报告响应:', result);
+        console.log('[历史Debug] 响应success:', result && result.success);
+        console.log('[历史Debug] 响应data:', result && result.data);
+    } catch (e) {
+        result = { success: false, msg: '网络异常，请确认 AI 服务 (http://localhost:5002) 已启动。' + (e && e.message ? ' ' + e.message : '') };
+        console.error('[历史Debug] 获取报告异常:', e);
+    } finally {
+        _interviewReportLoading = false;
+    }
     
-    if (result.success) {
-        renderInterviewReport(result.data);
-        
-        const tabs = document.querySelectorAll('.matching-tabs .tab-btn');
-        const tabContents = document.querySelectorAll('.mock-interview-tab-content .tab-content');
-        
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-        
-        tabs[2].classList.add('active');
-        document.getElementById('reportTab').classList.add('active');
+    if (result && result.success && result.data) {
+        try {
+            renderInterviewReport(result.data);
+        } catch (err) {
+            console.error('[MockInterview] 渲染报告异常:', err);
+        }
+        switchToInterviewReportTab();
+        console.log('[历史Debug] 跳转到面试报告tab完成');
+        loadInterviewHistory();
     } else {
-        alert(result.msg || '加载面试报告失败');
+        console.error('[历史Debug] 报告数据获取失败:', result);
+        // 后端不可用时：若有当前面试对话，展示本地离线报告，避免报告页空白
+        if (currentInterview && currentInterview.interview_id === interviewId && currentInterview.messages && currentInterview.messages.length > 0) {
+            var fallback = {
+                interview_id: interviewId,
+                target_job: currentInterview.target_position || currentInterview.target_job_title || '岗位',
+                overall_score: 0,
+                dimension_scores: { expression: 0, logic: 0, content: 0, stress_resistance: 0, cultural_fit: 0 },
+                strengths: ['当前为本地对话记录，未连接 AI 服务'],
+                weaknesses: ['完整报告需在 AI 服务 (http://localhost:5002) 启动后，重新点击「结束面试」生成'],
+                suggestions: ['请启动 AI 服务后重试', '启动后再次点击「结束面试」可生成含评分的报告'],
+                improvement_plan: { short_term: [], suggested_retry_days: 14 },
+                created_at: new Date().toISOString()
+            };
+            try { renderInterviewReport(fallback); } catch (err) { console.error('[MockInterview] 渲染报告异常:', err); }
+            switchToInterviewReportTab();
+            setTimeout(function () { alert(result.msg || '无法连接面试服务，当前仅展示对话记录。请启动 AI 服务 (http://localhost:5002) 后重新点击「结束面试」获取完整报告。'); }, 300);
+        } else {
+            if (reportArea) {
+                reportArea.innerHTML = '<div class="mock-report-loading mock-report-loading-error"><div class="mock-report-loading-text">' + (result && result.msg ? result.msg : '获取报告失败，请确认 AI 服务 (http://localhost:5002) 已启动后重试。') + '</div></div>';
+            }
+            if (typeof showToast === 'function') showToast(result && result.msg ? result.msg : '获取报告失败，请重试', 'error');
+            else alert(result && result.msg ? result.msg : '加载面试报告失败，请确认 AI 服务 (http://localhost:5002) 已启动。');
+        }
     }
 }
 
@@ -12435,137 +12797,199 @@ function renderInterviewReport(report) {
     const reportArea = document.getElementById('reportArea');
     if (!reportArea) return;
     
-    reportArea.innerHTML = `
-        <div style="text-align: center; margin-bottom: 32px;">
-            <h3 style="font-family: var(--font-heading); font-size: 28px; color: var(--text-primary); margin: 0 0 8px 0;">
-                面试表现报告
-            </h3>
-            <p style="color: var(--text-secondary); margin: 0;">
-                ${new Date(report.created_at).toLocaleString('zh-CN')}
-            </p>
-        </div>
-        
-        <div style="text-align: center; margin-bottom: 32px;">
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--indigo-blue)); color: white; font-size: 48px; font-weight: 700;">
-                ${report.overall_score}
-            </div>
-            <p style="margin-top: 12px; font-size: 16px; color: var(--text-secondary);">综合评分</p>
-        </div>
-        
-        <div style="margin-bottom: 32px;">
-            <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 16px 0;">维度评分</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                ${Object.entries(report.dimension_scores).map(([key, score]) => `
-                    <div style="background: var(--light-blue-bg); padding: 16px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 4px;">${score}</div>
-                        <div style="font-size: 13px; color: var(--text-secondary);">
-                            ${key === 'expression' ? '表达能力' : 
-                              key === 'logic' ? '逻辑思维' : 
-                              key === 'content' ? '内容质量' : 
-                              key === 'stress_resistance' ? '抗压能力' : '文化适配'}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px;">
-            <div>
-                <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">💪 优势</h4>
-                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
-                    ${report.strengths.map(s => `<li>${s}</li>`).join('')}
-                </ul>
-            </div>
-            <div>
-                <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">📝 待提升</h4>
-                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
-                    ${report.weaknesses.map(w => `<li>${w}</li>`).join('')}
-                </ul>
-            </div>
-        </div>
-        
-        <div style="margin-bottom: 32px;">
-            <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">💡 改进建议</h4>
-            <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
-                ${report.suggestions.map(s => `<li>${s}</li>`).join('')}
-            </ul>
-        </div>
-        
-        <div>
-            <h4 style="font-family: var(--font-heading); font-size: 18px; color: var(--text-primary); margin: 0 0 12px 0;">📋 提升计划</h4>
-            <div style="background: var(--light-blue-bg); padding: 20px; border-radius: 12px; color: var(--text-secondary); line-height: 1.8; margin: 0;">
-                <h5 style="margin: 0 0 12px 0; color: var(--text-primary); font-size: 15px;">短期行动计划：</h5>
-                <ul style="margin: 0 0 16px 0; padding-left: 20px;">
-                    ${report.improvement_plan.short_term.map(plan => `<li>${plan}</li>`).join('')}
-                </ul>
-                <p style="margin: 0; font-weight: 600; color: var(--primary-color);">
-                    💡 建议 ${report.improvement_plan.suggested_retry_days || 14} 天后再次进行模拟面试
-                </p>
-            </div>
-        </div>
-    `;
+    const score = report.overall_score != null ? Number(report.overall_score) : 0;
+    const gradeText = score >= 80 ? '优秀' : (score >= 60 ? '良好' : '待提升');
+    const gradeSub = score >= 80 ? '建议录用' : (score >= 60 ? '建议再培养' : '建议加强练习');
+    const dims = report.dimension_scores || {};
+    const dimOrder = [
+        { key: 'content', label: '内容质量' },
+        { key: 'expression', label: '表达能力' },
+        { key: 'logic', label: '逻辑思维' },
+        { key: 'cultural_fit', label: '文化适配' },
+        { key: 'stress_resistance', label: '抗压能力' }
+    ];
+    function dimColor(v) {
+        if (v >= 75) return 'var(--mock-sage)';
+        if (v >= 50) return 'var(--mock-amber)';
+        return 'var(--mock-red)';
+    }
+    const suggestedDays = (report.improvement_plan && report.improvement_plan.suggested_retry_days) ? report.improvement_plan.suggested_retry_days : 14;
+    const shortTerm = (report.improvement_plan && report.improvement_plan.short_term) ? report.improvement_plan.short_term : [];
+    const date = report.created_at ? new Date(report.created_at).toLocaleString('zh-CN') : '';
+    const position = report.target_job || '岗位';
+    var rawType = report.interview_type || (currentInterview && currentInterview.interview_type) || 'comprehensive';
+    const interviewType = rawType === 'technical' ? '技术' : (rawType === 'behavioral' ? '行为' : '综合');
+    
+    var dimsHtml = dimOrder.map(function(d, idx) {
+        var v = dims[d.key] != null ? Number(dims[d.key]) : 0;
+        var scoreColor = dimColor(v);
+        var barColor = dimColor(v);
+        var last = idx === dimOrder.length - 1;
+        return '<div style="padding:12px 14px;border-right:' + (last ? 'none' : '1px solid var(--mock-line)') + ';text-align:center;">' +
+            '<div style="font-size:26px;font-weight:700;line-height:1;margin-bottom:4px;color:' + scoreColor + ';font-variant-numeric:tabular-nums;">' + v + '</div>' +
+            '<div style="font-size:11px;color:var(--mock-ink-3);margin-bottom:8px;">' + d.label + '</div>' +
+            '<div style="height:2px;background:var(--mock-line);border-radius:1px;">' +
+            '<div style="height:2px;border-radius:1px;background:' + barColor + ';width:' + Math.min(100, v) + '%;"></div></div></div>';
+    }).join('');
+    
+    var strengths = (report.strengths || []).map(function(s){ return '<li style="font-size:13px;color:var(--mock-ink-2);line-height:1.5;">' + s + '</li>'; }).join('');
+    var weaknesses = (report.weaknesses || []).map(function(w){ return '<li style="font-size:13px;color:var(--mock-ink-2);line-height:1.5;">' + w + '</li>'; }).join('');
+    var suggestions = (report.suggestions || []).map(function(s){ return '<li style="font-size:13px;color:var(--mock-ink-2);line-height:1.5;">' + s + '</li>'; }).join('');
+    
+    reportArea.innerHTML =
+        '<div style="display:grid;grid-template-columns:80px 1fr;gap:20px;align-items:start;padding-bottom:24px;border-bottom:1px solid var(--mock-line);margin-bottom:24px;">' +
+        '<div><div style="font-size:52px;font-weight:700;color:var(--mock-ink);line-height:1;letter-spacing:-3px;font-variant-numeric:tabular-nums;">' + score + '</div>' +
+        '<div style="font-size:10px;color:var(--mock-ink-3);margin-top:4px;">综合评分</div></div>' +
+        '<div><div style="font-size:17px;font-weight:700;margin-bottom:3px;">面试表现报告</div>' +
+        '<div style="font-size:12px;color:var(--mock-ink-3);margin-bottom:10px;">' + date + ' · ' + position + '</div>' +
+        '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">' +
+        '<span style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid var(--mock-line);color:var(--mock-ink-2);background:var(--mock-bg);">' + position + '</span>' +
+        '<span style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid var(--mock-line);color:var(--mock-ink-2);background:var(--mock-bg);">' + interviewType + '</span>' +
+        '<span style="font-size:11.5px;font-weight:600;color:var(--mock-sage);padding:2px 9px;background:var(--mock-sage-soft);border:1px solid var(--mock-sage-mid);border-radius:4px;">' + gradeText + ' · ' + gradeSub + '</span></div></div></div>' +
+        '<div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--mock-line);">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mock-ink-3);margin-bottom:14px;">维度评分</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(5,1fr);">' + dimsHtml + '</div></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--mock-line);">' +
+        '<div style="padding:0 22px;border-right:1px solid var(--mock-line);padding-left:0;">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mock-sage);margin-bottom:11px;display:flex;align-items:center;gap:6px;">' +
+        '<span style="width:8px;height:2px;border-radius:1px;background:var(--mock-sage);display:inline-block;"></span>优势</div>' +
+        '<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">' + strengths + '</ul></div>' +
+        '<div style="padding:0 22px;border-right:1px solid var(--mock-line);">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mock-amber);margin-bottom:11px;display:flex;align-items:center;gap:6px;">' +
+        '<span style="width:8px;height:2px;border-radius:1px;background:var(--mock-amber);display:inline-block;"></span>待提升</div>' +
+        '<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">' + weaknesses + '</ul></div>' +
+        '<div style="padding:0 22px;padding-right:0;">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mock-ink-2);margin-bottom:11px;display:flex;align-items:center;gap:6px;">' +
+        '<span style="width:8px;height:2px;border-radius:1px;background:var(--mock-ink-2);display:inline-block;"></span>改进建议</div>' +
+        '<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">' + suggestions + '</ul></div></div>' +
+        '<div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--mock-line);">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--mock-ink-3);margin-bottom:14px;">提升计划</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">' +
+        '<div style="padding:16px;background:var(--mock-bg);border-radius:var(--mock-radius);"><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--mock-sage);margin-bottom:8px;">短期 · 1个月</div><div style="font-size:13px;color:var(--mock-ink-2);line-height:1.6;">' + (shortTerm.length ? shortTerm.join('；') : '根据报告建议制定短期学习与练习计划。') + '</div></div>' +
+        '<div style="padding:16px;background:var(--mock-bg);border-radius:var(--mock-radius);"><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--mock-sage);margin-bottom:8px;">中期 · 3个月</div><div style="font-size:13px;color:var(--mock-ink-2);line-height:1.6;">巩固专业能力，参与项目或实习，积累可讲述的经历。</div></div>' +
+        '<div style="padding:16px;background:var(--mock-bg);border-radius:var(--mock-radius);"><div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--mock-amber);margin-bottom:8px;">长期 · 6个月</div><div style="font-size:13px;color:var(--mock-ink-2);line-height:1.6;">持续提升目标岗位竞争力，定期复盘与模拟面试。</div></div></div></div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">' +
+        '<div style="font-size:13px;color:var(--mock-ink-3);">建议 <span style="color:var(--mock-ink);font-weight:600;">' + suggestedDays + ' 天后</span> 再次进行模拟面试以检验提升效果</div>' +
+        '<button type="button" class="mock-btn mock-btn-primary" style="width:auto;margin:0;padding:8px 18px;font-size:13px" onclick="switchToCreateInterviewTab();">再次面试</button></div>';
 }
 
 async function loadInterviewHistory() {
     const userId = getCurrentUserId();
-    if (!userId) return;
+    const getHistoryFn = (typeof api !== 'undefined' && typeof api.getInterviewHistory === 'function')
+        ? api.getInterviewHistory
+        : (typeof getInterviewHistory === 'function' ? getInterviewHistory : null);
     
-    const result = await getInterviewHistory(userId);
+    if (!getHistoryFn) {
+        renderInterviewHistory([]);
+        return;
+    }
+    if (!userId) {
+        renderInterviewHistory([]);
+        return;
+    }
     
-    if (result.success) {
-        renderInterviewHistory(result.data.interviews);
+    var list = [];
+    try {
+        var result = await getHistoryFn(userId, 1, 50);
+        console.log('[历史] 接口返回全量数据:', result && result.data);
+        list = (result.success && result.data)
+            ? (result.data.list || result.data.interviews || (Array.isArray(result.data) ? result.data : []))
+            : [];
+    } catch (e) {
+        console.warn('[MockInterview] 获取历史记录接口异常，尝试使用本地记录:', e && e.message);
+    }
+    // 后端不可用或返回空时，用本地缓存的面试列表兜底，避免历史数量为零
+    if (list.length === 0 && typeof api !== 'undefined' && api.mockInterviews && Array.isArray(api.mockInterviews)) {
+        var uid = String(userId);
+        list = api.mockInterviews.filter(function(i) { return String(i.user_id) === uid; });
+    }
+    console.log('[MockInterview] 渲染历史记录，数量:', list.length);
+    renderInterviewHistory(list);
+}
+
+/** 模拟面试历史列表：仅绑定一次委托，避免每次渲染重复绑定导致点一次触发多次 */
+function initMockInterviewHistoryDelegation() {
+    var listEl = document.getElementById('interviewHistoryList');
+    if (!listEl) return;
+    listEl.removeEventListener('click', _handleInterviewHistoryClick);
+    listEl.addEventListener('click', _handleInterviewHistoryClick);
+}
+
+function _handleInterviewHistoryClick(e) {
+    var btn = e.target && e.target.closest && e.target.closest('[data-action="view-report"], [data-action="resume-interview"]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var id = btn.getAttribute('data-interview-id');
+    if (!id) return;
+    if (btn.getAttribute('data-action') === 'view-report') {
+        viewInterviewReport(id);
+    } else {
+        resumeInterview(id);
     }
 }
 
 function renderInterviewHistory(interviews) {
-    const historyList = document.getElementById('historyList');
-    if (!historyList) return;
-    
-    if (!interviews || interviews.length === 0) {
-        historyList.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
-                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
-                <p>暂无面试记录</p>
-                <p style="font-size: 14px; margin-top: 8px;">开始你的第一次模拟面试吧！</p>
-            </div>
-        `;
+    var containerId = 'interviewHistoryList';
+    var historyList = document.getElementById(containerId);
+    console.log('[历史Debug] 目标容器:', historyList, ' id=', containerId);
+    if (!historyList) {
+        console.warn('[MockInterview] 未找到 #' + containerId + ' 元素');
         return;
     }
+    var list = interviews || [];
+    console.log('[MockInterview] 渲染历史记录，数量:', list.length);
     
-    historyList.innerHTML = interviews.map(interview => `
-        <div class="history-item" data-interview-id="${interview.interview_id}">
-            <div class="history-item-info">
-                <h4>${interview.target_position}</h4>
-                <p>
-                    ${interview.interview_type === 'behavioral' ? '行为面试' : 
-                      interview.interview_type === 'technical' ? '技术面试' : 
-                      interview.interview_type === 'comprehensive' ? '综合面试' : '模拟面试'} · 
-                    ${interview.difficulty === 'easy' ? '简单' : 
-                      interview.difficulty === 'medium' ? '中等' : 
-                      interview.difficulty === 'hard' ? '困难' : '中等'} · 
-                    ${new Date(interview.created_at).toLocaleString('zh-CN')}
-                </p>
-            </div>
-            <div class="history-item-score">
-                ${interview.status === 'completed' ? `
-                    <span class="score-value">${interview.total_score || '-'}</span>
-                    <span class="score-label">综合评分</span>
-                ` : `
-                    <span class="score-value" style="color: var(--warning-color);">进行中</span>
-                    <span class="score-label">-</span>
-                `}
-            </div>
-            ${interview.status === 'completed' ? `
-                <button class="btn-secondary" style="padding: 8px 16px; font-size: 14px;" onclick="viewInterviewReport('${interview.interview_id}')">
-                    查看报告
-                </button>
-            ` : `
-                <button class="btn-primary" style="padding: 8px 16px; font-size: 14px;" onclick="resumeInterview('${interview.interview_id}')">
-                    继续面试
-                </button>
-            `}
-        </div>
-    `).join('');
+    if (list.length === 0) {
+        historyList.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--mock-ink-3);font-size:14px;">暂无面试记录，开始你的第一次模拟面试吧！</div>';
+        updateMockInterviewStats([]);
+        return;
+    }
+    var esc = function(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
+    historyList.innerHTML = list.map(function(interview) {
+        const job = interview.target_position || interview.target_job || interview.target_job_title || '岗位';
+        const typeText = interview.interview_type === 'behavioral' ? '行为' : (interview.interview_type === 'technical' ? '技术' : (interview.interview_type === 'comprehensive' ? '综合' : '模拟'));
+        const typeClass = interview.interview_type === 'technical' ? 'mock-tag-green' : (interview.interview_type === 'behavioral' ? 'mock-tag-amber' : 'mock-tag-blue');
+        const diffText = interview.difficulty === 'easy' ? '简单' : (interview.difficulty === 'hard' ? '困难' : '中等');
+        const dateRaw = interview.created_at || interview.started_at;
+        const dateStr = dateRaw ? new Date(dateRaw).toLocaleDateString('zh-CN') : '';
+        const score = interview.total_score != null ? Number(interview.total_score) : null;
+        let scoreBadge = '';
+        if (interview.status !== 'completed') {
+            scoreBadge = '<span class="mock-score-badge mock-score-mid">进行中</span>';
+        } else if (score != null) {
+            var scoreClass = score >= 80 ? 'mock-score-good' : (score >= 60 ? 'mock-score-mid' : 'mock-score-bad');
+            scoreBadge = '<span class="mock-score-badge ' + scoreClass + '">' + score + '</span>';
+        } else {
+            scoreBadge = '<span class="mock-score-badge mock-score-mid">-</span>';
+        }
+        var actionBtn = interview.status === 'completed'
+            ? '<button type="button" class="mock-btn-sm" data-action="view-report" data-interview-id="' + esc(interview.interview_id) + '">查看</button>'
+            : '<button type="button" class="mock-btn-sm" data-action="resume-interview" data-interview-id="' + esc(interview.interview_id) + '">继续</button>';
+        return '<div class="mock-history-row">' +
+            '<div class="mock-history-job">' + job + '</div>' +
+            '<div><span class="mock-tag ' + typeClass + '">' + typeText + '</span></div>' +
+            '<div style="color:var(--mock-ink-2)">' + diffText + '</div>' +
+            '<div class="mock-history-date">' + dateStr + '</div>' +
+            '<div>' + scoreBadge + '</div>' +
+            '<div>' + actionBtn + '</div></div>';
+    }).join('');
+    
+    updateMockInterviewStats(interviews);
+}
+
+function updateMockInterviewStats(interviews) {
+    var totalEl = document.getElementById('mockStatTotal');
+    var avgEl = document.getElementById('mockStatAvg');
+    var monthEl = document.getElementById('mockStatMonth');
+    if (!totalEl && !avgEl && !monthEl) return;
+    var list = interviews || [];
+    var completed = list.filter(function(i) { return i.status === 'completed' && i.total_score != null; });
+    var total = list.length;
+    var avg = completed.length ? Math.round(completed.reduce(function(s, i) { return s + Number(i.total_score); }, 0) / completed.length) : 0;
+    if (totalEl) totalEl.textContent = total;
+    if (avgEl) avgEl.textContent = avg;
+    if (monthEl) monthEl.textContent = completed.length > 0 ? '+' + Math.max(0, avg - 70) : '0';
 }
 
 function viewInterviewReport(interviewId) {
@@ -12579,6 +13003,7 @@ function resumeInterview(interviewId) {
         switchToInterviewTab();
         renderInterviewMessages();
         updateInterviewStats();
+        if (interview.status !== 'completed') startInterviewTimer();
     }
 }
 

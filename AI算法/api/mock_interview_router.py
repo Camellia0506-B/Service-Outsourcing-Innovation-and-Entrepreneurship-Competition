@@ -2,18 +2,44 @@
 模拟面试模块 - 路由层
 对应 API 文档第 10 章：模拟面试
 4个接口：创建面试会话、发送回答、获取报告、历史记录
+会话持久化到 data/mock_interview_sessions.json，避免重启后历史只剩一条。
 """
 
 import json
+import os
 import uuid
 from datetime import datetime
 from flask import Blueprint, request, Response, jsonify, stream_with_context
 from utils.logger_handler import logger
+from utils.path_tool import get_abs_path
 
 mock_interview_bp = Blueprint("mock_interview", __name__, url_prefix="/api/v1/mock-interview")
 
-# 内存中存储面试会话（生产环境建议使用Redis或数据库）
-interview_sessions = {}
+
+def _get_sessions_path() -> str:
+    return get_abs_path("data/mock_interview_sessions.json")
+
+
+def _load_json(path: str, default: dict):
+    if not os.path.exists(path):
+        return default
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read().strip()
+            return json.loads(text) if text else default
+    except Exception as e:
+        logger.warning(f"[MockInterview] 加载会话文件失败 {path}: {e}")
+        return default
+
+
+def _save_sessions() -> None:
+    os.makedirs(os.path.dirname(_get_sessions_path()), exist_ok=True)
+    with open(_get_sessions_path(), "w", encoding="utf-8") as f:
+        json.dump(interview_sessions, f, ensure_ascii=False, indent=2)
+
+
+# 内存中存储面试会话，启动时从文件恢复，避免重启后历史丢失
+interview_sessions = _load_json(_get_sessions_path(), {})
 
 def success_response(data: dict, msg: str = "success") -> tuple:
     """成功响应"""
@@ -40,8 +66,11 @@ def restore_session():
         interview_id = body.get("interview_id")
         if not interview_id:
             return error_response(400, "请提供 interview_id")
-        
+        # 兼容前端字段：前端使用 target_position，后端使用 target_job_title
+        if not body.get("target_job_title") and body.get("target_position"):
+            body["target_job_title"] = body["target_position"]
         interview_sessions[interview_id] = body
+        _save_sessions()
         logger.info(f"[MockInterview] 恢复会话: {interview_id}")
         
         return success_response({"restored": True}, msg="会话恢复成功")
@@ -79,9 +108,10 @@ def create_session():
 
         interview_id = str(uuid.uuid4())
         
-        # 构建面试官人设
+        # 构建面试官人设（名称与开场白一致，便于前端展示）
+        interviewer_name = "AI面试官"
         interviewer_persona = {
-            "name": "张总监",
+            "name": interviewer_name,
             "title": f"{target_job_title}面试官",
             "style": "专业、严谨、注重细节",
             "background": "10年以上相关行业经验，曾任职于多家知名企业"
@@ -100,8 +130,8 @@ def create_session():
             ]
         }
         
-        # 开场消息
-        opening_message = f"你好！我是张总监，今天将负责你{target_job_title}岗位的面试。\n\n我们将进行大约{duration_minutes}分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。"
+        # 开场消息（使用人设中的名称，避免硬编码）
+        opening_message = f"你好！我是{interviewer_name}，今天将负责你{target_job_title}岗位的面试。\n\n我们将进行大约{duration_minutes}分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。"
         
         # 存储会话
         interview_sessions[interview_id] = {
@@ -125,6 +155,7 @@ def create_session():
             "interview_plan": interview_plan
         }
         
+        _save_sessions()
         return success_response({
             "interview_id": interview_id,
             "opening_message": opening_message,
@@ -173,23 +204,20 @@ def send_answer(interview_id):
             "timestamp": datetime.now().isoformat()
         })
 
-        # 预定义问题库
-        questions = [
-            "请介绍一下你自己？",
-            "你为什么想应聘这个岗位？",
-            "请分享一个你参与过的项目经历？",
-            "你遇到过的最大挑战是什么？你是如何解决的？",
-            "你对未来3-5年的职业规划是什么？"
-        ]
-
-        interview["current_question_index"] += 1
-        next_question_index = interview["current_question_index"]
-        is_complete = next_question_index >= len(questions)
+        # 按模块统计：5 个模块，每模块可多轮追问，只算 1 题
+        MODULE_NAMES = ["自我介绍", "岗位认知", "项目经验", "技术能力", "职业规划"]
+        EXCHANGES_PER_MODULE = 2  # 每模块 2 轮用户回答后进入下一模块
+        user_count = len([m for m in interview["messages"] if m["role"] == "user"])
+        current_module_index = min(5, user_count // EXCHANGES_PER_MODULE)
+        interview["current_question_index"] = current_module_index
+        is_complete = current_module_index >= 5
+        current_module_name = MODULE_NAMES[current_module_index] if current_module_index < 5 else ""
+        next_module_name = MODULE_NAMES[current_module_index + 1] if current_module_index < 4 else ""
 
         def generate():
             try:
                 from langchain_core.prompts import PromptTemplate
-                from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
+                from langchain_core.output_parsers import StrOutputParser
                 from model.factory import chat_model
 
                 # 构建面试上下文
@@ -198,72 +226,30 @@ def send_answer(interview_id):
                     role = "面试官" if msg["role"] == "interviewer" else "应聘者"
                     history_text += f"{role}：{msg['content']}\n"
 
-                # 首先让AI分析回答并给出评分
-                score_prompt = PromptTemplate.from_template("""
-你是一位专业的面试官，请根据应聘者的回答，从以下三个维度进行评分（0-100分）：
-
-1. 表达能力（expression）：语言表达是否清晰、流畅、有条理
-2. 逻辑思维（logic）：回答是否逻辑严谨、思路清晰
-3. 内容质量（content）：回答内容是否充实、有深度、切题
-
-面试历史：
-{history}
-
-请只返回JSON格式，格式如下：
-{{
-    "overall": 综合得分,
-    "expression": 表达能力得分,
-    "logic": 逻辑思维得分,
-    "content": 内容质量得分
-}}
-""")
-
-                score_chain = score_prompt | chat_model | JsonOutputParser()
-                
-                try:
-                    score_result = score_chain.invoke({"history": history_text})
-                    overall = score_result.get("overall", 75)
-                    expression = score_result.get("expression", 75)
-                    logic = score_result.get("logic", 75)
-                    content = score_result.get("content", 75)
-                except:
-                    overall = 75 + next_question_index * 2
-                    expression = 75 + next_question_index * 2
-                    logic = 70 + next_question_index * 2
-                    content = 80 + next_question_index * 2
-
-                # 发送分数更新事件
-                yield f"data: {json.dumps({'event': 'score_update', 'overall_score': overall, 'dimension_scores': {'expression': expression, 'logic': logic, 'content': content}}, ensure_ascii=False)}\n\n"
-
-                # 构建面试官回复的system prompt
-                system_prompt = f"""你是一位专业的{interview['target_job_title']}面试官。
-你的风格是：{interview['interviewer_persona']['style']}
-面试类型：{interview['interview_type']}
-难度：{interview['difficulty']}
-
-请根据应聘者的回答，自然地提出下一个问题。
-如果这是最后一个问题，请在问题后补充："面试结束，感谢你的参与！"
-回答要专业、友好，控制在200字以内。"""
-
-                # 下一个问题
-                if not is_complete:
-                    next_question = questions[next_question_index]
+                job_title = interview.get("target_job_title") or interview.get("target_position") or "该岗位"
+                if is_complete:
+                    system_prompt = f"""你是一位专业的{job_title}面试官。面试已进入收尾阶段。
+请简短致谢并告知面试结束，例如："感谢你的参与，本次面试到此结束，我们会尽快给你反馈。" 控制在80字以内。"""
                 else:
-                    next_question = "面试结束，感谢你的参与！我们会尽快给你反馈。"
+                    transition_hint = f"本模块考察充分后，可自然过渡到下一模块「{next_module_name}」。" if next_module_name else ""
+                    system_prompt = f"""你是一位专业的{job_title}面试官。
+你的风格：{interview['interviewer_persona']['style']}
+面试类型：{interview['interview_type']}，难度：{interview['difficulty']}
 
-                # 构建prompt
+当前考察模块：{current_module_name}。请根据应聘者的回答，在本模块内进行追问或深入（可多轮），或{transition_hint}
+根据上面的对话，生成面试官的下一个提问。回答要专业、友好，控制在200字以内。"""
+
                 template = PromptTemplate.from_template("""
 {system}
 
 面试历史：
 {history}
 
-根据上面的对话，请生成面试官的回复。
+请生成面试官的回复（仅输出回复内容，不要加前缀）：
 """)
 
                 chain = template | chat_model | StrOutputParser()
 
-                # 流式输出AI回复
                 full_response = ""
                 for chunk in chain.stream({
                     "system": system_prompt,
@@ -273,28 +259,18 @@ def send_answer(interview_id):
                         full_response += chunk
                         yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
 
-                # 如果是最后一个问题，发送完成事件
+                remaining = 0 if is_complete else (5 - current_module_index - 1)
                 if is_complete:
-                    yield f"data: {json.dumps({'event': 'next_question', 'remaining_questions': 0}, ensure_ascii=False)}\n\n"
                     interview["status"] = "completed"
-                    interview["total_score"] = overall
-                else:
-                    yield f"data: {json.dumps({'event': 'next_question', 'remaining_questions': len(questions) - next_question_index - 1}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'event': 'next_question', 'remaining_questions': remaining, 'current_question_index': current_module_index}, ensure_ascii=False)}\n\n"
 
-                # 保存AI回复
+                # 保存AI回复（不在此处保存评分，评分在结束面试时由报告接口统一生成）
                 interview["messages"].append({
                     "role": "interviewer",
                     "content": full_response,
-                    "timestamp": datetime.now().isoformat(),
-                    "score": {
-                        "overall": overall,
-                        "dimensions": {
-                            "expression": expression,
-                            "logic": logic,
-                            "content": content
-                        }
-                    }
+                    "timestamp": datetime.now().isoformat()
                 })
+                _save_sessions()
 
                 yield "data: [DONE]\n\n"
 
@@ -325,9 +301,10 @@ def get_report(interview_id):
     """
     结束面试并获取详细报告。
     请求体：{ user_id, interview_id }
-    返回：完整的面试报告
+    返回：完整的面试报告。前端请求路径须为 /api/v1/mock-interview/session/<id>/finish，方法 POST。
     """
     try:
+        print(f"[Debug] 获取报告请求: interview_id={interview_id}")
         body = request.get_json()
         if not body:
             return error_response(400, "请提供JSON请求体")
@@ -339,6 +316,7 @@ def get_report(interview_id):
 
         interview = interview_sessions.get(interview_id)
         if not interview:
+            print(f"[Debug] 获取报告: 会话不存在 interview_id={interview_id}")
             return error_response(404, "面试会话不存在")
 
         # 标记为已完成
@@ -374,7 +352,7 @@ def get_report(interview_id):
         from model.factory import chat_model
         
         report_prompt = PromptTemplate.from_template("""
-你是一位专业的面试官，请根据以下面试内容，生成详细的面试报告。
+你是一位专业的面试官，请根据以下面试内容，对整场面试进行评分并生成详细的面试报告。
 
 应聘岗位：{target_job}
 面试类型：{interview_type}
@@ -382,8 +360,12 @@ def get_report(interview_id):
 面试完整对话：
 {history}
 
-请分析应聘者的表现，并返回JSON格式的报告，包含以下内容：
+请分析应聘者的整体表现，并返回JSON格式的报告，必须包含以下字段：
 {{
+    "overall_score": 综合得分（0-100整数）,
+    "expression": 表达能力得分（0-100整数）,
+    "logic": 逻辑思维得分（0-100整数）,
+    "content": 内容质量得分（0-100整数）,
     "strengths": ["优势1", "优势2", "优势3"],
     "weaknesses": ["不足1", "不足2"],
     "suggestions": ["建议1", "建议2", "建议3"],
@@ -394,21 +376,29 @@ def get_report(interview_id):
 }}
 
 要求：
-1. strengths：3个具体的优势，要基于面试内容
-2. weaknesses：2个具体的不足，要基于面试内容
-3. suggestions：3个针对性的改进建议
-4. improvement_plan：2个具体的短期行动计划，以及建议再次面试的天数
-5. 所有内容要具体、实用、有针对性，不要太笼统
+1. overall_score、expression、logic、content 为 0-100 的整数，基于整场面试表现综合给出
+2. strengths：3个具体的优势，要基于面试内容
+3. weaknesses：2个具体的不足，要基于面试内容
+4. suggestions：3个针对性的改进建议
+5. improvement_plan：2个具体的短期行动计划，以及建议再次面试的天数
+6. 所有内容要具体、实用、有针对性，不要太笼统
 """)
         
         report_chain = report_prompt | chat_model | JsonOutputParser()
         
+        target_job_title = interview.get("target_job_title") or interview.get("target_position") or "未知岗位"
         try:
             report_data = report_chain.invoke({
-                "target_job": interview["target_job_title"],
-                "interview_type": interview["interview_type"],
+                "target_job": target_job_title,
+                "interview_type": interview.get("interview_type", "comprehensive"),
                 "history": interview_history
             })
+            overall_score_ai = report_data.get("overall_score")
+            if overall_score_ai is not None:
+                overall_score_ai = max(0, min(100, int(overall_score_ai)))
+            expr_ai = report_data.get("expression")
+            logic_ai = report_data.get("logic")
+            content_ai = report_data.get("content")
             strengths = report_data.get("strengths", ["专业知识扎实", "沟通表达清晰", "逻辑思维能力强"])
             weaknesses = report_data.get("weaknesses", ["项目经验可以更丰富", "压力下的表现还有提升空间"])
             suggestions = report_data.get("suggestions", ["建议多积累项目经验", "可以进行更多的模拟面试练习", "加强对行业动态的了解"])
@@ -418,6 +408,8 @@ def get_report(interview_id):
             })
         except Exception as e:
             logger.warning(f"[MockInterview] AI生成报告失败，使用默认值: {e}")
+            overall_score_ai = None
+            expr_ai = logic_ai = content_ai = None
             strengths = ["专业知识扎实", "沟通表达清晰", "逻辑思维能力强"]
             weaknesses = ["项目经验可以更丰富", "压力下的表现还有提升空间"]
             suggestions = ["建议多积累项目经验", "可以进行更多的模拟面试练习", "加强对行业动态的了解"]
@@ -425,16 +417,26 @@ def get_report(interview_id):
                 "short_term": ["每天练习1道面试题", "每周进行2-3次模拟面试"],
                 "suggested_retry_days": 14
             }
-        
+
+        # 优先使用报告中的评分，否则用历史消息平均或默认值
+        final_overall = overall_score_ai if overall_score_ai is not None else interview.get("total_score") or avg_overall
+        final_expr = max(0, min(100, int(expr_ai))) if expr_ai is not None else avg_expression
+        final_logic = max(0, min(100, int(logic_ai))) if logic_ai is not None else avg_logic
+        final_content = max(0, min(100, int(content_ai))) if content_ai is not None else avg_content
+
+        # 真实对话轮数：统计用户回答次数
+        round_count = sum(1 for msg in interview.get("messages", []) if msg.get("role") == "user")
+
         # 生成报告
         report = {
             "interview_id": interview_id,
-            "target_job": interview["target_job_title"],
-            "overall_score": interview.get("total_score", avg_overall),
+            "target_job": target_job_title,
+            "overall_score": final_overall,
+            "round_count": round_count,
             "dimension_scores": {
-                "expression": avg_expression,
-                "logic": avg_logic,
-                "content": avg_content,
+                "expression": final_expr,
+                "logic": final_logic,
+                "content": final_content,
                 "stress_resistance": 75,
                 "cultural_fit": 80
             },
@@ -446,7 +448,9 @@ def get_report(interview_id):
         }
 
         interview["total_score"] = report["overall_score"]
+        _save_sessions()
 
+        print(f"[Debug] 查询结果: overall_score={report.get('overall_score')}, keys={list(report.keys())}")
         return success_response(report, msg="面试报告生成成功")
 
     except Exception as e:
@@ -465,7 +469,7 @@ def get_history():
     try:
         user_id = request.args.get("user_id")
         page = int(request.args.get("page", 1))
-        size = int(request.args.get("size", 10))
+        size = int(request.args.get("size", 50))  # 默认 50 条，避免历史只显示 1 条
 
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
@@ -473,17 +477,29 @@ def get_history():
         # 过滤用户的面试记录
         user_interviews = [
             v for k, v in interview_sessions.items()
-            if str(v["user_id"]) == str(user_id)
+            if str(v.get("user_id")) == str(user_id)
         ]
 
-        # 按时间倒序
-        user_interviews.sort(key=lambda x: x["started_at"], reverse=True)
+        # 按时间倒序（兼容 started_at / created_at）
+        user_interviews.sort(key=lambda x: x.get("started_at") or x.get("created_at") or "", reverse=True)
+
+        logger.info(f"[MockInterview] 查询历史记录, user_id={user_id}, 结果数量={len(user_interviews)}")
 
         # 分页
         total = len(user_interviews)
         start = (page - 1) * size
         end = start + size
-        paginated_list = user_interviews[start:end]
+        raw_list = user_interviews[start:end]
+
+        # 归一化字段，供前端使用（created_at、target_position 等）
+        paginated_list = []
+        for item in raw_list:
+            rec = dict(item)
+            if not rec.get("created_at") and rec.get("started_at"):
+                rec["created_at"] = rec["started_at"]
+            if not rec.get("target_position") and rec.get("target_job_title"):
+                rec["target_position"] = rec["target_job_title"]
+            paginated_list.append(rec)
 
         # 计算得分趋势
         scores = [i.get("total_score", 0) for i in user_interviews if i.get("total_score")]

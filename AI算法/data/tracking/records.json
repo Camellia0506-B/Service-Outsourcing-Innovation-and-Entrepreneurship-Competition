@@ -68,7 +68,7 @@
     "current_stage": "rejected",
     "result": "rejected",
     "created_at": "2026-03-06 17:41:44",
-    "updated_at": "2026-03-06 18:23:39",
+    "updated_at": "2026-03-07 13:18:25",
     "timeline": [
       {
         "stage": "applied",
@@ -187,8 +187,72 @@
         "stage_date": "2026-03-06",
         "self_evaluation": {},
         "notes": ""
+      },
+      {
+        "stage": "rejected",
+        "result": "rejected",
+        "stage_date": "2026-03-07",
+        "self_evaluation": {},
+        "notes": ""
       }
     ],
     "has_failure_report": true
+  },
+  "track_20260307131019271_3": {
+    "record_id": "track_20260307131019271_3",
+    "user_id": 3,
+    "job_id": "job_apply_1772860219239",
+    "job_title": "前端工程师",
+    "company_name": "阿里",
+    "apply_date": "2026-03-07",
+    "source": "self_found",
+    "current_stage": "offer",
+    "result": "passed",
+    "created_at": "2026-03-07 13:10:19",
+    "updated_at": "2026-03-07 13:10:48",
+    "timeline": [
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-07",
+        "notes": ""
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-07",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "interview_1",
+        "result": "passed",
+        "stage_date": "2026-03-07",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "interview_2",
+        "result": "passed",
+        "stage_date": "2026-03-07",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "final",
+        "result": "passed",
+        "stage_date": "2026-03-07",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "offer",
+        "result": "passed",
+        "stage_date": "2026-03-07",
+        "self_evaluation": {},
+        "notes": ""
+      }
+    ],
+    "has_failure_report": false
   }
 }
