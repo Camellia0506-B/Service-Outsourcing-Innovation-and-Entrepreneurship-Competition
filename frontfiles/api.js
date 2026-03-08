@@ -440,8 +440,29 @@ class API {
             }
             case '/profile/upload-resume':
                 return { success: true, data: { task_id: 'task_' + Date.now() }, msg: '简历上传成功' };
-            case '/profile/resume-parse-result':
-                return { success: true, data: { status: 'completed', parsed_data: null } };
+            case '/profile/resume-parse-result': {
+                // Mock 返回示例解析结果，便于前端能正确填充表单（真实环境由 Python 服务返回）
+                const mockParsedData = {
+                    basic_info: {
+                        name: '张三',
+                        gender: '男',
+                        birth_date: '2000-06-15',
+                        phone: '13800138000',
+                        email: 'zhangsan@example.com',
+                        summary: '计算机专业，有实习与项目经历。'
+                    },
+                    education: [
+                        { school: '某某大学', major: '计算机科学与技术', degree: '本科', grade: '2022级', expected_graduation: '2026-06', gpa: '3.6/4.0' }
+                    ],
+                    skills: [
+                        { category: '编程语言', items: ['Python', 'Java', 'JavaScript'] },
+                        { category: '框架与工具', items: ['React', 'Spring Boot', 'MySQL'] }
+                    ],
+                    internships: [],
+                    projects: []
+                };
+                return { success: true, data: { status: 'completed', parsed_data: mockParsedData } };
+            }
             case '/assessment/questionnaire':
                 return { success: true, data: this.mockQuestions() };
             case '/assessment/submit':

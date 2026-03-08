@@ -427,6 +427,7 @@ class CareerPlanningApp {
         this.trackingReportsCache = {};   // report_id -> report
         this.trackingReportsByKey = {};  // "job||company" -> [report...]
         this.trackingFailureAnalysisCache = {}; // record_id -> { skill:[], resume:[], interview:[], raw, ts }
+        this.profileCompleteness = 0;          // 个人档案完整度（用于侧边进度条）
         // 岗位画像流式请求状态（用于防止并发请求串流导致内容错乱、卡顿）
         this._jobProfileStreamController = null; // AbortController 实例
         this._jobProfileStreamReqId = 0;         // 递增请求编号，始终只接受最新一次点击的结果
@@ -520,6 +521,79 @@ class CareerPlanningApp {
             this.viewCompleteProfile();
         });
 
+        // 个人档案新布局：左侧 Tab 导航 + 右侧面板
+        const profilePage = document.getElementById('profilePage');
+        if (profilePage) {
+            const tabs = profilePage.querySelectorAll('.sidebar .tab[data-tab]');
+            const panels = profilePage.querySelectorAll('.panels .panel');
+            const switchProfileTab = (name) => {
+                tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+                panels.forEach(p => p.id === ('panel-' + name)
+                    ? p.classList.add('active')
+                    : p.classList.remove('active'));
+            };
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const name = tab.dataset.tab;
+                    if (name) switchProfileTab(name);
+                });
+            });
+            // 右侧卡片上的快捷跳转
+            profilePage.querySelectorAll('[data-jump-tab]')?.forEach(card => {
+                card.addEventListener('click', () => {
+                    const name = card.getAttribute('data-jump-tab');
+                    if (name) switchProfileTab(name);
+                });
+            });
+
+            // AI 解析简历：拖拽上传接入现有 handleResumeUpload
+            const dropZone = document.getElementById('profileDropZone');
+            if (dropZone) {
+                ['dragenter', 'dragover'].forEach(evt => {
+                    dropZone.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropZone.classList.add('dragover');
+                    });
+                });
+                ['dragleave', 'dragend', 'drop'].forEach(evt => {
+                    dropZone.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (evt === 'drop') {
+                            const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                            if (file) {
+                                this.handleResumeUpload(file);
+                            }
+                        }
+                        dropZone.classList.remove('dragover');
+                    });
+                });
+            }
+
+            // 实习/项目删除按钮事件委托
+            const internWrap = document.getElementById('internshipsContainer');
+            if (internWrap) {
+                internWrap.addEventListener('click', (e) => {
+                    const btn = e.target.closest && e.target.closest('[data-remove-exp]');
+                    if (btn) {
+                        const item = btn.closest('.exp-item');
+                        if (item) item.remove();
+                    }
+                });
+            }
+            const projWrap = document.getElementById('projectsContainer');
+            if (projWrap) {
+                projWrap.addEventListener('click', (e) => {
+                    const btn = e.target.closest && e.target.closest('[data-remove-exp]');
+                    if (btn) {
+                        const item = btn.closest('.exp-item');
+                        if (item) item.remove();
+                    }
+                });
+            }
+        }
+
         document.getElementById('addSkillCategory')?.addEventListener('click', () => {
             this.addSkillCategory();
         });
@@ -531,11 +605,12 @@ class CareerPlanningApp {
         });
 
         document.getElementById('uploadResumeBtn')?.addEventListener('click', () => {
-            document.getElementById('resumeUpload').click();
+            document.getElementById('resumeUpload')?.click();
         });
 
         document.getElementById('resumeUpload')?.addEventListener('change', (e) => {
-            this.handleResumeUpload(e.target.files[0]);
+            const file = e.target && e.target.files && e.target.files[0];
+            this.handleResumeUpload(file);
         });
 
         document.getElementById('resumeParseDoneBtn')?.addEventListener('click', () => {
@@ -1292,6 +1367,8 @@ class CareerPlanningApp {
         const profileResult = await getProfile(userId);
         if (profileResult.success) {
             profileCompleteness = profileResult.data.profile_completeness || 0;
+            this.profileCompleteness = profileCompleteness;
+            this.updateProfileProgress(profileCompleteness);
         }
         assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed)
             || !!(this.hasHistoryReport() && this.getLastAssessmentReportId());
@@ -1387,6 +1464,24 @@ class CareerPlanningApp {
         }
     }
 
+    // 更新个人档案侧边进度条
+    updateProfileProgress(percent) {
+        const p = Math.max(0, Math.min(100, Number(percent) || 0));
+        const fill = document.getElementById('profileProgFill');
+        const lbl = document.getElementById('profileProgLabel');
+        if (fill) {
+            fill.style.width = p + '%';
+        }
+        if (lbl) {
+            lbl.textContent = `${p}% · ${p === 100 ? '档案已完善' : '继续完善档案'}`;
+        }
+        const avatar = document.getElementById('profileAvatar');
+        if (avatar && this.currentUser) {
+            const name = (this.currentUser.nickname || this.currentUser.username || '').trim();
+            avatar.textContent = name ? name.charAt(0).toUpperCase() : 'U';
+        }
+    }
+
     // 填充个人档案表单（merge 模式：仅更新有值的字段，用于加载已有档案）
     fillProfileForm(data) {
         if (data.basic_info) {
@@ -1396,12 +1491,14 @@ class CareerPlanningApp {
             const birthInput = document.getElementById('birthDate');
             const phoneInput = document.getElementById('phone');
             const emailInput = document.getElementById('email');
+            const summaryInput = document.getElementById('profileSummary');
 
             if (basic.nickname !== undefined) nicknameInput.value = basic.nickname || '';
             if (basic.gender !== undefined) genderInput.value = basic.gender || '';
             if (basic.birth_date !== undefined) birthInput.value = this.formatDateForDisplay(basic.birth_date || '');
             if (basic.phone !== undefined) phoneInput.value = basic.phone || '';
             if (basic.email !== undefined) emailInput.value = basic.email || '';
+            if (summaryInput && basic.summary !== undefined) summaryInput.value = basic.summary || '';
         }
         
         this.initDateInput();
@@ -1423,24 +1520,7 @@ class CareerPlanningApp {
             if (edu.gpa !== undefined) gpaInput.value = edu.gpa || '';
         }
 
-        if (data.skills !== undefined) {
-            const container = document.getElementById('skillsContainer');
-            if (container) {
-                const toStr = (it) => (typeof it === 'string' ? it : (it && (it.name || it.skill || it.item || it.label))) || '';
-                container.innerHTML = '';
-                (data.skills || []).forEach(skill => {
-                    const div = document.createElement('div');
-                    div.className = 'skill-category';
-                    const raw = Array.isArray(skill.items) ? skill.items : [];
-                    const items = raw.map(toStr).filter(Boolean);
-                    div.innerHTML = `
-                        <input type="text" placeholder="技能分类" class="skill-category-input" value="${(skill.category || '').replace(/"/g, '&quot;')}">
-                        <input type="text" placeholder="技能列表" class="skill-items-input" value="${items.join(', ').replace(/"/g, '&quot;')}">
-                    `;
-                    container.appendChild(div);
-                });
-            }
-        }
+        this.renderSkillsSection(data.skills);
     }
 
     // 用简历解析结果覆盖表单（overwrite 模式：新简历为权威，全部覆盖之前填充的内容）
@@ -1454,6 +1534,7 @@ class CareerPlanningApp {
         const birthInput = document.getElementById('birthDate');
         const phoneInput = document.getElementById('phone');
         const emailInput = document.getElementById('email');
+        const summaryInput = document.getElementById('profileSummary');
         const schoolInput = document.getElementById('school');
         const majorInput = document.getElementById('major');
         const degreeInput = document.getElementById('degree');
@@ -1466,6 +1547,7 @@ class CareerPlanningApp {
         if (birthInput) birthInput.value = this.formatDateForDisplay(basic.birth_date || '');
         if (phoneInput) phoneInput.value = basic.phone || '';
         if (emailInput) emailInput.value = basic.email || '';
+        if (summaryInput && basic.summary !== undefined) summaryInput.value = basic.summary || '';
         if (schoolInput) schoolInput.value = edu.school || '';
         if (majorInput) majorInput.value = edu.major || '';
         if (degreeInput) degreeInput.value = edu.degree || '';
@@ -1475,22 +1557,42 @@ class CareerPlanningApp {
 
         this.initDateInput();
 
+        this.renderSkillsSection(skills);
+    }
+
+    // 渲染技能模块（带默认分类和标签）
+    renderSkillsSection(skills) {
         const container = document.getElementById('skillsContainer');
-        if (container) {
-            const toStr = (it) => (typeof it === 'string' ? it : (it && (it.name || it.skill || it.item || it.label))) || '';
-            container.innerHTML = '';
-            skills.forEach(skill => {
-                const div = document.createElement('div');
-                div.className = 'skill-category';
-                const raw = Array.isArray(skill.items) ? skill.items : [];
-                const items = raw.map(toStr).filter(Boolean);
-                div.innerHTML = `
-                    <input type="text" placeholder="技能分类" class="skill-category-input" value="${(skill.category || '').replace(/"/g, '&quot;')}">
-                    <input type="text" placeholder="技能列表" class="skill-items-input" value="${items.join(', ').replace(/"/g, '&quot;')}">
-                `;
-                container.appendChild(div);
-            });
+        if (!container) return;
+        const toStr = (it) => (typeof it === 'string' ? it : (it && (it.name || it.skill || it.item || it.label))) || '';
+        let list = Array.isArray(skills) ? skills : [];
+        if (!list.length) {
+            list = [
+                { category: '编程语言', items: ['Python', 'Java', 'JavaScript', 'C++'] },
+                { category: '框架与工具', items: ['React', 'Spring Boot', 'MySQL'] }
+            ];
         }
+        container.innerHTML = '';
+        list.forEach(skill => {
+            const div = document.createElement('div');
+            div.className = 'skill-cat';
+            const raw = Array.isArray(skill.items) ? skill.items : [];
+            const items = raw.map(toStr).filter(Boolean);
+            const tagsHtml = items.map(val => {
+                const safe = String(val).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `<span class="tag" data-value="${safe}">${safe} <span class="x">×</span></span>`;
+            }).join('');
+            div.innerHTML = `
+                <div class="skill-cat-header">
+                    <div class="skill-cat-name">${(skill.category || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                    <button type="button" class="btn btn-danger btn-sm" data-remove-cat>删除</button>
+                </div>
+                <div class="tags">${tagsHtml}</div>
+                <input class="tag-input" type="text" placeholder="输入后按 Enter 添加…">
+            `;
+            container.appendChild(div);
+        });
+        this.initSkillTagInputs();
     }
 
     // 将简历解析结果转换为档案结构，便于直接填充表单（输出完整结构，用于覆盖模式）
@@ -1511,7 +1613,8 @@ class CareerPlanningApp {
                 gender: basic.gender || basic.sex || '',
                 birth_date: basic.birth_date || basic.birthday || basic.date_of_birth || basic.dob || '',
                 phone: basic.phone || '',
-                email: basic.email || ''
+                email: basic.email || '',
+                summary: basic.summary || basic.intro || basic.about || ''
             },
             education_info: {
                 school: firstEdu.school || firstEdu.school_name || '',
@@ -1670,7 +1773,8 @@ class CareerPlanningApp {
                 gender: document.getElementById('gender').value,
                 birth_date: this.normalizeDateForStorage(document.getElementById('birthDate').value),
                 phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value
+                email: document.getElementById('email').value,
+                summary: document.getElementById('profileSummary')?.value || ''
             },
             education_info: {
                 school: document.getElementById('school').value,
@@ -1696,6 +1800,8 @@ class CareerPlanningApp {
         if (result.success) {
             this.showToast('档案保存成功，正在重新生成能力画像…', 'success');
             const completeness = result.data.profile_completeness ?? result.data.profileCompleteness ?? 0;
+            this.profileCompleteness = completeness;
+            this.updateProfileProgress(completeness);
             const card = document.querySelector('#dashboardPage .main-card[data-action="profile"]');
             if (card) {
                 const badge = card.querySelector('.status-badge');
@@ -1730,14 +1836,16 @@ class CareerPlanningApp {
     // 收集技能数据
     collectSkills() {
         const skills = [];
-        document.querySelectorAll('.skill-category').forEach(category => {
-            const categoryName = category.querySelector('.skill-category-input').value;
-            const itemsStr = category.querySelector('.skill-items-input').value;
-            if (categoryName && itemsStr) {
-                skills.push({
-                    category: categoryName,
-                    items: itemsStr.split(',').map(s => s.trim()).filter(s => s)
-                });
+        document.querySelectorAll('#skillsContainer .skill-cat').forEach(category => {
+            const nameEl = category.querySelector('.skill-cat-name');
+            const categoryName = nameEl ? nameEl.textContent.trim() : '';
+            const items = [];
+            category.querySelectorAll('.tag').forEach(tag => {
+                const v = tag.getAttribute('data-value') || tag.textContent.replace(/×.*/, '').trim();
+                if (v) items.push(v);
+            });
+            if (categoryName && items.length) {
+                skills.push({ category: categoryName, items });
             }
         });
         return skills;
@@ -1790,72 +1898,96 @@ class CareerPlanningApp {
         return projects;
     }
 
-    // 添加技能分类
+    // 添加技能分类（与 renderSkillCats 结构一致：含 skill-cat-header + 删除按钮）
     addSkillCategory() {
         const container = document.getElementById('skillsContainer');
+        if (!container) return;
+        const name = prompt('请输入技能分类名称：');
+        if (!name) return;
         const div = document.createElement('div');
-        div.className = 'skill-category';
+        div.className = 'skill-cat';
+        const safeName = String(name).replace(/</g, '&lt;').replace(/>/g, '&gt;');
         div.innerHTML = `
-            <input type="text" placeholder="技能分类 (如: 编程语言)" class="skill-category-input">
-            <input type="text" placeholder="技能列表 (用逗号分隔)" class="skill-items-input">
+            <div class="skill-cat-header">
+                <div class="skill-cat-name">${safeName}</div>
+                <button type="button" class="btn btn-danger btn-sm" data-remove-cat>删除</button>
+            </div>
+            <div class="tags"></div>
+            <input class="tag-input" type="text" placeholder="输入后按 Enter 添加…">
         `;
         container.appendChild(div);
+        this.initSkillTagInputs();
+    }
+
+    // 绑定技能标签输入与删除事件
+    initSkillTagInputs() {
+        const container = document.getElementById('skillsContainer');
+        if (!container) return;
+        container.querySelectorAll('.tag-input').forEach(input => {
+            if (input._skillInited) return;
+            input._skillInited = true;
+            input.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                const val = (input.value || '').trim();
+                if (!val) return;
+                const wrap = input.closest('.skill-cat');
+                if (!wrap) return;
+                const tags = wrap.querySelector('.tags');
+                if (!tags) return;
+                const safe = val.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.setAttribute('data-value', safe);
+                span.innerHTML = `${safe} <span class="x">×</span>`;
+                tags.appendChild(span);
+                input.value = '';
+            });
+        });
+        // 删除标签
+        if (!container._removeInited) {
+            container._removeInited = true;
+            container.addEventListener('click', (e) => {
+                const x = e.target.closest && e.target.closest('.x');
+                if (x) {
+                    const tag = x.closest('.tag');
+                    if (tag) tag.remove();
+                    return;
+                }
+                const catBtn = e.target.closest && e.target.closest('[data-remove-cat]');
+                if (catBtn) {
+                    const cat = catBtn.closest('.skill-cat');
+                    if (cat) cat.remove();
+                }
+            });
+        }
     }
 
     // 添加实习经历
     addInternship() {
         const container = document.getElementById('internshipsContainer');
-        const div = document.createElement('div');
-        div.className = 'internship-item';
-        div.innerHTML = `
-            <div class="profile-field">
-                <label>公司名称</label>
-                <input type="text" class="internship-company">
-            </div>
-            <div class="profile-field">
-                <label>职位</label>
-                <input type="text" class="internship-position">
-            </div>
-            <div class="profile-field">
-                <label>时间</label>
-                <input type="text" class="internship-time">
-            </div>
-            <div class="profile-field profile-field-full">
-                <label>描述</label>
-                <input type="text" class="internship-description">
-            </div>
-        `;
-        container.appendChild(div);
+        if (!container) return;
+        const tmpl = container.querySelector('.exp-item');
+        if (tmpl) {
+            const clone = tmpl.cloneNode(true);
+            // 清空输入值
+            clone.querySelectorAll('input').forEach(inp => inp.value = '');
+            clone.querySelector('.exp-item-no').textContent = '实习';
+            container.appendChild(clone);
+        }
     }
 
     // 添加项目经历
     addProject() {
         const container = document.getElementById('projectsContainer');
-        const div = document.createElement('div');
-        div.className = 'project-item';
-        div.innerHTML = `
-            <div class="profile-field">
-                <label>项目名称</label>
-                <input type="text" class="project-name">
-            </div>
-            <div class="profile-field">
-                <label>角色</label>
-                <input type="text" class="project-role">
-            </div>
-            <div class="profile-field">
-                <label>时间</label>
-                <input type="text" class="project-time">
-            </div>
-            <div class="profile-field profile-field-full">
-                <label>描述</label>
-                <input type="text" class="project-description">
-            </div>
-            <div class="profile-field">
-                <label>技术栈 (用逗号分隔)</label>
-                <input type="text" class="project-tech-stack">
-            </div>
-        `;
-        container.appendChild(div);
+        if (!container) return;
+        const tmpl = container.querySelector('.exp-item');
+        if (tmpl) {
+            const clone = tmpl.cloneNode(true);
+            clone.querySelectorAll('input').forEach(inp => inp.value = '');
+            clone.querySelector('.exp-item-no').textContent = '项目';
+            container.appendChild(clone);
+        }
     }
 
     // 查看完整档案
@@ -2033,7 +2165,7 @@ class CareerPlanningApp {
         }
     }
 
-    // ---------- AI 简历解析加载弹窗（由后端轮询驱动步骤）----------
+    // ---------- AI 简历解析加载弹窗（由后端轮询驱动步骤，状态由 CSS pending/active/done 控制）----------
     showResumeParseModal() {
         const overlay = document.getElementById('resumeParseOverlay');
         const stepsWrap = document.getElementById('resumeParseSteps');
@@ -2042,15 +2174,10 @@ class CareerPlanningApp {
         if (!overlay) return;
         for (let i = 0; i <= 5; i++) {
             const step = document.getElementById('resumeStep' + i);
-            const status = document.getElementById('resumeStatus' + i);
-            const typing = document.getElementById('resumeTyping' + i);
-            if (step) { step.classList.remove('active', 'done'); }
-            if (status) {
-                status.className = 'resume-step-status resume-status-wait';
-                status.textContent = '—';
-                status.innerHTML = '—';
+            if (step) {
+                step.classList.remove('active', 'done');
+                step.classList.add('pending');
             }
-            if (typing) typing.textContent = '';
         }
         const fill = document.getElementById('resumeParseProgressFill');
         const num = document.getElementById('resumeParseProgressNum');
@@ -2062,25 +2189,11 @@ class CareerPlanningApp {
         overlay.classList.add('show');
     }
 
-    advanceResumeParseStep(idx, typingText) {
+    advanceResumeParseStep(idx, _typingText) {
         const step = document.getElementById('resumeStep' + idx);
-        const status = document.getElementById('resumeStatus' + idx);
-        const typing = document.getElementById('resumeTyping' + idx);
-        if (typing && typingText) {
-            typing.textContent = '';
-            let i = 0;
-            const id = setInterval(() => {
-                if (i < typingText.length) {
-                    typing.textContent += typingText[i++];
-                } else {
-                    clearInterval(id);
-                }
-            }, 40);
-        }
-        if (step) step.classList.add('active');
-        if (status) {
-            status.className = 'resume-step-status resume-status-loading';
-            status.innerHTML = '<div class="resume-parse-spin"></div>';
+        if (step) {
+            step.classList.remove('pending');
+            step.classList.add('active');
         }
         const pct = Math.round(((idx + 1) / 6) * 100);
         const fill = document.getElementById('resumeParseProgressFill');
@@ -2088,11 +2201,9 @@ class CareerPlanningApp {
         if (fill) fill.style.width = pct + '%';
         if (num) num.textContent = pct + '%';
         setTimeout(() => {
-            if (step) { step.classList.remove('active'); step.classList.add('done'); }
-            if (status) {
-                status.className = 'resume-step-status resume-status-done';
-                status.textContent = '✓';
-                status.innerHTML = '✓';
+            if (step) {
+                step.classList.remove('active');
+                step.classList.add('done');
             }
         }, 800);
     }
@@ -2218,20 +2329,31 @@ class CareerPlanningApp {
             try {
                 const profileData = this.transformParsedResumeData(parsedData);
                 this.fillProfileFormFromResume(profileData);
+                // 切换到档案页并打开「基本信息」，让用户看到已填充内容
+                this.showPage('profilePage');
+                const profilePage = document.getElementById('profilePage');
+                if (profilePage) {
+                    const basicTab = profilePage.querySelector('.tab[data-tab="basic"]');
+                    if (basicTab) basicTab.click();
+                }
                 this.saveProfile().then(() => {
                     this.showToast('简历解析完成，档案已保存，正在重新生成能力画像…', 'success');
                     aiGenerateAbilityProfile(userId, 'profile').then((res) => {
                         if (res.success) this.showToast('能力画像已更新，岗位匹配将基于新简历', 'success');
                     }).catch(() => {});
-                }).catch(() => {});
+                    this.loadDashboardData(); // 保存后再刷新仪表盘
+                }).catch(() => {
+                    this.loadDashboardData();
+                });
             } catch (e) {
                 console.error('应用简历解析结果到表单时出错:', e);
                 this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');
+                this.loadDashboardData();
             }
         } else {
             this.showToast('简历解析未提取到有效信息，请检查PDF是否为可复制文本型', 'warning');
+            this.loadDashboardData();
         }
-        this.loadDashboardData();
     }
 
     // 轮询简历解析结果（无弹窗时使用，如直接调用）

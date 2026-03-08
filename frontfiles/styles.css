@@ -47,6 +47,779 @@
     --border: rgba(79,124,255,0.12);
 }
 
+/* ══════════════════════════════════════
+   个人档案 · 新布局（Topbar + Sidebar + Panels + Bottombar）
+   仅作用于 #profilePage，避免影响全局
+   ══════════════════════════════════════ */
+
+#profilePage {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #eef2fb;
+    overflow: hidden;
+}
+
+#profilePage .profile-shell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 顶栏 */
+#profilePage .topbar {
+    height: 52px;
+    flex-shrink: 0;
+    background: #fff;
+    border-bottom: 1px solid #dde4f5;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 10px;
+    box-shadow: 0 1px 6px rgba(30, 60, 160, .06);
+}
+
+#profilePage .logo {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+#profilePage .logo-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: profileBlink 2.4s ease-in-out infinite;
+}
+
+@keyframes profileBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .4; transform: scale(.6); }
+}
+
+#profilePage .sep {
+    width: 1px;
+    height: 20px;
+    background: #dde4f5;
+    margin: 0 6px;
+}
+
+#profilePage .topbar-title {
+    font-size: 14px;
+    color: #4b5d8a;
+    font-weight: 500;
+}
+
+#profilePage .topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#profilePage .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5b8aff, #3360e8);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 主体：左侧导航 + 右侧内容 */
+#profilePage .body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+#profilePage .sidebar {
+    width: 176px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #dde4f5;
+    padding: 18px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#profilePage .tab-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #96a3c5;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 10px 10px 4px;
+}
+
+#profilePage .tab {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5d8a;
+    transition: all .15s;
+    user-select: none;
+}
+
+#profilePage .tab:hover {
+    background: #eaf0ff;
+    color: var(--primary-color);
+}
+
+#profilePage .tab.active {
+    background: #eaf0ff;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+#profilePage .prog-wrap {
+    margin-top: auto;
+}
+
+#profilePage .prog-card {
+    background: linear-gradient(135deg, #3360e8, #5b82f5);
+    border-radius: 10px;
+    padding: 13px 14px;
+    color: #fff;
+}
+
+#profilePage .prog-card h5 {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+#profilePage .prog-bg {
+    background: rgba(255, 255, 255, .25);
+    border-radius: 100px;
+    height: 5px;
+    margin-bottom: 5px;
+    overflow: hidden;
+}
+
+#profilePage .prog-fill {
+    background: #fff;
+    border-radius: 100px;
+    height: 5px;
+    width: 0%;
+    transition: width 0.8s ease;
+}
+
+#profilePage .prog-lbl {
+    font-size: 11px;
+    opacity: .8;
+}
+
+/* 右侧内容区 / 面板 */
+#profilePage .panels {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 26px;
+}
+
+#profilePage .panels::-webkit-scrollbar {
+    width: 5px;
+}
+
+#profilePage .panels::-webkit-scrollbar-thumb {
+    background: #dde4f5;
+    border-radius: 10px;
+}
+
+#profilePage .panel {
+    display: none;
+    animation: profileFadeIn .2s ease;
+}
+
+#profilePage .panel.active {
+    display: block;
+}
+
+@keyframes profileFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 卡片、表单、标签 */
+#profilePage .card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #dde4f5;
+    padding: 20px 22px;
+    box-shadow: 0 1px 4px rgba(30, 60, 140, .04);
+}
+
+#profilePage .card + .card {
+    margin-top: 14px;
+}
+
+#profilePage .sec-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+#profilePage .sec-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0d1a3e;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+#profilePage .sec-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 15px;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+#profilePage .fg {
+    display: grid;
+    gap: 14px;
+}
+
+#profilePage .fg-2 { grid-template-columns: 1fr 1fr; }
+#profilePage .fg-3 { grid-template-columns: 1fr 1fr 1fr; }
+#profilePage .fg-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+#profilePage .fg-5 { grid-template-columns: repeat(5, 1fr); }
+#profilePage .s2 { grid-column: span 2; }
+#profilePage .s3 { grid-column: span 3; }
+#profilePage .s5 { grid-column: 1 / -1; }
+
+#profilePage .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#profilePage .field label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #96a3c5;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+#profilePage .fi {
+    background: #f4f6fd;
+    border: 1.5px solid #dde4f5;
+    border-radius: 10px;
+    padding: 8px 11px;
+    font-size: 13.5px;
+    color: #0d1a3e;
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+}
+
+#profilePage input.fi,
+#profilePage select.fi {
+    height: 44px;
+}
+
+#profilePage .fi:focus {
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(51, 96, 232, .1);
+}
+
+#profilePage .fi::placeholder {
+    color: #96a3c5;
+}
+
+#profilePage textarea.fi {
+    resize: none;
+    line-height: 1.55;
+}
+
+/* AI 解析简历 hero */
+#profilePage .upload-panel {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 18px;
+    height: 100%;
+}
+
+#profilePage .ai-hero {
+    background: linear-gradient(145deg, #1d3bb5 0%, #3360e8 55%, #4a78f5 100%);
+    border-radius: 14px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 8px 32px rgba(51, 96, 232, .35);
+}
+
+#profilePage .ai-hero:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(51, 96, 232, .45);
+}
+
+#profilePage .ai-hero::before,
+#profilePage .ai-hero::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+}
+
+#profilePage .ai-hero::before {
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, .07);
+}
+
+#profilePage .ai-hero::after {
+    bottom: -60px;
+    left: -30px;
+    width: 180px;
+    height: 180px;
+    background: rgba(255, 255, 255, .05);
+}
+
+#profilePage .ai-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, .18);
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    margin-bottom: 20px;
+    width: fit-content;
+    backdrop-filter: blur(4px);
+}
+
+#profilePage .ai-hero h2 {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    font-family: var(--font-heading);
+}
+
+#profilePage .ai-hero p {
+    font-size: 13.5px;
+    opacity: .85;
+    line-height: 1.65;
+    margin-bottom: 28px;
+    max-width: 320px;
+}
+
+#profilePage .drop-zone {
+    border: 2px dashed rgba(255, 255, 255, .45);
+    border-radius: 12px;
+    padding: 24px 20px;
+    text-align: center;
+    background: rgba(255, 255, 255, .1);
+    backdrop-filter: blur(6px);
+    transition: background .2s, border-color .2s;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+#profilePage .drop-zone.dragover {
+    background: rgba(255, 255, 255, .2);
+    border-color: rgba(255, 255, 255, .8);
+}
+
+#profilePage .drop-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+    animation: profileFloat 3s ease-in-out infinite;
+}
+
+@keyframes profileFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+#profilePage .drop-main {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+#profilePage .drop-sub {
+    font-size: 12px;
+    opacity: .75;
+    margin-bottom: 14px;
+}
+
+#profilePage .btn-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    color: var(--primary-color);
+    padding: 9px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all .15s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+}
+
+#profilePage .btn-upload:hover {
+    background: #f0f6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
+}
+
+#profilePage .ai-features {
+    display: flex;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+    margin-top: 8px;
+}
+
+#profilePage .ai-feat {
+    flex: 1;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 8px;
+    padding: 10px 10px 8px;
+    font-size: 12px;
+    backdrop-filter: blur(4px);
+}
+
+#profilePage .ai-feat-icon {
+    font-size: 16px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+#profilePage .ai-feat-name {
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+#profilePage .ai-feat-desc {
+    opacity: .75;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* 右侧手动填写区滚动 */
+#profilePage .manual-side {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+#profilePage .manual-side::-webkit-scrollbar {
+    width: 4px;
+}
+
+#profilePage .manual-side::-webkit-scrollbar-thumb {
+    background: #dde4f5;
+    border-radius: 10px;
+}
+
+#profilePage .manual-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+#profilePage .manual-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4b5d8a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#profilePage .manual-title-icon {
+    font-size: 16px;
+}
+
+#profilePage .manual-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #96a3c5;
+    margin-bottom: 10px;
+}
+
+#profilePage .manual-divider::before,
+#profilePage .manual-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #dde4f5;
+}
+
+#profilePage .manual-divider span {
+    white-space: nowrap;
+}
+
+#profilePage .manual-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* 技能 / 实习 / 项目 列表样式复用设计稿 */
+#profilePage .skill-cats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#profilePage .skill-cat {
+    background: #f4f6fd;
+    border: 1.5px solid #dde4f5;
+    border-radius: 10px;
+    padding: 13px 15px;
+    margin-bottom: 10px;
+}
+
+#profilePage .skill-cat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+#profilePage .skill-cat-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+}
+
+#profilePage .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+#profilePage .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: #dde8ff;
+    color: var(--primary-color);
+    border-radius: 100px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: default;
+    transition: all .15s;
+    border: 1.5px solid rgba(51, 96, 232, .12);
+}
+
+#profilePage .tag:hover {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: transparent;
+}
+
+#profilePage .tag .x {
+    opacity: .5;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+}
+
+#profilePage .tag:hover .x {
+    opacity: 1;
+}
+
+#profilePage .tag-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px dashed #dde4f5;
+    padding: 3px 4px;
+    font-size: 12.5px;
+    color: #0d1a3e;
+    font-family: inherit;
+    outline: none;
+    width: 200px;
+    transition: border-color .15s;
+}
+
+#profilePage .tag-input:focus {
+    border-color: var(--primary-color);
+}
+
+#profilePage .exp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#profilePage .exp-item {
+    background: #f4f6fd;
+    border: 1.5px solid #dde4f5;
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color .15s;
+}
+
+#profilePage .exp-item:hover {
+    border-color: #c0cff5;
+}
+
+#profilePage .exp-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+#profilePage .exp-item-no {
+    font-size: 11px;
+    font-weight: 700;
+    color: #96a3c5;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+/* 个人档案页通用按钮样式 */
+#profilePage .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+#profilePage .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+#profilePage .btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(45, 91, 227, 0.25);
+}
+
+#profilePage .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+#profilePage .btn-outline {
+    background: #fff;
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-color);
+}
+
+#profilePage .btn-outline:hover {
+    background: #eef3ff;
+}
+
+#profilePage .btn-ghost {
+    background: #eef3ff;
+    color: var(--primary-color);
+}
+
+#profilePage .btn-ghost:hover {
+    background: #dde7ff;
+}
+
+#profilePage .btn-danger {
+    background: #fff1f1;
+    color: #d94040;
+}
+
+#profilePage .btn-danger:hover {
+    background: #ffe0e0;
+}
+
+/* 侧边栏图标对齐 */
+#profilePage .tab .tab-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+}
+
+/* 底部栏 */
+#profilePage .bottombar {
+    height: 52px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, .97);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #dde4f5;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 10px;
+    box-shadow: 0 -2px 12px rgba(30, 60, 140, .05);
+}
+
+#profilePage .save-status {
+    font-size: 12.5px;
+    color: #96a3c5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#profilePage .save-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+#profilePage .bottombar-right {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+}
+
 /* 重置样式 */
 * {
     margin: 0;
@@ -416,9 +1189,9 @@ body::before {
     border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
-    background-color: transparent !important;
-    background-image: none !important;
-    color: var(--text-primary) !important;
+    background-color: var(--card-bg);
+    background-image: none;
+    color: var(--text-primary);
     -webkit-appearance: none;
     appearance: none;
     transition: all 0.2s;
@@ -670,43 +1443,7 @@ body::before {
 }
 
 /* 个人档案 - 实习 / 项目经历字段布局 */
-.internship-item,
-.project-item {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 12px;
-}
-.project-item {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-.profile-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-.profile-field.profile-field-full {
-    grid-column: 1 / -1;
-}
-.profile-field label {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
-}
-.profile-field input {
-    padding: 8px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.skill-category-input,
-.skill-items-input {
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 14px;
-}
+/* 旧版个人档案表单布局（已不用于新页面，保留作兼容但不影响 #profilePage 新布局） */
 
 .upload-area {
     text-align: center;
@@ -13314,12 +14051,12 @@ body::before {
     }
 }
 
-/* ========== AI 简历解析加载动画弹窗 ========== */
+/* ========== AI 简历解析加载动画弹窗（参考 parsing-modal.html）========== */
 .resume-parse-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(20, 30, 60, 0.45);
-    backdrop-filter: blur(6px);
+    background: rgba(26, 63, 168, 0.25);
+    backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -13332,197 +14069,127 @@ body::before {
     opacity: 1;
     pointer-events: all;
 }
-.resume-parse-dialog {
+/* 弹窗外层：白色圆角卡片 */
+.resume-parse-modal {
     background: #fff;
     border-radius: 20px;
-    width: 420px;
+    width: 460px;
     max-width: 92vw;
-    box-shadow: 0 24px 64px rgba(20,30,80,0.18), 0 0 0 1px rgba(79,124,255,0.08);
-    overflow: hidden;
-    transform: scale(0.9) translateY(20px);
-    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    padding: 32px 32px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
 }
-.resume-parse-overlay.show .resume-parse-dialog {
-    transform: scale(1) translateY(0);
-}
-.resume-parse-glow {
-    height: 3px;
-    background: linear-gradient(90deg, #4f7cff, #7c5cff, #a78bff, #00b894);
-    background-size: 200% 100%;
-    animation: resumeGlowSlide 2s linear infinite;
-}
-@keyframes resumeGlowSlide {
-    0%   { background-position: 0% 0; }
-    100% { background-position: 200% 0; }
-}
-.resume-parse-body { padding: 32px 32px 28px; }
-.resume-parse-ai-wrap {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-.resume-parse-ai-icon {
-    width: 72px;
-    height: 72px;
-    background: linear-gradient(135deg, rgba(79,124,255,0.1), rgba(124,92,255,0.08));
-    border: 2px solid rgba(79,124,255,0.15);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    position: relative;
-    animation: resumeIconPulse 2s ease-in-out infinite;
-}
-.resume-parse-ai-icon::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(79,124,255,0.8), transparent);
-    border-radius: 2px;
-    animation: resumeScanLine 1.8s ease-in-out infinite;
-}
-@keyframes resumeIconPulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(79,124,255,0.2); }
-    50%      { box-shadow: 0 0 0 12px rgba(79,124,255,0); }
-}
-@keyframes resumeScanLine {
-    0%   { top: 8px; opacity: 0; }
-    20%  { opacity: 1; }
-    80%  { opacity: 1; }
-    100% { top: calc(100% - 8px); opacity: 0; }
+.resume-parse-head {
+    margin-bottom: 24px;
 }
 .resume-parse-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: #1a2340;
-    text-align: center;
-    margin-bottom: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text, #1a2340);
+    margin-bottom: 5px;
 }
 .resume-parse-sub {
-    font-size: 12px;
-    color: #aab4cc;
-    text-align: center;
-    margin-bottom: 28px;
+    font-size: 13px;
+    color: var(--dim, #5a6a8a);
 }
+/* 步骤列表：紧凑行，无独立卡片 */
 .resume-parse-steps {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
     margin-bottom: 24px;
 }
 .resume-parse-step {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(79,124,255,0.12);
-    background: #fafbff;
-    transition: all 0.3s;
-}
-.resume-parse-step.active {
-    background: rgba(79,124,255,0.05);
-    border-color: rgba(79,124,255,0.25);
-}
-.resume-parse-step.done {
-    background: rgba(0,184,148,0.04);
-    border-color: rgba(0,184,148,0.2);
-}
-.resume-step-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    flex-shrink: 0;
-    background: rgba(79,124,255,0.08);
-}
-.resume-parse-step.active .resume-step-icon { background: rgba(79,124,255,0.12); }
-.resume-parse-step.done .resume-step-icon   { background: rgba(0,184,148,0.1); }
-.resume-step-info { flex: 1; }
-.resume-step-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1a2340;
-    margin-bottom: 2px;
-}
-.resume-typing {
-    font-size: 11px;
-    font-weight: 400;
-    color: #4f7cff;
-    font-family: 'DM Mono', 'Consolas', monospace;
-}
-.resume-step-desc { font-size: 11px; color: #aab4cc; }
-.resume-step-status {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 11px;
-}
-.resume-status-wait {
-    background: rgba(79,124,255,0.06);
-    color: #aab4cc;
-    border: 1px solid rgba(79,124,255,0.12);
-}
-.resume-status-loading { background: rgba(79,124,255,0.1); }
-.resume-status-done {
-    background: rgba(0,184,148,0.12);
-    color: #00b894;
-    font-size: 13px;
-}
-.resume-parse-spin {
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(79,124,255,0.15);
-    border-top-color: #4f7cff;
-    border-radius: 50%;
-    animation: resumeSpin 0.7s linear infinite;
-}
-@keyframes resumeSpin { to { transform: rotate(360deg); } }
-.resume-parse-progress-wrap { margin-bottom: 8px; }
-.resume-parse-progress-header {
-    display: flex;
     justify-content: space-between;
-    font-size: 11px;
-    color: #aab4cc;
-    margin-bottom: 6px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    transition: background 0.2s;
 }
-.resume-parse-progress-num {
-    font-family: 'DM Mono', 'Consolas', monospace;
+.resume-parse-step.pending { background: transparent; }
+.resume-parse-step.active { background: var(--light-blue-bg, rgba(79,124,255,0.06)); }
+.resume-parse-step.done { background: var(--light-blue-bg, rgba(79,124,255,0.06)); }
+.resume-parse-step:hover { background: var(--light-blue-bg, rgba(79,124,255,0.06)); }
+.resume-step-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.resume-step-name {
+    font-size: 13.5px;
     font-weight: 600;
-    color: #4f7cff;
+    color: var(--text, #1a2340);
+    transition: color 0.2s;
+}
+.resume-parse-step.pending .resume-step-name { color: var(--muted, #aab4cc); }
+.resume-parse-step.active .resume-step-name { color: var(--accent); }
+.resume-step-desc {
+    font-size: 11.5px;
+    color: var(--muted, #aab4cc);
+    transition: color 0.2s;
+}
+.resume-parse-step.done .resume-step-desc { color: var(--dim, #5a6a8a); }
+.resume-parse-step.active .resume-step-desc { color: var(--dim, #5a6a8a); }
+/* 右侧状态：22px 圆形，待执行=空心灰圈，进行中=旋转圈，完成=实心+白勾 */
+.resume-step-status {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+}
+.resume-parse-step.pending .resume-step-status {
+    border: 2px solid var(--border);
+}
+.resume-parse-step.active .resume-step-status {
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    animation: resume-parse-spin 0.8s linear infinite;
+}
+@keyframes resume-parse-spin { to { transform: rotate(360deg); } }
+.resume-parse-step.done .resume-step-status {
+    background: var(--accent);
+    border: 2px solid var(--accent);
+}
+.resume-step-check {
+    display: none;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+.resume-parse-step.done .resume-step-check { display: block; }
+/* 进度条与百分比同一行 */
+.resume-parse-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 .resume-parse-progress-bg {
-    height: 6px;
-    background: rgba(79,124,255,0.08);
-    border-radius: 6px;
+    flex: 1;
+    height: 5px;
+    background: var(--light-blue-bg, #eef3ff);
+    border-radius: 100px;
     overflow: hidden;
 }
 .resume-parse-progress-fill {
     height: 100%;
-    border-radius: 6px;
-    background: linear-gradient(90deg, #4f7cff, #7c5cff);
-    transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+    background: linear-gradient(90deg, var(--primary-dark), var(--accent), var(--accent2));
+    border-radius: 100px;
     width: 0%;
-    position: relative;
+    transition: width 0.6s ease;
 }
-.resume-parse-progress-fill::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    animation: resumeShimmer 1.2s ease infinite;
+.resume-parse-progress-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 36px;
+    text-align: right;
 }
-@keyframes resumeShimmer { to { left: 100%; } }
+/* 解析完成状态 */
 .resume-parse-done-state {
     display: none;
     flex-direction: column;
@@ -13537,36 +14204,38 @@ body::before {
 .resume-parse-done-check {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, #00b894, #00d9b0);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #fff;
     font-size: 26px;
+    font-weight: 700;
     margin-bottom: 12px;
-    box-shadow: 0 4px 20px rgba(0,184,148,0.3);
+    box-shadow: 0 4px 20px rgba(79,124,255,0.3);
     animation: resumePopIn 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 @keyframes resumePopIn {
     from { transform: scale(0.5); opacity:0; }
     to   { transform: scale(1); opacity:1; }
 }
-.resume-parse-done-title { font-size: 16px; font-weight: 700; color: #1a2340; margin-bottom: 4px; }
-.resume-parse-done-sub   { font-size: 12px; color: #aab4cc; margin-bottom: 16px; }
+.resume-parse-done-title { font-size: 16px; font-weight: 700; color: var(--text, #1a2340); margin-bottom: 4px; }
+.resume-parse-done-sub   { font-size: 12px; color: var(--dim, #5a6a8a); margin-bottom: 16px; }
 .resume-parse-done-btn {
     padding: 10px 32px;
-    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 100px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     font-family: inherit;
-    box-shadow: 0 4px 14px rgba(79,124,255,0.3);
-    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(79,124,255,0.3);
+    transition: all 0.15s;
 }
-.resume-parse-done-btn:hover { transform: translateY(-2px); }
+.resume-parse-done-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
 /* ══════════════════
    换岗路径 — 血缘图谱
