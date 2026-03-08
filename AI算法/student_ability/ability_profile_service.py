@@ -331,16 +331,6 @@ class AIAbilityProfileGenerator:
             ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return ability_profile
 
-        # 如果未配置大模型 Key，则直接降级为规则画像（避免网络重试/超时导致接口长时间无响应）
-        if (self.model is None) or (not os.environ.get("DASHSCOPE_API_KEY")):
-            logger.warning("[AbilityProfile] 未检测到 DASHSCOPE_API_KEY，使用规则画像降级生成 user_id=%s", user_id)
-            ability_profile = self._build_rule_based_profile(user_id, profile_data)
-            ability_profile = self._score_profile(ability_profile)
-            ability_profile["user_id"] = user_id
-            ability_profile["profile_id"] = f"profile_{user_id}"
-            ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            return ability_profile
-
         # 构造Prompt
         prompt = self._build_generation_prompt(profile_data)
         
@@ -393,16 +383,6 @@ class AIAbilityProfileGenerator:
             ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return ability_profile
 
-        
-        if (self.model is None) or (not os.environ.get("DASHSCOPE_API_KEY")):
-            logger.warning("[AbilityProfile] 未检测到 DASHSCOPE_API_KEY，简历画像生成改用规则画像降级 user_id=%s", user_id)
-            ability_profile = self._build_rule_based_profile(user_id, {})
-            ability_profile = self._score_profile(ability_profile)
-            ability_profile["user_id"] = user_id
-            ability_profile["profile_id"] = f"profile_{user_id}"
-            ability_profile["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            return ability_profile
-
         prompt = self._build_resume_generation_prompt(resume_text)
         
         try:
@@ -432,6 +412,47 @@ class AIAbilityProfileGenerator:
             "注意事项：只根据简历真实信息填写，没有的字段用\"待补充\"；证据必须来自简历。\n"
         )
 
+    @staticmethod
+    def _ability_profile_output_schema() -> str:
+        """能力画像输出 JSON 结构（纯文本模板，插入到 Prompt 中）"""
+        return """{
+  "basic_info": {
+    "education": "本科/硕士/博士",
+    "major": "专业名称",
+    "school": "学校名称",
+    "gpa": "X.X/4.0",
+    "expected_graduation": "YYYY-MM",
+    "target_job": "推荐的目标岗位"
+  },
+  "professional_skills": {
+    "programming_languages": [
+      { "skill": "技能名称", "level": "精通/熟练/熟悉/了解", "evidence": ["证据1", "证据2"] }
+    ],
+    "frameworks_tools": [...],
+    "domain_knowledge": [...]
+  },
+  "certificates": { "items": [{ "name": "证书名称", "level": "级别", "issue_date": "YYYY-MM" }] },
+  "innovation_ability": {
+    "projects": [{ "name": "项目名称", "innovation_points": ["创新点"], "impact": "影响" }],
+    "competitions": [{ "name": "竞赛名称", "award": "获奖等级" }]
+  },
+  "learning_ability": {
+    "indicators": [
+      { "indicator": "GPA", "value": 3.8, "percentile": 85 },
+      { "indicator": "自学新技术", "evidence": ["证据"] }
+    ]
+  },
+  "pressure_resistance": { "evidence": ["抗压证据"] },
+  "communication_ability": {
+    "teamwork": { "evidence": ["团队协作证据"] },
+    "presentation": { "evidence": ["演讲展示证据"] }
+  },
+  "practical_experience": {
+    "internships": [{ "company": "公司", "position": "职位", "duration": "X个月", "achievements": ["成就"] }],
+    "projects": [{ "name": "项目", "role": "角色", "complexity": "高/中/低" }]
+  }
+}"""
+    
     def _build_generation_prompt(self, profile_data: dict) -> str:
         """构造生成Prompt"""
         schema = self._ability_profile_output_schema()
@@ -458,91 +479,7 @@ class AIAbilityProfileGenerator:
         
 请严格按以下JSON格式输出能力画像（只输出JSON，不要其他内容）：
         
-{{
-  "basic_info": {{
-    "education": "本科/硕士/博士",
-    "major": "专业名称",
-    "school": "学校名称",
-    "gpa": "X.X/4.0",
-    "expected_graduation": "YYYY-MM"
-  }},
-  "professional_skills": {{
-    "programming_languages": [
-      {{
-        "skill": "技能名称",
-        "level": "精通/熟练/熟悉/了解",
-        "evidence": ["证据1", "证据2"]
-      }}
-    ],
-    "frameworks_tools": [...],
-    "domain_knowledge": [...]
-  }},
-  "certificates": {{
-    "items": [
-      {{
-        "name": "证书名称",
-        "level": "级别",
-        "issue_date": "YYYY-MM"
-      }}
-    ]
-  }},
-  "innovation_ability": {{
-    "projects": [
-      {{
-        "name": "项目名称",
-        "innovation_points": ["创新点1", "创新点2"],
-        "impact": "影响描述"
-      }}
-    ],
-    "competitions": [
-      {{
-        "name": "竞赛名称",
-        "award": "获奖等级"
-      }}
-    ]
-  }},
-  "learning_ability": {{
-    "indicators": [
-      {{
-        "indicator": "GPA",
-        "value": 3.8,
-        "percentile": 85
-      }},
-      {{
-        "indicator": "自学新技术",
-        "evidence": ["证据1", "证据2"]
-      }}
-    ]
-  }},
-  "pressure_resistance": {{
-    "evidence": ["抗压证据1", "证据2"]
-  }},
-  "communication_ability": {{
-    "teamwork": {{
-      "evidence": ["团队协作证据1", "证据2"]
-    }},
-    "presentation": {{
-      "evidence": ["演讲展示证据1", "证据2"]
-    }}
-  }},
-  "practical_experience": {{
-    "internships": [
-      {{
-        "company": "公司名称",
-        "position": "职位",
-        "duration": "X个月",
-        "achievements": ["成就1", "成就2"]
-      }}
-    ],
-    "projects": [
-      {{
-        "name": "项目名称",
-        "role": "角色",
-        "complexity": "高/中/低"
-      }}
-    ]
-  }}
-}}
+{schema}
         
 注意事项：
 1. 如果档案某个字段为空，不要编造，标记为"待补充"
@@ -575,6 +512,36 @@ class AIAbilityProfileGenerator:
                 {"indicator": "GPA", "value": gpa_val, "percentile": 80}
             )
 
+        # 处理技能数据
+        skills = profile_data.get("skills", []) or []
+        programming_languages = []
+        frameworks_tools = []
+        domain_knowledge = []
+        
+        for skill_item in skills:
+            if isinstance(skill_item, dict):
+                category = skill_item.get("category", "").strip()
+                items = skill_item.get("items", []) or []
+                
+                # 转换技能数据为能力画像所需格式
+                if category in ["编程语言", "编程", "coding", "programming"]:
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            programming_languages.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
+                elif category in ["框架工具", "框架", "工具", "frameworks", "tools"]:
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            frameworks_tools.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
+                elif category in ["领域知识", "领域", "知识", "domain", "knowledge"]:
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            domain_knowledge.append({"domain": item.strip(), "level": "熟悉", "evidence": []})
+                else:
+                    # 其他技能分类，默认添加到框架工具中
+                    for item in items:
+                        if isinstance(item, str) and item.strip():
+                            frameworks_tools.append({"skill": item.strip(), "level": "熟悉", "evidence": []})
+        
         profile = {
             "basic_info": {
                 "education": basic.get("education", "待补充"),
@@ -582,12 +549,12 @@ class AIAbilityProfileGenerator:
                 "school": basic.get("school", "待补充"),
                 "gpa": gpa_raw or "待补充",
                 "expected_graduation": basic.get("expected_graduation", "待补充"),
+                "target_job": "算法工程师（中级）",
             },
             "professional_skills": {
-                # 规则兜底模式下不给具体评分，只占位，评分由 AbilityScorer 决定（可能为 0）
-                "programming_languages": [],
-                "frameworks_tools": [],
-                "domain_knowledge": [],
+                "programming_languages": programming_languages,
+                "frameworks_tools": frameworks_tools,
+                "domain_knowledge": domain_knowledge,
             },
             "certificates": {
                 "items": [],
@@ -689,6 +656,20 @@ class AIAbilityProfileGenerator:
         # 8. 综合评分
         profile["overall_assessment"] = self._calculate_overall_assessment(profile)
         
+        # 9. 推荐目标岗位
+        try:
+            from matching.matching_service import JobMatchingService
+            matching_service = JobMatchingService()
+            recommendations = matching_service.recommend_jobs(0, top_n=1, ability_profile=profile)
+            if recommendations.get("recommendations"):
+                top_job = recommendations["recommendations"][0]
+                profile["basic_info"]["target_job"] = top_job.get("job_name", "算法工程师（中级）")
+            else:
+                profile["basic_info"]["target_job"] = "算法工程师（中级）"
+        except Exception as e:
+            logger.warning(f"[AbilityProfile] 目标岗位推荐失败，使用默认值: {e}")
+            profile["basic_info"]["target_job"] = "算法工程师（中级）"
+        
         return profile
     
     def _calculate_overall_assessment(self, profile: dict) -> dict:
@@ -776,6 +757,7 @@ class StudentAbilityProfileService:
     def get_ability_profile(self, user_id: int) -> Optional[dict]:
         """
         5.1 获取学生能力画像
+        检查个人档案是否有更新，如果有更新则重新生成能力画像
         """
         profile_id = f"profile_{user_id}"
 
@@ -783,23 +765,8 @@ class StudentAbilityProfileService:
         existing_profile = self.profiles_store.get(profile_id)
 
         # 获取个人档案数据（用于判断是否需要更新）
-
-        # 若画像已存在，允许直接返回（即使档案模块不可用/未完善）
-        existing_profile = self.profiles_store.get(profile_id)
-
-        # 获取个人档案数据（用于判断是否需要更新）
         profile_data = self._get_user_profile_data(user_id)
         if not profile_data:
-            if existing_profile:
-                logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，返回已存在画像: {profile_id}")
-                return existing_profile
-            # 档案不存在时也给一个规则画像兜底，避免前端“看不见能力画像”
-            logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，生成规则画像兜底: {profile_id}")
-            resolved_profile = self._adapt_profile_for_generator({})
-            ability_profile = self.generator.generate_from_profile(user_id, resolved_profile)
-            self.profiles_store[profile_id] = ability_profile
-            _save_profiles_store(self.profiles_store)
-            return ability_profile
             if existing_profile:
                 logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，返回已存在画像: {profile_id}")
                 return existing_profile
@@ -874,9 +841,6 @@ class StudentAbilityProfileService:
             if not profile_data:
                 profile_data = self._get_user_profile_data(user_id)
             if not profile_data:
-                # 档案不存在时也允许生成一个兜底规则画像，避免流程被硬阻塞
-                logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，画像生成将使用空档案兜底")
-                profile_data = {}
                 # 档案不存在时也允许生成一个兜底规则画像，避免流程被硬阻塞
                 logger.warning(f"[AbilityProfile] 用户{user_id}档案数据不存在，画像生成将使用空档案兜底")
                 profile_data = {}
