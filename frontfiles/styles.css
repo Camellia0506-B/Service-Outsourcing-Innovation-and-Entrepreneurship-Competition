@@ -14135,6 +14135,261 @@ body {
     }
 }
 
+/* 首页暖色扁平风格（仅作用于 #dashboardPage） */
+#dashboardPage.dashboard-page {
+    background: #f5f0eb;
+}
+
+#dashboardPage .hero-glow-1,
+#dashboardPage .hero-glow-2,
+#dashboardPage .hero-dots {
+    display: none;
+}
+
+#dashboardPage .hero-section {
+    margin-bottom: 36px;
+}
+
+#dashboardPage .hero-content {
+    align-items: flex-start;
+    gap: 56px;
+}
+
+#dashboardPage .hero-left {
+    max-width: 640px;
+}
+
+#dashboardPage .hero-badge {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #9a8f82;
+    background: rgba(244, 234, 221, 0.9);
+    border: 1px solid #e4d6c8;
+}
+
+#dashboardPage .hero-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    font-size: 42px;
+    line-height: 1.25;
+    color: #1f1f1f;
+    margin-bottom: 16px;
+}
+
+#dashboardPage .username {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 48px;
+    color: #2b8a6e;
+    margin-right: 6px;
+}
+
+#dashboardPage .hero-title-suffix {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    font-size: 38px;
+    color: #1f1f1f;
+}
+
+#dashboardPage .hero-title-ready {
+    color: #c26b43;
+}
+
+#dashboardPage .hero-subtitle {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    color: #5a524a;
+    line-height: 1.8;
+    max-width: 620px;
+}
+
+#dashboardPage .hero-chips {
+    margin-top: 20px;
+    gap: 10px;
+}
+
+#dashboardPage .hero-chip {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff7ee;
+    border: 1px solid #f0e3d5;
+    color: #5a524a;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    box-shadow: none;
+}
+
+#dashboardPage .hero-chip:hover {
+    background: #f0e3d5;
+    color: #1f1f1f;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 右侧统计卡片：竖向排列的小卡片 */
+#dashboardPage .hero-right.hero-stats-grid {
+    gap: 12px;
+    min-width: 230px;
+}
+
+@media (min-width: 1200px) {
+    #dashboardPage .hero-right.hero-stats-grid {
+        transform: translateX(80px);
+    }
+}
+
+#dashboardPage .hero-right .stat-card {
+    background: #ffffff;
+    border-radius: 0;
+    border: 1px solid #e4d6c8;
+    padding: 14px 16px;
+    box-shadow: none;
+}
+
+#dashboardPage .hero-right .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f5f0eb;
+    font-size: 18px;
+}
+
+#dashboardPage .hero-right .stat-body {
+    min-width: 0;
+}
+
+#dashboardPage .hero-right .stat-number {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: #1f1f1f;
+}
+
+#dashboardPage .hero-right .stat-label {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 12px;
+    color: #9a8f82;
+    margin-top: 4px;
+}
+
+/* 首页分割标题与主卡片区域 */
+#dashboardPage .section-divider {
+    margin: 36px 0 24px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    color: #9a8f82;
+}
+
+#dashboardPage .main-cards {
+    background: transparent;
+}
+
+#dashboardPage .main-card {
+    border-radius: 0;
+    border: 1px solid #e4d6c8;
+    box-shadow: none;
+    text-align: left;
+}
+
+#dashboardPage .card-content {
+    padding: 24px 24px 20px;
+}
+
+#dashboardPage .card-icon {
+    margin: 0 0 16px;
+    background: #f5f0eb;
+    box-shadow: none;
+    color: #2b8a6e;
+}
+
+#dashboardPage .main-card:nth-child(2) .card-icon {
+    color: #c26b43;
+}
+
+#dashboardPage .main-card:nth-child(3) .card-icon {
+    color: #2b8a6e;
+}
+
+#dashboardPage .card-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: #1f1f1f;
+    margin-bottom: 8px;
+}
+
+#dashboardPage .card-description {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    color: #5a524a;
+    line-height: 1.7;
+    margin-bottom: 18px;
+}
+
+#dashboardPage .card-status {
+    border-top: 1px solid #f0e3d5;
+    padding-top: 14px;
+    align-items: flex-start;
+}
+
+#dashboardPage .status-badge {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 12px;
+}
+
+#dashboardPage .status-badge.status-pending {
+    background: #f5f0eb;
+    color: #c26b43;
+}
+
+#dashboardPage .status-badge.status-done {
+    background: #e1f1df;
+    color: #2b8a6e;
+}
+
+#dashboardPage .card-btn {
+    margin: 0 20px 20px;
+    width: auto;
+    border-radius: 999px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+}
+
+#dashboardPage .card-btn-primary {
+    background: #111111;
+    color: #ffffff;
+    box-shadow: none;
+}
+
+#dashboardPage .card-btn-primary:hover:not(:disabled):not(.card-btn-disabled) {
+    background: #000000;
+    transform: translateY(-1px);
+}
+
+#dashboardPage .card-btn-secondary {
+    background: #f7f3ef;
+    color: #1f1f1f;
+    border: 1px solid #e2d4c8;
+}
+
+#dashboardPage .card-btn-secondary:hover:not(:disabled) {
+    background: #f0e3d5;
+}
+
+#dashboardPage .card-btn-disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+
 /* 首页响应式设计 */
 @media (max-width: 1200px) {
     .main-cards {
