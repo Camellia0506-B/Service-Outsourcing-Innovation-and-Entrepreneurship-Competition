@@ -13672,16 +13672,36 @@ body.on-login-page #globalBlobs { display: none; }
     box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 
-/* 档案模态框样式 */
+/* 档案模态框样式：首页风格 + 仅一处滚动 */
 .profile-modal {
     max-width: 800px;
     max-height: 90vh;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid #e4d6c8;
+}
+
+.profile-modal .modal-header {
+    flex-shrink: 0;
+    border-bottom: 1px solid #e4d6c8;
+}
+
+.profile-modal .modal-header h3 {
+    color: #1f1f1f;
+}
+
+.profile-modal .modal-close {
+    color: #5a524a;
 }
 
 .profile-modal .modal-body {
-    max-height: calc(90vh - 80px);
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .profile-tables {
@@ -13693,23 +13713,24 @@ body.on-login-page #globalBlobs { display: none; }
 .profile-section h4 {
     font-size: 18px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #1f1f1f;
     margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 2px solid var(--primary-color);
+    border-bottom: 1px solid #e4d6c8;
 }
 
 .profile-table {
     width: 100%;
     border-collapse: collapse;
-    background: var(--card-bg);
-    border-radius: 8px;
+    background: #fff;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: var(--shadow);
+    box-shadow: none;
+    border: 1px solid #e4d6c8;
 }
 
 .profile-table tr {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #e4d6c8;
 }
 
 .profile-table tr:last-child {
@@ -13719,8 +13740,8 @@ body.on-login-page #globalBlobs { display: none; }
 .profile-table th {
     padding: 12px 16px;
     text-align: left;
-    background: var(--bg-color);
-    color: var(--text-secondary);
+    background: #f7f3ef;
+    color: #5a524a;
     font-weight: 600;
     font-size: 14px;
     width: 30%;
@@ -13729,16 +13750,16 @@ body.on-login-page #globalBlobs { display: none; }
 
 .profile-table td {
     padding: 12px 16px;
-    color: var(--text-primary);
+    color: #1f1f1f;
     font-size: 14px;
 }
 
 .completeness-badge {
     display: inline-block;
     padding: 4px 12px;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 20px;
+    background: #111;
+    color: #fff;
+    border-radius: 0;
     font-weight: 600;
     font-size: 14px;
 }

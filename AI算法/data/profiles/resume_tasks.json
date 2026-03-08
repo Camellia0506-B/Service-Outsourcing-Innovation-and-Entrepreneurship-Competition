@@ -52,10 +52,29 @@
     "error": null
   },
   "resume_parse_20260308164257005_3_259255": {
-    "status": "processing",
+    "status": "completed",
     "user_id": 3,
     "created_at": "2026-03-08 16:42:57",
-    "result": null,
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "",
+          "nickname": "",
+          "phone": "",
+          "email": "",
+          "gender": "",
+          "birth_date": "",
+          "birthday": ""
+        },
+        "education": [],
+        "skills": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.85,
+      "suggestions": []
+    },
     "error": null
   }
 }
