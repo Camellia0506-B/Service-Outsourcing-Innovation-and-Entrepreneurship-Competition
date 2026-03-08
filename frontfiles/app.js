@@ -770,6 +770,10 @@ class CareerPlanningApp {
         // 求职失败复盘弹窗
         document.getElementById('trackingFailureClose')?.addEventListener('click', () => this.closeTrackingFailureModal());
         document.getElementById('trackingFailureStartBtn')?.addEventListener('click', () => this.startFailureAnalysisForCurrentRecord());
+        document.getElementById('trackingPlanFab')?.addEventListener('click', () => this.openTrackingPlanModal());
+        document.getElementById('trackingPlanModalClose')?.addEventListener('click', () => this.closeTrackingPlanModal());
+        document.getElementById('trackingPlanModal')?.addEventListener('click', (e) => { if (e.target && e.target.id === 'trackingPlanModal') this.closeTrackingPlanModal(); });
+        document.getElementById('trackingPlanGenerateBtn')?.addEventListener('click', () => this.startTrackingPlanGenerate());
 
         // 查看完整分析弹窗
         document.getElementById('trackingFullAnalysisClose')?.addEventListener('click', () => this.closeTrackingFullAnalysisModal());
@@ -3023,8 +3027,20 @@ class CareerPlanningApp {
 
     // 规划落地性跟踪：渲染求职总览与时间线
     renderTrackingOverview(data) {
-        const summary = data.summary || {};
+        let summary = data.summary || {};
         const records = Array.isArray(data.records) ? data.records : [];
+
+        const isOfferRecord = (r) => {
+            if (!r) return false;
+            const stage = (r.current_stage || r.stage || '').toString().toLowerCase();
+            return r.result === 'offer' || stage === 'offer';
+        };
+        const isRejectedRecord = (r) => (r && (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected'));
+        const offerCountFromRecords = records.filter(isOfferRecord).length;
+        const inProgressFromRecords = records.filter(r => !isOfferRecord(r) && !isRejectedRecord(r)).length;
+        const offerCount = Math.max(Number(summary.offer_count) || 0, offerCountFromRecords);
+        const inProgressCount = records.length ? inProgressFromRecords : (Number(summary.in_progress_count) || 0);
+        summary = { ...summary, offer_count: offerCount, in_progress_count: inProgressCount };
 
         const toPercent = (v) => {
             if (v == null || isNaN(v)) return '0%';
@@ -3037,10 +3053,10 @@ class CareerPlanningApp {
             if (el) el.textContent = text;
         };
 
-        setText('trackingTotalApplied', String(summary.total_applied ?? 0));
+        setText('trackingTotalApplied', String(summary.total_applied ?? records.length ?? 0));
         setText('trackingWrittenRate', toPercent(summary.written_test_pass_rate));
-        setText('trackingOfferCount', String(summary.offer_count ?? 0));
-        setText('trackingInProgressCount', String(summary.in_progress_count ?? 0));
+        setText('trackingOfferCount', String(summary.offer_count));
+        setText('trackingInProgressCount', String(summary.in_progress_count));
         const writtenSub = document.getElementById('trackingWrittenRateSub');
         if (writtenSub) writtenSub.textContent = '—';
 
@@ -3065,10 +3081,8 @@ class CareerPlanningApp {
 
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
         const stageLabel = { applied: '已投递', written_test: '笔试', interview_1: '一面', interview_2: '二面', final: '终面', offer: 'Offer', rejected: '已拒绝' };
-        // 兼容：后端可能用 result=rejected/failed 或 current_stage=rejected 标记淘汰
-        const isRejectedRecord = (r) => (r && (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected'));
         const statusDotClass = (r) => {
-            if (r.result === 'offer' || r.current_stage === 'offer') return 'tracking-sd-ok';
+            if (isOfferRecord(r)) return 'tracking-sd-ok';
             if (isRejectedRecord(r)) return 'tracking-sd-err';
             if (r.current_stage === 'applied') return 'tracking-sd-blue';
             return 'tracking-sd-warn';
@@ -3097,8 +3111,8 @@ class CareerPlanningApp {
                 jobList.innerHTML = '<div class="hint-text">暂无记录</div>';
             } else {
                 jobList.innerHTML = records.map(r => {
-                    const label = stageLabel[r.current_stage] || '进行中';
-                    const status = (r.result === 'offer' || r.current_stage === 'offer')
+                    const label = stageLabel[r.current_stage || r.stage] || '进行中';
+                    const status = isOfferRecord(r)
                         ? '已拿Offer 🎉'
                         : isRejectedRecord(r)
                             ? (label + '淘汰')
@@ -3467,6 +3481,76 @@ class CareerPlanningApp {
         this.trackingFailureRecord = null;
     }
 
+    openTrackingPlanModal() {
+        const modal = document.getElementById('trackingPlanModal');
+        if (!modal) return;
+        const streamEl = document.getElementById('trackingPlanStream');
+        const statusEl = document.getElementById('trackingPlanStatus');
+        if (statusEl) statusEl.textContent = '';
+        if (streamEl) {
+            streamEl.innerHTML = '<p class="hint-text">点击「生成可执行计划」后，将展示学习资源、竞争力提升建议与项目实践方案。</p>';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingPlanModal() {
+        const modal = document.getElementById('trackingPlanModal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // 应对措施/计划定制：直接展示可执行计划（本地内容），避免请求未实现的接口导致 404；后端提供 /tracking/action-plan 后可改为先请求再兜底
+    async startTrackingPlanGenerate() {
+        const userId = getCurrentUserId();
+        const statusEl = document.getElementById('trackingPlanStatus');
+        const streamEl = document.getElementById('trackingPlanStream');
+        const promptEl = document.getElementById('trackingPlanPrompt');
+        const btn = document.getElementById('trackingPlanGenerateBtn');
+        const extraPrompt = (promptEl && promptEl.value) ? String(promptEl.value).trim() : '';
+
+        if (!userId) {
+            this.showToast('请先登录', 'error');
+            return;
+        }
+        if (statusEl) statusEl.textContent = '正在生成可执行计划…';
+        if (streamEl) streamEl.textContent = '';
+        if (btn) btn.disabled = true;
+
+        try {
+            const fallback = this._getTrackingPlanFallbackContent(extraPrompt);
+            if (streamEl) streamEl.innerHTML = `<div class="tracking-md">${this._simpleMarkdownToHtml(fallback)}</div>`;
+            if (statusEl) statusEl.textContent = '生成完成';
+            this.showToast('可执行计划已生成', 'success');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    _getTrackingPlanFallbackContent(extraPrompt) {
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const userHint = extraPrompt ? `\n**针对你的补充**：${extraPrompt.slice(0, 120)}${extraPrompt.length > 120 ? '…' : ''}\n\n建议在下面三个板块中优先关注与这段话最相关的部分；如需更贴合你个人的方案，可等待后续接入 AI 生成。\n\n---\n\n` : '';
+
+        const resourcesVariants = [
+            '- **算法与笔试**：LeetCode、牛客网、CodeTop；**前端/全栈**：MDN、菜鸟教程、React 官方文档\n- **项目与社区**：GitHub、Gitee、掘金、知乎专栏、V2EX\n- **求职与行业**：拉勾、Boss、脉脉、看准网（岗位要求与面经）\n- **系统学习**：中国大学 MOOC、极客时间、慕课网、极客学院',
+            '- **技术基础**：LeetCode（算法）、牛客网（笔试/面经）、MDN / 菜鸟教程（前端/全栈）\n- **项目与开源**：GitHub、Gitee、掘金、知乎专栏\n- **行业与岗位**：拉勾、Boss、脉脉（岗位要求与趋势）\n- **系统学习**：中国大学 MOOC、极客时间、慕课网',
+            '- **刷题与面经**：LeetCode、牛客网、力扣题解；**文档与教程**：MDN、菜鸟、官方文档\n- **开源与输出**：GitHub 参与/自建项目、掘金/博客写总结\n- **招聘与情报**：Boss、拉勾、脉脉、公司官网/校招页\n- **课程**：MOOC、极客时间、Udemy、B 站优质系列'
+        ];
+        const competeVariants = [
+            '1. **技能与岗位对齐**：根据目标岗位 JD 提炼关键词，补齐缺失技能并能在简历/面试中举证。\n2. **项目经历**：优先做与岗位相关的课程设计/毕设/开源/实习项目，量化结果（性能、用户量、优化比例等）。\n3. **笔试与面试**：定期刷题、总结常考题型；整理面经，准备项目深挖与行为问题。\n4. **软实力**：沟通表达、时间管理、复盘习惯，在面试中体现学习与迭代能力。',
+            '1. **JD 拆解**：把岗位描述里的技术栈、业务词、软素质逐条列出，自评差距。\n2. **项目可讲性**：每个项目能说清背景、难点、你的角色和可量化结果。\n3. **笔试与手写**：按题型归纳（数组/链表/DP/设计），限时模拟。\n4. **面试节奏**：先结论后细节，不会的说明边界与可补充方向。',
+            '1. **能力标签化**：把“会什么”对应到岗位关键词，简历与口述一致。\n2. **项目闭环**：从需求到上线/数据，突出你负责的部分与反思。\n3. **题感与表达**：刷题重思路与边界；面试重结构（STAR/先总后分）。\n4. **复盘**：每次面试后记录被问住的问题，补强并形成话术。'
+        ];
+        const projectVariants = [
+            '1. **选题**：围绕目标岗位技术栈和业务场景，选一个小而完整的模块（如后台管理、数据看板、推荐/检索 demo）。\n2. **实现与文档**：代码结构清晰、有 README 与部署说明；可补充设计思路、难点与收获。\n3. **展示**：在简历中写清技术栈、个人职责与成果；面试前准备好「项目背景—难点—你的贡献—反思」的讲述逻辑。\n4. **持续迭代**：根据投递反馈补充技术点或新项目，形成闭环。',
+            '1. **方向**：和意向岗位技术栈一致（如后端用 Go/Java+MySQL+Redis，前端 React+Vite）。\n2. **规模**：不贪大，一个完整链路（前后端/数据/部署）即可。\n3. **简历与口述**：技术栈、职责、指标写清楚；面试能展开 2～3 分钟并应对追问。\n4. **迭代**：根据面试反馈补做小模块或新项目，形成“投递—反馈—补强”的循环。',
+            '1. **选题**：与目标岗位相关的小系统（电商/内容/工具均可），突出技术难点。\n2. **实现**：规范命名、分层清晰、有 README 和关键设计说明。\n3. **简历**：用 STAR 或“背景-难点-方案-结果”写项目，并准备深挖话术。\n4. **复盘**：根据挂掉的面试补充知识点或新项目，再投。'
+        ];
+
+        const part1 = pick(resourcesVariants);
+        const part2 = pick(competeVariants);
+        const part3 = pick(projectVariants);
+        return `${userHint}## 一、优质学习资源与网站\n\n${part1}\n\n## 二、如何增强自身竞争力\n\n${part2}\n\n## 三、怎么做项目\n\n${part3}`;
+    }
+
     // 求职失败复盘：SSE 流式调用 9.3 接口
     async startFailureAnalysisForCurrentRecord() {
         const record = this.trackingFailureRecord;
@@ -3628,12 +3712,16 @@ class CareerPlanningApp {
             if (/技能|gap|能力差距/.test(t)) { cur = 'skill'; continue; }
             if (/简历|履历|项目描述|优化点/.test(t)) { cur = 'resume'; continue; }
             if (/面试|沟通|表达|准备/.test(t)) { cur = 'interview'; continue; }
-            // 只收集“像条目”的内容，避免把长段落全塞进列表
             const m1 = ln.match(/^[-*•]\s+(.*)$/);
             const m2 = ln.match(/^\d+\.\s+(.*)$/);
             const m3 = ln.match(/^\d+[、]\s*(.*)$/);
             const m4 = ln.match(/^\(?\d+\)?[)）]\s*(.*)$/);
-            if (m1 || m2 || m3 || m4) pushLine((m1 || m2 || m3 || m4)[1]);
+            if (m1 || m2 || m3 || m4) {
+                pushLine((m1 || m2 || m3 || m4)[1]);
+            } else if (cur && ln.length > 20 && !/^#|^[\d一二三四五六七八九十]+[、.．)]\s*$/.test(ln)) {
+                // 非列表的长句也按当前区块收集（按句号/分号拆成多条）
+                ln.split(/[；。！？?]/).map(s => s.trim()).filter(s => s.length >= 6).forEach(pushLine);
+            }
         }
 
         // 进一步把“长段落”切成更多可读要点（不新增内容，只做句子切分）
@@ -3667,35 +3755,105 @@ class CareerPlanningApp {
             return '';
         };
 
-        // 若某一块为空，先尝试用关键词把条目归类补齐（比纯切片更靠谱）
-        if (!sec.resume.length || !sec.skill.length || !sec.interview.length) {
-            for (const it of flat) {
-                const c = classify(it);
-                if (c === 'resume' && !sec.resume.includes(it)) sec.resume.push(it);
-                else if (c === 'skill' && !sec.skill.includes(it)) sec.skill.push(it);
-                else if (c === 'interview' && !sec.interview.includes(it)) sec.interview.push(it);
-            }
+        // 始终用关键词把 flat 条目归类，让三栏分布更均衡（不只在某块为空时）
+        for (const it of flat) {
+            const c = classify(it);
+            const str = String(it).trim();
+            if (!str) continue;
+            if (c === 'resume' && !sec.resume.includes(it)) sec.resume.push(it);
+            else if (c === 'skill' && !sec.skill.includes(it)) sec.skill.push(it);
+            else if (c === 'interview' && !sec.interview.includes(it)) sec.interview.push(it);
         }
 
-        // 兜底分配：即使只识别出某一块，也保证另外两块有内容
-        const used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
-        const pool = flat.filter(s => !used.has(String(s).trim()));
+        // 兜底分配：某块为空时从 pool 取
+        let used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
+        let pool = flat.filter(s => !used.has(String(s).trim()));
         const take = (n) => pool.splice(0, n);
 
-        // 默认每栏至少给 6 条（可滚动展示），让信息更充实
-        if (!sec.skill.length) sec.skill = take(6);
-        if (!sec.resume.length) sec.resume = take(6);
-        if (!sec.interview.length) sec.interview = take(6);
+        const TARGET_PER_BOX = 10;
+        if (!sec.skill.length) sec.skill = take(TARGET_PER_BOX);
+        if (!sec.resume.length) sec.resume = take(TARGET_PER_BOX);
+        if (!sec.interview.length) sec.interview = take(TARGET_PER_BOX);
 
-        // 若仍为空（极端情况下 md 很短），就按原 flat 切片兜底
-        // 注意：允许跨区复用，保证“看得见内容”优先
-        if (!sec.skill.length) sec.skill = flat.slice(0, 6);
-        if (!sec.resume.length) sec.resume = flat.slice(0, 6);
-        if (!sec.interview.length) sec.interview = flat.slice(0, 6);
+        if (!sec.skill.length) sec.skill = flat.slice(0, TARGET_PER_BOX);
+        if (!sec.resume.length) sec.resume = flat.slice(0, TARGET_PER_BOX);
+        if (!sec.interview.length) sec.interview = flat.slice(0, TARGET_PER_BOX);
 
-        // 去重+限长，避免太啰嗦
-        // 每栏展示更多要点；面板本身可滚动，不会撑坏布局
-        const uniq = (arr) => Array.from(new Set(arr.map(s => String(s).trim()).filter(Boolean))).slice(0, 20);
+        // 补足稀疏栏：每栏至少 TARGET_PER_BOX 条，从 pool 补充（优先关键词匹配）
+        used = new Set([...sec.skill, ...sec.resume, ...sec.interview].map(s => String(s).trim()));
+        pool = flat.filter(s => !used.has(String(s).trim()));
+        const topUp = (key) => {
+            while (sec[key].length < TARGET_PER_BOX && pool.length) {
+                let idx = pool.findIndex(p => classify(p) === key);
+                if (idx < 0) idx = 0;
+                const item = pool.splice(idx, 1)[0];
+                if (item && !sec[key].includes(item)) {
+                    sec[key].push(item);
+                    used.add(String(item).trim());
+                }
+            }
+        };
+        topUp('resume');
+        topUp('interview');
+        topUp('skill');
+
+        // 去重：简历/面试栏若与技能栏完全重复则去掉
+        const skillSet = new Set(sec.skill.map(s => String(s).trim()));
+        sec.resume = sec.resume.filter(s => !skillSet.has(String(s).trim()));
+        sec.interview = sec.interview.filter(s => !skillSet.has(String(s).trim()));
+        if (!sec.resume.length) sec.resume = sec.skill.slice(0, TARGET_PER_BOX);
+        if (!sec.interview.length) sec.interview = sec.skill.slice(0, TARGET_PER_BOX);
+
+        // 每栏补足到约 10 条：用可执行建议填充，避免只罗列缺点
+        const ACTIONABLE_SKILL = [
+            '针对岗位 JD 补 1～2 门关键技术，并用小项目或笔记验证',
+            '用 LeetCode/牛客等巩固算法与手写题，按题型归纳思路',
+            '梳理已做项目的技术难点、优化点与数据结果，便于面试深挖',
+            '学习目标岗位常用中间件/框架的官方文档与最佳实践',
+            '找一段与目标技术栈一致的开源或课程项目做精读与改造',
+            '建立技术知识体系：基础原理 → 应用场景 → 踩坑与优化',
+            '参与或主导一个可量化的技术改进（性能、稳定性、可观测）',
+            '对简历上每项技术能讲清原理、使用场景和与岗位的关联',
+            '定期做技术总结与输出（博客/内部分享），形成可讲的故事',
+            '明确与岗位的差距点并制定 2～3 个月可落地的学习计划'
+        ];
+        const ACTIONABLE_RESUME = [
+            '用 STAR 法则写项目经历：情境、任务、行动、可量化结果',
+            '成果尽量量化：性能提升 x%、用户量、QPS、节省成本等',
+            '简历关键词与岗位 JD 对齐，技能与项目描述一致',
+            '与岗位最相关的 1～2 个项目放前并写清技术栈与职责',
+            '补充与岗位匹配的技能关键词，避免空洞的“了解/熟悉”',
+            '教育/实习时间线清晰，经历按时间倒序排列',
+            '控制篇幅：一页为主，重点突出与岗位匹配的部分',
+            '每段经历都有“做了什么 + 用了什么技术 + 结果如何”',
+            '删去与岗位无关或过于陈旧的内容，保持信息密度',
+            '请他人或 AI 从 HR/技术视角帮你做一遍简历审阅'
+        ];
+        const ACTIONABLE_INTERVIEW = [
+            '准备 2～3 个可深挖的项目：背景、难点、你的贡献、反思',
+            '梳理常见算法题型与思路，限时手写 1～2 道练手',
+            '准备 1～2 个行为面试案例：冲突解决、协作、失败复盘',
+            '对简历每一条都能展开讲 2～3 分钟，并预判追问',
+            '模拟面试：计时自述、让同学/朋友做面试官提问',
+            '技术问题先答思路再答细节，不清楚的说明边界与可补充点',
+            '准备“为什么选我们/职业规划”等通用问题的简洁回答',
+            '面试前再看一遍岗位 JD，把要求与自己的经历做对应',
+            '记录每次面试被问住的问题，事后补强并形成话术',
+            '面试结尾可主动问 1～2 个与团队/业务相关的问题'
+        ];
+        const fillToTarget = (key, list) => {
+            const existing = new Set(sec[key].map(s => String(s).trim()));
+            for (const tip of list) {
+                if (sec[key].length >= TARGET_PER_BOX) break;
+                const t = String(tip).trim();
+                if (!existing.has(t)) { sec[key].push(tip); existing.add(t); }
+            }
+        };
+        fillToTarget('skill', ACTIONABLE_SKILL);
+        fillToTarget('resume', ACTIONABLE_RESUME);
+        fillToTarget('interview', ACTIONABLE_INTERVIEW);
+
+        const uniq = (arr) => Array.from(new Set(arr.map(s => String(s).trim()).filter(Boolean))).slice(0, 25);
         sec.skill = uniq(sec.skill);
         sec.resume = uniq(sec.resume);
         sec.interview = uniq(sec.interview);
@@ -3864,11 +4022,22 @@ class CareerPlanningApp {
             this.showToast('已是最终阶段', 'info');
             return;
         }
+        // 推进到 Offer 阶段时必须传 result='offer'，总览里的「Offer 数量」才会计入
+        const result = next === 'offer' ? 'offer' : 'passed';
         this.showLoading();
-        const res = await updateTrackingRecord(recordId, { user_id: userId, stage: next, result: 'passed' });
+        const res = await updateTrackingRecord(recordId, { user_id: userId, stage: next, result });
         this.hideLoading();
         if (res && res.success) {
             this.showToast('进展已更新', 'success');
+            // 乐观更新：先改缓存与列表，再拉取，避免到达 Offer 后仍显示「进行中」
+            const updated = { ...record, current_stage: next, result };
+            this.trackingRecordsCache[recordId] = updated;
+            const recs = this.trackingOverviewRecords || [];
+            const idx = recs.findIndex(r => r && r.record_id === recordId);
+            if (idx >= 0) {
+                recs[idx] = { ...recs[idx], current_stage: next, result };
+                this.renderTrackingOverview({ summary: this.trackingOverviewSummary || {}, records: recs, agent_insight: null });
+            }
             await this.loadTrackingData();
             this.renderTrackingSteps(this.trackingRecordsCache?.[recordId]);
         } else {
@@ -4011,7 +4180,6 @@ class CareerPlanningApp {
         }
         const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
         const title = `${report.job_title || ''} · ${report.company_name || ''} 失败复盘`;
-        const sub = `${report.company_name || ''} · ${report.job_title || ''} · ${report.failure_stage || '—'} · ${report.created_at || ''} 生成`;
         // 与 Tab3 同步：优先用“流式完整分析缓存”，没有再用报告摘要 key_weakness
         const cachedRaw = this._getCachedRawForReport(report);
         const source = cachedRaw || String(report.key_weakness || '');
@@ -4019,7 +4187,6 @@ class CareerPlanningApp {
         const toUl = (arr) => arr && arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>—</li></ul>';
         detailEl.innerHTML = `
             <h3>${esc(title)}</h3>
-            <p class="tracking-rpt-detail-sub">${esc(sub)}</p>
             <div class="tracking-detail-section"><h4>🔍 技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
             <div class="tracking-detail-section"><h4>📄 简历优化建议</h4>${toUl(parsed.resume)}</div>
             <div class="tracking-detail-section"><h4>🗣️ 面试准备行动计划</h4>${toUl(parsed.interview)}</div>
@@ -4076,10 +4243,10 @@ class CareerPlanningApp {
         const pieDom = document.getElementById('trackingPieChart');
         if (pieDom) {
             const stageCount = { offer: 0, rejected: 0, inProgress: 0, applied: 0 };
+            const isOffer = (r) => r.result === 'offer' || ((r.current_stage || r.stage || '').toString().toLowerCase() === 'offer');
             records.forEach(r => {
-                const res = r.result || 'pending';
-                if (res === 'offer') stageCount.offer++;
-                else if (res === 'rejected' || res === 'failed' || r.current_stage === 'rejected') stageCount.rejected++;
+                if (isOffer(r)) stageCount.offer++;
+                else if (r.result === 'rejected' || r.result === 'failed' || r.current_stage === 'rejected') stageCount.rejected++;
                 else if (r.current_stage === 'applied') stageCount.applied++;
                 else stageCount.inProgress++;
             });
@@ -12044,9 +12211,26 @@ class CareerPlanningApp {
     }
 }
 
+// 全局：计划定制弹窗入口（供内联 onclick 与委托点击使用）
+function openTrackingPlanModal() {
+    if (window.app && typeof window.app.openTrackingPlanModal === 'function') {
+        window.app.openTrackingPlanModal();
+    }
+}
+
 // 页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new CareerPlanningApp();
+    window.openTrackingPlanModal = openTrackingPlanModal;
+
+    // 计划定制按钮：文档级委托，确保点击一定能触发（避免被遮挡或绑定丢失）
+    document.addEventListener('click', function planFabDelegate(e) {
+        if (e.target && e.target.closest && e.target.closest('#trackingPlanFab')) {
+            openTrackingPlanModal();
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 
     // 初始化日期输入框（即使没有加载档案数据）
     if (window.app && typeof window.app.initDateInput === 'function') {

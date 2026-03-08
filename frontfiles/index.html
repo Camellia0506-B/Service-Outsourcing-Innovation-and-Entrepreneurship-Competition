@@ -1245,6 +1245,37 @@
                     </div>
                 </div>
             </div>
+            <!-- 右下角：应对措施/计划定制 入口（放在 wrap 外避免被 overflow 裁剪） -->
+            <button type="button" class="tracking-plan-fab" id="trackingPlanFab" title="应对措施与计划定制" aria-label="应对措施与计划定制" onclick="typeof openTrackingPlanModal==='function'&&openTrackingPlanModal()">
+                <span class="tracking-plan-fab-icon">📋</span>
+                <span class="tracking-plan-fab-text">计划定制</span>
+            </button>
+        </div>
+
+        <!-- 应对措施/计划定制 弹窗（可执行计划：学习资源、增强竞争力、项目实践） -->
+        <div id="trackingPlanModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal tracking-plan-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div>
+                        <h3>📋 应对措施与计划定制</h3>
+                        <p class="tracking-failure-subtitle">生成可执行的提升计划：学习资源、竞争力提升、项目实践，详略得当</p>
+                    </div>
+                    <button type="button" class="modal-close" id="trackingPlanModalClose" aria-label="关闭">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tracking-plan-input-row">
+                        <label for="trackingPlanPrompt">可选：补充你的目标方向或薄弱点，生成更贴合的方案</label>
+                        <textarea id="trackingPlanPrompt" rows="2" placeholder="例如：想加强算法与项目经历，目标互联网后端/算法岗…"></textarea>
+                    </div>
+                    <div class="tracking-plan-actions">
+                        <button type="button" class="btn-primary" id="trackingPlanGenerateBtn">🤖 生成可执行计划</button>
+                        <span id="trackingPlanStatus" class="tracking-failure-status-text"></span>
+                    </div>
+                    <div id="trackingPlanStream" class="tracking-plan-stream">
+                        <p class="hint-text">点击「生成可执行计划」后，将展示学习资源、竞争力提升建议与项目实践方案。</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- 职业规划报告页面 -->

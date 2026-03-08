@@ -1679,6 +1679,114 @@ body {
     margin: 4px 0 0 0;
 }
 
+/* 求职跟踪页右下角：应对措施/计划定制 悬浮按钮（置于智能体 FAB 上方避免被遮挡） */
+#trackingPage .tracking-plan-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 130px;
+    z-index: 10002;
+    pointer-events: auto;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--medium-blue), var(--bright-blue));
+    border: none;
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(45, 91, 227, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+#trackingPage .tracking-plan-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 91, 227, 0.45);
+}
+#trackingPage .tracking-plan-fab:active {
+    transform: translateY(0);
+}
+.tracking-plan-fab-icon { font-size: 18px; }
+.tracking-plan-fab-text { white-space: nowrap; }
+
+/* 计划定制弹窗隐藏时彻底不显示遮罩，避免残留灰色块 */
+#trackingPlanModal.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 应对措施/计划定制 弹窗 */
+.tracking-plan-modal .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.tracking-plan-input-row label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+.tracking-plan-input-row textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 56px;
+}
+.tracking-plan-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.tracking-plan-stream {
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--page-bg);
+}
+.tracking-plan-stream .tracking-md,
+.tracking-plan-stream .hint-text {
+    font-family: var(--font-body);
+    color: var(--text-secondary);
+}
+.tracking-plan-stream .tracking-md h2,
+.tracking-plan-stream .tracking-md h3,
+.tracking-plan-stream .tracking-md h4 {
+    margin: 10px 0 6px;
+    line-height: 1.35;
+    color: var(--text-primary);
+}
+.tracking-plan-stream .tracking-md h2 { font-size: 16px; font-weight: 800; }
+.tracking-plan-stream .tracking-md h3 { font-size: 14px; font-weight: 800; color: var(--deep-blue); }
+.tracking-plan-stream .tracking-md h4 { font-size: 13px; font-weight: 700; color: var(--medium-blue); }
+.tracking-plan-stream .tracking-md p { margin: 6px 0; color: var(--text-secondary); }
+.tracking-plan-stream .tracking-md ul,
+.tracking-plan-stream .tracking-md ol {
+    margin: 6px 0 8px 18px;
+    padding: 0;
+    color: var(--text-secondary);
+}
+.tracking-plan-stream .tracking-md li { margin: 4px 0; }
+.tracking-plan-stream .tracking-md strong { color: var(--text-primary); }
+.tracking-plan-stream .tracking-md code {
+    background: rgba(79, 124, 255, 0.08);
+    border: 1px solid rgba(79, 124, 255, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
 /* 求职跟踪 5 Tab 一屏布局 */
 .tracking-page-wrap {
     display: flex;
@@ -12215,7 +12323,10 @@ body {
     z-index: 10001;
 }
 .modal-overlay.hidden {
-    display: none;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 .modal-content {
     background: var(--bg-color, #fff);
@@ -12312,7 +12423,18 @@ body {
 }
 
 .modal-overlay.hidden {
-    display: none;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 求职跟踪·反馈报告列表：右侧详情区不出现灰色遮罩（避免残留或伪元素） */
+#trackingPage .tracking-rpt-detail::before,
+#trackingPage .tracking-rpt-detail::after,
+#trackingPage .tracking-t5-layout::after {
+    display: none !important;
+    content: none !important;
 }
 
 .modal-content {

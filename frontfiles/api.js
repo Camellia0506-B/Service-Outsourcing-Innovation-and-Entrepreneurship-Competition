@@ -602,8 +602,8 @@ class API {
                             const records = raw ? JSON.parse(raw) : [];
                             const total = records.length;
                             const rejected = records.filter(r => r.result === 'rejected' || r.result === 'failed').length;
-                            const offer = records.filter(r => r.result === 'offer').length;
-                            const inProgress = records.filter(r => r.result !== 'offer' && r.result !== 'rejected' && r.result !== 'failed').length;
+                            const offer = records.filter(r => r.result === 'offer' || r.current_stage === 'offer').length;
+                            const inProgress = records.filter(r => r.result !== 'offer' && r.current_stage !== 'offer' && r.result !== 'rejected' && r.result !== 'failed').length;
                             const written = records.filter(r => ['written_test','interview_1','interview_2','final','offer'].indexOf(r.current_stage) >= 0 || r.current_stage === 'written_test').length;
                             const wtRate = total > 0 && written > 0 ? Math.min(1, written / total) : 0;
                             const ivRate = written > 0 ? (offer + rejected) / written : 0;
@@ -2411,6 +2411,12 @@ async function getFailureReports(userId, page = 1, size = 10) {
 function getTrackingFailureAnalysisURL(recordId) {
     const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
     return `${base}/tracking/record/${encodeURIComponent(recordId)}/failure-analysis`;
+}
+
+// 应对措施/计划定制（可执行计划生成，流式或一次性）
+function getTrackingActionPlanURL() {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    return `${base}/tracking/action-plan`;
 }
 
 // ==================== 知识库模块 ====================
