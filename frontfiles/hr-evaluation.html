@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生评估 - HR评估管理</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%231e3a5f' width='32' height='32' rx='4'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>C</text></svg>" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+    <div id="app">
+        <!-- 加载动画 -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+
+        <!-- HR评估页面 -->
+        <div class="hr-evaluation-page">
+            <!-- 顶部导航栏 -->
+            <nav class="hr-navbar">
+                <div class="hr-navbar-brand">
+                    <div class="hr-navbar-logo">C</div>
+                    <h1 class="hr-navbar-title">学生评估</h1>
+                </div>
+                <div class="hr-navbar-user">
+                    <div class="hr-user-info">
+                        <p class="hr-user-name" id="hrUserName"></p>
+                        <p class="hr-company-name" id="hrCompanyName"></p>
+                    </div>
+                    <button id="hrLogoutBtn" class="hr-logout-btn">退出登录</button>
+                </div>
+            </nav>
+
+            <!-- 主内容区域 -->
+            <main class="hr-evaluation-container">
+                <div class="hr-evaluation-card">
+                    <div class="hr-evaluation-header">
+                        <div class="hr-student-highlight">
+                            <div class="hr-student-highlight-avatar" id="studentAvatar">S</div>
+                            <div>
+                                <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;" id="studentName">学生信息</h2>
+                                <p style="color: var(--text-secondary);" id="studentJob">应聘岗位：AI产品经理</p>
+                            </div>
+                        </div>
+                        <div style="background: var(--light-blue-bg); padding: 16px; border-radius: 10px;">
+                            <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">学生简介</h3>
+                            <p id="studentIntro" style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
+                                加载中...
+                            </p>
+                        </div>
+                    </div>
+
+                    <form id="evaluationForm">
+                        <input type="hidden" id="evaluationId">
+                        <input type="hidden" id="hrId">
+
+                        <!-- 整体印象 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">整体印象</label>
+                            <select id="overallImpression" class="hr-select" required>
+                                <option value="">请选择</option>
+                                <option value="excellent">优秀</option>
+                                <option value="good">良好</option>
+                                <option value="average">一般</option>
+                                <option value="below_average">有待提升</option>
+                            </select>
+                        </div>
+
+                        <!-- 维度评分 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">多维度评分（0-100分）</label>
+                            <div class="hr-dimension-grid">
+                                <div class="hr-dimension-item">
+                                    <label class="hr-dimension-label">专业技能匹配度</label>
+                                    <input type="range" class="hr-dimension-slider" id="skillMatch" min="0" max="100" value="75">
+                                    <div class="hr-dimension-value" id="skillMatchValue">75分</div>
+                                </div>
+                                <div class="hr-dimension-item">
+                                    <label class="hr-dimension-label">学习能力</label>
+                                    <input type="range" class="hr-dimension-slider" id="learningAbility" min="0" max="100" value="75">
+                                    <div class="hr-dimension-value" id="learningAbilityValue">75分</div>
+                                </div>
+                                <div class="hr-dimension-item">
+                                    <label class="hr-dimension-label">沟通表达</label>
+                                    <input type="range" class="hr-dimension-slider" id="communication" min="0" max="100" value="75">
+                                    <div class="hr-dimension-value" id="communicationValue">75分</div>
+                                </div>
+                                <div class="hr-dimension-item">
+                                    <label class="hr-dimension-label">团队协作意愿</label>
+                                    <input type="range" class="hr-dimension-slider" id="teamwork" min="0" max="100" value="75">
+                                    <div class="hr-dimension-value" id="teamworkValue">75分</div>
+                                </div>
+                                <div class="hr-dimension-item">
+                                    <label class="hr-dimension-label">抗压能力</label>
+                                    <input type="range" class="hr-dimension-slider" id="pressureResistance" min="0" max="100" value="75">
+                                    <div class="hr-dimension-value" id="pressureResistanceValue">75分</div>
+                                </div>
+                                <div class="hr-dimension-item">
+                                    <label class="hr-dimension-label">职业成熟度</label>
+                                    <input type="range" class="hr-dimension-slider" id="careerMaturity" min="0" max="100" value="75">
+                                    <div class="hr-dimension-value" id="careerMaturityValue">75分</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 录用意向 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">录用意向</label>
+                            <select id="hiringIntent" class="hr-select" required>
+                                <option value="">请选择</option>
+                                <option value="strong">强烈推荐</option>
+                                <option value="moderate">有意向</option>
+                                <option value="weak">可考虑</option>
+                                <option value="no">暂不考虑</option>
+                            </select>
+                        </div>
+
+                        <!-- 优点 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">学生的优点</label>
+                            <textarea id="strengthsNoted" class="hr-textarea" placeholder="请描述该学生的优点..." required></textarea>
+                        </div>
+
+                        <!-- 不足 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">待提升之处</label>
+                            <textarea id="weaknessesNoted" class="hr-textarea" placeholder="请描述该学生的待提升之处..." required></textarea>
+                        </div>
+
+                        <!-- 推荐岗位 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">推荐岗位（用逗号分隔）</label>
+                            <input type="text" id="recommendedPositions" class="hr-form-input" placeholder="例如：产品助理, 数据产品经理">
+                        </div>
+
+                        <!-- 评估依据 -->
+                        <div class="hr-evaluation-section">
+                            <label class="hr-section-label">评估依据</label>
+                            <select id="evaluationBasis" class="hr-select" required>
+                                <option value="">请选择</option>
+                                <option value="resume_review">简历审阅</option>
+                                <option value="online_test">在线测试</option>
+                                <option value="video_interview">视频面试</option>
+                                <option value="onsite_interview">现场面试</option>
+                            </select>
+                        </div>
+
+                        <div class="hr-evaluation-actions">
+                            <button type="button" id="cancelBtn" class="hr-cancel-btn">取消</button>
+                            <button type="submit" class="hr-submit-btn">提交评估</button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="hr-app.js"></script>
+</body>
+</html>

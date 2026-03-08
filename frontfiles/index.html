@@ -212,6 +212,17 @@
                         
                         <button type="button" id="goRegister" class="career-btn-register">创建新账号</button>
                         
+                        <!-- HR登录入口 -->
+                        <div class="hr-login-section">
+                            <div class="hr-divider">
+                                <span>企业HR入口</span>
+                            </div>
+                            <div class="hr-buttons">
+                                <button type="button" id="hrLoginBtn" class="hr-btn">HR登录</button>
+                                <button type="button" id="hrRegisterBtn" class="hr-btn-secondary">HR注册</button>
+                            </div>
+                        </div>
+                        
                         <!-- 服务条款和隐私政策 -->
                         <div class="login-terms">
                             <p>登录即表示同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a></p>
@@ -253,6 +264,106 @@
                     <button type="button" id="forgotResetBtn" class="btn-primary">重置密码</button>
                 </div>
                 <p id="forgotPasswordMsg" class="hint-text" style="margin-top:12px;"></p>
+            </div>
+        </div>
+
+        <!-- HR登录弹窗 -->
+        <div id="hrLoginModal" class="hr-login-modal hidden">
+            <div class="hr-login-modal-content">
+                <button type="button" id="hrLoginModalClose" class="hr-login-modal-close">&times;</button>
+                <div class="hr-login-modal-header">
+                    <div class="hr-register-logo">C</div>
+                    <h3 class="hr-login-modal-title">HR登录</h3>
+                    <p class="hr-login-modal-subtitle">登录以继续评估学生简历</p>
+                </div>
+                <form id="hrLoginForm">
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">账号</label>
+                        <input type="text" id="hrLoginUsername" class="hr-form-input" placeholder="请输入账号" required>
+                    </div>
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">密码</label>
+                        <input type="password" id="hrLoginPassword" class="hr-form-input" placeholder="请输入密码" required>
+                    </div>
+                    <button type="submit" class="hr-submit-btn" style="width: 100%; margin-top: 8px;">登录</button>
+                </form>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="#" id="goHrRegister" class="hr-back-link">还没有账号？立即注册</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- HR注册弹窗 -->
+        <div id="hrRegisterModal" class="hr-login-modal hidden">
+            <div class="hr-register-modal-content">
+                <button type="button" id="hrRegisterModalClose" class="hr-login-modal-close">&times;</button>
+                <div class="hr-register-modal-header">
+                    <div class="hr-register-logo">C</div>
+                    <h3 class="hr-login-modal-title">HR账号注册</h3>
+                    <p class="hr-login-modal-subtitle">填写企业信息，开始评估学生简历</p>
+                </div>
+                <form id="hrRegisterModalForm" enctype="multipart/form-data">
+                    <div class="hr-form-grid">
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">账号</label>
+                            <input type="text" id="hrModalRegUsername" class="hr-form-input" placeholder="请输入账号" required>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">密码</label>
+                            <input type="password" id="hrModalRegPassword" class="hr-form-input" placeholder="请输入密码" required>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">真实姓名</label>
+                            <input type="text" id="hrModalRegRealName" class="hr-form-input" placeholder="请输入真实姓名" required>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">企业名称</label>
+                            <input type="text" id="hrModalRegCompanyName" class="hr-form-input" placeholder="请输入企业名称" required>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">企业规模</label>
+                            <select id="hrModalRegCompanySize" class="hr-select" required>
+                                <option value="">请选择</option>
+                                <option value="50人以下">50人以下</option>
+                                <option value="50-500人">50-500人</option>
+                                <option value="500人以上">500人以上</option>
+                            </select>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">所属行业</label>
+                            <select id="hrModalRegIndustry" class="hr-select" required>
+                                <option value="">请选择</option>
+                                <option value="互联网">互联网</option>
+                                <option value="金融">金融</option>
+                                <option value="制造">制造</option>
+                                <option value="教育">教育</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">岗位</label>
+                            <select id="hrModalRegHrRole" class="hr-select" required>
+                                <option value="">请选择</option>
+                                <option value="HR专员">HR专员</option>
+                                <option value="招聘主管">招聘主管</option>
+                                <option value="部门经理">部门经理</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">营业执照（可选，用于认证）</label>
+                        <div class="hr-file-upload" id="hrModalFileUpload">
+                            <div class="hr-file-upload-icon">📄</div>
+                            <p class="hr-file-upload-text">点击或拖拽上传营业执照<br>支持 JPG、PNG、PDF 格式</p>
+                            <input type="file" id="hrModalRegBusinessLicense" accept=".jpg,.jpeg,.png,.pdf" style="display: none;">
+                        </div>
+                        <p id="hrModalFileName" style="margin-top: 8px; color: var(--text-secondary); font-size: 13px;"></p>
+                    </div>
+                    <button type="submit" class="hr-submit-btn" style="width: 100%; margin-top: 8px;">注册</button>
+                </form>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="#" id="goHrLoginFromModal" class="hr-back-link">← 返回登录</a>
+                </div>
             </div>
         </div>
 
@@ -2166,6 +2277,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="api.js?v=18&t=20260307"></script>
     <script src="app.js?v=18&t=20260307"></script>
+    <script src="hr-app.js"></script>
     <link rel="stylesheet" href="styles.css?v=10&t=20260305">
     
     <!-- 粒子效果已关闭，背景为纯色暖米白 -->

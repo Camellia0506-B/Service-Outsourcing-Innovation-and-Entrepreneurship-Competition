@@ -16705,6 +16705,905 @@ body.on-login-page #agentAssistant { display: none !important; }
     display: flex !important;
 }
 
-/* 小智：登录页隐藏，非登录页显示（恢复原有逻辑） */
+/* 小智：登录页隐藏，非登录页显示（恢复原有逻辑） */       
 body.on-login-page #agentFab { display: none !important; }
 body:not(.on-login-page) #agentFab { display: flex !important; }
+
+/* ==================== HR评估模块样式 ==================== */
+
+/* HR登录入口区域 */
+.hr-login-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.hr-divider {
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.hr-divider::before,
+.hr-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.hr-divider::before {
+    left: 0;
+}
+
+.hr-divider::after {
+    right: 0;
+}
+
+.hr-divider span {
+    background: white;
+    padding: 0 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.hr-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.hr-btn,
+.hr-btn-secondary {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.hr-btn {
+    background: #111111;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.hr-btn:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+
+.hr-btn-secondary {
+    background: transparent;
+    border: 1px solid #e2d4c8;
+    color: #1f1f1f;
+}
+
+.hr-btn-secondary:hover {
+    background: #f7f3ef;
+    transform: translateY(-1px);
+}
+
+/* HR主页面样式 */
+.hr-page-body {
+    display: block !important;
+    height: auto !important;
+    flex-direction: row !important;
+}
+
+.hr-page-app {
+    display: block !important;
+    height: auto !important;
+    flex: none !important;
+    width: 100% !important;
+}
+
+.hr-dashboard {
+    min-height: 100vh;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.hr-navbar {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+}
+
+.hr-navbar-inner {
+    width: 100%;
+    max-width: 1600px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hr-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.hr-navbar-logo {
+    width: 40px;
+    height: 40px;
+    background: #111111;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.hr-navbar-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+}
+
+.hr-navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.hr-user-info {
+    text-align: right;
+}
+
+.hr-user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.hr-company-name {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.hr-logout-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: #f5f5f5;
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.hr-logout-btn:hover {
+    background: #e0e0e0;
+}
+
+.hr-main-content {
+    padding: 32px;
+    max-width: 1600px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    display: block !important;
+}
+
+.hr-dashboard {
+    min-height: 100vh;
+    background: var(--bg-secondary);
+}
+
+.hr-welcome-card {
+    background: linear-gradient(135deg, #1a1a1a, #333333);
+    border-radius: 16px;
+    padding: 32px;
+    color: white;
+    margin-bottom: 24px;
+}
+
+.hr-welcome-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.hr-welcome-subtitle {
+    opacity: 0.9;
+    font-size: 15px;
+}
+
+.hr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.hr-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+}
+
+.hr-stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111111;
+    margin-bottom: 4px;
+}
+
+.hr-stat-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.hr-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hr-student-list {
+    display: grid;
+    gap: 16px;
+}
+
+.hr-student-detail {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.hr-student-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hr-student-detail-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.hr-student-detail-info h4 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.hr-student-detail-score {
+    display: inline-block;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.hr-student-detail-section {
+    margin-bottom: 20px;
+}
+
+.hr-student-detail-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hr-student-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.hr-student-detail-item {
+    background: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.hr-student-detail-item-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.hr-student-detail-item-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.hr-student-detail-highlight {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    padding: 16px;
+    border-radius: 8px;
+    border-left: 4px solid #f5576c;
+}
+
+.hr-student-detail-highlight p {
+    margin: 0;
+    color: #8b4513;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.hr-student-detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.hr-student-detail-actions .hr-view-btn,
+.hr-student-detail-actions .hr-invite-btn {
+    flex: 1;
+}
+
+.hr-student-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    display: flex;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hr-student-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.hr-student-card.selected {
+    border: 2px solid #667eea;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.hr-student-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.hr-student-info {
+    flex: 1;
+}
+
+.hr-student-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.hr-student-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.hr-match-score {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.hr-student-details {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.hr-ability-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.hr-ability-tag {
+    background: #f7f3ef;
+    color: #1f1f1f;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.hr-student-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.hr-invite-btn,
+.hr-view-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.hr-invite-btn {
+    background: #111111;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.hr-invite-btn:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+
+.hr-view-btn {
+    background: transparent;
+    border: 1px solid #e2d4c8;
+    color: #1f1f1f;
+}
+
+.hr-view-btn:hover {
+    background: #f7f3ef;
+    transform: translateY(-1px);
+}
+
+/* HR评估页面样式 */
+.hr-evaluation-page {
+    min-height: 100vh;
+    background: var(--page-bg);
+}
+
+.hr-evaluation-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+.hr-evaluation-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: var(--shadow-lg);
+}
+
+.hr-evaluation-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.hr-student-highlight {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.hr-student-highlight-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.hr-evaluation-section {
+    margin-bottom: 32px;
+}
+
+.hr-section-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.hr-dimension-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.hr-dimension-item {
+    background: var(--light-blue-bg);
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.hr-dimension-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.hr-dimension-slider {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    background: #e0e0e0;
+    border-radius: 4px;
+    outline: none;
+}
+
+.hr-dimension-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #111111;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.hr-dimension-value {
+    text-align: right;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111111;
+    margin-top: 8px;
+}
+
+.hr-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+    font-family: var(--font-body);
+    resize: vertical;
+    transition: all 0.2s;
+}
+
+.hr-textarea:focus {
+    outline: none;
+    border-color: #111111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+}
+
+.hr-select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.hr-select:focus {
+    outline: none;
+    border-color: #111111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+}
+
+.hr-evaluation-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.hr-submit-btn,
+.hr-cancel-btn {
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.hr-submit-btn {
+    background: #111111;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.hr-submit-btn:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+
+.hr-cancel-btn {
+    background: transparent;
+    border: 1px solid #e2d4c8;
+    color: #1f1f1f;
+}
+
+.hr-cancel-btn:hover {
+    background: #f7f3ef;
+    transform: translateY(-1px);
+}
+
+/* HR注册页面样式 */
+.hr-register-page {
+    min-height: 100vh;
+    background: var(--page-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.hr-register-container {
+    width: 100%;
+    max-width: 560px;
+}
+
+.hr-register-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: var(--shadow-lg);
+}
+
+.hr-register-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.hr-register-logo {
+    width: 56px;
+    height: 56px;
+    background: #111111;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 auto 16px;
+}
+
+.hr-register-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.hr-register-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.hr-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.hr-form-group {
+    margin-bottom: 20px;
+}
+
+.hr-form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.hr-form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: var(--font-body);
+    transition: all 0.2s;
+}
+
+.hr-form-input:focus {
+    outline: none;
+    border-color: #111111;
+    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+}
+
+.hr-full-width {
+    grid-column: 1 / -1;
+}
+
+.hr-file-upload {
+    border: 2px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hr-file-upload:hover {
+    border-color: var(--primary-color);
+    background: var(--light-blue-bg);
+}
+
+.hr-file-upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.hr-file-upload-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.hr-register-footer {
+    margin-top: 32px;
+    text-align: center;
+}
+
+.hr-back-link {
+    color: #1f1f1f;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.hr-back-link:hover {
+    text-decoration: underline;
+    color: #111111;
+}
+
+/* HR登录弹窗样式 */
+.hr-login-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.hr-login-modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    padding: 36px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+
+.hr-login-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.hr-login-modal-close:hover {
+    background: #e0e0e0;
+}
+
+.hr-login-modal-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.hr-login-modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.hr-login-modal-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.hr-register-modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 36px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+}
+
+.hr-register-modal-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.hr-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 768px) {
+    .hr-form-grid {
+        grid-template-columns: 1fr;
+    }
+}

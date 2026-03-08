@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR注册 - 职业规划智能体</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%231e3a5f' width='32' height='32' rx='4'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18'>C</text></svg>" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+    <div id="app">
+        <!-- 加载动画 -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+
+        <!-- HR注册页面 -->
+        <div class="hr-register-page">
+            <div class="hr-register-container">
+                <div class="hr-register-card">
+                    <div class="hr-register-header">
+                        <div class="hr-register-logo">C</div>
+                        <h2 class="hr-register-title">HR账号注册</h2>
+                        <p class="hr-register-subtitle">填写企业信息，开始评估学生简历</p>
+                    </div>
+                    <form id="hrRegisterForm" enctype="multipart/form-data">
+                        <div class="hr-form-grid">
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">账号</label>
+                                <input type="text" id="hrRegUsername" class="hr-form-input" placeholder="请输入账号" required>
+                            </div>
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">密码</label>
+                                <input type="password" id="hrRegPassword" class="hr-form-input" placeholder="请输入密码" required>
+                            </div>
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">真实姓名</label>
+                                <input type="text" id="hrRegRealName" class="hr-form-input" placeholder="请输入真实姓名" required>
+                            </div>
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">企业名称</label>
+                                <input type="text" id="hrRegCompanyName" class="hr-form-input" placeholder="请输入企业名称" required>
+                            </div>
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">企业规模</label>
+                                <select id="hrRegCompanySize" class="hr-select" required>
+                                    <option value="">请选择</option>
+                                    <option value="50人以下">50人以下</option>
+                                    <option value="50-500人">50-500人</option>
+                                    <option value="500人以上">500人以上</option>
+                                </select>
+                            </div>
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">所属行业</label>
+                                <select id="hrRegIndustry" class="hr-select" required>
+                                    <option value="">请选择</option>
+                                    <option value="互联网">互联网</option>
+                                    <option value="金融">金融</option>
+                                    <option value="制造">制造</option>
+                                    <option value="教育">教育</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                            <div class="hr-form-group">
+                                <label class="hr-form-label">岗位</label>
+                                <select id="hrRegHrRole" class="hr-select" required>
+                                    <option value="">请选择</option>
+                                    <option value="HR专员">HR专员</option>
+                                    <option value="招聘主管">招聘主管</option>
+                                    <option value="部门经理">部门经理</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="hr-form-group">
+                            <label class="hr-form-label">营业执照（可选，用于认证）</label>
+                            <div class="hr-file-upload" id="hrFileUpload">
+                                <div class="hr-file-upload-icon">📄</div>
+                                <p class="hr-file-upload-text">点击或拖拽上传营业执照<br>支持 JPG、PNG、PDF 格式</p>
+                                <input type="file" id="hrRegBusinessLicense" accept=".jpg,.jpeg,.png,.pdf" style="display: none;">
+                            </div>
+                            <p id="hrFileName" style="margin-top: 8px; color: var(--text-secondary); font-size: 13px;"></p>
+                        </div>
+                        <button type="submit" class="hr-submit-btn" style="width: 100%; margin-top: 8px;">注册</button>
+                    </form>
+                    <div class="hr-register-footer">
+                        <a href="index.html" class="hr-back-link">← 返回登录页面</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api/v1';
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        const fileUpload = document.getElementById('hrFileUpload');
+        const fileInput = document.getElementById('hrRegBusinessLicense');
+        const fileNameDisplay = document.getElementById('hrFileName');
+
+        fileUpload.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileNameDisplay.textContent = '已选择: ' + e.target.files[0].name;
+            }
+        });
+
+        document.getElementById('hrRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading();
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('hrRegUsername').value);
+            formData.append('password', document.getElementById('hrRegPassword').value);
+            formData.append('real_name', document.getElementById('hrRegRealName').value);
+            formData.append('company_name', document.getElementById('hrRegCompanyName').value);
+            formData.append('company_size', document.getElementById('hrRegCompanySize').value);
+            formData.append('industry', document.getElementById('hrRegIndustry').value);
+            formData.append('hr_role', document.getElementById('hrRegHrRole').value);
+            
+            if (fileInput.files.length > 0) {
+                formData.append('business_license', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/hr/register`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('注册成功！等待平台审核后即可登录。');
+                    window.location.href = 'index.html';
+                } else {
+                    alert(result.msg || '注册失败');
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                alert('网络错误，请稍后重试');
+            } finally {
+                hideLoading();
+            }
+        });
+    </script>
+</body>
+</html>
