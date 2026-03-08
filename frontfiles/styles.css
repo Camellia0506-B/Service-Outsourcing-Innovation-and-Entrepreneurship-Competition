@@ -45,6 +45,7 @@
     --dim: #5a6a8a;
     --muted: #aab4cc;
     --border: rgba(79,124,255,0.12);
+    --sidebar-w: 220px;
 }
 
 /* ══════════════════════════════════════
@@ -837,7 +838,8 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
-    position: relative;
+    display: flex;
+    min-height: 100vh;
 }
 
 #globalBlobs {
@@ -930,116 +932,138 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* 导航栏 */
+/* 导航栏：左侧固定侧边栏 */
 .navbar {
-    height: 64px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 1px 0 var(--light-blue-border);
-    position: sticky;
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    height: 100%;
+    background: #ffffff;
+    border-right: 1px solid #e8e6df;
+    border-bottom: none;
+    position: fixed;
     top: 0;
+    left: 0;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
 }
 
 .nav-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 24px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    justify-content: flex-start;
 }
 
 .nav-brand {
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid #e8e6df;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .nav-brand-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: #3b5bdb;
-    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: #1c1c18;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 18px;
-    font-weight: 800;
-    font-family: inherit;
+    flex-shrink: 0;
 }
 
 .nav-brand h1 {
-    font-family: var(--font-heading);
-    font-size: 20px;
+    font-size: 12.5px;
     font-weight: 700;
-    color: var(--deep-blue);
-    letter-spacing: -0.02em;
+    color: #1c1c18;
+    line-height: 1.3;
+    letter-spacing: -.1px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
 }
 
 .nav-menu {
-    display: flex;
-    align-items: center;
     flex: 1;
-    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 10px;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow-y: auto;
 }
 
 .nav-inner {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    background: #f4f5f9;
-    border-radius: 10px;
-    padding: 4px;
-    gap: 2px;
+    flex-direction: column;
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    gap: 4px;
+    width: 100%;
 }
 
 .nav-inner a {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    padding: 6px 18px;
-    font-size: 14px;
-    color: #666;
+    padding: 11px 12px;
+    font-size: 13px;
+    color: #5a5a52;
     text-decoration: none;
-    border-radius: 7px;
+    border-radius: 6px;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: background .1s, color .1s;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
 }
 
 .nav-inner a:hover {
-    color: #3b5bdb;
-    background: rgba(59, 91, 219, 0.06);
+    background: #f7f6f2;
+    color: #1c1c18;
 }
 
 .nav-inner a.active {
-    background: #ffffff;
-    color: #3b5bdb;
+    background: #eef4ee;
+    color: #5e8c65;
     font-weight: 600;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
 }
 
 .nav-user {
+    padding: 12px 14px;
+    border-top: 1px solid #e8e6df;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #eef4ee;
+    border: 1px solid #c9deca;
+    flex-shrink: 0;
     object-fit: cover;
-    background: linear-gradient(135deg, #4f79f6, #3dd6c8);
 }
 
 .nav-user #userName {
@@ -1066,8 +1090,9 @@ body {
 
 /* 页面布局 */
 .page {
-    min-height: calc(100vh - 64px);
-    padding: 40px 24px;
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    padding: 36px 40px 60px;
 }
 
 /* 登录/注册页面 */
@@ -14417,8 +14442,11 @@ body {
 }
 
 /* ========== 合并：悬浮聊天智能体样式（与图谱共存，不覆盖现有样式） ========== */
-body.on-login-page #agentFab,
 body.on-login-page #agentAssistant { display: none !important; }
+
+/* 小智浮层置于所有内容之上（高于暖白背景、导航、弹窗等），避免被遮挡 */
+#agentFab { z-index: 99999 !important; }
+#agentAssistant { z-index: 99998 !important; }
 
 .agent-fab {
   position: fixed;
@@ -14434,7 +14462,7 @@ body.on-login-page #agentAssistant { display: none !important; }
   justify-content: center;
   box-shadow: 0 6px 28px rgba(79, 124, 255, 0.5);
   cursor: move;
-  z-index: 9999;
+  z-index: 99999;
   transition: transform 0.2s, box-shadow 0.2s;
   user-select: none;
 }
@@ -14531,7 +14559,7 @@ body.on-login-page #agentAssistant { display: none !important; }
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 12px 48px rgba(79, 100, 200, 0.2);
-  z-index: 9996;
+  z-index: 99998;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -15474,6 +15502,356 @@ body.on-login-page #agentAssistant { display: none !important; }
     #mockInterviewPage .mock-history-table-head,
     #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
 }
-kInterviewPage .mock-history-table-head,
-    #mockInterviewPage .mock-history-row { grid-template-columns: 1fr 1fr 1fr 1fr 70px 70px; font-size: 12px; }
+
+/* 侧边栏响应式：小屏恢复为顶部横条 */
+@media (max-width: 768px) {
+    .navbar {
+        width: 100%;
+        height: auto;
+        min-height: unset;
+        position: sticky;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid #e8e6df;
+    }
+    .nav-container {
+        flex-direction: row;
+        min-height: unset;
+        align-items: center;
+        padding: 0 16px;
+        height: 56px;
+    }
+    .nav-menu {
+        flex-direction: row;
+        padding: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .nav-inner {
+        flex-direction: row;
+        gap: 2px;
+    }
+    .nav-user { border-top: none; border-left: 1px solid #e8e6df; padding: 0 14px; }
+    .page {
+        margin-left: 0;
+        padding: 24px 20px 40px;
+    }
 }
+
+/* ========== 侧边栏 200px 与导航图标（覆盖此前侧边栏样式） ========== */
+:root {
+    --sidebar-w: 200px;
+}
+.navbar {
+    width: 200px !important;
+    min-height: 100vh;
+    height: 100%;
+    background: #ffffff !important;
+    border-right: 1px solid #e8e6df !important;
+    border-bottom: none !important;
+    position: fixed !important;
+    top: 0; left: 0;
+    z-index: 100;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+.nav-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+.nav-brand {
+    padding: 16px 16px 12px !important;
+    border-bottom: 1px solid #e8e6df;
+    flex-shrink: 0;
+}
+.nav-brand h1 {
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+    letter-spacing: -.1px !important;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif !important;
+}
+.nav-menu {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 12px 10px !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    overflow-y: auto !important;
+}
+.nav-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    background: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    gap: 6px !important;
+    width: 100% !important;
+}
+.nav-inner a {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 12px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+}
+.nav-inner a.active {
+    background: #eef4ee !important;
+    color: #5e8c65 !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+.nav-inner a:hover {
+    background: #f7f6f2 !important;
+    color: #1c1c18 !important;
+}
+.nav-user {
+    padding: 10px 12px !important;
+    border-top: 1px solid #e8e6df !important;
+    flex-shrink: 0 !important;
+}
+.page {
+    margin-left: 200px !important;
+    min-height: 100vh !important;
+    padding: 32px 36px 60px !important;
+}
+
+/* 小智悬浮球定位强制修复（避免被父级 transform/filter 破坏 fixed 参考系） */
+.agent-fab {
+    position: fixed !important;
+    right: 32px !important;
+    bottom: 32px !important;
+    z-index: 99999 !important;
+    transform: none;
+}
+
+#agentAssistant {
+    position: fixed !important;
+    right: 32px !important;
+    bottom: 130px !important;
+    z-index: 99998 !important;
+}
+
+/* 覆盖导航项尺寸（参考图二，增加每项高度与间距） */
+.nav-inner a {
+    padding: 11px 12px !important;
+    font-size: 13px !important;
+    gap: 10px !important;
+    line-height: 1.45 !important;
+    min-height: 40px !important;
+}
+
+.nav-inner a svg {
+    width: 14px !important;
+    height: 14px !important;
+    flex-shrink: 0 !important;
+}
+
+.nav-section-label,
+.nav-inner > div[style] {
+    font-size: 10px !important;
+    padding-top: 14px !important;
+    padding-bottom: 8px !important;
+}
+
+.nav-brand {
+    padding: 18px 16px 14px !important;
+}
+
+.nav-brand-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+}
+
+.nav-brand h1 {
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+}
+
+.nav-user {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+}
+
+.user-avatar {
+    width: 26px !important;
+    height: 26px !important;
+}
+
+#userName {
+    font-size: 12px !important;
+}
+
+/* ══ 小智配色重置：蓝紫 → 暖绿/墨黑 ══ */
+
+/* 悬浮球 */
+.agent-fab {
+    background: #1c1c18 !important;
+    box-shadow: 0 4px 20px rgba(28,28,24,0.25) !important;
+}
+.agent-fab:hover {
+    transform: scale(1.04) !important;
+    box-shadow: 0 6px 28px rgba(28,28,24,0.32) !important;
+}
+/* 雷达扩散环改为墨绿色 */
+.agent-fab::before,
+.agent-fab::after {
+    border-color: rgba(94,140,101,0.3) !important;
+}
+@keyframes agent-fab-radar {
+    0%   { width: 80px; height: 80px; opacity: 0.6; }
+    100% { width: 136px; height: 136px; opacity: 0; }
+}
+/* 悬浮球大小收窄 */
+.agent-fab {
+    width: 52px !important;
+    height: 52px !important;
+}
+.agent-fab-icon {
+    font-size: 24px !important;
+}
+@keyframes agent-fab-radar {
+    0%   { width: 52px; height: 52px; opacity: 0.5; }
+    100% { width: 100px; height: 100px; opacity: 0; }
+}
+.agent-fab-dot {
+    top: 6px !important;
+    right: 6px !important;
+    width: 10px !important;
+    height: 10px !important;
+    background: #5e8c65 !important;
+}
+
+/* 对话面板整体 */
+.agent-assistant {
+    border-radius: 10px !important;
+    box-shadow: 0 8px 32px rgba(28,28,24,0.14) !important;
+    border: 1px solid #e8e6df !important;
+}
+
+/* 面板 header：蓝紫渐变 → 墨色 */
+.agent-header {
+    background: #1c1c18 !important;
+    padding: 12px 14px !important;
+}
+.agent-header-avatar {
+    background: rgba(255,255,255,0.12) !important;
+}
+.agent-status-dot {
+    background: #5e8c65 !important;
+}
+
+/* AI气泡：蓝底 → 暖纸白 */
+.agent-msg-bot .agent-msg-bubble {
+    background: #f7f6f2 !important;
+    color: #1c1c18 !important;
+    border: 1px solid #e8e6df !important;
+    border-radius: 3px 10px 10px 10px !important;
+}
+
+/* 用户气泡：蓝紫渐变 → 墨黑 */
+.agent-msg-user .agent-msg-bubble {
+    background: #1c1c18 !important;
+    color: #fff !important;
+    border-radius: 10px 3px 10px 10px !important;
+}
+
+/* 链接颜色 */
+.agent-msg-bubble .agent-inline-link {
+    color: #5e8c65 !important;
+    border-bottom-color: rgba(94,140,101,0.4) !important;
+}
+.agent-msg-bubble .agent-inline-link:hover {
+    color: #4a7050 !important;
+}
+
+/* 胶囊快捷按钮：蓝紫 → 墨黑/绿描边 */
+.agent-msg-bubble .agent-capsule-btn {
+    background: #1c1c18 !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+}
+.agent-msg-bubble .agent-capsule-btn-secondary {
+    background: #fff !important;
+    color: #5e8c65 !important;
+    border: 1.5px solid #5e8c65 !important;
+}
+.agent-msg-bubble .agent-capsule-btn-secondary:hover {
+    background: #eef4ee !important;
+}
+
+/* 打字动画点：蓝 → 绿 */
+.agent-typing span {
+    background: rgba(94,140,101,0.5) !important;
+}
+
+/* 快捷功能栏 */
+.agent-quick-bar {
+    background: #f7f6f2 !important;
+    border-top-color: #e8e6df !important;
+}
+.agent-quick-btn {
+    border-radius: 5px !important;
+    border-color: #e8e6df !important;
+    color: #5a5a52 !important;
+}
+.agent-quick-btn:hover {
+    background: #eef4ee !important;
+    border-color: #c9deca !important;
+    color: #5e8c65 !important;
+}
+
+/* 输入框 */
+.agent-input {
+    border-color: #e8e6df !important;
+    border-radius: 7px !important;
+    color: #1c1c18 !important;
+    background: #f7f6f2 !important;
+}
+.agent-input:focus {
+    border-color: #5e8c65 !important;
+    box-shadow: 0 0 0 2px rgba(94,140,101,0.15) !important;
+}
+
+/* 发送按钮：蓝紫渐变 → 墨黑 */
+.agent-send {
+    background: #1c1c18 !important;
+    border-radius: 7px !important;
+    width: 44px !important;
+    height: 38px !important;
+}
+.agent-send:hover { opacity: 0.8 !important; }
+
+/* tooltip */
+.agent-fab-tooltip {
+    background: #1c1c18 !important;
+    border-radius: 6px !important;
+}
+.agent-fab-tooltip::after {
+    border-top-color: #1c1c18 !important;
+}
+
+/* 登录/注册页隐藏侧边栏：依赖 .hidden class，不依赖 on-login-page */
+#navbar.hidden {
+    display: none !important;
+}
+
+/* 登录后强制显示侧边栏和小智（兜底） */
+#navbar:not(.hidden) {
+    display: flex !important;
+}
+
+/* 小智：登录页隐藏，非登录页显示（恢复原有逻辑） */
+body.on-login-page #agentFab { display: none !important; }
+body:not(.on-login-page) #agentFab { display: flex !important; }

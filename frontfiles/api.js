@@ -197,10 +197,10 @@ class API {
             return { success: false, msg: result.msg, code: result.code };
         } catch (error) {
             clearTimeout(timeoutId);
-            // 有自动回退的接口（如 recommend-jobs）仅打一行 warn，避免控制台刷屏报错
+            // 有自动回退的接口（如 recommend-jobs）仅打一行提示，避免控制台报错刷屏
             const hasFallback = endpoint.startsWith('/matching/recommend-jobs');
             if (hasFallback) {
-                console.warn('[AI]', endpoint, '不可用，将尝试备用服务或演示数据');
+                console.log('[AI]', endpoint, '暂未连通，正在尝试备用服务或演示数据');
             } else {
                 console.error('API请求错误(AI):', { endpoint, url, timeoutMs, error });
             }
@@ -2271,6 +2271,10 @@ async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = 
             }
             result = javaResult;
         }
+        // 若 Java 仍失败，返回演示数据，避免页面一直加载或报错
+        if (!result.success) {
+            return getRecommendedJobsDemoData();
+        }
         return result;
     } catch (e) {
         const throwIsConnection = (err) => (err && (String(err.message || '').includes('Failed to fetch') || String(err.message || '').includes('Load failed')));
@@ -2283,19 +2287,25 @@ async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = 
                     code: javaResult.code
                 };
             }
-            return javaResult;
+            if (javaResult.success) return javaResult;
+            return getRecommendedJobsDemoData();
         } catch (e2) {
             console.error('[getRecommendedJobs] 请求异常:', e2);
-            return {
-                success: false,
-                msg: (e2 && e2.name === 'AbortError')
-                    ? '请求超时，请确认后端服务已启动（Java 5000 或 AI 5002）'
-                    : (throwIsConnection(e) || throwIsConnection(e2))
-                        ? AI_SERVICE_START_HINT
-                        : ((e2 && e2.message) || '推荐岗位服务暂不可用，请稍后重试')
-            };
+            return getRecommendedJobsDemoData();
         }
     }
+}
+
+/** AI/Java 均不可用时返回的演示数据结构，保证智能推荐页可正常展示 */
+function getRecommendedJobsDemoData() {
+    try {
+        if (typeof api !== 'undefined' && api.mockJobs && api.mockRecommendation) {
+            const recJobList = api.mockJobs().slice(0, 6);
+            const recommendations = recJobList.map((j, i) => api.mockRecommendation(j, 85 - i * 3 + Math.floor(Math.random() * 5)));
+            return { success: true, data: { total_matched: recommendations.length, recommendations }, msg: '当前为演示数据，推荐服务恢复后将显示真实推荐' };
+        }
+    } catch (_) {}
+    return { success: true, data: { total_matched: 0, recommendations: [] }, msg: '暂无推荐数据，请稍后重试或完善能力画像后刷新' };
 }
 
 // 人岗匹配分析（API 使用 job_id）
