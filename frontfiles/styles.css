@@ -839,7 +839,16 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
     display: flex;
+    height: 100vh;
     min-height: 100vh;
+}
+
+/* 外层布局：navbar + 主内容区 */
+#app {
+    display: flex;
+    height: 100vh;
+    flex: 1;
+    min-width: 0;
 }
 
 #globalBlobs {
@@ -1088,11 +1097,14 @@ body {
     border-color: var(--danger-color);
 }
 
-/* 页面布局 */
+/* 页面布局：主内容区域，占满剩余空间并可滚动 */
 .page {
     margin-left: var(--sidebar-w);
     min-height: 100vh;
     padding: 36px 40px 60px;
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
 }
 
 /* 登录/注册页面 */
@@ -13614,13 +13626,13 @@ body {
 
 /* 首页样式 */
 
-/* 主页面容器 */
+/* 主页面容器：不限制高度，允许内容撑开与滚动 */
 #dashboardPage.dashboard-page {
-    min-height: 100vh;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
     padding: 40px 24px 60px;
     background: transparent;
-    position: relative;
-    overflow: hidden;
     position: relative;
     z-index: 1;
     max-width: 1400px;
@@ -14770,6 +14782,7 @@ body.on-login-page #agentAssistant { display: none !important; }
 
 /* ģ������ģ����ʽ */
 /* 模拟面试页面样式（参考 mock_interview_ui.html，仅作用于 #mockInterviewPage） */
+/* 面试模块：无固定宽度限制，全宽 + border-box */
 #mockInterviewPage {
     --mock-ink: #1c1c18;
     --mock-ink-2: #5a5a52;
@@ -14791,10 +14804,10 @@ body.on-login-page #agentAssistant { display: none !important; }
     font-family: 'Noto Sans SC', sans-serif;
     background: var(--mock-bg);
     color: var(--mock-ink);
-    max-width: none;
     width: 100%;
-    padding: 24px 40px;
+    max-width: 100%;
     box-sizing: border-box;
+    padding: 24px 40px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
