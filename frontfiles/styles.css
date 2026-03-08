@@ -786,6 +786,290 @@
     width: 18px;
 }
 
+/* ══════════════════════════════════════
+   个人档案 - 首页风格：暖色、无 emoji、无蓝紫渐变、直角卡片无侧条
+   ══════════════════════════════════════ */
+#profilePage {
+    background: #f5f0eb;
+}
+#profilePage .profile-shell {
+    background: #f5f0eb;
+}
+#profilePage .topbar {
+    background: #fff;
+    border-bottom: 1px solid #e4d6c8;
+    box-shadow: none;
+}
+#profilePage .logo {
+    color: #1f1f1f;
+}
+#profilePage .logo-dot {
+    background: #111;
+    animation: none;
+}
+#profilePage .sep {
+    background: #e4d6c8;
+}
+#profilePage .topbar-title {
+    color: #5a524a;
+}
+#profilePage .avatar {
+    background: #111;
+    color: #fff;
+    box-shadow: none;
+}
+#profilePage .body {
+    background: #f5f0eb;
+}
+#profilePage .sidebar {
+    background: #fff;
+    border-right: 1px solid #e4d6c8;
+}
+#profilePage .tab-label {
+    color: #9a8f82;
+}
+#profilePage .tab {
+    color: #5a524a;
+}
+#profilePage .tab:hover {
+    background: #f7f3ef;
+    color: #1f1f1f;
+}
+#profilePage .tab.active {
+    background: #f7f3ef;
+    color: #1f1f1f;
+    font-weight: 600;
+}
+#profilePage .tab .tab-icon:empty,
+#profilePage .tab .tab-icon[aria-hidden="true"] {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c0b4a8;
+    flex-shrink: 0;
+}
+#profilePage .prog-card {
+    background: #1f1f1f;
+    border-radius: 0;
+    color: #fff;
+    box-shadow: none;
+}
+#profilePage .prog-bg {
+    background: rgba(255,255,255,.2);
+}
+#profilePage .prog-fill {
+    background: #fff;
+}
+#profilePage .panels {
+    background: #f5f0eb;
+}
+#profilePage .panels::-webkit-scrollbar-thumb {
+    background: #e4d6c8;
+}
+#profilePage .card {
+    background: #fff;
+    border-radius: 0;
+    border: 1px solid #e4d6c8;
+    box-shadow: none;
+}
+#profilePage .sec-title::before {
+    display: none;
+}
+#profilePage .sec-title {
+    color: #1f1f1f;
+}
+#profilePage .ai-hero {
+    background: #1f1f1f;
+    border-radius: 0;
+    box-shadow: none;
+}
+#profilePage .ai-hero:hover {
+    transform: none;
+    box-shadow: none;
+}
+#profilePage .ai-hero::before,
+#profilePage .ai-hero::after {
+    display: none;
+}
+#profilePage .ai-hero-badge {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+}
+#profilePage .ai-hero-badge .spark {
+    display: none;
+}
+#profilePage .ai-hero h2 {
+    color: #fff;
+}
+#profilePage .ai-hero p {
+    color: rgba(255,255,255,.85);
+}
+#profilePage .drop-zone {
+    border: 1px dashed rgba(255,255,255,.4);
+    background: rgba(255,255,255,.08);
+    border-radius: 0;
+}
+#profilePage .drop-zone.dragover {
+    background: rgba(255,255,255,.15);
+    border-color: rgba(255,255,255,.6);
+}
+#profilePage .drop-icon:empty,
+#profilePage .drop-icon[aria-hidden="true"] {
+    display: none;
+}
+#profilePage .btn-upload {
+    background: #fff;
+    color: #1f1f1f;
+    border-radius: 0;
+    box-shadow: none;
+}
+#profilePage .btn-upload:hover {
+    background: #f7f3ef;
+    box-shadow: none;
+}
+#profilePage .ai-feat {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 0;
+}
+#profilePage .ai-feat-icon:empty,
+#profilePage .ai-feat-icon[aria-hidden="true"] {
+    display: none;
+}
+#profilePage .manual-divider span {
+    color: #9a8f82;
+}
+#profilePage .manual-divider::before,
+#profilePage .manual-divider::after {
+    background: #e4d6c8;
+}
+#profilePage .manual-title-icon:empty,
+#profilePage .manual-title-icon[aria-hidden="true"] {
+    display: none;
+}
+#profilePage .manual-title {
+    color: #1f1f1f;
+}
+#profilePage .manual-grid-card {
+    padding: 14px 16px;
+    cursor: pointer;
+    border-radius: 0;
+}
+#profilePage .manual-grid-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f1f1f;
+    margin-bottom: 3px;
+}
+#profilePage .manual-grid-desc {
+    font-size: 11.5px;
+    color: #9a8f82;
+}
+#profilePage .profile-tip-box {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #f7f3ef;
+    border-radius: 0;
+    border: 1px solid #e4d6c8;
+}
+#profilePage .profile-tip-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #1f1f1f;
+    margin-bottom: 5px;
+}
+#profilePage .profile-tip-desc {
+    font-size: 12px;
+    color: #5a524a;
+    line-height: 1.6;
+}
+#profilePage .field label {
+    color: #9a8f82;
+}
+#profilePage .fi {
+    background: #f7f3ef;
+    border: 1px solid #e4d6c8;
+    border-radius: 0;
+    color: #1f1f1f;
+}
+#profilePage .fi:focus {
+    border-color: #cfa47c;
+    background: #fff;
+    box-shadow: none;
+}
+#profilePage .fi::placeholder {
+    color: #b9afa6;
+}
+#profilePage .btn-primary {
+    background: #111;
+    color: #fff;
+    box-shadow: none;
+}
+#profilePage .btn-primary:hover {
+    background: #000;
+    transform: translateY(-1px);
+}
+#profilePage .btn-outline {
+    background: #fff;
+    color: #1f1f1f;
+    border: 1px solid #e4d6c8;
+}
+#profilePage .btn-outline:hover {
+    background: #f7f3ef;
+}
+#profilePage .btn-ghost {
+    background: #f7f3ef;
+    color: #1f1f1f;
+}
+#profilePage .btn-ghost:hover {
+    background: #f0e7df;
+}
+#profilePage .skill-cat {
+    background: #f7f3ef;
+    border: 1px solid #e4d6c8;
+    border-radius: 0;
+}
+#profilePage .skill-cat-name {
+    color: #1f1f1f;
+}
+#profilePage .tag {
+    background: #f7f3ef;
+    border: 1px solid #e4d6c8;
+    color: #1f1f1f;
+    border-radius: 0;
+}
+#profilePage .tag:hover {
+    background: #1f1f1f;
+    color: #fff;
+    border-color: #1f1f1f;
+}
+#profilePage .tag-input {
+    border-bottom-color: #e4d6c8;
+}
+#profilePage .tag-input:focus {
+    border-color: #cfa47c;
+}
+#profilePage .exp-item {
+    background: #f7f3ef;
+    border: 1px solid #e4d6c8;
+    border-radius: 0;
+}
+#profilePage .exp-item:hover {
+    border-color: #cfa47c;
+}
+#profilePage .exp-item-no {
+    color: #9a8f82;
+}
+#profilePage .bottombar {
+    background: #fff;
+    border-top: 1px solid #e4d6c8;
+    box-shadow: none;
+}
+#profilePage .save-status {
+    color: #9a8f82;
+}
+
 /* 底部栏 */
 #profilePage .bottombar {
     height: 52px;
@@ -14724,7 +15008,7 @@ body.on-login-page #globalBlobs { display: none; }
 .resume-parse-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(26, 63, 168, 0.25);
+    background: rgba(90, 82, 74, 0.2);
     backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
@@ -14738,14 +15022,15 @@ body.on-login-page #globalBlobs { display: none; }
     opacity: 1;
     pointer-events: all;
 }
-/* 弹窗外层：白色圆角卡片 */
+/* 弹窗外层：白色直角卡片，无蓝紫、无重阴影 */
 .resume-parse-modal {
     background: #fff;
-    border-radius: 20px;
+    border-radius: 0;
     width: 460px;
     max-width: 92vw;
     padding: 32px 32px 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    box-shadow: none;
+    border: 1px solid #e4d6c8;
 }
 .resume-parse-head {
     margin-bottom: 24px;
@@ -14753,12 +15038,12 @@ body.on-login-page #globalBlobs { display: none; }
 .resume-parse-title {
     font-size: 18px;
     font-weight: 600;
-    color: var(--text, #1a2340);
+    color: #1f1f1f;
     margin-bottom: 5px;
 }
 .resume-parse-sub {
     font-size: 13px;
-    color: var(--dim, #5a6a8a);
+    color: #9a8f82;
 }
 /* 步骤列表：紧凑行，无独立卡片 */
 .resume-parse-steps {
@@ -14772,13 +15057,13 @@ body.on-login-page #globalBlobs { display: none; }
     align-items: center;
     justify-content: space-between;
     padding: 12px 14px;
-    border-radius: 10px;
+    border-radius: 0;
     transition: background 0.2s;
 }
 .resume-parse-step.pending { background: transparent; }
-.resume-parse-step.active { background: var(--light-blue-bg, rgba(79,124,255,0.06)); }
-.resume-parse-step.done { background: var(--light-blue-bg, rgba(79,124,255,0.06)); }
-.resume-parse-step:hover { background: var(--light-blue-bg, rgba(79,124,255,0.06)); }
+.resume-parse-step.active { background: #f7f3ef; }
+.resume-parse-step.done { background: #f7f3ef; }
+.resume-parse-step:hover { background: #f7f3ef; }
 .resume-step-left {
     display: flex;
     flex-direction: column;
@@ -14787,18 +15072,18 @@ body.on-login-page #globalBlobs { display: none; }
 .resume-step-name {
     font-size: 13.5px;
     font-weight: 600;
-    color: var(--text, #1a2340);
+    color: #1f1f1f;
     transition: color 0.2s;
 }
-.resume-parse-step.pending .resume-step-name { color: var(--muted, #aab4cc); }
-.resume-parse-step.active .resume-step-name { color: var(--accent); }
+.resume-parse-step.pending .resume-step-name { color: #9a8f82; }
+.resume-parse-step.active .resume-step-name { color: #1f1f1f; }
 .resume-step-desc {
     font-size: 11.5px;
-    color: var(--muted, #aab4cc);
+    color: #9a8f82;
     transition: color 0.2s;
 }
-.resume-parse-step.done .resume-step-desc { color: var(--dim, #5a6a8a); }
-.resume-parse-step.active .resume-step-desc { color: var(--dim, #5a6a8a); }
+.resume-parse-step.done .resume-step-desc { color: #5a524a; }
+.resume-parse-step.active .resume-step-desc { color: #5a524a; }
 /* 右侧状态：22px 圆形，待执行=空心灰圈，进行中=旋转圈，完成=实心+白勾 */
 .resume-step-status {
     width: 22px;
@@ -14808,20 +15093,20 @@ body.on-login-page #globalBlobs { display: none; }
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border: 2px solid var(--border);
+    border: 2px solid #e4d6c8;
 }
 .resume-parse-step.pending .resume-step-status {
-    border: 2px solid var(--border);
+    border: 2px solid #e4d6c8;
 }
 .resume-parse-step.active .resume-step-status {
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
+    border: 2px solid #e4d6c8;
+    border-top-color: #111;
     animation: resume-parse-spin 0.8s linear infinite;
 }
 @keyframes resume-parse-spin { to { transform: rotate(360deg); } }
 .resume-parse-step.done .resume-step-status {
-    background: var(--accent);
-    border: 2px solid var(--accent);
+    background: #111;
+    border: 2px solid #111;
 }
 .resume-step-check {
     display: none;
@@ -14840,21 +15125,21 @@ body.on-login-page #globalBlobs { display: none; }
 .resume-parse-progress-bg {
     flex: 1;
     height: 5px;
-    background: var(--light-blue-bg, #eef3ff);
-    border-radius: 100px;
+    background: #f0e7df;
+    border-radius: 0;
     overflow: hidden;
 }
 .resume-parse-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary-dark), var(--accent), var(--accent2));
-    border-radius: 100px;
+    background: #111;
+    border-radius: 0;
     width: 0%;
     transition: width 0.6s ease;
 }
 .resume-parse-progress-num {
     font-size: 13px;
     font-weight: 700;
-    color: var(--accent);
+    color: #1f1f1f;
     min-width: 36px;
     text-align: right;
 }
@@ -14873,8 +15158,8 @@ body.on-login-page #globalBlobs { display: none; }
 .resume-parse-done-check {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 50%;
+    background: #111;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14882,29 +15167,29 @@ body.on-login-page #globalBlobs { display: none; }
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 12px;
-    box-shadow: 0 4px 20px rgba(79,124,255,0.3);
+    box-shadow: none;
     animation: resumePopIn 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 @keyframes resumePopIn {
     from { transform: scale(0.5); opacity:0; }
     to   { transform: scale(1); opacity:1; }
 }
-.resume-parse-done-title { font-size: 16px; font-weight: 700; color: var(--text, #1a2340); margin-bottom: 4px; }
-.resume-parse-done-sub   { font-size: 12px; color: var(--dim, #5a6a8a); margin-bottom: 16px; }
+.resume-parse-done-title { font-size: 16px; font-weight: 700; color: #1f1f1f; margin-bottom: 4px; }
+.resume-parse-done-sub   { font-size: 12px; color: #5a524a; margin-bottom: 16px; }
 .resume-parse-done-btn {
     padding: 10px 32px;
-    background: var(--accent);
+    background: #111;
     color: #fff;
     border: none;
-    border-radius: 100px;
+    border-radius: 0;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     font-family: inherit;
-    box-shadow: 0 4px 16px rgba(79,124,255,0.3);
+    box-shadow: none;
     transition: all 0.15s;
 }
-.resume-parse-done-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.resume-parse-done-btn:hover { background: #000; transform: translateY(-1px); }
 
 /* ══════════════════
    换岗路径 — 血缘图谱
