@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -166,6 +167,121 @@ public class HrController {
         return ApiResponse.success("success", response);
     }
 
+    @GetMapping("/evaluation/invitations")
+    public ApiResponse<GetInvitationsResponse> getInvitations(
+            @RequestParam("hr_id") Long hrId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        
+        List<GetInvitationsResponse.InvitationItem> invitations = new ArrayList<>();
+        
+        invitations.add(GetInvitationsResponse.InvitationItem.builder()
+                .invitationId("inv_001")
+                .anonymousStudentId("student_anon_001")
+                .targetJob("AI产品经理")
+                .message("您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。")
+                .status("pending")
+                .sentAt("2025-03-10 15:00:00")
+                .build());
+        
+        invitations.add(GetInvitationsResponse.InvitationItem.builder()
+                .invitationId("inv_002")
+                .anonymousStudentId("student_anon_002")
+                .targetJob("后端开发工程师")
+                .message("您好，我们正在招聘后端开发工程师，您的经历非常匹配，期待与您交流。")
+                .status("accepted")
+                .sentAt("2025-03-09 10:30:00")
+                .build());
+        
+        GetInvitationsResponse response = GetInvitationsResponse.builder()
+                .total(invitations.size())
+                .list(invitations)
+                .build();
+        
+        return ApiResponse.success("success", response);
+    }
+
+    @PostMapping("/evaluation/invite")
+    public ApiResponse<InviteStudentResponse> inviteStudent(@RequestBody InviteStudentRequest request) {
+        if (request.getHrId() == null) {
+            return ApiResponse.badRequest("HR ID不能为空");
+        }
+        if (request.getAnonymousStudentId() == null || request.getAnonymousStudentId().isBlank()) {
+            return ApiResponse.badRequest("学生ID不能为空");
+        }
+        if (request.getTargetJob() == null || request.getTargetJob().isBlank()) {
+            return ApiResponse.badRequest("目标岗位不能为空");
+        }
+        
+        InviteStudentResponse response = InviteStudentResponse.builder()
+                .invitationId("inv_" + System.currentTimeMillis())
+                .status("pending")
+                .sentAt("2025-03-10 15:00:00")
+                .build();
+        
+        return ApiResponse.success("邀请已发送，等待学生确认", response);
+    }
+
+    @GetMapping("/evaluation/evaluations")
+    public ApiResponse<GetEvaluationsResponse> getEvaluations(
+            @RequestParam("hr_id") Long hrId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size) {
+        
+        List<GetEvaluationsResponse.EvaluationItem> evaluations = new ArrayList<>();
+        
+        evaluations.add(GetEvaluationsResponse.EvaluationItem.builder()
+                .evaluationId("eval_001")
+                .invitationId("inv_002")
+                .anonymousStudentId("student_anon_002")
+                .targetJob("后端开发工程师")
+                .status("in_progress")
+                .createdAt("2025-03-09 11:00:00")
+                .build());
+        
+        evaluations.add(GetEvaluationsResponse.EvaluationItem.builder()
+                .evaluationId("eval_003")
+                .invitationId("inv_003")
+                .anonymousStudentId("student_anon_003")
+                .targetJob("算法工程师")
+                .status("completed")
+                .createdAt("2025-03-08 14:00:00")
+                .submittedAt("2025-03-08 16:30:00")
+                .overallImpression("good")
+                .hiringIntent("strong")
+                .build());
+        
+        GetEvaluationsResponse response = GetEvaluationsResponse.builder()
+                .total(evaluations.size())
+                .list(evaluations)
+                .build();
+        
+        return ApiResponse.success("success", response);
+    }
+
+    @PostMapping("/evaluation/{evaluation_id}/submit")
+    public ApiResponse<SubmitEvaluationResponse> submitEvaluation(
+            @PathVariable("evaluation_id") String evaluationId,
+            @RequestBody SubmitEvaluationRequest request) {
+        if (request.getHrId() == null) {
+            return ApiResponse.badRequest("HR ID不能为空");
+        }
+        if (request.getEvaluationForm() == null) {
+            return ApiResponse.badRequest("评估表单不能为空");
+        }
+        
+        SubmitEvaluationResponse response = SubmitEvaluationResponse.builder()
+                .evaluationId(evaluationId)
+                .status("completed")
+                .profileUpdated(true)
+                .submittedAt("2025-03-12 16:30:00")
+                .build();
+        
+        return ApiResponse.success("评估提交成功", response);
+    }
+
     @Data
     private static class HrRegisterRequest {
         private String username;
@@ -252,5 +368,129 @@ public class HrController {
             @JsonProperty("is_open_to_contact")
             private Boolean isOpenToContact;
         }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class GetInvitationsResponse {
+        private Integer total;
+        private List<InvitationItem> list;
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        private static class InvitationItem {
+            @JsonProperty("invitation_id")
+            private String invitationId;
+            @JsonProperty("anonymous_student_id")
+            private String anonymousStudentId;
+            @JsonProperty("target_job")
+            private String targetJob;
+            private String message;
+            private String status;
+            @JsonProperty("sent_at")
+            private String sentAt;
+        }
+    }
+
+    @Data
+    private static class InviteStudentRequest {
+        @JsonProperty("hr_id")
+        private Long hrId;
+        @JsonProperty("anonymous_student_id")
+        private String anonymousStudentId;
+        @JsonProperty("target_job")
+        private String targetJob;
+        private String message;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class InviteStudentResponse {
+        @JsonProperty("invitation_id")
+        private String invitationId;
+        private String status;
+        @JsonProperty("sent_at")
+        private String sentAt;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class GetEvaluationsResponse {
+        private Integer total;
+        private List<EvaluationItem> list;
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        private static class EvaluationItem {
+            @JsonProperty("evaluation_id")
+            private String evaluationId;
+            @JsonProperty("invitation_id")
+            private String invitationId;
+            @JsonProperty("anonymous_student_id")
+            private String anonymousStudentId;
+            @JsonProperty("target_job")
+            private String targetJob;
+            private String status;
+            @JsonProperty("created_at")
+            private String createdAt;
+            @JsonProperty("submitted_at")
+            private String submittedAt;
+            @JsonProperty("overall_impression")
+            private String overallImpression;
+            @JsonProperty("hiring_intent")
+            private String hiringIntent;
+        }
+    }
+
+    @Data
+    private static class SubmitEvaluationRequest {
+        @JsonProperty("hr_id")
+        private Long hrId;
+        @JsonProperty("evaluation_id")
+        private String evaluationId;
+        @JsonProperty("evaluation_form")
+        private EvaluationForm evaluationForm;
+
+        @Data
+        public static class EvaluationForm {
+            @JsonProperty("overall_impression")
+            private String overallImpression;
+            @JsonProperty("dimension_scores")
+            private java.util.Map<String, Integer> dimensionScores;
+            @JsonProperty("hiring_intent")
+            private String hiringIntent;
+            @JsonProperty("strengths_noted")
+            private String strengthsNoted;
+            @JsonProperty("weaknesses_noted")
+            private String weaknessesNoted;
+            @JsonProperty("recommended_positions")
+            private List<String> recommendedPositions;
+            @JsonProperty("evaluation_basis")
+            private String evaluationBasis;
+        }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class SubmitEvaluationResponse {
+        @JsonProperty("evaluation_id")
+        private String evaluationId;
+        private String status;
+        @JsonProperty("profile_updated")
+        private Boolean profileUpdated;
+        @JsonProperty("submitted_at")
+        private String submittedAt;
     }
 }

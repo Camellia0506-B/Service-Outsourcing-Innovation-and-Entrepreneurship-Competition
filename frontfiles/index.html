@@ -49,6 +49,8 @@
                         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a0a098;padding:10px 9px 5px;">扩展功能</div>
                         <a href="#" class="nav-link" data-page="tracking"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1.5" y="2.5" width="11" height="9" rx="1.4" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 2v2M9.5 2v2M1.5 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>求职跟踪</a>
                         <a href="#" class="nav-link" data-page="mockInterview"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M2 2.5h10a.5.5 0 01.5.5v6a.5.5 0 01-.5.5H8L5.5 12V9.5H2a.5.5 0 01-.5-.5V3a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.4"/></svg>模拟面试</a>
+                        <a href="#" class="nav-link" data-page="privacy"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1L2 3v4c0 3.5 2.5 6.5 5 7 2.5-.5 5-3.5 5-7V3L7 1z" stroke="currentColor" stroke-width="1.4"/><path d="M7 4.5v3M5.5 6.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>隐私设置</a>
+                        <a href="#" class="nav-link" data-page="resume"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M2 2h10a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.4"/><path d="M4 4h6M4 7h6M4 10h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>简历生成</a>
                     </div>
                 </div>
                 <div class="nav-user">
@@ -2281,6 +2283,222 @@
                         <span class="btn-arrow">→</span>
                     </button>
                     <p class="quick-register-hint">点击即表示同意我们的服务条款</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 隐私设置页面 -->
+        <div id="privacyPage" class="page hidden">
+            <div class="matching-container">
+                <div class="page-header">
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">隐私设置</span>
+                    </div>
+                    <p class="page-subtitle">管理您的数据隐私和授权设置，控制哪些信息可以被HR查看</p>
+                </div>
+
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <!-- 隐私设置卡片 -->
+                    <div class="hr-welcome-card" style="margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 8px 0; color: #1c1c18; font-size: 18px;">数据隐私设置</h3>
+                        <p style="margin: 0; color: #666; font-size: 14px;">您的数据安全和隐私对我们至关重要，请根据您的意愿设置</p>
+                    </div>
+
+                    <!-- 设置选项 -->
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- 简历对HR可见 -->
+                        <div class="hr-student-card">
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 16px;">简历对HR可见</h4>
+                                        <p style="margin: 0; color: #666; font-size: 13px;">开启后，企业HR可以浏览您的匿名简历（隐去姓名、学校等敏感信息）</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="resumeVisibleToHr">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 允许HR联系 -->
+                        <div class="hr-student-card">
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 16px;">允许HR发起评估邀请</h4>
+                                        <p style="margin: 0; color: #666; font-size: 13px;">开启后，企业HR可以向您发起评估邀请</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="allowHrContact">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 算法优化 -->
+                        <div class="hr-student-card">
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 16px;">允许数据用于平台算法优化</h4>
+                                        <p style="margin: 0; color: #666; font-size: 13px;">您的匿名数据将用于改进平台的推荐算法</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="allowAlgorithmOptimization">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 学术研究 -->
+                        <div class="hr-student-card">
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 16px;">允许用于学术研究</h4>
+                                        <p style="margin: 0; color: #666; font-size: 13px;">您的脱敏数据可用于学术研究目的</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="allowResearch">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 数据保留年限 -->
+                        <div class="hr-student-card">
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 16px;">数据保留年限</h4>
+                                        <p style="margin: 0; color: #666; font-size: 13px;">设置您的数据在平台上的保留时间</p>
+                                    </div>
+                                    <select id="dataRetentionYears" class="hr-select" style="width: 150px;">
+                                        <option value="1">1年</option>
+                                        <option value="3" selected>3年</option>
+                                        <option value="5">5年</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 保存按钮 -->
+                    <div style="margin-top: 32px; text-align: center;">
+                        <button id="savePrivacySettings" class="hr-submit-btn" style="padding: 14px 48px; font-size: 16px;">保存设置</button>
+                    </div>
+
+                    <!-- 数据统计 -->
+                    <div style="margin-top: 48px;">
+                        <h3 style="margin: 0 0 16px 0; color: #1c1c18; font-size: 18px;">我的数据</h3>
+                        <div id="dataSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div class="hr-student-card" style="text-align: center;">
+                                <div style="font-size: 32px; font-weight: 700; color: var(--primary-color); margin-bottom: 4px;" id="summaryResumeCount">0</div>
+                                <div style="color: #666; font-size: 14px;">简历数据</div>
+                            </div>
+                            <div class="hr-student-card" style="text-align: center;">
+                                <div style="font-size: 32px; font-weight: 700; color: var(--primary-color); margin-bottom: 4px;" id="summaryAbilityCount">0</div>
+                                <div style="color: #666; font-size: 14px;">能力画像</div>
+                            </div>
+                            <div class="hr-student-card" style="text-align: center;">
+                                <div style="font-size: 32px; font-weight: 700; color: var(--primary-color); margin-bottom: 4px;" id="summaryLogCount">0</div>
+                                <div style="color: #666; font-size: 14px;">访问记录</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 数据管理 -->
+                    <div style="margin-top: 32px;">
+                        <h3 style="margin: 0 0 16px 0; color: #1c1c18; font-size: 18px;">数据管理</h3>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button id="exportUserDataBtn" class="hr-view-btn" style="padding: 12px 24px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                导出我的数据
+                            </button>
+                            <button id="deleteUserDataBtn" class="hr-invite-btn" style="padding: 12px 24px; background: #dc3545;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                删除我的数据
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 数据访问日志 -->
+                    <div style="margin-top: 32px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="margin: 0; color: #1c1c18; font-size: 18px;">数据访问日志</h3>
+                            <button id="refreshAccessLog" class="hr-view-btn">刷新</button>
+                        </div>
+                        <div id="accessLogList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">
+                                暂无访问记录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 简历生成页面 -->
+        <div id="resumePage" class="page hidden">
+            <div class="matching-container">
+                <div class="page-header">
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <span class="page-title">简历生成</span>
+                    </div>
+                    <p class="page-subtitle">AI根据您的个人信息智能生成简历，您可以选择是否提交给HR管理模块</p>
+                </div>
+
+                <div style="max-width: 1000px; margin: 0 auto;">
+                    <!-- 操作按钮区域 -->
+                    <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button id="generateResumeBtn" class="hr-submit-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                                <path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            AI生成简历
+                        </button>
+                        <button id="submitToHrBtn" class="hr-invite-btn" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            提交给HR
+                        </button>
+                        <button id="exportResumeBtn" class="hr-view-btn" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            导出PDF
+                        </button>
+                    </div>
+
+                    <!-- 简历预览区域 - 样式和HR看到的一样 -->
+                    <div id="resumePreview" class="hr-student-detail" style="background: white; border-radius: 8px; border: 1px solid #e8e6df;">
+                        <div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" style="margin-bottom: 16px; opacity: 0.3;">
+                                <path d="M2 2h10a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.4"/>
+                                <path d="M4 4h6M4 7h6M4 10h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                            </svg>
+                            <p style="font-size: 16px; margin-bottom: 8px;">点击「AI生成简历」按钮开始</p>
+                            <p style="font-size: 14px; color: #a0a098;">AI将根据您的个人信息智能生成简历</p>
+                        </div>
+                    </div>
+
+                    <!-- 状态提示 -->
+                    <div id="resumeStatus" style="margin-top: 24px; text-align: center; display: none;">
+                    </div>
                 </div>
             </div>
         </div>

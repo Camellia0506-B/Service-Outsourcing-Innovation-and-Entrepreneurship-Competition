@@ -69,6 +69,9 @@ from api.graph_router import graph_bp
 from api.agent_chat_router import agent_chat_bp
 from api.tracking_router import tracking_bp
 from api.mock_interview_router import mock_interview_bp
+from api.security_router import security_bp
+from api.resume_router import resume_bp
+from api.hr_router import hr_bp
 
 app.register_blueprint(matching_bp)
 app.register_blueprint(student_bp)
@@ -76,6 +79,12 @@ app.register_blueprint(graph_bp)
 app.register_blueprint(agent_chat_bp)
 app.register_blueprint(tracking_bp)
 app.register_blueprint(mock_interview_bp)
+app.register_blueprint(security_bp)
+app.register_blueprint(resume_bp)
+app.register_blueprint(hr_bp)
+logger.info("[App] 注册路由: 安全与隐私设置模块 /api/v1/security/*")
+logger.info("[App] 注册路由: 简历生成模块 /api/v1/resume/*")
+logger.info("[App] 注册路由: HR管理模块 /api/v1/hr/*")
 logger.info("[App] 注册路由: 关联图谱模块 /api/v1/job/search, /api/v1/job/promotion-path, /api/v1/job/transfer-path")
 logger.info("[App] 注册路由: 智能体对话模块 /api/v1/agent/chat")
 logger.info("[App] 注册路由: Career Tracking 模块 /api/v1/tracking/*")

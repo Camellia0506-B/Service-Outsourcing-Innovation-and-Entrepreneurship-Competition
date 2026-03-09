@@ -48,123 +48,226 @@
 
         <!-- HR主页面 -->
         <div id="hrDashboard" class="hr-dashboard">
-            <!-- 顶部导航栏 -->
-            <nav class="hr-navbar">
-                <div class="hr-navbar-inner">
-                    <div class="hr-navbar-brand">
-                        <div class="hr-navbar-logo">C</div>
-                        <h1 class="hr-navbar-title">HR评估管理</h1>
-                    </div>
-                    <div class="hr-navbar-user">
-                        <div class="hr-user-info">
-                            <p class="hr-user-name" id="hrUserName"></p>
-                            <p class="hr-company-name" id="hrCompanyName"></p>
-                        </div>
-                        <button id="hrLogoutBtn" class="hr-logout-btn">退出登录</button>
-                    </div>
+            <!-- 左侧侧边栏 -->
+            <aside class="hr-sidebar">
+                <div class="hr-sidebar-header">
+                    <div class="hr-sidebar-logo">C</div>
+                    <h1 class="hr-sidebar-title">HR评估管理</h1>
                 </div>
-            </nav>
+                
+                <nav class="hr-sidebar-nav">
+                    <a href="#" class="hr-sidebar-item active" data-section="dashboard">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>仪表板</span>
+                    </a>
+                    <a href="#" class="hr-sidebar-item" data-section="students">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>学生简历库</span>
+                    </a>
+                    <a href="#" class="hr-sidebar-item" data-section="invitations">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>评估邀请</span>
+                    </a>
+                    <a href="#" class="hr-sidebar-item" data-section="evaluations">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>评估结果</span>
+                    </a>
+                </nav>
+                
+                <div class="hr-sidebar-footer">
+                    <div class="hr-sidebar-user">
+                        <div class="hr-sidebar-avatar" id="hrSidebarAvatar">HR</div>
+                        <div class="hr-sidebar-user-info">
+                            <p class="hr-sidebar-user-name" id="hrUserName"></p>
+                            <p class="hr-sidebar-company-name" id="hrCompanyName"></p>
+                        </div>
+                    </div>
+                    <button id="hrLogoutBtn" class="hr-sidebar-logout">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>退出登录</span>
+                    </button>
+                </div>
+            </aside>
 
             <!-- 主内容区域 -->
             <main class="hr-main-content">
-                <!-- 欢迎卡片 -->
-                <div class="hr-welcome-card">
-                    <h2 class="hr-welcome-title">欢迎回来，<span id="hrWelcomeName"></span></h2>
-                    <p class="hr-welcome-subtitle">浏览学生简历，发起评估邀请，帮助学生更好地规划职业发展</p>
+                <!-- 仪表板区域 -->
+                <div id="dashboard-section" class="hr-content-section">
+                    <!-- 欢迎卡片 -->
+                    <div class="hr-welcome-card">
+                        <h2 class="hr-welcome-title">欢迎回来，<span id="hrWelcomeName"></span></h2>
+                        <p class="hr-welcome-subtitle">浏览学生简历，发起评估邀请，帮助学生更好地规划职业发展</p>
+                    </div>
+
+                    <!-- 统计数据 -->
+                    <div class="hr-stats-grid">
+                        <div class="hr-stat-card">
+                            <div class="hr-stat-value" id="totalStudents">0</div>
+                            <div class="hr-stat-label">可用学生数</div>
+                        </div>
+                        <div class="hr-stat-card">
+                            <div class="hr-stat-value" id="pendingInvitations">0</div>
+                            <div class="hr-stat-label">待确认邀请</div>
+                        </div>
+                        <div class="hr-stat-card">
+                            <div class="hr-stat-value" id="completedEvaluations">0</div>
+                            <div class="hr-stat-label">已完成评估</div>
+                        </div>
+                        <div class="hr-stat-card">
+                            <div class="hr-stat-value" id="unreadEvaluations">0</div>
+                            <div class="hr-stat-label">待评估任务</div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 统计数据 -->
-                <div class="hr-stats-grid">
-                    <div class="hr-stat-card">
-                        <div class="hr-stat-value" id="totalStudents">0</div>
-                        <div class="hr-stat-label">可用学生数</div>
-                    </div>
-                    <div class="hr-stat-card">
-                        <div class="hr-stat-value" id="pendingInvitations">0</div>
-                        <div class="hr-stat-label">待确认邀请</div>
-                    </div>
-                    <div class="hr-stat-card">
-                        <div class="hr-stat-value" id="completedEvaluations">0</div>
-                        <div class="hr-stat-label">已完成评估</div>
-                    </div>
-                    <div class="hr-stat-card">
-                        <div class="hr-stat-value" id="unreadEvaluations">0</div>
-                        <div class="hr-stat-label">待评估任务</div>
-                    </div>
-                </div>
-
-                <!-- 学生简历列表 - 左右分栏布局 -->
-                <div style="display: flex; gap: 24px; margin-top: 24px;">
-                    <!-- 左侧：学生列表 -->
-                    <div style="flex: 0 0 480px; min-width: 480px;">
-                        <h3 class="hr-section-title">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            学生简历库
-                        </h3>
-
-                        <!-- 筛选器 -->
-                        <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow);">
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
-                                <div>
-                                    <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">招聘岗位</label>
-                                    <select id="filterJob" class="hr-select">
-                                        <option value="">全部岗位</option>
-                                        <option value="AI产品经理">AI产品经理</option>
-                                        <option value="前端开发工程师">前端开发工程师</option>
-                                        <option value="后端开发工程师">后端开发工程师</option>
-                                        <option value="算法工程师">算法工程师</option>
-                                        <option value="数据分析师">数据分析师</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">最低匹配分</label>
-                                    <select id="filterMinScore" class="hr-select">
-                                        <option value="0">不限</option>
-                                        <option value="60">60分以上</option>
-                                        <option value="70">70分以上</option>
-                                        <option value="80">80分以上</option>
-                                        <option value="90">90分以上</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">学历</label>
-                                    <select id="filterEducation" class="hr-select">
-                                        <option value="">不限</option>
-                                        <option value="本科">本科</option>
-                                        <option value="硕士">硕士</option>
-                                        <option value="博士">博士</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <button id="filterBtn" class="hr-invite-btn" style="width: 100%;">筛选</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 学生列表 -->
-                        <div id="studentList" class="hr-student-list">
-                        </div>
-
-                        <!-- 分页 -->
-                        <div style="display: flex; justify-content: center; margin-top: 24px; gap: 8px;">
-                            <button id="prevPage" class="hr-view-btn" disabled>上一页</button>
-                            <span id="pageInfo" style="padding: 10px 16px; color: var(--text-secondary);">第 1 页</span>
-                            <button id="nextPage" class="hr-view-btn">下一页</button>
-                        </div>
-                    </div>
-
-                    <!-- 右侧：学生详情 -->
-                    <div style="flex: 1; min-width: 0;">
-                        <div id="studentDetail" class="hr-student-detail">
-                            <div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">
-                                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" style="margin-bottom: 16px; opacity: 0.3;">
+                <!-- 学生简历库区域 -->
+                <div id="students-section" class="hr-content-section">
+                    <!-- 学生简历列表 - 左右分栏布局 -->
+                    <div style="display: flex; gap: 24px;">
+                        <!-- 左侧：学生列表 -->
+                        <div style="flex: 0 0 480px; min-width: 480px;">
+                            <h3 class="hr-section-title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                <p style="font-size: 16px;">请从左侧选择学生查看详情</p>
+                                学生简历库
+                            </h3>
+
+                            <!-- 筛选器 -->
+                            <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e8e6df;">
+                                <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                                    <div>
+                                        <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">招聘岗位</label>
+                                        <select id="filterJob" class="hr-select">
+                                            <option value="">全部岗位</option>
+                                            <option value="AI产品经理">AI产品经理</option>
+                                            <option value="前端开发工程师">前端开发工程师</option>
+                                            <option value="后端开发工程师">后端开发工程师</option>
+                                            <option value="算法工程师">算法工程师</option>
+                                            <option value="数据分析师">数据分析师</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">最低匹配分</label>
+                                        <select id="filterMinScore" class="hr-select">
+                                            <option value="0">不限</option>
+                                            <option value="60">60分以上</option>
+                                            <option value="70">70分以上</option>
+                                            <option value="80">80分以上</option>
+                                            <option value="90">90分以上</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">学历</label>
+                                        <select id="filterEducation" class="hr-select">
+                                            <option value="">不限</option>
+                                            <option value="本科">本科</option>
+                                            <option value="硕士">硕士</option>
+                                            <option value="博士">博士</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <button id="filterBtn" class="hr-invite-btn" style="width: 100%;">筛选</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 学生列表 -->
+                            <div id="studentList" class="hr-student-list">
+                            </div>
+
+                            <!-- 分页 -->
+                            <div style="display: flex; justify-content: center; margin-top: 24px; gap: 8px;">
+                                <button id="prevPage" class="hr-view-btn" disabled>上一页</button>
+                                <span id="pageInfo" style="padding: 10px 16px; color: #a0a098;">第 1 页</span>
+                                <button id="nextPage" class="hr-view-btn">下一页</button>
                             </div>
                         </div>
+
+                        <!-- 右侧：学生详情 -->
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="studentDetail" class="hr-student-detail">
+                                <div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">
+                                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" style="margin-bottom: 16px; opacity: 0.3;">
+                                        <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <p style="font-size: 16px;">请从左侧选择学生查看详情</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 评估邀请区域 -->
+                <div id="invitations-section" class="hr-content-section">
+                    <h3 class="hr-section-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        评估邀请
+                    </h3>
+                    
+                    <!-- 筛选器 -->
+                    <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e8e6df;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">状态</label>
+                                <select id="invitationStatusFilter" class="hr-select">
+                                    <option value="">全部状态</option>
+                                    <option value="pending">待确认</option>
+                                    <option value="accepted">已接受</option>
+                                    <option value="declined">已拒绝</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button id="loadInvitationsBtn" class="hr-invite-btn" style="width: 100%;">刷新</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 邀请列表 -->
+                    <div id="invitationList" style="display: flex; flex-direction: column; gap: 16px;">
+                    </div>
+                </div>
+
+                <!-- 评估结果区域 -->
+                <div id="evaluations-section" class="hr-content-section">
+                    <h3 class="hr-section-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        评估结果
+                    </h3>
+                    
+                    <!-- 筛选器 -->
+                    <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e8e6df;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">状态</label>
+                                <select id="evaluationStatusFilter" class="hr-select">
+                                    <option value="">全部状态</option>
+                                    <option value="in_progress">进行中</option>
+                                    <option value="completed">已完成</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button id="loadEvaluationsBtn" class="hr-invite-btn" style="width: 100%;">刷新</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 评估列表 -->
+                    <div id="evaluationList" style="display: flex; flex-direction: column; gap: 16px;">
                     </div>
                 </div>
             </main>
@@ -215,6 +318,100 @@
                         <textarea id="inviteMessage" class="hr-textarea" placeholder="请输入您想对学生说的话..." required></textarea>
                     </div>
                     <button type="submit" class="hr-submit-btn" style="width: 100%;">发送邀请</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 提交评估弹窗 -->
+        <div id="evaluationModal" class="hr-login-modal hidden">
+            <div class="hr-login-modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <button type="button" id="evaluationModalClose" class="hr-login-modal-close">&times;</button>
+                <div class="hr-login-modal-header">
+                    <h3 class="hr-login-modal-title">提交评估结果</h3>
+                    <p class="hr-login-modal-subtitle">请完成以下评估表单</p>
+                </div>
+                <form id="evaluationForm">
+                    <input type="hidden" id="evaluationId">
+                    
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">整体印象</label>
+                        <select id="overallImpression" class="hr-select" required>
+                            <option value="">请选择</option>
+                            <option value="excellent">优秀</option>
+                            <option value="good">良好</option>
+                            <option value="average">一般</option>
+                            <option value="below_average">有待提升</option>
+                        </select>
+                    </div>
+
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">能力维度评分 (0-100)</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">专业技能匹配度</label>
+                                <input type="number" id="skillMatch" class="hr-form-input" min="0" max="100" placeholder="0-100">
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">学习能力</label>
+                                <input type="number" id="learningAbility" class="hr-form-input" min="0" max="100" placeholder="0-100">
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">沟通表达</label>
+                                <input type="number" id="communication" class="hr-form-input" min="0" max="100" placeholder="0-100">
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">团队协作意愿</label>
+                                <input type="number" id="teamwork" class="hr-form-input" min="0" max="100" placeholder="0-100">
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">抗压能力</label>
+                                <input type="number" id="stressResistance" class="hr-form-input" min="0" max="100" placeholder="0-100">
+                            </div>
+                            <div>
+                                <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">职业成熟度</label>
+                                <input type="number" id="professionalMaturity" class="hr-form-input" min="0" max="100" placeholder="0-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">聘用意向</label>
+                        <select id="hiringIntent" class="hr-select" required>
+                            <option value="">请选择</option>
+                            <option value="strong">强烈意向</option>
+                            <option value="moderate">有一定意向</option>
+                            <option value="weak">意向较弱</option>
+                            <option value="no">暂无意向</option>
+                        </select>
+                    </div>
+
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">优点</label>
+                        <textarea id="strengthsNoted" class="hr-textarea" placeholder="请描述该学生的优点..."></textarea>
+                    </div>
+
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">待提升点</label>
+                        <textarea id="weaknessesNoted" class="hr-textarea" placeholder="请描述该学生的待提升点..."></textarea>
+                    </div>
+
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">推荐岗位</label>
+                        <input type="text" id="recommendedPositions" class="hr-form-input" placeholder="例如：产品助理, 数据产品经理（用逗号分隔）">
+                    </div>
+
+                    <div class="hr-form-group">
+                        <label class="hr-form-label">评估依据</label>
+                        <select id="evaluationBasis" class="hr-select" required>
+                            <option value="">请选择</option>
+                            <option value="resume_review">简历审阅</option>
+                            <option value="online_test">在线测试</option>
+                            <option value="video_interview">视频面试</option>
+                            <option value="onsite_interview">现场面试</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="hr-submit-btn" style="width: 100%;">提交评估</button>
                 </form>
             </div>
         </div>

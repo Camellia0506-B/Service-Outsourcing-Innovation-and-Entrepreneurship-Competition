@@ -224,7 +224,9 @@ class API {
             || endpoint.startsWith('/matching/')
             || endpoint.startsWith('/job/')
             || endpoint.startsWith('/system/')
-            || endpoint.startsWith('/tracking/');
+            || endpoint.startsWith('/tracking/')
+            || endpoint.startsWith('/resume/')
+            || endpoint.startsWith('/security/');
         const raw = useAI ? (API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
         const base = normalizeBaseURL(raw, useAI ? 'http://127.0.0.1:5002/api/v1' : 'http://127.0.0.1:5000/api/v1');
         const url = `${base}${endpoint}`;
@@ -2947,4 +2949,59 @@ async function getInterviewHistory(userId, page = 1, size = 50) {
             error: e
         };
     }
+}
+
+// ==================== AI简历生成模块 ====================
+
+// 获取简历
+async function getResume(userId) {
+    return await api.requestToAI(`/resume/get?user_id=${userId}`, { method: 'GET' });
+}
+
+// AI生成简历
+async function generateResume(userId) {
+    return await api.postToAI('/resume/generate', { user_id: userId });
+}
+
+// 提交简历给HR
+async function submitResumeToHr(userId) {
+    return await api.postToAI('/resume/submit', { user_id: userId });
+}
+
+// ==================== 隐私设置模块 ====================
+
+// 获取隐私设置
+async function getPrivacySettings(userId) {
+    return await api.requestToAI(`/security/privacy/consent?user_id=${userId}`, { method: 'GET' });
+}
+
+// 更新隐私设置
+async function updatePrivacySettings(userId, consents) {
+    return await api.requestToAI('/security/privacy/consent', {
+        method: 'PUT',
+        body: { user_id: userId, consents: consents }
+    });
+}
+
+// 获取访问日志
+async function getAccessLogs(userId, limit = 20) {
+    return await api.requestToAI(`/security/access/logs?user_id=${userId}&limit=${limit}`, { method: 'GET' });
+}
+
+// 获取用户数据统计
+async function getDataSummary(userId) {
+    return await api.requestToAI(`/security/data/summary?user_id=${userId}`, { method: 'GET' });
+}
+
+// 导出用户数据
+async function exportUserData(userId) {
+    return await api.requestToAI(`/security/data/export?user_id=${userId}`, { method: 'GET' });
+}
+
+// 删除用户数据
+async function deleteUserData(userId) {
+    return await api.requestToAI('/security/data/delete', {
+        method: 'DELETE',
+        body: { user_id: userId }
+    });
 }

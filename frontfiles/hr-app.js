@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = 'http://127.0.0.1:5002/api/v1';
 
 let currentPage = 1;
 let totalPages = 1;
@@ -47,29 +47,108 @@ function initHrDashboard() {
 
     loadStudents();
     bindHrDashboardEvents();
+    bindSidebarNavigation();
+}
+
+function bindSidebarNavigation() {
+    const sidebarItems = document.querySelectorAll('.hr-sidebar-item');
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const section = item.dataset.section;
+            switchToSection(section);
+        });
+    });
+}
+
+function switchToSection(sectionId) {
+    const sidebarItems = document.querySelectorAll('.hr-sidebar-item');
+    sidebarItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.section === sectionId) {
+            item.classList.add('active');
+        }
+    });
+
+    const sections = document.querySelectorAll('.hr-content-section');
+    sections.forEach(sec => {
+        sec.classList.remove('active');
+    });
+
+    const targetSection = document.getElementById(`${sectionId}-section`);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+
+    if (sectionId === 'students') {
+        loadStudents();
+    } else if (sectionId === 'invitations') {
+        loadInvitations();
+    } else if (sectionId === 'evaluations') {
+        loadEvaluations();
+    }
 }
 
 function bindHrDashboardEvents() {
-    document.getElementById('hrLogoutBtn').addEventListener('click', () => {
-        clearStoredHrData();
-        window.location.href = 'index.html';
-    });
+    const logoutBtn = document.getElementById('hrLogoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            clearStoredHrData();
+            window.location.href = 'index.html';
+        });
+    }
 
-    document.getElementById('filterBtn').addEventListener('click', loadStudents);
+    const filterBtn = document.getElementById('filterBtn');
+    if (filterBtn) {
+        filterBtn.addEventListener('click', loadStudents);
+    }
     
-    document.getElementById('prevPage').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            loadStudents();
-        }
-    });
+    const prevPage = document.getElementById('prevPage');
+    if (prevPage) {
+        prevPage.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadStudents();
+            }
+        });
+    }
 
-    document.getElementById('nextPage').addEventListener('click', () => {
-        if (currentPage < totalPages) {
-            currentPage++;
-            loadStudents();
-        }
-    });
+    const nextPage = document.getElementById('nextPage');
+    if (nextPage) {
+        nextPage.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadStudents();
+            }
+        });
+    }
+
+    const loadInvitationsBtn = document.getElementById('loadInvitationsBtn');
+    if (loadInvitationsBtn) {
+        loadInvitationsBtn.addEventListener('click', loadInvitations);
+    }
+
+    const loadEvaluationsBtn = document.getElementById('loadEvaluationsBtn');
+    if (loadEvaluationsBtn) {
+        loadEvaluationsBtn.addEventListener('click', loadEvaluations);
+    }
+
+    const evaluationModalClose = document.getElementById('evaluationModalClose');
+    if (evaluationModalClose) {
+        evaluationModalClose.addEventListener('click', closeEvaluationModal);
+    }
+
+    const evaluationForm = document.getElementById('evaluationForm');
+    if (evaluationForm) {
+        evaluationForm.addEventListener('submit', handleEvaluationSubmit);
+    }
+
+    const evaluationModal = document.getElementById('evaluationModal');
+    if (evaluationModal) {
+        evaluationModal.addEventListener('click', (e) => {
+            if (e.target === evaluationModal) closeEvaluationModal();
+        });
+    }
 }
 
 async function loadStudents() {
@@ -130,7 +209,7 @@ function renderStudents(students) {
             <div class="hr-student-avatar">S${index + 1}</div>
             <div class="hr-student-info">
                 <div class="hr-student-header">
-                    <h4 class="hr-student-name">候选人 #${student.anonymous_id}</h4>
+                    <h4 class="hr-student-name">${student.anonymous_id}</h4>
                     <span class="hr-match-score">${student.system_match_score}分匹配</span>
                 </div>
                 <div class="hr-student-details">
@@ -168,7 +247,7 @@ function renderStudentDetail(studentId) {
         <div class="hr-student-detail-header">
             <div class="hr-student-detail-avatar">${student.anonymous_id.charAt(student.anonymous_id.length - 1)}</div>
             <div class="hr-student-detail-info">
-                <h4>候选人 #${student.anonymous_id}</h4>
+                <h4>${student.anonymous_id}</h4>
                 <span class="hr-student-detail-score">${student.system_match_score}分匹配</span>
             </div>
         </div>
@@ -319,6 +398,256 @@ async function handleInviteSubmit(e) {
     }
 }
 
+async function loadInvitations() {
+    showLoading();
+    try {
+        const params = new URLSearchParams({
+            hr_id: currentHrData.hr_id
+        });
+
+        const statusFilter = document.getElementById('invitationStatusFilter')?.value;
+        if (statusFilter) {
+            params.append('status', statusFilter);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/hr/evaluation/invitations?${params}`, {
+            headers: {
+                'Authorization': `Bearer ${currentHrData.token}`
+            }
+        });
+
+        const result = await response.json();
+        if (result.code === 200) {
+            renderInvitations(result.data.list);
+            document.getElementById('pendingInvitations').textContent = 
+                result.data.list.filter(inv => inv.status === 'pending').length;
+        } else {
+            alert('加载邀请列表失败: ' + (result.msg || '未知错误'));
+        }
+    } catch (error) {
+        console.error('加载邀请列表错误:', error);
+        alert('网络错误，请稍后重试');
+    } finally {
+        hideLoading();
+    }
+}
+
+function renderInvitations(invitations) {
+    const container = document.getElementById('invitationList');
+    if (!invitations || invitations.length === 0) {
+        container.innerHTML = '<div style="background: white; padding: 48px; border-radius: 8px; text-align: center; color: #a0a098;">暂无邀请数据</div>';
+        return;
+    }
+
+    const statusLabels = {
+        'pending': { text: '待确认', color: '#f59e0b' },
+        'accepted': { text: '已接受', color: '#5e8c65' },
+        'declined': { text: '已拒绝', color: '#dc2626' }
+    };
+
+    container.innerHTML = invitations.map(invitation => {
+        const statusInfo = statusLabels[invitation.status] || { text: invitation.status, color: '#666' };
+        return `
+        <div class="hr-student-card">
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="margin: 0; color: #1c1c18; font-size: 16px;">邀请 #${invitation.invitation_id}</h4>
+                    <span style="background: ${statusInfo.color}20; color: ${statusInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                        ${statusInfo.text}
+                    </span>
+                </div>
+                <p style="margin: 4px 0; color: #666; font-size: 14px;">
+                    <strong>目标岗位:</strong> ${invitation.target_job}
+                </p>
+                <p style="margin: 4px 0; color: #666; font-size: 14px;">
+                    <strong>学生ID:</strong> ${invitation.anonymous_student_id}
+                </p>
+                <p style="margin: 8px 0 0 0; color: #888; font-size: 13px;">
+                    ${invitation.message}
+                </p>
+                <p style="margin: 8px 0 0 0; color: #a0a098; font-size: 12px;">
+                    发送时间: ${invitation.sent_at}
+                </p>
+            </div>
+        </div>
+    `}).join('');
+}
+
+async function loadEvaluations() {
+    showLoading();
+    try {
+        const params = new URLSearchParams({
+            hr_id: currentHrData.hr_id
+        });
+
+        const statusFilter = document.getElementById('evaluationStatusFilter')?.value;
+        if (statusFilter) {
+            params.append('status', statusFilter);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/hr/evaluation/evaluations?${params}`, {
+            headers: {
+                'Authorization': `Bearer ${currentHrData.token}`
+            }
+        });
+
+        const result = await response.json();
+        if (result.code === 200) {
+            renderEvaluations(result.data.list);
+            document.getElementById('completedEvaluations').textContent = 
+                result.data.list.filter(eval => eval.status === 'completed').length;
+        } else {
+            alert('加载评估列表失败: ' + (result.msg || '未知错误'));
+        }
+    } catch (error) {
+        console.error('加载评估列表错误:', error);
+        alert('网络错误，请稍后重试');
+    } finally {
+        hideLoading();
+    }
+}
+
+function renderEvaluations(evaluations) {
+    const container = document.getElementById('evaluationList');
+    if (!evaluations || evaluations.length === 0) {
+        container.innerHTML = '<div style="background: white; padding: 48px; border-radius: 8px; text-align: center; color: #a0a098;">暂无评估数据</div>';
+        return;
+    }
+
+    const statusLabels = {
+        'in_progress': { text: '进行中', color: '#3b82f6' },
+        'completed': { text: '已完成', color: '#5e8c65' }
+    };
+
+    const hiringIntentLabels = {
+        'strong': '强烈意向',
+        'moderate': '有一定意向',
+        'weak': '意向较弱',
+        'no': '暂无意向'
+    };
+
+    const overallImpressionLabels = {
+        'excellent': '优秀',
+        'good': '良好',
+        'average': '一般',
+        'below_average': '有待提升'
+    };
+
+    container.innerHTML = evaluations.map(evaluation => {
+        const statusInfo = statusLabels[evaluation.status] || { text: evaluation.status, color: '#666' };
+        return `
+        <div class="hr-student-card">
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="margin: 0; color: #1c1c18; font-size: 16px;">评估 #${evaluation.evaluation_id}</h4>
+                    <span style="background: ${statusInfo.color}20; color: ${statusInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                        ${statusInfo.text}
+                    </span>
+                </div>
+                <p style="margin: 4px 0; color: #666; font-size: 14px;">
+                    <strong>目标岗位:</strong> ${evaluation.target_job}
+                </p>
+                <p style="margin: 4px 0; color: #666; font-size: 14px;">
+                    <strong>学生ID:</strong> ${evaluation.anonymous_student_id}
+                </p>
+                ${evaluation.status === 'completed' ? `
+                <p style="margin: 4px 0; color: #666; font-size: 14px;">
+                    <strong>整体印象:</strong> ${overallImpressionLabels[evaluation.overall_impression] || evaluation.overall_impression}
+                </p>
+                <p style="margin: 4px 0; color: #666; font-size: 14px;">
+                    <strong>聘用意向:</strong> ${hiringIntentLabels[evaluation.hiring_intent] || evaluation.hiring_intent}
+                </p>
+                <p style="margin: 8px 0 0 0; color: #a0a098; font-size: 12px;">
+                    提交时间: ${evaluation.submitted_at}
+                </p>
+                ` : `
+                <p style="margin: 8px 0 0 0; color: #a0a098; font-size: 12px;">
+                    创建时间: ${evaluation.created_at}
+                </p>
+                `}
+            </div>
+            ${evaluation.status === 'in_progress' ? `
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-left: 16px;">
+                <button class="hr-invite-btn" onclick="openEvaluationModal('${evaluation.evaluation_id}')">填写评估</button>
+            </div>
+            ` : ''}
+        </div>
+    `}).join('');
+}
+
+function openEvaluationModal(evaluationId) {
+    document.getElementById('evaluationId').value = evaluationId;
+    document.getElementById('overallImpression').value = '';
+    document.getElementById('skillMatch').value = '';
+    document.getElementById('learningAbility').value = '';
+    document.getElementById('communication').value = '';
+    document.getElementById('teamwork').value = '';
+    document.getElementById('stressResistance').value = '';
+    document.getElementById('professionalMaturity').value = '';
+    document.getElementById('hiringIntent').value = '';
+    document.getElementById('strengthsNoted').value = '';
+    document.getElementById('weaknessesNoted').value = '';
+    document.getElementById('recommendedPositions').value = '';
+    document.getElementById('evaluationBasis').value = '';
+    document.getElementById('evaluationModal').classList.remove('hidden');
+}
+
+function closeEvaluationModal() {
+    document.getElementById('evaluationModal').classList.add('hidden');
+}
+
+async function handleEvaluationSubmit(e) {
+    e.preventDefault();
+    showLoading();
+
+    const evaluationId = document.getElementById('evaluationId').value;
+    const data = {
+        hr_id: currentHrData.hr_id,
+        evaluation_id: evaluationId,
+        evaluation_form: {
+            overall_impression: document.getElementById('overallImpression').value,
+            dimension_scores: {
+                "专业技能匹配度": parseInt(document.getElementById('skillMatch').value) || 0,
+                "学习能力": parseInt(document.getElementById('learningAbility').value) || 0,
+                "沟通表达": parseInt(document.getElementById('communication').value) || 0,
+                "团队协作意愿": parseInt(document.getElementById('teamwork').value) || 0,
+                "抗压能力": parseInt(document.getElementById('stressResistance').value) || 0,
+                "职业成熟度": parseInt(document.getElementById('professionalMaturity').value) || 0
+            },
+            hiring_intent: document.getElementById('hiringIntent').value,
+            strengths_noted: document.getElementById('strengthsNoted').value,
+            weaknesses_noted: document.getElementById('weaknessesNoted').value,
+            recommended_positions: document.getElementById('recommendedPositions').value.split(',').map(s => s.trim()).filter(s => s),
+            evaluation_basis: document.getElementById('evaluationBasis').value
+        }
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/hr/evaluation/${evaluationId}/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentHrData.token}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.code === 200) {
+            alert('评估提交成功！');
+            closeEvaluationModal();
+            loadEvaluations();
+        } else {
+            alert(result.msg || '提交评估失败');
+        }
+    } catch (error) {
+        console.error('提交评估错误:', error);
+        alert('网络错误，请稍后重试');
+    } finally {
+        hideLoading();
+    }
+}
+
 async function handleHrModalRegister(e) {
     e.preventDefault();
     showLoading();
@@ -358,113 +687,11 @@ async function handleHrModalRegister(e) {
     }
 }
 
-function initHrEvaluation() {
-    if (!checkHrAuth()) return;
-
-    document.getElementById('hrUserName').textContent = currentHrData.real_name;
-    document.getElementById('hrCompanyName').textContent = currentHrData.company_name;
-    document.getElementById('hrId').value = currentHrData.hr_id;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const evaluationId = urlParams.get('evaluation_id');
-    if (evaluationId) {
-        document.getElementById('evaluationId').value = evaluationId;
-    }
-
-    initSliders();
-    bindEvaluationEvents();
-}
-
-function initSliders() {
-    const sliders = [
-        { id: 'skillMatch', valueId: 'skillMatchValue' },
-        { id: 'learningAbility', valueId: 'learningAbilityValue' },
-        { id: 'communication', valueId: 'communicationValue' },
-        { id: 'teamwork', valueId: 'teamworkValue' },
-        { id: 'pressureResistance', valueId: 'pressureResistanceValue' },
-        { id: 'careerMaturity', valueId: 'careerMaturityValue' }
-    ];
-
-    sliders.forEach(({ id, valueId }) => {
-        const slider = document.getElementById(id);
-        const valueDisplay = document.getElementById(valueId);
-        slider.addEventListener('input', () => {
-            valueDisplay.textContent = slider.value + '分';
-        });
-    });
-}
-
-function bindEvaluationEvents() {
-    document.getElementById('hrLogoutBtn').addEventListener('click', () => {
-        clearStoredHrData();
-        window.location.href = 'index.html';
-    });
-
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-        window.location.href = 'hr-dashboard.html';
-    });
-
-    document.getElementById('evaluationForm').addEventListener('submit', handleEvaluationSubmit);
-}
-
-async function handleEvaluationSubmit(e) {
-    e.preventDefault();
-    showLoading();
-
-    const evaluationId = document.getElementById('evaluationId').value;
-    const data = {
-        hr_id: document.getElementById('hrId').value,
-        evaluation_id: evaluationId,
-        evaluation_form: {
-            overall_impression: document.getElementById('overallImpression').value,
-            dimension_scores: {
-                "专业技能匹配度": parseInt(document.getElementById('skillMatch').value),
-                "学习能力": parseInt(document.getElementById('learningAbility').value),
-                "沟通表达": parseInt(document.getElementById('communication').value),
-                "团队协作意愿": parseInt(document.getElementById('teamwork').value),
-                "抗压能力": parseInt(document.getElementById('pressureResistance').value),
-                "职业成熟度": parseInt(document.getElementById('careerMaturity').value)
-            },
-            hiring_intent: document.getElementById('hiringIntent').value,
-            strengths_noted: document.getElementById('strengthsNoted').value,
-            weaknesses_noted: document.getElementById('weaknessesNoted').value,
-            recommended_positions: document.getElementById('recommendedPositions').value.split(',').map(s => s.trim()).filter(s => s),
-            evaluation_basis: document.getElementById('evaluationBasis').value
-        }
-    };
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/hr/evaluation/${evaluationId}/submit`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentHrData.token}`
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-        if (result.code === 200) {
-            alert('评估提交成功！');
-            window.location.href = 'hr-dashboard.html';
-        } else {
-            alert(result.msg || '提交评估失败');
-        }
-    } catch (error) {
-        console.error('提交评估错误:', error);
-        alert('网络错误，请稍后重试');
-    } finally {
-        hideLoading();
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     const currentPath = window.location.pathname;
     
     if (currentPath.includes('hr-dashboard.html')) {
         initHrDashboard();
-    } else if (currentPath.includes('hr-evaluation.html')) {
-        initHrEvaluation();
     } else if (currentPath.includes('index.html') || currentPath === '/' || currentPath === '') {
         const hrLoginBtn = document.getElementById('hrLoginBtn');
         const hrRegisterBtn = document.getElementById('hrRegisterBtn');

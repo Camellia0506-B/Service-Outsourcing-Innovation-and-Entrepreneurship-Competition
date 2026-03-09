@@ -16233,6 +16233,66 @@ body.on-login-page #agentAssistant { display: none !important; }
 #mockInterviewPage .page-subtitle { color: #a0a098; }
 #mockInterviewPage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
 
+/* 隐私设置页面标题样式（和模拟面试一致） */
+#privacyPage .page-title-bar { background: #5e8c65; }
+#privacyPage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
+#privacyPage .page-subtitle { color: #a0a098; }
+#privacyPage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
+
+/* 简历生成页面标题样式（和模拟面试一致） */
+#resumePage .page-title-bar { background: #5e8c65; }
+#resumePage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
+#resumePage .page-subtitle { color: #a0a098; }
+#resumePage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
+
+/* 隐私设置页面整体样式（和模拟面试一致） */
+#privacyPage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+}
+
+/* 简历生成页面整体样式（和模拟面试一致） */
+#resumePage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+}
+
 /* 问题2：Tab 索引栏样式 */
 #mockInterviewPage .matching-tabs {
     display: flex;
@@ -16655,6 +16715,56 @@ body.on-login-page #agentAssistant { display: none !important; }
     .interview-stats {
         gap: 16px;
     }
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 26px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #4f7cff 0%, #5a9fff 100%);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.toggle-switch:hover .toggle-slider {
+    box-shadow: 0 2px 8px rgba(79, 124, 255, 0.3);
+}
     .interview-message {
         max-width: 95%;
     }
@@ -17344,13 +17454,10 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 .hr-page-body {
     display: block !important;
     height: auto !important;
-    flex-direction: row !important;
 }
 
 .hr-page-app {
     display: block !important;
-    height: auto !important;
-    flex: none !important;
     width: 100% !important;
 }
 
@@ -17358,10 +17465,178 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
     min-height: 100vh;
     background: var(--bg-secondary);
     display: flex;
-    flex-direction: column;
-    width: 100%;
+    flex-direction: row;
 }
 
+/* 侧边栏样式 - 模拟面试页面配色 */
+.hr-sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: #ffffff;
+    color: #1c1c18;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid #e8e6df;
+}
+
+.hr-sidebar-header {
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #e8e6df;
+}
+
+.hr-sidebar-logo {
+    width: 40px;
+    height: 40px;
+    background: #5e8c65;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: white;
+}
+
+.hr-sidebar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1c1c18;
+    font-family: var(--font-heading);
+}
+
+.hr-sidebar-nav {
+    flex: 1;
+    padding: 12px 10px;
+    overflow-y: auto;
+}
+
+.hr-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    color: #5a5a52;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+.hr-sidebar-item:hover {
+    background: #f7f6f2;
+    color: #1c1c18;
+}
+
+.hr-sidebar-item.active {
+    background: #eef4ee;
+    color: #5e8c65;
+    font-weight: 600;
+}
+
+.hr-sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #e8e6df;
+}
+
+.hr-sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.hr-sidebar-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #eef4ee;
+    color: #5e8c65;
+    border: 1px solid #c9deca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.hr-sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.hr-sidebar-user-name {
+    font-weight: 600;
+    color: #1c1c18;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hr-sidebar-company-name {
+    font-size: 12px;
+    color: #a0a098;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hr-sidebar-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: none;
+    border: 1.5px solid #e8e6df;
+    border-radius: 8px;
+    color: #5a5a52;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hr-sidebar-logout:hover {
+    border-color: #1c1c18;
+    color: #1c1c18;
+}
+
+/* 内容区域样式 - 模拟面试页面配色 */
+.hr-main-content {
+    padding: 32px;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    display: block !important;
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    background: #f7f6f2;
+}
+
+.hr-content-section {
+    display: none;
+}
+
+.hr-content-section:first-child,
+.hr-content-section.active {
+    display: block;
+}
+
+/* 旧的顶部导航栏样式 - 已废弃，使用侧边栏 */
+/*
 .hr-navbar {
     background: white;
     border-bottom: 1px solid var(--border-color);
@@ -17458,23 +17733,27 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
     min-height: 100vh;
     background: var(--bg-secondary);
 }
+*/
 
 .hr-welcome-card {
-    background: linear-gradient(135deg, #1a1a1a, #333333);
-    border-radius: 16px;
+    background: #ffffff;
+    border-radius: 8px;
     padding: 32px;
-    color: white;
+    color: #1c1c18;
     margin-bottom: 24px;
+    border: 1px solid #e8e6df;
 }
 
 .hr-welcome-title {
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 8px;
+    color: #1c1c18;
+    font-family: 'DM Serif Display', serif;
 }
 
 .hr-welcome-subtitle {
-    opacity: 0.9;
+    color: #5a5a52;
     font-size: 15px;
 }
 
@@ -17486,32 +17765,34 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-stat-card {
-    background: white;
-    border-radius: 12px;
+    background: #ffffff;
+    border-radius: 8px;
     padding: 24px;
-    box-shadow: var(--shadow);
+    border: 1px solid #e8e6df;
 }
 
 .hr-stat-value {
     font-size: 32px;
     font-weight: 700;
-    color: #111111;
+    color: #5e8c65;
     margin-bottom: 4px;
+    font-family: 'DM Serif Display', serif;
 }
 
 .hr-stat-label {
-    color: var(--text-secondary);
+    color: #a0a098;
     font-size: 14px;
 }
 
 .hr-section-title {
     font-size: 20px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #1c1c18;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
+    font-family: 'DM Serif Display', serif;
 }
 
 .hr-student-list {
@@ -17520,10 +17801,10 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-student-detail {
-    background: white;
-    border-radius: 12px;
+    background: #ffffff;
+    border-radius: 8px;
     padding: 24px;
-    box-shadow: var(--shadow);
+    border: 1px solid #e8e6df;
     position: sticky;
     top: 24px;
     max-height: calc(100vh - 200px);
@@ -17536,18 +17817,19 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
     gap: 16px;
     margin-bottom: 24px;
     padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #e8e6df;
 }
 
 .hr-student-detail-avatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #eef4ee;
+    border: 1px solid #c9deca;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #5e8c65;
     font-size: 28px;
     font-weight: 700;
 }
@@ -17555,15 +17837,15 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 .hr-student-detail-info h4 {
     font-size: 20px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #1c1c18;
     margin-bottom: 4px;
 }
 
 .hr-student-detail-score {
     display: inline-block;
     padding: 4px 12px;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
+    background: #eef4ee;
+    color: #5e8c65;
     border-radius: 20px;
     font-size: 14px;
     font-weight: 600;
@@ -17574,9 +17856,9 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-student-detail-section-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #a0a098;
     margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -17589,33 +17871,33 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-student-detail-item {
-    background: var(--bg-secondary);
+    background: #f7f6f2;
     padding: 12px;
     border-radius: 8px;
 }
 
 .hr-student-detail-item-label {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: #a0a098;
     margin-bottom: 4px;
 }
 
 .hr-student-detail-item-value {
     font-size: 14px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #1c1c18;
 }
 
 .hr-student-detail-highlight {
-    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    background: #eef4ee;
     padding: 16px;
     border-radius: 8px;
-    border-left: 4px solid #f5576c;
+    border-left: 4px solid #5e8c65;
 }
 
 .hr-student-detail-highlight p {
     margin: 0;
-    color: #8b4513;
+    color: #5e8c65;
     font-size: 14px;
     line-height: 1.6;
 }
@@ -17632,34 +17914,34 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-student-card {
-    background: white;
-    border-radius: 12px;
+    background: #ffffff;
+    border-radius: 8px;
     padding: 24px;
-    box-shadow: var(--shadow);
+    border: 1px solid #e8e6df;
     display: flex;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .hr-student-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    background: #f7f6f2;
 }
 
 .hr-student-card.selected {
-    border: 2px solid #667eea;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: 1px solid #5e8c65;
+    background: #eef4ee;
 }
 
 .hr-student-avatar {
     width: 64px;
     height: 64px;
     border-radius: 12px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #eef4ee;
+    border: 1px solid #c9deca;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #5e8c65;
     font-size: 24px;
     font-weight: 600;
     flex-shrink: 0;
@@ -17679,12 +17961,12 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 .hr-student-name {
     font-size: 18px;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #1c1c18;
 }
 
 .hr-match-score {
-    background: linear-gradient(135deg, #10b981, #34d399);
-    color: white;
+    background: #eef4ee;
+    color: #5e8c65;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 14px;
@@ -17692,7 +17974,7 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-student-details {
-    color: var(--text-secondary);
+    color: #5a5a52;
     font-size: 14px;
     line-height: 1.6;
     margin-bottom: 12px;
@@ -17706,12 +17988,13 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 }
 
 .hr-ability-tag {
-    background: #f7f3ef;
-    color: #1f1f1f;
+    background: #f7f6f2;
+    color: #1c1c18;
     padding: 4px 12px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 500;
+    border: 1px solid #e8e6df;
 }
 
 .hr-student-actions {
@@ -17724,32 +18007,30 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
     padding: 10px 20px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    border: none;
 }
 
 .hr-invite-btn {
-    background: #111111;
+    background: #1c1c18;
     color: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 1px solid #1c1c18;
 }
 
 .hr-invite-btn:hover {
-    background: #000;
-    transform: translateY(-1px);
+    background: #1c1c18;
 }
 
 .hr-view-btn {
-    background: transparent;
-    border: 1px solid #e2d4c8;
-    color: #1f1f1f;
+    background: none;
+    border: 1.5px solid #e8e6df;
+    color: #5a5a52;
 }
 
 .hr-view-btn:hover {
-    background: #f7f3ef;
-    transform: translateY(-1px);
+    border-color: #1c1c18;
+    color: #1c1c18;
 }
 
 /* HR评估页面样式 */
@@ -17875,20 +18156,21 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
 
 .hr-select {
     width: 100%;
-    padding: 12px 14px;
-    border: 1.5px solid var(--border-color);
+    padding: 12px 16px;
+    border: 1.5px solid #e8e6df;
     border-radius: 10px;
     font-size: 14px;
-    font-family: var(--font-body);
+    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
     transition: all 0.2s;
-    background: white;
+    background: #f7f6f2;
+    color: #1c1c18;
+    outline: none;
 }
 
 .hr-select:focus {
     outline: none;
-    border-color: #111111;
-    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.1);
+    border-color: #5e8c65;
 }
 
 .hr-evaluation-actions {

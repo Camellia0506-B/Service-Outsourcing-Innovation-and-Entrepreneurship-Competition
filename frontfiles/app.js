@@ -904,6 +904,36 @@ class CareerPlanningApp {
                 }
             });
         });
+
+        // 隐私设置相关
+        document.getElementById('savePrivacySettings')?.addEventListener('click', () => {
+            this.savePrivacySettings();
+        });
+
+        document.getElementById('refreshAccessLog')?.addEventListener('click', () => {
+            this.loadAccessLogs();
+        });
+
+        document.getElementById('exportUserDataBtn')?.addEventListener('click', () => {
+            this.exportUserData();
+        });
+
+        document.getElementById('deleteUserDataBtn')?.addEventListener('click', () => {
+            this.deleteUserData();
+        });
+
+        // 简历生成相关
+        document.getElementById('generateResumeBtn')?.addEventListener('click', () => {
+            this.generateResume();
+        });
+
+        document.getElementById('submitToHrBtn')?.addEventListener('click', () => {
+            this.submitToHr();
+        });
+
+        document.getElementById('exportResumeBtn')?.addEventListener('click', () => {
+            this.exportResume();
+        });
     }
 
     // 显示页面
@@ -1018,6 +1048,13 @@ class CareerPlanningApp {
                 break;
             case 'mockInterview':
                 initMockInterviewModule();
+                break;
+            case 'privacy':
+                await this.loadPrivacySettings();
+                await this.loadAccessLogs();
+                break;
+            case 'resume':
+                await this.loadResume();
                 break;
         }
     }
@@ -3144,6 +3181,376 @@ class CareerPlanningApp {
         } else if (reportsContainer) {
             reportsContainer.innerHTML = '<div class="hint-text">暂无反馈优化报告</div>';
         }
+    }
+
+    // 加载隐私设置
+    async loadPrivacySettings() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        try {
+            const result = await api.requestToAI(`/security/privacy/consent?user_id=${userId}`, { method: 'GET' });
+
+            if (result.success && result.data) {
+                const consents = result.data.consents;
+                document.getElementById('resumeVisibleToHr').checked = consents.resume_visible_to_hr || false;
+                document.getElementById('allowHrContact').checked = consents.allow_hr_contact || false;
+                document.getElementById('allowAlgorithmOptimization').checked = consents.allow_algorithm_optimization || false;
+                document.getElementById('allowResearch').checked = consents.allow_research || false;
+                document.getElementById('dataRetentionYears').value = consents.data_retention_years || 3;
+            }
+        } catch (error) {
+            console.error('[Privacy] 加载隐私设置失败:', error);
+        }
+
+        // 同时加载数据统计
+        await this.loadDataSummary();
+    }
+
+    // 加载数据统计
+    async loadDataSummary() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            return;
+        }
+
+        try {
+            const result = await api.requestToAI(`/security/data/summary?user_id=${userId}`, { method: 'GET' });
+
+            if (result.success && result.data) {
+                const summary = result.data;
+                document.getElementById('summaryResumeCount').textContent = summary.has_resume ? '1' : '0';
+                document.getElementById('summaryAbilityCount').textContent = summary.has_ability_profile ? '1' : '0';
+                document.getElementById('summaryLogCount').textContent = summary.access_log_count || '0';
+            }
+        } catch (error) {
+            console.error('[Privacy] 加载数据统计失败:', error);
+        }
+    }
+
+    // 导出用户数据
+    async exportUserData() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        if (!confirm('确定要导出您的所有数据吗？')) {
+            return;
+        }
+
+        try {
+            this.showToast('正在导出数据...', 'info');
+            const result = await api.requestToAI(`/security/data/export?user_id=${userId}`, { method: 'GET' });
+
+            if (result.success && result.data) {
+                const dataStr = JSON.stringify(result.data, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `user_data_${userId}_${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showToast('数据导出成功', 'success');
+            } else {
+                this.showToast(result.msg || '导出失败', 'error');
+            }
+        } catch (error) {
+            console.error('[Privacy] 导出数据失败:', error);
+            this.showToast('导出失败，请稍后重试', 'error');
+        }
+    }
+
+    // 删除用户数据
+    async deleteUserData() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        if (!confirm('警告：此操作将删除您的所有数据且不可恢复！\n\n确定要继续吗？')) {
+            return;
+        }
+
+        if (!confirm('再次确认：真的要删除所有数据吗？')) {
+            return;
+        }
+
+        try {
+            this.showToast('正在删除数据...', 'info');
+            const result = await api.requestToAI('/security/data/delete', {
+                method: 'DELETE',
+                body: { user_id: userId }
+            });
+
+            if (result.success) {
+                this.showToast('数据删除成功，请重新登录', 'success');
+                setTimeout(() => {
+                    this.logout();
+                }, 2000);
+            } else {
+                this.showToast(result.msg || '删除失败', 'error');
+            }
+        } catch (error) {
+            console.error('[Privacy] 删除数据失败:', error);
+            this.showToast('删除失败，请稍后重试', 'error');
+        }
+    }
+
+    // 保存隐私设置
+    async savePrivacySettings() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        const consents = {
+            resume_visible_to_hr: document.getElementById('resumeVisibleToHr').checked,
+            allow_hr_contact: document.getElementById('allowHrContact').checked,
+            allow_algorithm_optimization: document.getElementById('allowAlgorithmOptimization').checked,
+            allow_research: document.getElementById('allowResearch').checked,
+            data_retention_years: parseInt(document.getElementById('dataRetentionYears').value)
+        };
+
+        try {
+            const result = await api.requestToAI('/security/privacy/consent', { 
+                method: 'PUT',
+                body: { user_id: userId, consents: consents }
+            });
+
+            if (result.success) {
+                this.showToast('隐私设置保存成功', 'success');
+            } else {
+                this.showToast(result.msg || '保存失败', 'error');
+            }
+        } catch (error) {
+            console.error('[Privacy] 保存隐私设置失败:', error);
+            this.showToast('保存失败，请稍后重试', 'error');
+        }
+    }
+
+    // 加载访问日志
+    async loadAccessLogs() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            return;
+        }
+
+        const logList = document.getElementById('accessLogList');
+        logList.innerHTML = '<div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">加载中...</div>';
+
+        try {
+            const result = await api.requestToAI(`/security/access/logs?user_id=${userId}&limit=20`, { method: 'GET' });
+
+            if (result.success && result.data) {
+                const logs = result.data.logs || [];
+                if (logs.length === 0) {
+                    logList.innerHTML = '<div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">暂无访问记录</div>';
+                } else {
+                    logList.innerHTML = logs.map(log => {
+                        const date = new Date(log.timestamp);
+                        const dateStr = date.toLocaleString('zh-CN');
+                        return `
+                            <div class="hr-student-card">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 14px;">${log.access_type}</h4>
+                                        <p style="margin: 0; color: #666; font-size: 12px;">${dateStr}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        } catch (error) {
+            console.error('[Privacy] 加载访问日志失败:', error);
+            logList.innerHTML = '<div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">加载失败</div>';
+        }
+    }
+
+    // 当前生成的简历数据
+    currentResumeData = null;
+
+    // 加载简历
+    async loadResume() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        try {
+            const result = await api.requestToAI(`/resume/get?user_id=${userId}`, { method: 'GET' });
+
+            if (result.success && result.data) {
+                this.currentResumeData = result.data;
+                this.renderResumePreview(result.data);
+                document.getElementById('submitToHrBtn').disabled = false;
+                document.getElementById('exportResumeBtn').disabled = false;
+            }
+        } catch (error) {
+            console.error('[Resume] 加载简历失败:', error);
+        }
+    }
+
+    // AI生成简历
+    async generateResume() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        const statusEl = document.getElementById('resumeStatus');
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<div style="background: var(--light-blue-bg); padding: 16px; border-radius: 8px; text-align: center;">正在AI生成简历，请稍候...</div>';
+        
+        document.getElementById('generateResumeBtn').disabled = true;
+
+        try {
+            const result = await api.postToAI('/resume/generate', { user_id: userId });
+
+            if (result.success && result.data) {
+                this.currentResumeData = result.data;
+                this.renderResumePreview(result.data);
+                document.getElementById('submitToHrBtn').disabled = false;
+                document.getElementById('exportResumeBtn').disabled = false;
+                statusEl.innerHTML = '<div style="background: #d4edda; padding: 16px; border-radius: 8px; text-align: center; color: #155724;">简历生成成功！</div>';
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+                this.showToast('简历生成成功', 'success');
+            } else {
+                statusEl.innerHTML = `<div style="background: #f8d7da; padding: 16px; border-radius: 8px; text-align: center; color: #721c24;">${result.msg || '生成失败'}</div>`;
+                this.showToast(result.msg || '生成失败', 'error');
+            }
+        } catch (error) {
+            console.error('[Resume] 生成简历失败:', error);
+            statusEl.innerHTML = '<div style="background: #f8d7da; padding: 16px; border-radius: 8px; text-align: center; color: #721c24;">生成失败，请稍后重试</div>';
+            this.showToast('生成失败，请稍后重试', 'error');
+        } finally {
+            document.getElementById('generateResumeBtn').disabled = false;
+        }
+    }
+
+    // 提交简历给HR
+    async submitToHr() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+
+        if (!this.currentResumeData) {
+            this.showToast('请先生成简历', 'error');
+            return;
+        }
+
+        const statusEl = document.getElementById('resumeStatus');
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<div style="background: var(--light-blue-bg); padding: 16px; border-radius: 8px; text-align: center;">正在提交...</div>';
+        
+        document.getElementById('submitToHrBtn').disabled = true;
+
+        try {
+            const result = await api.postToAI('/resume/submit', { user_id: userId });
+
+            if (result.success) {
+                this.currentResumeData.submitted_to_hr = true;
+                statusEl.innerHTML = '<div style="background: #d4edda; padding: 16px; border-radius: 8px; text-align: center; color: #155724;">简历已成功提交给HR！</div>';
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+                this.showToast('简历已提交给HR', 'success');
+            } else {
+                statusEl.innerHTML = `<div style="background: #f8d7da; padding: 16px; border-radius: 8px; text-align: center; color: #721c24;">${result.msg || '提交失败'}</div>`;
+                this.showToast(result.msg || '提交失败', 'error');
+                document.getElementById('submitToHrBtn').disabled = false;
+            }
+        } catch (error) {
+            console.error('[Resume] 提交简历失败:', error);
+            statusEl.innerHTML = '<div style="background: #f8d7da; padding: 16px; border-radius: 8px; text-align: center; color: #721c24;">提交失败，请稍后重试</div>';
+            this.showToast('提交失败，请稍后重试', 'error');
+            document.getElementById('submitToHrBtn').disabled = false;
+        }
+    }
+
+    // 导出PDF
+    async exportResume() {
+        if (!this.currentResumeData) {
+            this.showToast('请先生成简历', 'error');
+            return;
+        }
+
+        this.showToast('PDF导出功能开发中', 'info');
+    }
+
+    // 渲染简历预览
+    renderResumePreview(resume) {
+        const container = document.getElementById('resumePreview');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="hr-student-detail-header">
+                <div class="hr-student-detail-avatar">${resume.anonymous_id.charAt(resume.anonymous_id.length - 1)}</div>
+                <div class="hr-student-detail-info">
+                    <h4>${resume.anonymous_id}</h4>
+                    <span class="hr-student-detail-score">${resume.system_match_score}分匹配</span>
+                </div>
+            </div>
+            
+            <div class="hr-student-detail-section">
+                <div class="hr-student-detail-section-title">基本信息</div>
+                <div class="hr-student-detail-grid">
+                    <div class="hr-student-detail-item">
+                        <div class="hr-student-detail-item-label">学历</div>
+                        <div class="hr-student-detail-item-value">${resume.education_level}</div>
+                    </div>
+                    <div class="hr-student-detail-item">
+                        <div class="hr-student-detail-item-label">专业</div>
+                        <div class="hr-student-detail-item-value">${resume.major_category}</div>
+                    </div>
+                    <div class="hr-student-detail-item">
+                        <div class="hr-student-detail-item-label">成绩</div>
+                        <div class="hr-student-detail-item-value">${resume.gpa_level}</div>
+                    </div>
+                    <div class="hr-student-detail-item">
+                        <div class="hr-student-detail-item-label">联系状态</div>
+                        <div class="hr-student-detail-item-value">${resume.is_open_to_contact ? '可联系' : '暂不可联系'}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hr-student-detail-section">
+                <div class="hr-student-detail-section-title">个人亮点</div>
+                <div class="hr-student-detail-highlight">
+                    <p>${resume.highlight}</p>
+                </div>
+            </div>
+            
+            <div class="hr-student-detail-section">
+                <div class="hr-student-detail-section-title">能力标签</div>
+                <div class="hr-ability-tags">
+                    ${resume.ability_tags.map(tag => `<span class="hr-ability-tag">${tag}</span>`).join('')}
+                </div>
+            </div>
+            
+            ${resume.submitted_to_hr ? `
+                <div style="margin-top: 24px; padding: 16px; background: #d4edda; border-radius: 8px; text-align: center;">
+                    <span style="color: #155724; font-weight: 600;">✓ 简历已提交给HR</span>
+                </div>
+            ` : ''}
+        `;
     }
 
     // 加载学生能力画像
