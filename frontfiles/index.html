@@ -1359,11 +1359,11 @@
                 </div>
 
                 <div class="tracking-tabs-row">
-                    <button type="button" class="tracking-tab active" data-tab="trackingCreate">➕ 创建跟踪记录</button>
-                    <button type="button" class="tracking-tab" data-tab="trackingUpdate">🔄 更新求职进展</button>
-                    <button type="button" class="tracking-tab" data-tab="trackingFailure">🤖 失败反馈分析</button>
-                    <button type="button" class="tracking-tab" data-tab="trackingOverview">📊 求职跟踪总览</button>
-                    <button type="button" class="tracking-tab" data-tab="trackingReports">📋 反馈报告列表</button>
+                    <button type="button" class="tracking-tab active" data-tab="trackingCreate">创建跟踪记录</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingUpdate">更新求职进展</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingFailure">失败反馈分析</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingOverview">求职跟踪总览</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingReports">反馈报告列表</button>
                 </div>
 
                 <div class="tracking-body">
@@ -1371,10 +1371,16 @@
                     <div class="tracking-panel on" id="trackingCreateTab">
                         <div class="tracking-t1-layout">
                             <div class="tracking-card">
-                                <h3 class="tracking-card-title">📝 新建求职跟踪记录</h3>
+                                <h3 class="tracking-card-title">新建求职跟踪记录</h3>
                                 <div class="tracking-form-grid">
-                                    <div class="tracking-form-item"><label>岗位名称</label><input type="text" id="trackingJobTitle" placeholder="如：后端开发工程师（实习）"></div>
-                                    <div class="tracking-form-item"><label>目标公司</label><input type="text" id="trackingCompanyName" placeholder="如：字节跳动"></div>
+                                    <div class="tracking-form-item">
+                                        <label>岗位名称</label>
+                                        <input type="text" id="trackingJobTitle" placeholder="如：后端开发工程师（实习）">
+                                    </div>
+                                    <div class="tracking-form-item">
+                                        <label>目标公司</label>
+                                        <input type="text" id="trackingCompanyName" placeholder="如：字节跳动">
+                                    </div>
                                     <div class="tracking-form-item">
                                         <label for="trackingApplyDateText">投递日期</label>
                                         <div class="tracking-date-input">
@@ -1383,7 +1389,8 @@
                                             <input type="date" id="trackingApplyDate" class="tracking-date-native" tabindex="-1" aria-hidden="true">
                                         </div>
                                     </div>
-                                    <div class="tracking-form-item"><label>投递渠道</label>
+                                    <div class="tracking-form-item">
+                                        <label>投递渠道</label>
                                         <select id="trackingSource">
                                             <option value="system_recommend">系统推荐</option>
                                             <option value="self_found">自行寻找</option>
@@ -1392,7 +1399,10 @@
                                             <option value="referral">内推</option>
                                         </select>
                                     </div>
-                                    <div class="tracking-form-item full"><label>备注（可选）</label><textarea id="trackingCreateNotes" rows="2" placeholder="记录岗位要求、薪资信息、特别注意事项…"></textarea></div>
+                                    <div class="tracking-form-item full">
+                                        <label>备注（可选）</label>
+                                        <textarea id="trackingCreateNotes" rows="2" placeholder="记录岗位要求、薪资信息、特别注意事项…"></textarea>
+                                    </div>
                                 </div>
                                 <div class="tracking-btn-row">
                                     <button type="button" class="btn-secondary" id="trackingCreateClear">清空</button>
@@ -1400,7 +1410,7 @@
                                 </div>
                             </div>
                             <div class="tracking-card">
-                                <h3 class="tracking-card-title">📌 最近创建的记录</h3>
+                                <h3 class="tracking-card-title">最近创建的记录</h3>
                                 <div id="trackingRecentList" class="tracking-recent-list">
                                     <div class="loading-message">加载中...</div>
                                 </div>
@@ -1412,13 +1422,13 @@
                     <div class="tracking-panel" id="trackingUpdateTab">
                         <div class="tracking-t2-layout">
                             <div class="tracking-card tracking-job-list-card">
-                                <h3 class="tracking-card-title">📋 求职记录</h3>
+                                <h3 class="tracking-card-title">求职记录</h3>
                                 <div id="trackingUpdateJobList" class="tracking-job-list">
                                     <div class="hint-text">暂无记录</div>
                                 </div>
                             </div>
                             <div class="tracking-card tracking-detail-card">
-                                <h3 class="tracking-card-title" id="trackingUpdateDetailTitle">🔄 进展详情</h3>
+                                <h3 class="tracking-card-title" id="trackingUpdateDetailTitle">进展详情</h3>
                                 <div class="tracking-steps-wrap">
                                     <h4 class="tracking-steps-label">当前阶段进度</h4>
                                     <div class="tracking-steps" id="trackingSteps">
@@ -1432,7 +1442,7 @@
                                         <div class="tracking-sline"></div>
                                         <div class="tracking-step" data-stage="final"><div class="tracking-sdot">5</div><div class="tracking-slabel">HR面</div></div>
                                         <div class="tracking-sline"></div>
-                                        <div class="tracking-step" data-stage="offer"><div class="tracking-sdot">🎉</div><div class="tracking-slabel">Offer</div></div>
+                                        <div class="tracking-step" data-stage="offer"><div class="tracking-sdot">6</div><div class="tracking-slabel">Offer</div></div>
                                     </div>
                                     <div class="tracking-step-actions">
                                         <button type="button" class="btn-primary tracking-advance-btn" id="trackingAdvanceBtn">推进到下一阶段</button>
@@ -1440,9 +1450,11 @@
                                     </div>
                                 </div>
                                 <div class="tracking-note-area">
-                                    <h4 class="tracking-note-label">📝 面试备注</h4>
+                                    <h4 class="tracking-note-label">面试备注</h4>
                                     <textarea id="trackingUpdateNotes" rows="3" placeholder="记录面试题目、面试官反馈、个人感受…"></textarea>
-                                    <div class="tracking-btn-row"><button type="button" class="btn-primary" id="trackingSaveNoteBtn">保存备注</button></div>
+                                    <div class="tracking-btn-row">
+                                        <button type="button" class="btn-primary" id="trackingSaveNoteBtn">保存备注</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1452,25 +1464,25 @@
                     <div class="tracking-panel" id="trackingFailureTab">
                         <div class="tracking-t3-layout">
                             <div class="tracking-card tracking-fail-list-card">
-                                <h3 class="tracking-card-title">❌ 失败记录</h3>
+                                <h3 class="tracking-card-title">失败记录</h3>
                                 <div id="trackingFailList" class="tracking-fail-list">
                                     <div class="hint-text">暂无失败记录</div>
                                 </div>
-                                <button type="button" class="btn-primary tracking-regen-analysis-btn" id="trackingRegenAnalysisBtn">🤖 重新生成AI分析</button>
+                                <button type="button" class="btn-primary tracking-regen-analysis-btn" id="trackingRegenAnalysisBtn">重新生成 AI 分析</button>
                             </div>
                             <div class="tracking-card tracking-analysis-card">
-                                <h3 class="tracking-card-title" id="trackingAnalysisTitle">🤖 AI 失败分析</h3>
+                                <h3 class="tracking-card-title" id="trackingAnalysisTitle">AI 失败分析</h3>
                                 <div class="tracking-an-grid">
                                     <div class="tracking-an-section">
-                                        <h4>🔍 技能 Gap</h4>
+                                        <h4>技能 Gap</h4>
                                         <ul id="trackingAnalysisSkillGap"></ul>
                                     </div>
                                     <div class="tracking-an-section">
-                                        <h4>📄 简历优化点</h4>
+                                        <h4>简历优化点</h4>
                                         <ul id="trackingAnalysisResume"></ul>
                                     </div>
                                     <div class="tracking-an-section">
-                                        <h4>🗣️ 面试准备建议</h4>
+                                        <h4>面试准备建议</h4>
                                         <ul id="trackingAnalysisInterview"></ul>
                                     </div>
                                 </div>
@@ -1487,21 +1499,24 @@
                         <div class="tracking-t4-layout">
                             <div class="tracking-kpi"><div class="tracking-kpi-lbl">累计投递</div><div class="tracking-kpi-val" id="trackingTotalApplied">0</div><div class="tracking-kpi-sub">岗位</div></div>
                             <div class="tracking-kpi"><div class="tracking-kpi-lbl">笔试通过率</div><div class="tracking-kpi-val tracking-kpi-warn" id="trackingWrittenRate">0%</div><div class="tracking-kpi-sub" id="trackingWrittenRateSub">—</div></div>
+                            <div class="tracking-kpi"><div class="tracking-kpi-lbl">面试通过率</div><div class="tracking-kpi-val" id="trackingInterviewRate">0%</div><div class="tracking-kpi-sub" id="trackingInterviewRateSub">—</div></div>
                             <div class="tracking-kpi"><div class="tracking-kpi-lbl">Offer 数量</div><div class="tracking-kpi-val tracking-kpi-ok" id="trackingOfferCount">0</div><div class="tracking-kpi-sub">进行中 <span id="trackingInProgressCount">0</span> 个</div></div>
                             <div class="tracking-chart-card tracking-insight-col" id="trackingAgentInsightWrap" style="display:none;">
-                                <h3>💡 智能建议</h3>
-                                <p id="trackingAgentInsight" class="tracking-agent-insight"></p>
+                                <div class="tracking-insight-content">
+                                    <span class="tracking-insight-icon" aria-hidden="true"></span>
+                                    <p id="trackingAgentInsight" class="tracking-agent-insight"></p>
+                                </div>
                             </div>
                             <div class="tracking-chart-card tracking-funnel-col">
                                 <h3>求职转化漏斗</h3>
                                 <div id="trackingFunnelChart" class="tracking-chart-box"></div>
                             </div>
                             <div class="tracking-chart-card tracking-line-col">
-                                <h3>📈 近30天投递趋势</h3>
+                                <h3>近30天投递趋势</h3>
                                 <div id="trackingLineChart" class="tracking-chart-box"></div>
                             </div>
-                            <div class="tracking-chart-card">
-                                <h3>🎯 阶段分布</h3>
+                            <div class="tracking-chart-card tracking-pie-col">
+                                <h3>阶段分布</h3>
                                 <div id="trackingPieChart" class="tracking-chart-box"></div>
                             </div>
                         </div>
@@ -1511,7 +1526,7 @@
                     <div class="tracking-panel" id="trackingReportsTab">
                         <div class="tracking-t5-layout">
                             <div class="tracking-card tracking-report-list-card">
-                                <h3 class="tracking-card-title">📋 历史报告 · <span id="trackingReportCount">0</span>份</h3>
+                                <h3 class="tracking-card-title">历史报告 · <span id="trackingReportCount">0</span> 份</h3>
                                 <div id="trackingReportsList" class="tracking-report-list">
                                     <div class="hint-text">暂无反馈优化报告</div>
                                 </div>
@@ -1523,19 +1538,18 @@
                     </div>
                 </div>
             </div>
-            <!-- 右下角：应对措施/计划定制 入口（放在 wrap 外避免被 overflow 裁剪） -->
+            <!-- 计划定制 FAB —— 保持原样不动 -->
             <button type="button" class="tracking-plan-fab" id="trackingPlanFab" title="应对措施与计划定制" aria-label="应对措施与计划定制" onclick="typeof openTrackingPlanModal==='function'&&openTrackingPlanModal()">
-                <span class="tracking-plan-fab-icon">📋</span>
                 <span class="tracking-plan-fab-text">计划定制</span>
             </button>
         </div>
 
-        <!-- 应对措施/计划定制 弹窗（可执行计划：学习资源、增强竞争力、项目实践） -->
+        <!-- 计划定制弹窗 —— 保持原样不动 -->
         <div id="trackingPlanModal" class="modal-overlay hidden">
             <div class="modal-content tracking-modal tracking-plan-modal" onclick="event.stopPropagation()">
                 <div class="modal-header">
                     <div>
-                        <h3>📋 应对措施与计划定制</h3>
+                        <h3>应对措施与计划定制</h3>
                         <p class="tracking-failure-subtitle">生成可执行的提升计划：学习资源、竞争力提升、项目实践，详略得当</p>
                     </div>
                     <button type="button" class="modal-close" id="trackingPlanModalClose" aria-label="关闭">&times;</button>
@@ -1543,10 +1557,10 @@
                 <div class="modal-body">
                     <div class="tracking-plan-input-row">
                         <label for="trackingPlanPrompt">可选：补充你的目标方向或薄弱点，生成更贴合的方案</label>
-                        <textarea id="trackingPlanPrompt" rows="2" placeholder="例如：想加强算法与项目经历，目标互联网后端/算法岗…"></textarea>
+                        <textarea id="trackingPlanPrompt" rows="3" placeholder="例如：想加强算法与项目经历，目标互联网后端/算法岗…"></textarea>
                     </div>
                     <div class="tracking-plan-actions">
-                        <button type="button" class="btn-primary" id="trackingPlanGenerateBtn">🤖 生成可执行计划</button>
+                        <button type="button" class="btn-primary" id="trackingPlanGenerateBtn">生成可执行计划</button>
                         <span id="trackingPlanStatus" class="tracking-failure-status-text"></span>
                     </div>
                     <div id="trackingPlanStream" class="tracking-plan-stream">

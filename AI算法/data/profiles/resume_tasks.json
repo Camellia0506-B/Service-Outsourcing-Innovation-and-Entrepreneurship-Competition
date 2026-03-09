@@ -76,5 +76,31 @@
       "suggestions": []
     },
     "error": null
+  },
+  "resume_parse_20260309123731492_5_629594": {
+    "status": "completed",
+    "user_id": 5,
+    "created_at": "2026-03-09 12:37:31",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "",
+          "nickname": "",
+          "phone": "",
+          "email": "FF@FY.hHE",
+          "gender": "",
+          "birth_date": "",
+          "birthday": ""
+        },
+        "education": [],
+        "skills": [],
+        "internships": [],
+        "projects": [],
+        "awards": []
+      },
+      "confidence_score": 0.85,
+      "suggestions": []
+    },
+    "error": null
   }
 }

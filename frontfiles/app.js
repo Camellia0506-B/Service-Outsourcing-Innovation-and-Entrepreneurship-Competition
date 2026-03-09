@@ -3202,10 +3202,13 @@ class CareerPlanningApp {
 
         setText('trackingTotalApplied', String(summary.total_applied ?? records.length ?? 0));
         setText('trackingWrittenRate', toPercent(summary.written_test_pass_rate));
+        setText('trackingInterviewRate', toPercent(summary.interview_pass_rate));
         setText('trackingOfferCount', String(summary.offer_count));
         setText('trackingInProgressCount', String(summary.in_progress_count));
         const writtenSub = document.getElementById('trackingWrittenRateSub');
         if (writtenSub) writtenSub.textContent = '—';
+        const interviewSub = document.getElementById('trackingInterviewRateSub');
+        if (interviewSub) interviewSub.textContent = '—';
 
         const insightWrap = document.getElementById('trackingAgentInsightWrap');
         const insightEl = document.getElementById('trackingAgentInsight');
@@ -3288,62 +3291,50 @@ class CareerPlanningApp {
         if (this.trackingSelectedFailureRecordId) this.renderTrackingFailureAnalysis(this.trackingSelectedFailureRecordId);
     }
 
-    // 规划落地性跟踪：初始化求职转换漏斗图
+    // 规划落地性跟踪：求职转化漏斗（横向 progress bar 统计）
     initTrackingFunnel(summary) {
         const dom = document.getElementById('trackingFunnelChart');
-        if (!dom || typeof echarts === 'undefined') return;
-        const total = Number(summary.total_applied || 0);
-        const wtRate = Number(summary.written_test_pass_rate || 0);
-        const ivRate = Number(summary.interview_pass_rate || 0);
-        const offer = Number(summary.offer_count || 0);
+        if (!dom) return;
 
-        const written = total > 0 ? Math.max(1, Math.round(total * wtRate)) : 0;
-        const interview = total > 0 ? Math.max(1, Math.round(total * ivRate)) : 0;
-        const data = [
-            { value: Math.max(total, written, interview, offer || 1), name: '投递岗位' },
-            { value: written, name: '进入笔试' },
-            { value: interview, name: '进入面试' },
-            { value: offer || 1, name: '获得 Offer' }
+        // 旧版本可能初始化过 ECharts，先释放
+        if (this.trackingFunnelChart && typeof this.trackingFunnelChart.dispose === 'function') {
+            try { this.trackingFunnelChart.dispose(); } catch (_) {}
+        }
+        this.trackingFunnelChart = null;
+
+        const total = Math.max(0, Number(summary?.total_applied || 0));
+        const wtRate = Math.max(0, Number(summary?.written_test_pass_rate || 0));
+        const ivRate = Math.max(0, Number(summary?.interview_pass_rate || 0));
+        const offer = Math.max(0, Number(summary?.offer_count || 0));
+
+        const written = total > 0 ? Math.max(0, Math.round(total * wtRate)) : 0;
+        const interview = total > 0 ? Math.max(0, Math.round(total * ivRate)) : 0;
+
+        // 以“投递”为 100%，其他按比例缩短
+        const base = Math.max(total, 1);
+        const stages = [
+            { label: '投递', value: total, pct: Math.round((total / base) * 100) },
+            { label: '笔试', value: written, pct: Math.round((written / base) * 100) },
+            { label: '面试', value: interview, pct: Math.round((interview / base) * 100) },
+            { label: 'Offer', value: offer, pct: Math.round((offer / base) * 100) }
         ];
 
-        if (this.trackingFunnelChart) {
-            this.trackingFunnelChart.dispose();
-        }
-        const chart = echarts.init(dom);
-        this.trackingFunnelChart = chart;
+        // 进度条最小可见宽度（有值时）
+        const minPct = 6;
+        const rows = stages.map(s => {
+            const pct = s.value > 0 ? Math.max(minPct, Math.min(100, s.pct)) : 0;
+            return `
+                <div class="tracking-funnel-row">
+                    <span class="tracking-funnel-label">${s.label}</span>
+                    <div class="tracking-funnel-bar-bg" aria-hidden="true">
+                        <div class="tracking-funnel-bar-fill" style="width:${pct}%;"></div>
+                    </div>
+                    <span class="tracking-funnel-val">${s.value}</span>
+                </div>
+            `;
+        }).join('');
 
-        chart.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}<br/>数量：{c}' },
-            series: [
-                {
-                    type: 'funnel',
-                    left: '10%',
-                    right: '10%',
-                    top: 10,
-                    bottom: 10,
-                    min: 0,
-                    maxSize: '80%',
-                    sort: 'none',
-                    gap: 4,
-                    itemStyle: {
-                        borderColor: '#fff',
-                        borderWidth: 1
-                    },
-                    label: {
-                        show: true,
-                        formatter: '{b}\n{c}',
-                        fontSize: 12
-                    },
-                    data
-                }
-            ]
-        });
-
-        window.addEventListener('resize', () => {
-            try {
-                chart.resize();
-            } catch (_) {}
-        });
+        dom.innerHTML = `<div class="tracking-funnel-list">${rows}</div>`;
     }
 
     // 规划落地性跟踪：渲染失败反馈报告列表
@@ -4348,25 +4339,8 @@ class CareerPlanningApp {
 
         const funnelDom = document.getElementById('trackingFunnelChart');
         if (funnelDom && summary.total_applied != null) {
-            if (this.trackingFunnelChart) this.trackingFunnelChart.dispose();
-            this.trackingFunnelChart = echarts.init(funnelDom);
-            const total = Number(summary.total_applied || 0);
-            const wtRate = Number(summary.written_test_pass_rate || 0);
-            const ivRate = Number(summary.interview_pass_rate || 0);
-            const offer = Number(summary.offer_count || 0);
-            const written = total > 0 ? Math.max(1, Math.round(total * wtRate)) : 0;
-            const interview = total > 0 ? Math.max(1, Math.round(total * ivRate)) : 0;
-            const data = [
-                { value: Math.max(total, written, interview, offer || 1), name: '投递' },
-                { value: written, name: '笔试' },
-                { value: interview, name: '面试' },
-                { value: offer || 1, name: 'Offer' }
-            ];
-            this.trackingFunnelChart.setOption({
-                tooltip: { trigger: 'item', formatter: '{b}: {c}' },
-                color: ['#2d5be3', '#4f79f6', '#6b7cff', '#22c55e'],
-                series: [{ type: 'funnel', left: '5%', width: '90%', min: 0, max: Math.max(total, 1), minSize: '20%', maxSize: '100%', sort: 'descending', gap: 3, label: { show: true, position: 'inside', color: '#fff', fontSize: 11 }, data }]
-            });
+            // 用横向 progress bar 统计替代 ECharts 漏斗图，且不强制最小为 1
+            this.initTrackingFunnel(summary);
         }
 
         const lineDom = document.getElementById('trackingLineChart');

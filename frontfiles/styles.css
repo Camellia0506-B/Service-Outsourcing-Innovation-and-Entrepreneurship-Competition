@@ -2481,7 +2481,6 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 /* 职业规划报告生成区域样式 */
-}
 
 .question-card {
     background: var(--card-bg);
@@ -3677,6 +3676,558 @@ body.on-login-page #globalBlobs { display: none; }
     font-size: 13px;
     text-align: center;
     padding: 2rem;
+}
+
+/* ══════════════════════════════════════
+   求职跟踪页 · 编辑风格设计语言
+   暖米色背景、白色卡片、黑色主元素，无蓝色、无 emoji
+   ══════════════════════════════════════ */
+
+/* --- Tab 标签栏 --- */
+#trackingPage .tracking-tabs-row {
+    border-bottom-color: #e0dcd4;
+    margin-top: 14px;
+}
+#trackingPage .tracking-tab {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 16px 10px;
+    color: #999;
+    border-bottom-width: 2px;
+}
+#trackingPage .tracking-tab:hover {
+    color: #1a1a1a;
+    border-bottom-color: transparent;
+}
+#trackingPage .tracking-tab.active {
+    color: #1a1a1a;
+    border-bottom-color: #1a1a1a;
+}
+
+/* Tab2：把“当前阶段进度 / 面试备注”整体上移一点，避免底部按钮被裁切 */
+#trackingPage #trackingUpdateTab .tracking-detail-card {
+    gap: 10px;
+}
+#trackingPage #trackingUpdateTab .tracking-detail-card .tracking-card-title {
+    margin-bottom: 6px;
+}
+#trackingPage #trackingUpdateTab .tracking-steps-wrap {
+    padding: 12px;
+}
+#trackingPage #trackingUpdateTab .tracking-steps-label {
+    margin-bottom: 8px;
+}
+#trackingPage #trackingUpdateTab .tracking-step-actions {
+    margin-top: 8px;
+}
+#trackingPage #trackingUpdateTab .tracking-note-area {
+    padding: 12px;
+}
+#trackingPage #trackingUpdateTab .tracking-note-label {
+    margin-bottom: 6px;
+}
+#trackingPage #trackingUpdateTab .tracking-note-area .tracking-btn-row {
+    margin-top: 4px;
+}
+
+/* 保存备注按钮：再细一点 */
+#trackingPage #trackingSaveNoteBtn {
+    padding: 6px 14px;
+    font-size: 12px;
+    line-height: 1.0;
+}
+
+/* --- 页面背景 & 标题 --- */
+#trackingPage {
+    background: var(--page-bg);
+}
+#trackingPage .page-title-bar {
+    background: #5e8c65;
+}
+#trackingPage .job-profile-tag {
+    background: #eef4ee;
+    color: #5e8c65;
+    border: 1px solid #c9deca;
+}
+#trackingPage .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.3px;
+}
+#trackingPage .page-subtitle {
+    color: #888;
+    font-size: 12.5px;
+}
+
+/* --- 卡片：无蓝色阴影，圆角收紧 --- */
+#trackingPage .tracking-card {
+    background: #ffffff;
+    border: 1px solid #e0dcd4;
+    border-radius: 10px;
+    box-shadow: none;
+}
+#trackingPage .tracking-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.1px;
+}
+
+/* --- 表单元素 --- */
+#trackingPage .tracking-form-item input,
+#trackingPage .tracking-form-item select,
+#trackingPage .tracking-form-item textarea {
+    background: #faf9f7;
+    border-color: #e0dcd4;
+    border-radius: 6px;
+    color: #1a1a1a;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+#trackingPage .tracking-form-item input:focus,
+#trackingPage .tracking-form-item select:focus,
+#trackingPage .tracking-form-item textarea:focus {
+    border-color: #999;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+    outline: none;
+}
+#trackingPage .tracking-form-item label {
+    color: #999;
+    font-size: 11.5px;
+    font-weight: 400;
+}
+#trackingPage .tracking-date-btn {
+    border-color: #e0dcd4;
+    background: rgba(0,0,0,0.03)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 3V6' stroke='%23888' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M17 3V6' stroke='%23888' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M4 9H20' stroke='%23888' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M6 5H18C19.1046 5 20 5.89543 20 7V19C20 20.1046 19.1046 21 18 21H6C4.89543 21 4 20.1046 4 19V7C4 5.89543 4.89543 5 6 5Z' stroke='%23888' stroke-width='2'/%3E%3C/svg%3E")
+        no-repeat center;
+}
+#trackingPage .tracking-date-btn:hover {
+    border-color: #999;
+    background-color: rgba(0,0,0,0.06);
+}
+
+/* --- 按钮 --- */
+#trackingPage .tracking-btn-row .btn-primary,
+#trackingPage .tracking-step-actions .btn-primary.tracking-advance-btn,
+#trackingPage .tracking-plan-actions .btn-primary,
+#trackingPage .tracking-regen-analysis-btn,
+#trackingPage .tracking-save-as-report-btn,
+#trackingPage #trackingSaveNoteBtn {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #1a1a1a;
+    box-shadow: none;
+    border-radius: 6px;
+    transform: none;
+}
+#trackingPage .tracking-btn-row .btn-primary:hover,
+#trackingPage .tracking-step-actions .btn-primary.tracking-advance-btn:hover,
+#trackingPage .tracking-plan-actions .btn-primary:hover,
+#trackingPage .tracking-regen-analysis-btn:hover,
+#trackingPage .tracking-save-as-report-btn:hover,
+#trackingPage #trackingSaveNoteBtn:hover {
+    background: #333;
+    transform: none;
+}
+
+/* --- 最近记录列表 --- */
+#trackingPage .tracking-recent-item {
+    background: #faf9f7;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+}
+#trackingPage .tracking-recent-item:hover {
+    border-color: #bbb;
+    box-shadow: none;
+}
+#trackingPage .tracking-ri-logo {
+    background: #f0ede6;
+    color: #1a1a1a;
+    border-radius: 6px;
+}
+#trackingPage .tracking-sd-blue {
+    background: #1a1a1a;
+}
+
+/* --- Tab2：岗位列表 --- */
+#trackingPage .tracking-job-item {
+    background: #faf9f7;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+}
+#trackingPage .tracking-job-item.sel,
+#trackingPage .tracking-job-item:hover {
+    border-color: #1a1a1a;
+    background: #f5f3ef;
+    box-shadow: none;
+}
+
+/* --- 步骤进度条 --- */
+#trackingPage .tracking-steps-wrap {
+    background: #f5f3ef;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+}
+#trackingPage .tracking-sdot {
+    border-color: #e0dcd4;
+    background: #fff;
+    color: #ccc;
+}
+#trackingPage .tracking-step.done .tracking-sdot {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #fff;
+}
+#trackingPage .tracking-step.cur .tracking-sdot {
+    background: #fff;
+    border-color: #1a1a1a;
+    color: #1a1a1a;
+    box-shadow: 0 0 0 3px rgba(26,26,26,0.1);
+}
+#trackingPage .tracking-step.done .tracking-slabel,
+#trackingPage .tracking-step.cur .tracking-slabel {
+    color: #1a1a1a;
+    font-weight: 500;
+}
+#trackingPage .tracking-sline {
+    background: #e0dcd4;
+}
+#trackingPage .tracking-sline.done {
+    background: #1a1a1a;
+}
+
+/* --- 备注区域 --- */
+#trackingPage .tracking-note-area {
+    background: #f5f3ef;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+}
+#trackingPage .tracking-note-area textarea {
+    background: #fff;
+    border-color: #e0dcd4;
+}
+#trackingPage .tracking-note-area textarea:focus {
+    border-color: #999;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.04);
+    outline: none;
+}
+
+/* --- Tab3：失败分析 --- */
+#trackingPage .tracking-an-section {
+    background: #f5f3ef;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+}
+#trackingPage .tracking-an-section h4 {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+#trackingPage .tracking-an-section ul li::before {
+    color: #aaa;
+    font-weight: 400;
+}
+
+/* --- Tab4：KPI 卡片（去掉彩色渐变顶边） --- */
+#trackingPage .tracking-kpi {
+    background: #fff;
+    border-color: #e0dcd4;
+    border-radius: 10px;
+    box-shadow: none;
+}
+#trackingPage .tracking-kpi::before {
+    background: #1a1a1a;
+    height: 2px;
+}
+#trackingPage .tracking-chart-card {
+    background: #fff;
+    border-color: #e0dcd4;
+    border-radius: 10px;
+    box-shadow: none;
+}
+#trackingPage .tracking-chart-card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* Tab4 总览：让“近30天投递趋势/阶段分布”与漏斗卡一致高度 */
+#trackingPage #trackingOverviewTab .tracking-chart-card:not(.tracking-insight-col) {
+    min-height: 210px;
+}
+#trackingPage #trackingOverviewTab .tracking-chart-box {
+    min-height: 150px;
+}
+
+/* Tab4 总览：提示语置顶；KPI 4 列；第三行三卡并排（趋势/阶段分布/漏斗） */
+#trackingPage #trackingOverviewTab .tracking-t4-layout {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr;
+    align-items: stretch;
+}
+#trackingPage #trackingOverviewTab .tracking-insight-col {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+/* KPI 四张卡：第二行（4 列） */
+#trackingPage #trackingOverviewTab .tracking-kpi {
+    grid-row: 2;
+}
+/* 第三行：近30天投递趋势 + 阶段分布 + 求职转化漏斗 */
+#trackingPage #trackingOverviewTab .tracking-pie-col {
+    grid-column: 3;
+    grid-row: 3;
+}
+#trackingPage #trackingOverviewTab .tracking-funnel-col {
+    grid-column: 4;
+    grid-row: 3;
+}
+#trackingPage #trackingOverviewTab .tracking-line-col {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+}
+
+/* 求职转化漏斗：横向 progress bar 统计 */
+#trackingPage .tracking-funnel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}
+#trackingPage .tracking-funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#trackingPage .tracking-funnel-label {
+    font-size: 11px;
+    color: #888;
+    width: 34px;
+    flex-shrink: 0;
+}
+#trackingPage .tracking-funnel-bar-bg {
+    flex: 1;
+    height: 14px;
+    background: #f5f3ef;
+    border-radius: 999px;
+    overflow: hidden;
+}
+#trackingPage .tracking-funnel-bar-fill {
+    height: 100%;
+    background: #1a1a1a;
+    border-radius: 999px;
+    opacity: 0.85;
+}
+#trackingPage .tracking-funnel-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a1a1a;
+    width: 18px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* --- 智能建议框：实线边框 + 左侧黑色圆形图标 --- */
+#trackingPage .tracking-insight-col {
+    display: flex;
+    border: 1px solid #e0dcd4;
+    padding: 12px 16px;
+    box-shadow: none;
+}
+#trackingPage .tracking-insight-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+}
+#trackingPage .tracking-insight-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+#trackingPage .tracking-agent-insight {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 12.5px;
+    color: #444;
+    line-height: 1.65;
+}
+
+/* --- Tab5：报告卡片 --- */
+#trackingPage .tracking-rpt-card {
+    background: #fff;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+    box-shadow: none;
+}
+#trackingPage .tracking-rpt-card:hover,
+#trackingPage .tracking-rpt-card.sel {
+    border-color: #1a1a1a;
+    box-shadow: none;
+}
+#trackingPage .tracking-rpt-detail {
+    background: #fff;
+    border-color: #e0dcd4;
+    border-radius: 10px;
+    box-shadow: none;
+}
+#trackingPage .tracking-rpt-detail h3 {
+    border-left: 2px solid #1a1a1a;
+    padding-left: 10px;
+}
+#trackingPage .tracking-detail-section {
+    background: #f5f3ef;
+    border-color: #e0dcd4;
+    border-radius: 8px;
+}
+#trackingPage .tracking-detail-section h4 {
+    color: #1a1a1a;
+}
+#trackingPage .tracking-detail-section ul li::before {
+    color: #aaa;
+}
+
+/* --- 报告标签 pill（去掉紫/黄/绿彩色）--- */
+#trackingPage .tracking-tag-s,
+#trackingPage .tracking-tag-r,
+#trackingPage .tracking-tag-i {
+    background: #f0ede6;
+    color: #666;
+    border: 1px solid #e0dcd4;
+    border-radius: 4px;
+}
+
+/* --- FAB 计划定制按钮（去掉蓝色渐变）--- */
+#trackingPage .tracking-plan-fab {
+    position: fixed;
+    right: 24px;
+    top: 92px;
+    bottom: auto;
+    z-index: 10002;
+    background: #5e8c65;
+    box-shadow: 0 4px 14px rgba(94, 140, 101, 0.35);
+    border-radius: 22px;
+}
+#trackingPage .tracking-plan-fab:hover {
+    background: #4f7b56;
+    box-shadow: 0 6px 18px rgba(94, 140, 101, 0.45);
+    transform: translateY(-2px);
+}
+
+/* 清空按钮：不使用蓝色，改为背景色体系 */
+#trackingPage #trackingCreateClear.btn-secondary {
+    background: #faf9f7;
+    color: #1a1a1a;
+    border-color: #e0dcd4;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+#trackingPage #trackingCreateClear.btn-secondary:hover {
+    background: #f5f3ef;
+    color: #1a1a1a;
+}
+
+/* 关键操作按钮：更“细长” */
+#trackingPage .tracking-step-actions .btn-primary.tracking-advance-btn,
+#trackingPage .tracking-step-actions .tracking-reject-btn,
+#trackingPage #trackingSaveNoteBtn {
+    padding: 9px 18px;
+    font-size: 13px;
+    border-radius: 8px;
+    line-height: 1.1;
+}
+
+/* 推进/淘汰按钮布局：左长右短（推进覆盖到 HR 面，淘汰在 Offer 下方） */
+#trackingPage .tracking-step-actions {
+    gap: 12px;
+}
+#trackingPage .tracking-step-actions .btn-primary.tracking-advance-btn {
+    flex: 1;
+    min-width: 0;
+}
+#trackingPage .tracking-step-actions .tracking-reject-btn {
+    flex: 0 0 128px;
+    justify-content: center;
+}
+
+/* 面试备注输入框：不要过高，避免压到按钮区域 */
+#trackingPage #trackingUpdateNotes {
+    min-height: 78px;
+    max-height: 120px;
+    height: 78px;
+    resize: vertical;
+}
+
+/* “查看完整分析”按钮：与“清空”按钮同配色（浅色填充） */
+#trackingPage #trackingViewFullAnalysisBtn.btn-secondary {
+    background: #faf9f7;
+    color: #1a1a1a;
+    border-color: #e0dcd4;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+#trackingPage #trackingViewFullAnalysisBtn.btn-secondary:hover {
+    background: #f5f3ef;
+    color: #1a1a1a;
+}
+
+/* --- 计划弹窗 --- */
+.tracking-plan-modal .modal-body {
+    padding: 20px 24px;
+    border-color: #e0dcd4;
+}
+.tracking-plan-modal .tracking-plan-input-row textarea {
+    border-color: #e0dcd4;
+    background: #faf9f7;
+}
+.tracking-plan-modal .tracking-plan-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.tracking-plan-modal .tracking-plan-actions .btn-primary {
+    width: auto;
+    flex-shrink: 0;
+}
+.tracking-plan-modal .tracking-plan-stream {
+    background: #f5f3ef;
+    border-color: #e0dcd4;
+    min-height: 100px;
+    max-height: 320px;
+}
+
+/* --- 失败/计划分析 markdown 渲染 --- */
+#trackingPage .tracking-failure-stream .tracking-md h3,
+#trackingPage .tracking-plan-stream .tracking-md h3 {
+    color: #1a1a1a;
+}
+#trackingPage .tracking-failure-stream .tracking-md h4,
+#trackingPage .tracking-plan-stream .tracking-md h4 {
+    color: #2d2d2d;
+}
+#trackingPage .tracking-failure-stream .tracking-md code,
+#trackingPage .tracking-plan-stream .tracking-md code {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+    color: #1a1a1a;
+}
+
+/* --- 弹窗主按钮 --- */
+.tracking-modal .btn-primary,
+.tracking-plan-modal .btn-primary,
+.tracking-failure-modal .btn-primary {
+    background: #1a1a1a;
+    color: #fff;
+    box-shadow: none;
+    border-radius: 6px;
+}
+.tracking-modal .btn-primary:hover,
+.tracking-plan-modal .btn-primary:hover,
+.tracking-failure-modal .btn-primary:hover {
+    background: #333;
 }
 
 .job-card {
