@@ -635,7 +635,15 @@ class CareerPlanningApp {
         // 岗位匹配相关 Tab 切换
         document.querySelectorAll('#matchingPage .tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
+                const tab = (e.currentTarget && e.currentTarget.dataset.tab) || e.target.dataset.tab;
+                if (tab) this.switchTab(tab);
+            });
+        });
+        // 智能推荐统计芯片点击（Mockup v2：stat-chip + .on）
+        document.querySelectorAll('#matchingPage .stat-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const filter = chip.dataset.filter;
+                if (filter) this.filterRec(filter, chip);
             });
         });
 
@@ -5594,11 +5602,11 @@ class CareerPlanningApp {
     // 加载推荐岗位（含超时、失败自动重试一次，便于服务刚启动时能加载出来）
     async loadRecommendedJobs() {
         const userId = getCurrentUserId();
-        const container = document.getElementById('recommendedJobs');
-        if (!container) return;
+        const grid = document.getElementById('recCardsGrid') || document.getElementById('recommendedJobs');
+        if (!grid) return;
 
-        container.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
-        const REC_TIMEOUT_MS = 70000; // 70 秒，与接口 90s 超时配合，给后端足够响应时间
+        grid.innerHTML = '<div class="loading-message">加载推荐岗位中...</div>';
+        const REC_TIMEOUT_MS = 92000; // 92 秒，略大于接口 90s，让 api 层有机会返回演示数据再判定超时
         const tryOnce = async () => {
             try {
                 const timeoutPromise = new Promise((_, reject) =>
@@ -5620,42 +5628,46 @@ class CareerPlanningApp {
         let result = await tryOnce();
         const shouldRetry = !result.success && (result.msg || '').match(/超时|无法连接|网络|请求超时/);
         if (shouldRetry) {
-            container.innerHTML = '<div class="loading-message">首次请求未就绪，正在重试...</div>';
+            grid.innerHTML = '<div class="loading-message">首次请求未就绪，正在重试...</div>';
             await new Promise(r => setTimeout(r, 3000));
             result = await tryOnce();
         }
         const recommendations = (result.data && (result.data.jobs ?? result.data.recommendations)) || [];
         this.currentRecommendations = Array.isArray(recommendations) ? recommendations : [];
         this.recFilter = 'all';
+        this._recFilter = 'all';
+        this._recPage = 0;
+
+        const nav = document.getElementById('recPageNav') || null;
 
         if (result.success && this.currentRecommendations.length > 0) {
             this.updateRecStats(this.currentRecommendations);
-            this.renderRecommendedJobs(this.currentRecommendations, container);
-            this.bindRecStatTiles();
-            this.bindRecCardClicks();
+            this.renderRecommendedJobs();
         } else if (result.success && this.currentRecommendations.length === 0) {
             const hint = '暂无推荐岗位。请先完善能力画像并生成岗位画像（系统管理 → 生成岗位画像 或 配置岗位 CSV），再刷新本页获取基于算法的真实推荐。';
-            container.innerHTML = '<div class="hint-text">' + hint + '</div>';
+            grid.innerHTML = '<div class="hint-text">' + hint + '</div>';
+            if (nav) nav.innerHTML = '';
             this.updateRecStats([]);
         } else {
             const msg = (result.msg || '') + '';
-            const isConnectionHint = msg.includes('AI 服务 (5002) 未连接') || msg.includes('请先启动 AI 服务');
-            const isAbilityProfile = !isConnectionHint && msg.includes('能力画像');
-            const isRouteNotFound = (result.code === 404 && msg.includes('接口不存在')) || (String(result.msg || '').includes('NOT FOUND'));
-            const isTimeout = msg.includes('超时') || msg.includes('请求超时');
-            const hint = isConnectionHint
-                ? msg
-                : (isTimeout
-                    ? (msg || '推荐服务响应超时。请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面获取真实推荐。')
-                    : (isAbilityProfile
-                        ? '暂无推荐岗位，请先完善个人档案并生成能力画像'
-                        : (isRouteNotFound
-                            ? '推荐岗位接口未就绪。请用项目根目录 start_ai_service.ps1 或 cd AI算法 && python app.py 启动 AI 服务 (http://localhost:5002) 后刷新。'
-                            : (result.code === 404
-                                ? '推荐岗位服务暂不可用。请确认已启动 AI 服务 (http://localhost:5002) 或 Java 后端(5000) 后刷新。'
-                                : (msg || '无法获取推荐岗位。请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面，即可获取基于能力画像的真实推荐。')))));
-            container.innerHTML = '<div class="hint-text">' + hint + '</div>';
-            this.updateRecStats([]);
+            const isAbilityProfile = msg.includes('能力画像') && !msg.includes('请先启动');
+            const fallbackList = this._getRecommendedJobsFallback();
+            if (fallbackList.length > 0) {
+                this.currentRecommendations = fallbackList;
+                this.recFilter = 'all';
+                this._recFilter = 'all';
+                this._recPage = 0;
+                this.updateRecStats(fallbackList);
+                this.renderRecommendedJobs();
+                grid.insertAdjacentHTML('afterbegin', '<div class="hint-text" style="margin-bottom:12px;font-size:12px;color:#888;">当前为演示数据，启动 Java(5000) 或 AI(5002) 后刷新可获取真实推荐。</div>');
+            } else {
+                const hint = isAbilityProfile
+                    ? '暂无推荐岗位，请先完善个人档案并生成能力画像'
+                    : '推荐服务暂不可用，请启动 Java 后端(5000) 或 AI 服务(5002) 后刷新页面。';
+                grid.innerHTML = '<div class="hint-text">' + hint + '</div>';
+                if (nav) nav.innerHTML = '';
+                this.updateRecStats([]);
+            }
         }
     }
 
@@ -5682,34 +5694,16 @@ class CareerPlanningApp {
         set('recStatLow', low);
         const badge = document.getElementById('recBadge');
         if (badge) { badge.textContent = total; badge.style.display = total ? 'inline' : 'none'; }
-        const title = document.getElementById('cardsTitle');
-        if (title) title.textContent = `全部推荐岗位 · ${total} 个`;
+        const title = document.getElementById('recCardsTitle') || document.getElementById('cardsTitle');
+        if (title) title.textContent = total ? `全部推荐岗位 · ${total} 个` : '全部推荐岗位';
     }
 
-    bindRecStatTiles() {
-        document.querySelectorAll('#matchingPage .stat-tile').forEach(tile => {
-            tile.onclick = () => {
-                const filter = tile.dataset.filter;
-                this.recFilter = filter;
-                document.querySelectorAll('#matchingPage .stat-tile').forEach(t => t.classList.remove('active'));
-                tile.classList.add('active');
-                const highN = this.currentRecommendations.filter(r => (r.match_score ?? 0) >= 85).length;
-                const midN = this.currentRecommendations.filter(r => { const s = r.match_score ?? 0; return s >= 65 && s < 85; }).length;
-                const lowN = this.currentRecommendations.filter(r => (r.match_score ?? 0) < 65).length;
-                const titles = {
-                    all: `全部推荐岗位 · ${this.currentRecommendations.length} 个`,
-                    high: `高度匹配 · ${highN} 个`,
-                    mid: `较为匹配 · ${midN} 个`,
-                    low: `一般匹配 · ${lowN} 个`
-                };
-                const titleEl = document.getElementById('cardsTitle');
-                if (titleEl) titleEl.textContent = titles[filter] || titles.all;
-                document.querySelectorAll('#matchingPage .job-card-match').forEach(card => {
-                    const level = card.dataset.level || 'mid';
-                    card.style.display = (filter === 'all' || level === filter) ? '' : 'none';
-                });
-            };
-        });
+    filterRec(filter, chipEl) {
+        this._recFilter = filter;
+        this._recPage = 0;
+        document.querySelectorAll('#matchingPage .stat-chip').forEach(c => c.classList.remove('on'));
+        if (chipEl) chipEl.classList.add('on');
+        this.renderRecommendedJobs();
     }
 
     bindRecCardClicks() {
@@ -5742,52 +5736,133 @@ class CareerPlanningApp {
         });
     }
 
-    // 渲染推荐岗位（新 UI：统计栏 + 卡片网格 + 分析匹配按钮）
-    renderRecommendedJobs(recommendations, container) {
-        const filter = this.recFilter || 'all';
-        const list = recommendations || [];
-        const level = (score) => (score >= 90 ? 'high' : score >= 80 ? 'mid' : score >= 70 ? 'low' : 'low');
-        const badgeText = (score) => (score >= 90 ? '高度匹配' : score >= 80 ? '较为匹配' : '一般匹配');
-        const companyLogoColors = ['#1a3fa8', '#0d7a3e', '#d4380d', '#d48806', '#722ed1', '#cf1322', '#096dd9', '#389e0d', '#531dab', '#08979c'];
-        const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
+    // 渲染推荐岗位（新 UI：统计行 + 卡片网格 + 翻页）
+    renderRecommendedJobs() {
+        const REC_PAGE_SIZE = 9;
+        if (this._recPage === undefined) this._recPage = 0;
+        if (this._recFilter === undefined) this._recFilter = 'all';
 
-        container.innerHTML = list.map((rec, i) => {
-            const job = rec.job_name ? rec : { job_name: rec.job_name || '-', job_id: rec.job_id, ...rec };
-            const matchScore = rec.match_score ?? 0;
-            const lev = level(matchScore);
-            const jobInfo = rec.job_info || {};
-            const dims = (rec.dimension_scores && Object.entries(rec.dimension_scores).slice(0, 4)) || [];
-            const dimHtml = dims.map(([k, d]) => {
-                const s = d && (d.score != null) ? d.score : 0;
-                const cls = s >= 80 ? 'ok' : s >= 60 ? 'warn' : '';
-                const label = { basic_requirements: '基础✓', professional_skills: '技能', soft_skills: '素养', development_potential: '潜力' }[k] || k;
-                return `<span class="dim-pill ${cls}">${label} ${s >= 80 ? '✓' : s >= 60 ? '⚡' : ''}</span>`;
-            }).join('') || '<span class="dim-pill">匹配度 ' + matchScore + '%</span>';
+        const all = this.currentRecommendations || [];
 
-            return `<div class="job-card-match ${lev}" data-level="${lev}" data-rec-index="${i}" style="${filter !== 'all' && lev !== filter ? 'display:none' : ''}">
-                <div class="card-head">
-                    <div style="display:flex;align-items:flex-start;flex:1;gap:10px;">
-                        <div class="card-co-logo" style="background:${getLogoColor(i)}">${(jobInfo.company || job.job_name || '岗').slice(0, 2)}</div>
-                        <div class="card-co-info">
-                            <div class="card-job-name">${job.job_name || '-'}</div>
-                            <div class="card-co-name">${jobInfo.company || '多家公司'} · ${jobInfo.location || '-'}</div>
-                        </div>
-                    </div>
-                    <span class="match-badge badge-${lev}">${badgeText(matchScore)}</span>
-                </div>
-                <div class="card-match-row">
-                    <div class="match-pct-big pct-${lev}">${matchScore}%</div>
-                    <div class="match-bar-wrap"><div class="match-bar-bg"><div class="match-bar-fill fill-${lev}" style="width:${matchScore}%"></div></div></div>
-                </div>
-                <div class="match-dim-pills">${dimHtml}</div>
-                <div class="card-footer">
-                    <span class="card-salary">${jobInfo.salary || '-'}</span>
-                    <button type="button" class="analyze-btn">分析匹配 →</button>
-                </div>
-            </div>`;
+        let filtered;
+        if (this._recFilter === 'high') {
+            filtered = all.filter(j => (j.matchScore ?? j.match_score ?? 0) >= 90);
+        } else if (this._recFilter === 'mid') {
+            filtered = all.filter(j => { const s = j.matchScore ?? j.match_score ?? 0; return s >= 80 && s < 90; });
+        } else if (this._recFilter === 'low') {
+            filtered = all.filter(j => { const s = j.matchScore ?? j.match_score ?? 0; return s < 80; });
+        } else {
+            filtered = all;
+        }
+
+        const countAll = all.length;
+        const countHigh = all.filter(j => (j.matchScore ?? j.match_score ?? 0) >= 90).length;
+        const countMid = all.filter(j => { const s = j.matchScore ?? j.match_score ?? 0; return s >= 80 && s < 90; }).length;
+        const countLow = all.filter(j => (j.matchScore ?? j.match_score ?? 0) < 80).length;
+        const elAll = document.getElementById('recStatAll');
+        const elHigh = document.getElementById('recStatHigh');
+        const elMid = document.getElementById('recStatMid');
+        const elLow = document.getElementById('recStatLow');
+        if (elAll) elAll.textContent = countAll;
+        if (elHigh) elHigh.textContent = countHigh;
+        if (elMid) elMid.textContent = countMid;
+        if (elLow) elLow.textContent = countLow;
+
+        const total = filtered.length;
+        const pages = Math.max(1, Math.ceil(total / REC_PAGE_SIZE));
+        if (this._recPage >= pages) this._recPage = 0;
+
+        const pageItems = filtered.slice(this._recPage * REC_PAGE_SIZE, (this._recPage + 1) * REC_PAGE_SIZE);
+
+        const grid = document.getElementById('recCardsGrid') || document.getElementById('recommendedJobs');
+        const nav = document.getElementById('recPageNav') || null;
+        const titleEl = document.getElementById('recCardsTitle') || document.getElementById('cardsTitle');
+        if (!grid) return;
+
+        const labelMap = { all: '全部推荐岗位', high: '高度匹配', mid: '较为匹配', low: '一般匹配' };
+        if (titleEl) titleEl.textContent = `${labelMap[this._recFilter]} · ${total} 个`;
+
+        const COLORS = ['#2d6a4f', '#0d7a3e', '#d4380d', '#d48806', '#722ed1', '#cf1322', '#1b5e4d', '#389e0d', '#531dab', '#08979c'];
+
+        grid.innerHTML = pageItems.map((job, i) => {
+            const score = job.matchScore ?? job.match_score ?? 0;
+            const lv = score >= 90 ? 'high' : score >= 80 ? 'mid' : 'low';
+            const lvLabel = lv === 'high' ? '高度匹配' : lv === 'mid' ? '较为匹配' : '一般匹配';
+            const color = COLORS[(this._recPage * REC_PAGE_SIZE + i) % COLORS.length];
+            const jobInfo = job.job_info || {};
+            const abbr = (jobInfo.company || job.job_name || job.company || '').slice(0, 2) || '?';
+            const salary = jobInfo.salary || job.salary || job.salaryRange || '薪资面议';
+            const skills = (job.matchedSkills || job.skills || []).slice(0, 4);
+            const jobId = job.id ?? job.job_id ?? i;
+            const jobIdAttr = typeof jobId === 'number' ? jobId : JSON.stringify(String(jobId));
+
+            return `<div class="jcard job-card-match" data-lv="${lv}" data-rec-index="${i}">
+      <div class="jcard-head">
+        <div style="display:flex;align-items:flex-start;flex:1;gap:0">
+          <div class="jcard-logo" style="background:${color}">${abbr}</div>
+          <div class="jcard-info" style="flex:1;min-width:0">
+            <div class="jcard-name">${job.job_name || job.title || job.jobTitle || '未知岗位'}</div>
+            <div class="jcard-co">${jobInfo.company || job.company || job.companyName || ''} · ${jobInfo.location || job.location || job.city || ''}</div>
+          </div>
+        </div>
+        <span class="badge badge-${lv}">${lvLabel}</span>
+      </div>
+      <div class="jcard-pct-row">
+        <span class="pct pct-${lv}">${score}%</span>
+        <div class="bar-bg"><div class="bar-fill bf-${lv}" style="width:${score}%"></div></div>
+      </div>
+      <div class="jcard-pills">
+        ${skills.map(s => `<span class="pill ok">${s}</span>`).join('')}
+      </div>
+      <div class="jcard-foot">
+        <span class="jcard-salary">${salary}</span>
+        <button type="button" class="ana-btn analyze-btn">分析匹配 →</button>
+      </div>
+    </div>`;
         }).join('');
 
         this.bindRecCardClicks();
+        if (!nav) return;
+        if (pages <= 1) { nav.innerHTML = ''; return; }
+
+        const p = this._recPage;
+        const prevDis = p === 0 ? 'disabled' : '';
+        const nextDis = p === pages - 1 ? 'disabled' : '';
+
+        let dotsHtml = '';
+        const show = new Set([0, pages - 1, p, p - 1, p + 1].filter(x => x >= 0 && x < pages));
+        let prev = -1;
+        Array.from(show).sort((a, b) => a - b).forEach(idx => {
+            if (prev >= 0 && idx > prev + 1) dotsHtml += `<span style="font-size:12px;color:#9a9a8f;padding:0 2px">…</span>`;
+            dotsHtml += `<button type="button" class="pg-dot${idx === p ? ' on' : ''}" onclick="app._goRecPage && app._goRecPage(${idx})">${idx + 1}</button>`;
+            prev = idx;
+        });
+
+        nav.innerHTML = `
+    <button type="button" class="pg-arrow" ${prevDis} onclick="app._goRecPage && app._goRecPage(${p - 1})">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      上一页
+    </button>
+    <div class="pg-dots">${dotsHtml}</div>
+    <button type="button" class="pg-arrow" ${nextDis} onclick="app._goRecPage && app._goRecPage(${p + 1})">
+      下一页
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <span class="pg-info">第 ${p + 1} / ${pages} 页 · 共 ${total} 个</span>
+  `;
+    }
+
+    _goRecPage(p) {
+        const dir = p > this._recPage ? 1 : -1;
+        this._recPage = p;
+        const grid = document.getElementById('recCardsGrid') || document.getElementById('recommendedJobs');
+        if (grid) {
+            grid.classList.remove('slide-left', 'slide-right');
+            void grid.offsetWidth;
+            grid.classList.add(dir > 0 ? 'slide-left' : 'slide-right');
+        }
+        this.renderRecommendedJobs();
+        (document.getElementById('recCardsGrid') || document.getElementById('recommendedJobs'))?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // 渲染岗位列表（搜索等场景，按图2模板：多色 logo、技能标签、预估匹配、分析匹配）
@@ -5798,7 +5873,7 @@ class CareerPlanningApp {
             container.innerHTML = '<p class="hint-text">未找到相关岗位</p>';
             return;
         }
-        const companyLogoColors = ['#2f54eb', '#d4380d', '#d46b08', '#08979c', '#531dab', '#1d39c4', '#0d7a3e', '#722ed1', '#096dd9', '#389e0d'];
+        const companyLogoColors = ['#2d6a4f', '#d4380d', '#d46b08', '#08979c', '#531dab', '#1b5e4d', '#0d7a3e', '#722ed1', '#264653', '#389e0d'];
         const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
         const tags = (job) => (job.tags || job.required_skills || []).slice(0, 4).map(t => `<span class="src-tag">${t}</span>`).join('');
         container.innerHTML = list.map((job, i) => {
@@ -5806,7 +5881,6 @@ class CareerPlanningApp {
             const abbr = (name.slice(0, 1) || '岗');
             const loc = job.location || job.job_info?.location || '';
             const salary = job.avg_salary || job.salary || job.job_info?.salary || '-';
-            const matchPct = job.match_score != null ? Number(job.match_score) : null;
             return `<div class="search-result-card" data-job-id="${job.job_id || ''}" data-job-name="${(job.job_name || '').replace(/"/g, '&quot;')}">
                 <div class="src-head">
                     <div class="src-logo" style="background:${getLogoColor(i)}">${abbr}</div>
@@ -5815,7 +5889,6 @@ class CareerPlanningApp {
                 <div class="src-tags">${tags(job)}${loc ? `<span class="src-tag">📍${loc}</span>` : ''}</div>
                 <div class="src-footer">
                     <span class="src-salary">${salary}${String(salary).includes('/') ? '' : '/月'}</span>
-                    <span class="src-match">${matchPct != null ? `匹配 ${matchPct}%` : '匹配 —'}</span>
                     <button type="button" class="src-btn">分析匹配</button>
                 </div>
             </div>`;
@@ -5896,7 +5969,7 @@ class CareerPlanningApp {
             container.innerHTML = '<p class="hint-text">未找到相关岗位</p>';
             return;
         }
-        const companyLogoColors = ['#2f54eb', '#d4380d', '#d46b08', '#08979c', '#531dab', '#1d39c4', '#0d7a3e', '#722ed1', '#096dd9', '#389e0d'];
+        const companyLogoColors = ['#2d6a4f', '#d4380d', '#d46b08', '#08979c', '#531dab', '#1b5e4d', '#0d7a3e', '#722ed1', '#264653', '#389e0d'];
         const getLogoColor = (i) => companyLogoColors[i % companyLogoColors.length];
 
         const fmtSalaryRange = (sr) => {
@@ -6052,7 +6125,7 @@ class CareerPlanningApp {
                     state.enriched = true;
                     return;
                 }
-                const jobIds = state.base.map(c => c.job_id).filter(id => id != null && id !== '');
+                const jobIds = state.base.map(c => c.job_id).filter(id => id != null && id !== '').slice(0, 50);
                 if (!jobIds.length) {
                     state.enriched = true;
                     return;
@@ -6167,7 +6240,6 @@ class CareerPlanningApp {
                     const co = (c.company || '未知公司').toString();
                     const abbr = (co.slice(0, 2) || '公司');
                     const salary = (c.avg_salary || c.salary || '-').toString() || '-';
-                    const matchPct = c.match_score != null ? Number(c.match_score) : null;
                     const pills = fmtIndustryPills(c.industry);
                     const colorIdx = ci % 10;
                     return `<div class="jg-company-row" data-job-id="${(c.job_id || '').toString().replace(/"/g, '&quot;')}">
@@ -6180,7 +6252,6 @@ class CareerPlanningApp {
                         </div>
                         <div class="jg-co-right">
                             <div class="jg-co-salary">${salary}${String(salary).includes('/') ? '' : '/月'}</div>
-                            <div class="jg-co-match">${matchPct != null ? `匹配${matchPct}%` : '匹配—'}</div>
                             <button type="button" class="jg-analyze">分析匹配</button>
                         </div>
                     </div>`;
@@ -9337,7 +9408,7 @@ class CareerPlanningApp {
         // 归类视图：/matching/search-jobs-grouped；全部职位：原 /matching/search-jobs
         const result = isGrouped
             ? await searchJobsGrouped(keyword, page, size, filters, getCurrentUserId())
-            : await searchJobs(keyword, page, size, filters);
+            : await searchJobs(keyword, page, size, filters, getCurrentUserId());
         console.log('[search-jobs result]', { mode: isGrouped ? 'grouped' : 'all', keyword, page, size, filters, result });
 
         const list = isGrouped
@@ -9406,7 +9477,7 @@ class CareerPlanningApp {
         const anaContent = document.getElementById('anaContent');
         const container = document.getElementById('analysisResult');
         if (anaEmpty) anaEmpty.style.display = 'none';
-        if (anaContent) anaContent.style.display = 'grid';
+        if (anaContent) anaContent.style.display = 'flex';
         if (container) container.innerHTML = '<div class="loading-message">分析中...</div>';
         const anaBadge = document.getElementById('anaBadge');
         if (anaBadge) { anaBadge.style.display = 'inline'; anaBadge.textContent = '1'; }
@@ -9460,7 +9531,7 @@ class CareerPlanningApp {
         const logo = document.getElementById('anaCoLogo');
         if (logo) {
             logo.textContent = (jobInfo.company || jobName).slice(0, 2);
-            logo.style.background = '#2C5FD4';
+            logo.style.background = '#2d6a4f';
         }
         set('anaCoType', jobInfo.location ? jobInfo.location + ' · 月薪范围' : '月薪范围');
         set('anaJobSalary', jobInfo.salary || '—');
@@ -9478,7 +9549,7 @@ class CareerPlanningApp {
         const dimKeys = ['basic_requirements', 'professional_skills', 'soft_skills', 'development_potential'];
         const legendEl = document.getElementById('anaRingLegend');
         if (legendEl) {
-            const colors = ['#2C5FD4', '#0BA771', '#E8890B', '#748ffc'];
+            const colors = ['#2d6a4f', '#0BA771', '#E8890B', '#40916c'];
             legendEl.innerHTML = dimKeys.map((key, i) => {
                 const s = safeScore(key);
                 return `<div class="leg-item"><div class="leg-dot" style="background:${colors[i]}"></div><span class="leg-name">${dimLabels[key]}</span><span class="leg-score">${s}</span></div>`;

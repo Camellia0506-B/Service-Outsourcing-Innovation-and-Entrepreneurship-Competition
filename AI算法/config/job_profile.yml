@@ -20,8 +20,8 @@ job_data_path: data/a13基于AI的大学生职业规划智能体-JD采样数据.
 job_profiles_store: data/job_profiles/profiles.json
 job_graph_store:    data/job_profiles/graph.json
 max_csv_sample_per_job: 10
-# 岗位匹配加载 CSV 时最多处理行数。0=不限制（约1万行时首请求可能超时）；建议 2000~3000 以保障推荐接口 90s 内返回
-max_csv_rows_for_matching: 2000
+# 岗位匹配加载 CSV 时最多处理行数。0=不限制（支持九千多岗位全量）；推荐接口通过语义召回+分页控制性能
+max_csv_rows_for_matching: 0
 
 
 # ============================================================

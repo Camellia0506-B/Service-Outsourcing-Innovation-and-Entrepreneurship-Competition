@@ -23,6 +23,7 @@ import csv
 import json
 import os
 import re
+import threading
 from datetime import datetime
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
@@ -960,8 +961,25 @@ class JobProfileService:
 
     def __init__(self):
         self.extractor = CsvDataExtractor()
-        self.profiles_store = _load_profiles_store()
+        self._profiles_store = None
+        self._load_done = threading.Event()
+        # 后台加载岗位 CSV，避免首请求阻塞数十秒（首请求会通过 profiles_store 属性等待加载完成）
+        def _do_load():
+            try:
+                self._profiles_store = _load_profiles_store()
+            finally:
+                self._load_done.set()
+        t = threading.Thread(target=_do_load, daemon=True)
+        t.start()
         self.model = self._init_model()
+
+    @property
+    def profiles_store(self):
+        """阻塞直到岗位数据加载完成（最多 120s），避免首请求因全量 CSV 解析过久而超时感明显。"""
+        if self._load_done.wait(timeout=120):
+            return self._profiles_store or {}
+        logger.warning("[ProfileStore] 岗位数据加载超时(120s)，返回已加载部分或空")
+        return self._profiles_store or {}
 
     def _init_model(self):
         try:
@@ -1345,7 +1363,8 @@ class JobProfileService:
         return result
 
     def reload_store(self):
-        self.profiles_store = _load_profiles_store()
+        self._profiles_store = _load_profiles_store()
+        self._load_done.set()
 
 
 # ========== 单例 ==========

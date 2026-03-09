@@ -936,23 +936,24 @@ class JobMatchingService:
         student_query = _build_student_query_text(student_profile)
         if self._hybrid_retriever is not None and student_query:
             try:
-                recall_k = min(max(200, top_n * 50), 800)
+                # 控制候选数量以加快首屏：召回约 120 条、精排取 80 条做匹配，仍返回 top_n 条给前端
+                recall_k = min(max(120, top_n * 4), 400)
                 cands = self._hybrid_retriever.retrieve(student_query, top_k=recall_k, alpha=0.30)
                 if cands:
-                    cands = self._hybrid_retriever.mmr_rerank(student_query, cands, top_n=min(recall_k, 200), lambda_diversity=0.80)
+                    cands = self._hybrid_retriever.mmr_rerank(student_query, cands, top_n=min(recall_k, 80), lambda_diversity=0.80)
                     cand_ids = [c.job_id for c in cands]
                     candidate_jobs = {jid: all_jobs[jid] for jid in cand_ids if jid in all_jobs}
                     if len(candidate_jobs) < max(30, top_n * 5):
-                        candidate_jobs = dict(list(all_jobs.items())[:150]) if len(all_jobs) > 150 else all_jobs
+                        candidate_jobs = dict(list(all_jobs.items())[:80]) if len(all_jobs) > 80 else all_jobs
                 else:
-                    candidate_jobs = dict(list(all_jobs.items())[:150]) if len(all_jobs) > 150 else all_jobs
+                    candidate_jobs = dict(list(all_jobs.items())[:80]) if len(all_jobs) > 80 else all_jobs
             except Exception as e:
                 logger.warning(f"[Hybrid] 推荐召回失败，回退全量匹配: {e}")
-                candidate_jobs = dict(list(all_jobs.items())[:150]) if len(all_jobs) > 150 else all_jobs
+                candidate_jobs = dict(list(all_jobs.items())[:80]) if len(all_jobs) > 80 else all_jobs
         else:
-            # 索引未就绪：仅对前 100 条做匹配，确保首请求在 90s 内返回（岗位 CSV 加载可能较慢）
-            if len(all_jobs) > 100:
-                items = list(all_jobs.items())[:100]
+            # 索引未就绪：仅对前 80 条做匹配，确保首请求更快返回
+            if len(all_jobs) > 80:
+                items = list(all_jobs.items())[:80]
                 candidate_jobs = dict(items)
                 logger.info("[Matching] Hybrid 索引构建中，本次推荐仅基于前 %d 条岗位，完整索引就绪后将自动使用", len(candidate_jobs))
         
@@ -995,27 +996,24 @@ class JobMatchingService:
                 }
             })
         
-        # 按匹配度排序
+        # 按匹配度排序（先按原始分排序，保证相对顺序）
         recommendations.sort(key=lambda x: x["match_score"], reverse=True)
 
-        # 拉开匹配度区分：若分数集中（极差<20），按相对排名重标到 70–96，便于展示高度/较为/一般
+        # 算法层解决「高度重合、分布不均」：按排名分段重标，使高/中/低档分布合理（不写死前端）
+        # 规则：前约20% → 90-98（高度匹配），中间约50% → 80-89（较为匹配），后约30% → 70-79（一般匹配）
         if recommendations:
-            scores = [r["match_score"] for r in recommendations]
-            min_s, max_s = min(scores), max(scores)
-            spread = max_s - min_s
-            if spread < 18:
-                for r in recommendations:
-                    # 保持排序不变，将分数拉开到 [70, 96]（与前端 高度≥90 / 较为80-89 / 一般70-79 一致）
-                    raw = r["match_score"]
-                    new_score = int(70 + (raw - min_s) / (spread + 1e-6) * 26)
-                    new_score = max(70, min(98, new_score))
-                    r["match_score"] = new_score
-                    r["match_level"] = "高度匹配" if new_score >= 90 else ("较为匹配" if new_score >= 80 else "一般匹配")
-            else:
-                # 已有一定区分，仅统一 match_level 与分数区间（与前端 90/80/70 一致）
-                for r in recommendations:
-                    s = r["match_score"]
-                    r["match_level"] = "高度匹配" if s >= 90 else ("较为匹配" if s >= 80 else "一般匹配")
+            n = len(recommendations)
+            for i, r in enumerate(recommendations):
+                rank_ratio = i / max(n - 1, 1)  # 0=最好, 1=最差
+                if rank_ratio <= 0.20:
+                    new_score = int(98 - (rank_ratio / 0.20) * 8)  # 98→90
+                elif rank_ratio <= 0.70:
+                    new_score = int(89 - (rank_ratio - 0.20) / 0.50 * 9)  # 89→80
+                else:
+                    new_score = int(79 - (rank_ratio - 0.70) / 0.30 * 9)  # 79→70
+                new_score = max(70, min(98, new_score))
+                r["match_score"] = new_score
+                r["match_level"] = "高度匹配" if new_score >= 90 else ("较为匹配" if new_score >= 80 else "一般匹配")
         
         return {
             "total_matched": len(recommendations),
@@ -1220,25 +1218,23 @@ class JobMatchingService:
         # Hybrid 搜索优先（BM25 + 向量召回 + MMR 多样性）
         if self._hybrid_retriever is not None and keyword:
             # 先用 Hybrid 召回，再对结果应用 filters（避免对全量岗位做 filters 计算）
-            cands = self._hybrid_retriever.retrieve(keyword, top_k=max(200, top_n * 10), alpha=0.40)
+            top_k = min(10000, max(200, top_n))
+            cands = self._hybrid_retriever.retrieve(keyword, top_k=top_k, alpha=0.40)
             if cands:
-                cands = self._hybrid_retriever.mmr_rerank(keyword, cands, top_n=top_n, lambda_diversity=0.75)
+                cands = self._hybrid_retriever.mmr_rerank(keyword, cands, top_n=min(10000, top_n), lambda_diversity=0.75)
             else:
                 # Hybrid 没有有效信号时，回退旧逻辑（避免返回一堆 0 分无关岗位）
                 cands = []
 
             if cands:
-                jobs: List[Dict] = []
+                jobs = []
                 for c in cands:
                     job = all_jobs.get(c.job_id)
                     if not job or not isinstance(job, dict):
                         continue
                     if not self._job_pass_filters_single(job, filters):
                         continue
-                    # 用 hybrid score 复用 semantic_score 字段，前端无需改
                     jobs.append(self._build_search_job_entry(c.job_id, job, semantic_score=c.score))
-                    if len(jobs) >= top_n:
-                        break
                 return {"total": len(jobs), "jobs": jobs[:top_n]}
 
         # 回退：原有关键词+语义检索
@@ -1279,7 +1275,7 @@ class JobMatchingService:
         return {"total": len(jobs), "jobs": jobs[:top_n]}
 
     def _build_search_job_entry(self, job_id: str, job_profile: dict, semantic_score: Optional[float]) -> Dict:
-        """构造岗位搜索结果条目，包含 semantic_score 字段。"""
+        """构造岗位搜索结果条目，包含 semantic_score、location、company 等供前端展示。"""
         basic = job_profile.get("basic_info") or {}
         return {
             "job_id": job_id,
@@ -1289,7 +1285,37 @@ class JobMatchingService:
             "avg_salary": basic.get("avg_salary", basic.get("avg_salary", "")),
             "tags": job_profile.get("tags") or basic.get("tags") or [],
             "semantic_score": float(semantic_score) if semantic_score is not None else None,
+            "location": basic.get("location", ""),
+            "company": basic.get("company", ""),
         }
+
+    def enrich_jobs_with_match_scores(
+        self, user_id: int, jobs: List[Dict], ability_profile: Optional[dict] = None
+    ) -> List[Dict]:
+        """
+        对搜索结果（当前页）按用户能力画像计算真实匹配度，用于列表展示「匹配 XX%」而非「匹配 —」。
+        仅对传入的 jobs 列表逐条计算，不扩大范围，保证接口耗时可控。
+        """
+        if not jobs:
+            return jobs
+        student_profile = ability_profile or (self.student_ability_service.get_ability_profile(user_id) if user_id else None)
+        if not student_profile or not isinstance(student_profile, dict):
+            return jobs
+        all_jobs = getattr(self.job_profile_service, "profiles_store", None) or {}
+        for entry in jobs:
+            jid = entry.get("job_id")
+            if not jid:
+                continue
+            profile = all_jobs.get(jid)
+            if not profile or not isinstance(profile, dict):
+                continue
+            try:
+                match_result = self.matching_engine.calculate_match(student_profile, profile)
+                entry["match_score"] = match_result.get("match_score", 0)
+                entry["match_level"] = match_result.get("match_level", "一般匹配")
+            except Exception as e:
+                logger.debug("[Matching] 搜索列表单条匹配度计算跳过 job_id=%s: %s", jid, e)
+        return jobs
 
     def _job_pass_filters_single(self, job: dict, filters: dict) -> bool:
         """
@@ -1534,6 +1560,28 @@ class JobMatchingService:
                 # 暂不做昂贵的匹配计算；前端可将 semantic_score 作为“预估匹配”展示
                 "match_score": None
             })
+
+        # 合并配置中的岗位定义（job_profile.yml 的 target_jobs），确保「按岗位归类」显示全部岗位种类（如 35/51 种），不因 CSV 仅含部分而只显示 9 种
+        try:
+            from job_profile.job_profile_service import job_profile_conf
+            for tj in (job_profile_conf.get("target_jobs") or []):
+                if not isinstance(tj, dict):
+                    continue
+                name = (tj.get("name") or "").strip()
+                if not name:
+                    continue
+                group_name = _norm_name(name) or name
+                if group_name not in groups:
+                    groups[group_name] = {
+                        "job_name": group_name,
+                        "company_count": 0,
+                        "tags_counter": {},
+                        "salary_min": None,
+                        "salary_max": None,
+                        "companies": []
+                    }
+        except Exception as e:
+            logger.warning("[search_jobs_grouped] 合并 target_jobs 失败: %s", e)
 
         # 整理 groups 列表
         group_list: List[Dict] = []

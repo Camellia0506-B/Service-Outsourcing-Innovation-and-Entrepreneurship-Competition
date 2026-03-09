@@ -1190,99 +1190,114 @@
             </div>
         </div>
 
-        <!-- 岗位匹配页面 -->
+        <!-- 岗位匹配页面（Mockup v2 结构） -->
         <div id="matchingPage" class="page hidden">
             <div class="matching-container">
-                <div class="page-header">
-                    <span class="job-profile-tag">职业规划智能体</span>
-                    <div class="page-title-row">
-                        <div class="page-title-bar"></div>
-                        <span class="page-title">岗位匹配</span>
-                    </div>
-                    <p class="page-subtitle">基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
+                <div class="page-chip">职业规划智能体</div>
+                <div class="page-head-row">
+                    <div class="page-head-bar"></div>
+                    <h1 class="page-title">岗位匹配</h1>
+                </div>
+                <p class="page-sub">基于你的能力画像，智能推荐最适合你的岗位并生成人岗匹配分析</p>
+
+                <div class="tabs matching-tabs">
+                    <button class="tab-btn active" data-tab="recommend">智能推荐 <span class="tab-badge" id="recBadge">0</span></button>
+                    <button class="tab-btn" data-tab="search">主动探索</button>
+                    <button class="tab-btn" data-tab="analysis">智能决策分析 <span class="tab-badge" id="anaBadge" style="display:none">1</span></button>
                 </div>
 
-                <div class="matching-tabs">
-                    <button class="tab-btn active" data-tab="recommend">🤖 智能推荐 <span class="tab-badge" id="recBadge">0</span></button>
-                    <button class="tab-btn" data-tab="search">🔎 主动探索</button>
-                    <button class="tab-btn" data-tab="analysis">📊 智能决策分析 <span class="tab-badge" id="anaBadge" style="display:none">1</span></button>
-                </div>
-
-                <!-- 推荐岗位 -->
+                <!-- 智能推荐 Tab -->
                 <div class="tab-content active" id="recommendTab">
-                    <div class="rec-layout">
-                        <div class="stats-sidebar">
-                            <div class="stat-tile all active" data-filter="all">
-                                <div class="stat-tile-num" id="recStatAll">0</div>
-                                <div class="stat-tile-label">全部推荐岗位</div>
-                                <div class="stat-tile-sub">点击查看全部</div>
+                    <div class="stats-bar">
+                        <div class="stat-chip on" data-filter="all">
+                            <div><div class="stat-n" id="recStatAll">0</div></div>
+                            <div class="stat-txt">
+                                <div class="stat-lbl">全部推荐</div>
+                                <div class="stat-sub">点击查看全部</div>
                             </div>
-                            <div class="stat-tile high" data-filter="high">
-                                <div class="stat-tile-num" id="recStatHigh">0</div>
-                                <div class="stat-tile-label">高度匹配</div>
-                                <div class="stat-tile-sub">匹配度 ≥ 90%</div>
-                            </div>
-                            <div class="stat-tile mid" data-filter="mid">
-                                <div class="stat-tile-num" id="recStatMid">0</div>
-                                <div class="stat-tile-label">较为匹配</div>
-                                <div class="stat-tile-sub">匹配度 80–89%</div>
-                            </div>
-                            <div class="stat-tile low" data-filter="low">
-                                <div class="stat-tile-num" id="recStatLow">0</div>
-                                <div class="stat-tile-label">一般匹配</div>
-                                <div class="stat-tile-sub">匹配度 70–79%</div>
-                            </div>
+                            <div class="stat-dot d-ink"></div>
                         </div>
-                        <div class="cards-area">
-                            <div class="cards-toolbar">
-                                <span class="cards-title" id="cardsTitle">全部推荐岗位 · 0 个</span>
-                                <div class="sort-row">
-                                    <span class="sort-label">排序</span>
-                                    <select class="sort-sel"><option>匹配度从高到低</option><option>薪资从高到低</option></select>
-                                </div>
+                        <div class="stat-chip" data-filter="high">
+                            <div><div class="stat-n g" id="recStatHigh">0</div></div>
+                            <div class="stat-txt">
+                                <div class="stat-lbl">高度匹配</div>
+                                <div class="stat-sub">匹配度 ≥ 90%</div>
                             </div>
-                            <div class="ai-hint ai-hint-blue">
-                                🤖 智能体从 10000+条岗位信息综合技能相似度、行业趋势与成长潜力筛选出以下推荐结果。
+                            <div class="stat-dot d-sage"></div>
+                        </div>
+                        <div class="stat-chip" data-filter="mid">
+                            <div><div class="stat-n a" id="recStatMid">0</div></div>
+                            <div class="stat-txt">
+                                <div class="stat-lbl">较为匹配</div>
+                                <div class="stat-sub">匹配度 80–89%</div>
                             </div>
-                            <div class="cards-grid" id="recommendedJobs">
-                                <div class="loading-message">加载推荐岗位中...</div>
+                            <div class="stat-dot d-amb"></div>
+                        </div>
+                        <div class="stat-chip" data-filter="low">
+                            <div><div class="stat-n m" id="recStatLow">0</div></div>
+                            <div class="stat-txt">
+                                <div class="stat-lbl">一般匹配</div>
+                                <div class="stat-sub">匹配度 70–79%</div>
                             </div>
+                            <div class="stat-dot d-gray"></div>
                         </div>
                     </div>
-                    <div style="font-size:11px;color:#7e93c0;margin-top:10px;">
-                        匹配等级（高度匹配 / 较为匹配 / 一般匹配）由智能体匹配分级机制自动生成。
+                    <div class="cards-bar">
+                        <span class="cards-bar-title" id="recCardsTitle">全部推荐岗位 · 0 个</span>
+                        <div class="sort-wrap">
+                            <span style="font-size:12px;color:var(--ink-4)">排序</span>
+                            <select class="sort-sel"><option>匹配度从高到低</option><option>薪资从高到低</option></select>
+                        </div>
+                    </div>
+                    <div class="ai-hint">
+                        <div class="ai-hint-dot"></div>
+                        智能体从 10000+ 条岗位信息综合技能相似度、行业趋势与成长潜力筛选出以下推荐结果。
+                    </div>
+                    <div class="cards-wrap">
+                        <div class="cards-grid" id="recCardsGrid">
+                            <div class="loading-message">加载推荐岗位中...</div>
+                        </div>
+                        <div class="page-nav" id="recPageNav"></div>
                     </div>
                 </div>
 
-                <!-- 搜索岗位 -->
+                <!-- 主动探索 Tab -->
                 <div class="tab-content" id="searchTab">
-                    <div class="search-bar-wrap">
-                        <h2>🔎 主动探索</h2>
-                        <div class="search-input-row">
-                            <input type="text" id="jobSearchInput" class="search-input" placeholder="输入岗位名称、技能、公司…">
-                            <button type="button" id="searchJobBtn" class="search-btn">🔍 搜索</button>
+                    <div class="search-box">
+                        <div class="search-box-title">主动探索</div>
+                        <div class="search-row">
+                            <input type="text" id="jobSearchInput" class="search-inp" placeholder="输入岗位名称、技能、公司…">
+                            <button type="button" id="searchJobBtn" class="search-go">搜索</button>
                         </div>
-                        <div class="filters-row">
-                            <div class="filter-group"><span class="filter-label">城市</span><select id="searchFilterCity" class="filter-sel"><option value="">不限</option><option value="北京">北京</option><option value="上海">上海</option><option value="深圳">深圳</option><option value="杭州">杭州</option><option value="广州">广州</option></select></div>
-                            <div class="filter-group"><span class="filter-label">行业</span><select id="searchFilterIndustry" class="filter-sel"><option value="">不限</option><option value="互联网">互联网</option><option value="金融科技">金融科技</option><option value="AI/智能硬件">AI/智能硬件</option><option value="新能源">新能源</option><option value="咨询">咨询</option></select></div>
-                            <div class="filter-group"><span class="filter-label">薪资</span><select id="searchFilterSalary" class="filter-sel"><option value="">不限</option><option value="10k以下">10k以下</option><option value="10–20k">10–20k</option><option value="20k以上">20k以上</option></select></div>
-                            <div class="filter-group"><span class="filter-label">企业性质</span><select id="searchFilterCompanyType" class="filter-sel"><option value="">不限</option><option value="国企">国企</option><option value="私企">私企</option><option value="外资">外资</option></select></div>
+                        <div class="filters">
+                            <div class="flt"><span class="flt-lbl">城市</span>
+                                <select id="searchFilterCity" class="flt-sel"><option value="">不限</option><option value="北京">北京</option><option value="上海">上海</option><option value="深圳">深圳</option><option value="杭州">杭州</option><option value="广州">广州</option></select>
+                            </div>
+                            <div class="flt"><span class="flt-lbl">行业</span>
+                                <select id="searchFilterIndustry" class="flt-sel"><option value="">不限</option><option value="互联网">互联网</option><option value="金融科技">金融科技</option><option value="AI/智能硬件">AI/智能硬件</option><option value="新能源">新能源</option><option value="咨询">咨询</option></select>
+                            </div>
+                            <div class="flt"><span class="flt-lbl">薪资</span>
+                                <select id="searchFilterSalary" class="flt-sel"><option value="">不限</option><option value="10k以下">10k以下</option><option value="10–20k">10–20k</option><option value="20k以上">20k以上</option></select>
+                            </div>
+                            <div class="flt"><span class="flt-lbl">企业性质</span>
+                                <select id="searchFilterCompanyType" class="flt-sel"><option value="">不限</option><option value="国企">国企</option><option value="私企">私企</option><option value="外资">外资</option></select>
+                            </div>
                         </div>
                     </div>
-                    <div class="search-results-topbar">
-                        <div class="search-results-meta" id="searchResultsMeta">搜索结果</div>
-                        <div class="search-view-toggle" role="tablist" aria-label="岗位展示方式切换">
-                            <button type="button" id="searchViewGroupedBtn" class="sv-btn active" aria-selected="true">🗂 按岗位归类</button>
-                            <button type="button" id="searchViewAllBtn" class="sv-btn" aria-selected="false">☰ 全部职位</button>
+                    <div class="results-topbar search-results-topbar">
+                        <span class="results-meta" id="searchResultsMeta">搜索结果</span>
+                        <div class="view-toggle search-view-toggle" role="tablist" aria-label="岗位展示方式切换">
+                            <button type="button" id="searchViewGroupedBtn" class="view-btn sv-btn on" aria-selected="true">按岗位归类</button>
+                            <button type="button" id="searchViewAllBtn" class="view-btn sv-btn" aria-selected="false">全部职位</button>
                         </div>
                     </div>
                     <div class="search-results-grid" id="searchResults">
                         <p class="hint-text">请输入岗位名称进行搜索</p>
                     </div>
                     <div class="pagination" id="searchPagination" style="display:none;">
-                        <button type="button" id="searchPrevBtn">上一页</button>
-                        <span id="searchPageInfo">第 1 页</span>
-                        <button type="button" id="searchNextBtn">下一页</button>
+                        <button type="button" id="searchPrevBtn" class="pg2-btn arrow">‹</button>
+                        <span id="searchPageInfo" class="pg2-info">第 1 页</span>
+                        <button type="button" id="searchNextBtn" class="pg2-btn arrow">›</button>
                     </div>
                 </div>
 

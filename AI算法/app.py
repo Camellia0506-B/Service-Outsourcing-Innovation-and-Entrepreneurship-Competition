@@ -96,6 +96,18 @@ logger.info("[App] 注册路由: 模拟面试模块 /api/v1/mock-interview/*")
 # from api.student_profile_router import student_bp
 # app.register_blueprint(student_bp)
 
+# ========== 岗位数据预加载：启动时在后台加载 CSV，首屏「岗位匹配」会更快 ==========
+def _preload_job_data():
+    try:
+        from job_profile.job_profile_service import get_job_profile_service
+        get_job_profile_service()
+        logger.info("[App] 岗位数据预加载已触发（后台加载中，首请求将更快）")
+    except Exception as e:
+        logger.warning("[App] 岗位数据预加载失败: %s", e)
+
+import threading
+_thread = threading.Thread(target=_preload_job_data, daemon=True)
+_thread.start()
 
 # ========== 调试：列出所有已注册路由（排查 404 时用）==========
 @app.route("/api/v1/routes", methods=["GET"])

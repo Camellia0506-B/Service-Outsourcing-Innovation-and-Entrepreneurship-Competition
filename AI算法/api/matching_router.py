@@ -123,16 +123,17 @@ def recommend_jobs():
 def search_jobs():
     """
     使用语义搜索获取岗位列表（分页）。
-    请求体：{ keyword?, pageNum?, pageSize?, filters? }
+    请求体：{ keyword?, pageNum?, pageSize?, filters?, user_id?, ability_profile? }
     - pageNum: 页码（从1开始，默认1）
     - pageSize: 每页条数（默认20，最大50）
+    - user_id: 可选，传入则对本页结果计算真实匹配度（match_score/match_level）
 
     返回：
     {
       "total_count": 123,
       "page_num": 1,
       "page_size": 20,
-      "jobs": [{ job_id, job_name, industry, level, avg_salary, tags, semantic_score }]
+      "jobs": [{ job_id, job_name, industry, level, avg_salary, tags, semantic_score?, match_score?, match_level? }]
     }
     """
     try:
@@ -141,6 +142,8 @@ def search_jobs():
         page_num = int(body.get("pageNum") or body.get("page_num") or 1)
         page_size = int(body.get("pageSize") or body.get("page_size") or body.get("top_n") or 20)
         filters = body.get("filters", {}) or {}
+        user_id = body.get("user_id")
+        ability_profile = body.get("ability_profile")
 
         if page_num < 1:
             page_num = 1
@@ -150,10 +153,8 @@ def search_jobs():
             return error_response(400, "pageSize 参数应在1-50之间")
 
         service = get_job_matching_service()
-        # 为了让前端有多页可翻，这里不再按「pageNum * pageSize」裁剪，
-        # 而是一次性取固定上限的 TopK，再在路由层做分页。
-        # 对当前数据量，200 条足够覆盖主要岗位，同时避免一次性全量遍历过慢。
-        top_n = max(200, page_size * 10)
+        # 支持九千多岗位：一次取足够多结果用于 total 与分页，路由层再切片
+        top_n = 10000
         result = service.search_jobs(keyword, top_n, filters)
 
         jobs = result.get("jobs") or []
@@ -161,6 +162,13 @@ def search_jobs():
         start = (page_num - 1) * page_size
         end = start + page_size
         page_items = jobs[start:end]
+
+        # 传入 user_id 时对本页岗位计算真实匹配度，避免列表全部显示「匹配 —」
+        if user_id and page_items:
+            try:
+                page_items = service.enrich_jobs_with_match_scores(int(user_id), page_items, ability_profile=ability_profile)
+            except Exception as e:
+                logger.warning("[API] 搜索列表匹配度填充失败（仍返回列表）: %s", e)
 
         data = {
             "total_count": total,
@@ -300,8 +308,8 @@ def batch_analyze():
         if not job_ids or not isinstance(job_ids, list):
             return error_response(400, "请提供有效的 job_ids 数组")
 
-        if len(job_ids) > 20:
-            return error_response(400, "job_ids 数量不能超过20个")
+        if len(job_ids) > 50:
+            return error_response(400, "job_ids 数量不能超过50个")
 
         service = get_job_matching_service()
         result = service.batch_analyze(user_id, job_ids, ability_profile=ability_profile)

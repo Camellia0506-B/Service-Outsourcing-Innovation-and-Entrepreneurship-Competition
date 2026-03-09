@@ -200,7 +200,7 @@ class API {
             // 有自动回退的接口（如 recommend-jobs）仅打一行提示，避免控制台报错刷屏
             const hasFallback = endpoint.startsWith('/matching/recommend-jobs');
             if (hasFallback) {
-                console.log('[AI]', endpoint, '暂未连通，正在尝试备用服务或演示数据');
+                console.warn('[AI]', endpoint, '暂未连通，正在尝试 Java 后端 (5000)');
             } else {
                 console.error('API请求错误(AI):', { endpoint, url, timeoutMs, error });
             }
@@ -2130,13 +2130,15 @@ async function aiGenerateJobProfile(jobName, jobDescriptions, sampleSize = 30, i
 }
 
 // 搜索岗位（仅使用语义搜索 /matching/search-jobs，结果由 AI 岗位匹配模块统一分页）
-async function searchJobs(keyword, page = 1, size = 21, filters = null) {
+// 传入 userId 时后端会对本页结果计算真实匹配度（match_score/match_level），否则列表显示「匹配 —」
+async function searchJobs(keyword, page = 1, size = 21, filters = null, userId = null) {
     const body = {
         keyword: keyword || '',
         pageNum: page,
         pageSize: size,
         filters: filters || {}
     };
+    if (userId != null) body.user_id = userId;
     // 单独为岗位搜索拉长超时时间（默认 3 分钟），避免首次大批量向量检索被过早中断
     const res = await api.requestToAI('/matching/search-jobs', {
         method: 'POST',
@@ -2151,7 +2153,11 @@ async function searchJobs(keyword, page = 1, size = 21, filters = null) {
             level: j.level,
             avg_salary: j.avg_salary,
             tags: j.tags || [],
-            semantic_score: j.semantic_score ?? null
+            semantic_score: j.semantic_score ?? null,
+            match_score: j.match_score != null ? Number(j.match_score) : null,
+            match_level: j.match_level || null,
+            location: j.location || null,
+            company: j.company || null
         }));
         return {
             success: true,
@@ -2273,9 +2279,13 @@ async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = 
             }
             result = javaResult;
         }
-        // 若 Java 仍失败，返回演示数据，避免页面一直加载或报错
+        // 要求真实数据：AI/Java 均不可用时返回失败，不再用演示数据
         if (!result.success) {
-            return getRecommendedJobsDemoData();
+            return {
+                success: false,
+                msg: result.msg || (AI_SERVICE_START_HINT + '启动后刷新可获取基于能力画像的真实推荐。'),
+                code: result.code
+            };
         }
         return result;
     } catch (e) {
@@ -2290,10 +2300,17 @@ async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = 
                 };
             }
             if (javaResult.success) return javaResult;
-            return getRecommendedJobsDemoData();
+            return {
+                success: false,
+                msg: javaResult.msg || (AI_SERVICE_START_HINT + '启动后刷新可获取基于能力画像的真实推荐。'),
+                code: javaResult.code
+            };
         } catch (e2) {
             console.error('[getRecommendedJobs] 请求异常:', e2);
-            return getRecommendedJobsDemoData();
+            return {
+                success: false,
+                msg: AI_SERVICE_START_HINT + '启动后刷新可获取基于能力画像的真实推荐。'
+            };
         }
     }
 }
