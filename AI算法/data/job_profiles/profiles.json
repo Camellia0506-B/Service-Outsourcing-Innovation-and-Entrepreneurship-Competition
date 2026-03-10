@@ -1,1 +1,183 @@
+{
+  "job_001": {
+    "job_id": "job_001",
+    "job_name": "Java后端开发工程师",
+    "basic_info": {
+      "industry": "后端开发",
+      "level": "初级",
+      "avg_salary": "15k",
+      "work_locations": [
+        "北京"
+      ]
+    },
     "requirements": {
+      "basic_requirements": {
+        "education": {
+          "level": "本科",
+          "preferred_majors": [
+            "计算机",
+            "软件工程",
+            "网络"
+          ]
+        },
+        "gpa": {
+          "min_requirement": "3.0/4.0"
+        },
+        "certifications": [
+          "计算机二级"
+        ]
+      },
+      "professional_skills": {
+        "programming_languages": [
+          {
+            "skill": "Java",
+            "level": "熟悉",
+            "importance": "核心",
+            "weight": 0.1
+          }
+        ],
+        "frameworks_tools": [
+          {
+            "skill": "Spring Boot",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          },
+          {
+            "skill": "MySQL",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.06
+          }
+        ],
+        "domain_knowledge": [
+          {
+            "skill": "后端开发",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.06
+          }
+        ]
+      }
+    }
+  },
+  "job_011": {
+    "job_id": "job_011",
+    "job_name": "机器学习/算法工程师",
+    "basic_info": {
+      "industry": "AI与算法",
+      "level": "中级",
+      "avg_salary": "20k",
+      "work_locations": [
+        "上海"
+      ]
+    },
+    "requirements": {
+      "basic_requirements": {
+        "education": {
+          "level": "硕士",
+          "preferred_majors": [
+            "计算机",
+            "数学",
+            "人工智能",
+            "统计学"
+          ]
+        },
+        "gpa": {
+          "min_requirement": "3.2/4.0"
+        },
+        "certifications": [
+          "英语六级"
+        ]
+      },
+      "professional_skills": {
+        "programming_languages": [
+          {
+            "skill": "Python",
+            "level": "熟悉",
+            "importance": "核心",
+            "weight": 0.1
+          }
+        ],
+        "frameworks_tools": [
+          {
+            "skill": "PyTorch",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.08
+          }
+        ],
+        "domain_knowledge": [
+          {
+            "skill": "机器学习",
+            "level": "熟悉",
+            "importance": "核心",
+            "weight": 0.1
+          },
+          {
+            "skill": "算法",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.06
+          }
+        ]
+      }
+    }
+  },
+  "job_023": {
+    "job_id": "job_023",
+    "job_name": "产品经理",
+    "basic_info": {
+      "industry": "产品与设计",
+      "level": "中级",
+      "avg_salary": "18k",
+      "work_locations": [
+        "深圳"
+      ]
+    },
+    "requirements": {
+      "basic_requirements": {
+        "education": {
+          "level": "本科",
+          "preferred_majors": [
+            "信息管理",
+            "工商管理",
+            "市场营销",
+            "计算机"
+          ]
+        },
+        "gpa": {
+          "min_requirement": "3.0/4.0"
+        },
+        "certifications": [
+          "PMP"
+        ]
+      },
+      "professional_skills": {
+        "programming_languages": [],
+        "frameworks_tools": [
+          {
+            "skill": "Axure",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.06
+          }
+        ],
+        "domain_knowledge": [
+          {
+            "skill": "需求分析",
+            "level": "熟悉",
+            "importance": "核心",
+            "weight": 0.1
+          },
+          {
+            "skill": "项目管理",
+            "level": "熟悉",
+            "importance": "重要",
+            "weight": 0.06
+          }
+        ]
+      }
+    }
+  }
+}

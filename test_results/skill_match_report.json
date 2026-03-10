@@ -1,6 +1,6 @@
 {
   "standard": "A",
-  "generated_at": "2026-03-07 16:36:16",
+  "generated_at": "2026-03-10 18:45:32",
   "ai_base_url": "http://127.0.0.1:5002/api/v1",
   "mysql": {
     "host": "127.0.0.1",
@@ -10,39 +10,52 @@
     "driver": "pymysql"
   },
   "sample_user_ids": [
-    10,
-    8,
-    1
+    9,
+    22,
+    17
   ],
   "per_student": [
     {
-      "user_id": 10,
-      "error": "recommend-jobs returned empty list",
-      "accuracy": 0.0
-    },
-    {
-      "user_id": 8,
-      "error": "recommend-jobs returned empty list",
-      "accuracy": 0.0
-    },
-    {
-      "user_id": 1,
-      "job_id": "CC872366650J40778062914",
-      "job_name": "Java",
-      "required_skills_total": 3,
-      "mastered_skills_total": 16,
-      "matched_skills": [
-        "Java",
-        "MySQL"
-      ],
+      "user_id": 9,
+      "job_id": "CCL1224990300J40757782514",
+      "job_name": "项目专员/助理",
+      "required_skills_total": 1,
+      "mastered_skills_total": 0,
+      "matched_skills": [],
       "missing_skills": [
-        "Spring"
+        "R"
       ],
-      "accuracy": 66.67,
-      "elapsed_seconds": 3.719
+      "accuracy": 0.0,
+      "elapsed_seconds": 15.102
+    },
+    {
+      "user_id": 22,
+      "job_id": "CCL1224990300J40757782514",
+      "job_name": "项目专员/助理",
+      "required_skills_total": 1,
+      "mastered_skills_total": 0,
+      "matched_skills": [],
+      "missing_skills": [
+        "R"
+      ],
+      "accuracy": 0.0,
+      "elapsed_seconds": 2.25
+    },
+    {
+      "user_id": 17,
+      "job_id": "CCL1224990300J40757782514",
+      "job_name": "项目专员/助理",
+      "required_skills_total": 1,
+      "mastered_skills_total": 0,
+      "matched_skills": [],
+      "missing_skills": [
+        "R"
+      ],
+      "accuracy": 0.0,
+      "elapsed_seconds": 2.332
     }
   ],
-  "average_accuracy": 22.22,
+  "average_accuracy": 0.0,
   "pass_threshold": 0.8,
   "passed": false
 }

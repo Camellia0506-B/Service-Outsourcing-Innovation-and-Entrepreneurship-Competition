@@ -244,24 +244,45 @@ def _extract_student_skills(ability_profile: Dict[str, Any]) -> List[str]:
 
 
 def _calc_accuracy(required: List[str], mastered: List[str]) -> Tuple[float, List[str], List[str]]:
-    req_norm = [_norm_skill(x) for x in required]
-    mas_norm = {_norm_skill(x) for x in mastered}
-    matched_norm = [x for x in req_norm if x and x in mas_norm]
-    required_total = len([x for x in req_norm if x])
-    matched = len(matched_norm)
-    acc = (matched / required_total) if required_total else 0.0
+    """
+    计算技能匹配准确率（带轻量模糊匹配）：
+    - 精确匹配：规范化后字符串完全相同
+    - 模糊匹配：两边长度都 >= 3，且一方包含另一方（如 "java" vs "精通java语言"）
+    """
+    # 规范化岗位技能，并保留原始文案
+    req_pairs: List[Tuple[str, str]] = []
+    for s in required:
+        ns = _norm_skill(s)
+        if ns:
+            req_pairs.append((ns, s))
 
-    # matched/missing 用原始 required 词条展示
+    # 规范化学生技能
+    mas_norm = [_norm_skill(x) for x in mastered if _norm_skill(x)]
+
     matched_display: List[str] = []
     missing_display: List[str] = []
-    for orig in required:
-        ns = _norm_skill(orig)
-        if not ns:
-            continue
-        if ns in mas_norm:
+
+    def _is_fuzzy_match(a: str, b: str) -> bool:
+        if not a or not b:
+            return False
+        if a == b:
+            return True
+        # 都太短时不做模糊匹配，避免比如 "c"、"go" 误伤
+        if len(a) < 3 or len(b) < 3:
+            return False
+        return a in b or b in a
+
+    matched_count = 0
+    for ns, orig in req_pairs:
+        hit = any(_is_fuzzy_match(ns, m) for m in mas_norm)
+        if hit:
+            matched_count += 1
             matched_display.append(orig)
         else:
             missing_display.append(orig)
+
+    total_required = len(req_pairs)
+    acc = (matched_count / total_required) if total_required else 0.0
     return acc, matched_display, missing_display
 
 
