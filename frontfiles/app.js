@@ -823,6 +823,12 @@ class CareerPlanningApp {
         const trackingUpdateJobList = document.getElementById('trackingUpdateJobList');
         if (trackingUpdateJobList) {
             trackingUpdateJobList.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest?.('.tracking-job-delete-btn');
+                if (deleteBtn && deleteBtn.dataset.recordId) {
+                    this.deleteTrackingJob(deleteBtn.dataset.recordId);
+                    e.stopPropagation();
+                    return;
+                }
                 const item = e.target.closest?.('.tracking-job-item');
                 if (item && item.dataset.recordId) {
                     this.selectTrackingJob(item.dataset.recordId);
@@ -832,6 +838,11 @@ class CareerPlanningApp {
         document.getElementById('trackingAdvanceBtn')?.addEventListener('click', () => this.trackingAdvanceStage());
         document.getElementById('trackingRejectBtn')?.addEventListener('click', () => this.trackingMarkRejected());
         document.getElementById('trackingSaveNoteBtn')?.addEventListener('click', () => this.trackingSaveNote());
+        document.getElementById('trackingViewNoteBtn')?.addEventListener('click', () => this.openTrackingNoteModal());
+        document.getElementById('trackingNoteModalClose')?.addEventListener('click', () => this.closeTrackingNoteModal());
+        document.getElementById('trackingNoteModal')?.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'trackingNoteModal') this.closeTrackingNoteModal();
+        });
 
         // Tab3 失败分析：失败列表委托、重新生成/查看完整分析/保存为报告
         const trackingFailList = document.getElementById('trackingFailList');
@@ -843,7 +854,7 @@ class CareerPlanningApp {
         }
         document.getElementById('trackingRegenAnalysisBtn')?.addEventListener('click', () => this.trackingOpenFailureModalForRegen());
         document.getElementById('trackingViewFullAnalysisBtn')?.addEventListener('click', () => this.openTrackingFullAnalysisModal());
-        document.getElementById('trackingSaveAsReportBtn')?.addEventListener('click', () => this.showToast('已保存到反馈报告列表', 'success'));
+        document.getElementById('trackingSaveAsReportBtn')?.addEventListener('click', () => this.saveFailureAsReport());
 
         // 求职跟踪：更新进展弹窗（仍用于详细编辑）
         document.getElementById('trackingUpdateClose')?.addEventListener('click', () => this.closeTrackingUpdateModal());
@@ -3639,6 +3650,7 @@ class CareerPlanningApp {
 
         this.trackingOverviewSummary = summary;
         this.trackingOverviewRecords = records;
+        this.trackingAgentInsight = data.agent_insight ?? null;
         this.trackingRecordsCache = {};
         records.forEach(r => {
             if (r && r.record_id) this.trackingRecordsCache[r.record_id] = r;
@@ -3661,9 +3673,10 @@ class CareerPlanningApp {
                 const recent = records.slice(0, 10);
                 recentList.innerHTML = recent.map(r => {
                     const first = (r.company_name || '公').charAt(0);
+                    const dateText = (r.apply_date || r.last_updated || '').slice(0, 16) || '-';
                     return `<div class="tracking-recent-item" data-record-id="${esc(r.record_id)}">
                         <div class="tracking-ri-logo">${esc(first)}</div>
-                        <div class="tracking-ri-info"><h4>${esc(r.job_title || '未命名岗位')}</h4><p>${esc(r.company_name || '')} · ${esc(r.last_updated || '-')}</p></div>
+                        <div class="tracking-ri-info"><h4>${esc(r.job_title || '未命名岗位')}</h4><p>${esc(r.company_name || '')} · ${esc(dateText)}</p></div>
                         <div class="tracking-status-dot ${statusDotClass(r)}"></div>
                     </div>`;
                 }).join('');
@@ -3683,7 +3696,13 @@ class CareerPlanningApp {
                             ? (label + '淘汰')
                             : '进行中';
                     const sel = r.record_id === this.trackingSelectedRecordId ? ' sel' : '';
-                    return `<div class="tracking-job-item${sel}" data-record-id="${esc(r.record_id)}"><h4>${esc(r.job_title || '未命名岗位')}</h4><p>${esc(r.company_name || '')} · ${status}</p></div>`;
+                    return `<div class="tracking-job-item${sel}" data-record-id="${esc(r.record_id)}">
+                        <div class="tracking-job-main">
+                            <h4>${esc(r.job_title || '未命名岗位')}</h4>
+                            <p>${esc(r.company_name || '')} · ${status}</p>
+                        </div>
+                        <button type="button" class="tracking-job-delete-btn" data-record-id="${esc(r.record_id)}" aria-label="删除该求职记录">删除</button>
+                    </div>`;
                 }).join('');
             }
         }
@@ -3721,9 +3740,11 @@ class CareerPlanningApp {
         const wtRate = Math.max(0, Number(summary?.written_test_pass_rate || 0));
         const ivRate = Math.max(0, Number(summary?.interview_pass_rate || 0));
         const offer = Math.max(0, Number(summary?.offer_count || 0));
-
-        const written = total > 0 ? Math.max(0, Math.round(total * wtRate)) : 0;
-        const interview = total > 0 ? Math.max(0, Math.round(total * ivRate)) : 0;
+        // 使用后端返回的「进入笔试人数」「进入面试岗位数」，避免仅投递就淘汰的被算进笔试/面试
+        const writtenTotal = Number(summary?.written_total);
+        const interviewStageCount = Number(summary?.interview_stage_count);
+        const written = (writtenTotal >= 0 ? writtenTotal : (total > 0 ? Math.round(total * wtRate) : 0));
+        const interview = (interviewStageCount >= 0 ? interviewStageCount : (total > 0 ? Math.round(total * ivRate) : 0));
 
         // 以“投递”为 100%，其他按比例缩短
         const base = Math.max(total, 1);
@@ -4523,19 +4544,25 @@ class CareerPlanningApp {
         const titleEl = document.getElementById('trackingUpdateDetailTitle');
         const stepsWrap = document.getElementById('trackingSteps');
         const noteEl = document.getElementById('trackingUpdateNotes');
+        const noteLabel = document.querySelector('#trackingUpdateTab .tracking-note-label');
+        const notePlaceholder = document.getElementById('trackingUpdateNotes');
+
         if (!record) {
             if (titleEl) titleEl.textContent = '🔄 进展详情';
             if (stepsWrap) stepsWrap.querySelectorAll('.tracking-step').forEach(s => s.classList.remove('done', 'cur', 'fail'));
             if (stepsWrap) stepsWrap.querySelectorAll('.tracking-sline').forEach(l => l.classList.remove('done'));
             if (noteEl) noteEl.value = '';
+            if (noteLabel) noteLabel.textContent = '备注';
             return;
         }
+
         if (titleEl) titleEl.textContent = `🔄 进展详情 · ${(record.company_name || '')} ${record.job_title || '未命名岗位'}`;
         const stages = ['applied', 'written_test', 'interview_1', 'interview_2', 'final', 'offer'];
         const curStage = record.current_stage || 'applied';
         const result = record.result || 'pending';
         const isRejected = result === 'rejected' || result === 'failed';
         const curIdx = stages.indexOf(curStage);
+
         if (stepsWrap) {
             stepsWrap.querySelectorAll('.tracking-step').forEach((s, i) => {
                 s.classList.remove('done', 'cur', 'fail');
@@ -4553,7 +4580,49 @@ class CareerPlanningApp {
                 l.classList.toggle('done', i < curIdx);
             });
         }
-        if (noteEl) noteEl.value = record.notes || '';
+
+        // 根据阶段切换备注标题与内容
+        const stageNotes = (record.stage_notes && typeof record.stage_notes === 'object') ? record.stage_notes : {};
+        let text = '';
+        let labelText = '备注';
+        let placeholderText = '记录备注…';
+        if (curStage === 'applied') {
+            text = stageNotes.applied || '';
+            labelText = '投递备注';
+            placeholderText = '记录投递时间、渠道、岗位链接等…';
+        } else if (curStage === 'written_test') {
+            text = stageNotes.written_test || '';
+            labelText = '笔试备注';
+            placeholderText = '记录笔试时间、题目类型、完成情况、自我感受…';
+        } else if (curStage === 'interview_1') {
+            // 一面备注
+            text = stageNotes.interview_1 || '';
+            labelText = '一面备注';
+            placeholderText = '记录一面题目、面试官反馈、个人感受…';
+        } else if (curStage === 'interview_2') {
+            // 二面备注
+            text = stageNotes.interview_2 || '';
+            labelText = '二面备注';
+            placeholderText = '记录二面题目、面试官反馈、个人感受…';
+        } else if (curStage === 'final') {
+            // HR 面备注
+            text = stageNotes.final || '';
+            labelText = 'HR 面备注';
+            placeholderText = '记录 HR 面问题、沟通重点、个人感受…';
+        } else if (curStage === 'rejected') {
+            // 淘汰后的复盘备注
+            text = stageNotes.rejected || '';
+            labelText = '淘汰备注';
+            placeholderText = '记录淘汰原因、复盘总结、后续改进计划…';
+        } else if (curStage === 'offer') {
+            text = stageNotes.offer || '';
+            labelText = 'Offer 备注';
+            placeholderText = '记录实习/转正时间、薪酬福利、到岗安排等…';
+        }
+        // 不再自动从旧的总备注回填，推进到新阶段时默认看到空白输入框
+        if (noteEl) noteEl.value = text;
+        if (noteLabel) noteLabel.textContent = labelText;
+        if (notePlaceholder) notePlaceholder.placeholder = placeholderText;
     }
 
     getNextStage(currentStage) {
@@ -4582,17 +4651,26 @@ class CareerPlanningApp {
         this.hideLoading();
         if (res && res.success) {
             this.showToast('进展已更新', 'success');
-            // 乐观更新：先改缓存与列表，再拉取，避免到达 Offer 后仍显示「进行中」
+            // 仅本地更新当前记录与步骤/备注区域，不再整体刷新总览，避免页面晃动
             const updated = { ...record, current_stage: next, result };
             this.trackingRecordsCache[recordId] = updated;
-            const recs = this.trackingOverviewRecords || [];
-            const idx = recs.findIndex(r => r && r.record_id === recordId);
-            if (idx >= 0) {
-                recs[idx] = { ...recs[idx], current_stage: next, result };
-                this.renderTrackingOverview({ summary: this.trackingOverviewSummary || {}, records: recs, agent_insight: null });
+            // 更新左侧当前选中项的状态文案（例如“进行中/已拿 Offer”），避免用户困惑
+            const listEl = document.getElementById('trackingUpdateJobList');
+            if (listEl) {
+                const item = listEl.querySelector(`.tracking-job-item[data-record-id="${recordId}"]`);
+                if (item) {
+                    const p = item.querySelector('p');
+                    if (p) {
+                        const labelMap = { applied: '投递', written_test: '笔试', interview_1: '一面', interview_2: '二面', final: 'HR面', offer: 'Offer' };
+                        const stageLabel = labelMap[next] || '进行中';
+                        const status = result === 'offer' ? '已拿 Offer 🎉' : (result === 'rejected' || result === 'failed' ? `${stageLabel}淘汰` : '进行中');
+                        const company = record.company_name || '';
+                        p.textContent = `${company} · ${status}`;
+                    }
+                }
             }
-            await this.loadTrackingData();
-            this.renderTrackingSteps(this.trackingRecordsCache?.[recordId]);
+            // 只刷新右侧当前记录的步骤与备注区域
+            this.renderTrackingSteps(updated);
         } else {
             this.showToast((res && res.msg) || '更新失败', 'error');
         }
@@ -4614,8 +4692,30 @@ class CareerPlanningApp {
         this.hideLoading();
         if (res && res.success) {
             this.showToast('已标记为淘汰', 'success');
-            await this.loadTrackingData();
-            this.renderTrackingSteps(this.trackingRecordsCache?.[recordId]);
+            const updated = { ...record, current_stage: 'rejected', result: 'rejected' };
+            this.trackingRecordsCache[recordId] = updated;
+
+            // 同步更新总览数据，使失败反馈分析和总览能立即反映淘汰状态（不重新拉接口，仅本地更新）
+            const recs = this.trackingOverviewRecords || [];
+            const idx = recs.findIndex(r => r && r.record_id === recordId);
+            if (idx >= 0) {
+                recs[idx] = { ...recs[idx], current_stage: 'rejected', result: 'rejected' };
+            }
+            const summary = this.trackingOverviewSummary || {};
+            const newRejected = (Number(summary.rejected_count) || 0) + 1;
+            const newInProgress = Math.max(0, (Number(summary.in_progress_count) || 0) - 1);
+            this.trackingOverviewSummary = { ...summary, rejected_count: newRejected, in_progress_count: newInProgress };
+
+            // 重新渲染总览（失败列表、KPI、图表等），不调用 loadTrackingData，避免整页闪烁
+            this.renderTrackingOverview({
+                summary: this.trackingOverviewSummary,
+                records: recs,
+                agent_insight: this.trackingAgentInsight ?? null
+            });
+
+            // 保持当前选中并刷新右侧步骤与备注
+            this.trackingSelectedRecordId = recordId;
+            this.renderTrackingSteps(updated);
         } else {
             this.showToast((res && res.msg) || '更新失败', 'error');
         }
@@ -4633,14 +4733,145 @@ class CareerPlanningApp {
         const stage = record.current_stage || 'applied';
         const result = record.result || 'pending';
         this.showLoading();
-        const res = await updateTrackingRecord(recordId, { user_id: userId, stage, result, notes });
+        // 以阶段为维度拆分备注：投递 / 笔试 / 一面 / 二面 / HR 面 / Offer
+        const stageKey = (function (s) {
+            if (s === 'applied') return 'applied';
+            if (s === 'written_test') return 'written_test';
+            if (s === 'offer') return 'offer';
+            // 面试轮次各自独立存储，旧数据仍可通过 stage_notes.interview 读取
+            if (s === 'interview_1') return 'interview_1';
+            if (s === 'interview_2') return 'interview_2';
+            if (s === 'final') return 'final';
+            return s || 'interview';
+        })(stage);
+        const existingStageNotes = (record.stage_notes && typeof record.stage_notes === 'object') ? record.stage_notes : {};
+        const stage_notes = { ...existingStageNotes, [stageKey]: notes };
+
+        const res = await updateTrackingRecord(recordId, { user_id: userId, stage, result, notes, stage_notes });
         this.hideLoading();
         if (res && res.success) {
             this.showToast('备注已保存', 'success');
-            if (record) record.notes = notes;
+            if (record) {
+                record.notes = notes;
+                record.stage_notes = stage_notes;
+            }
         } else {
             this.showToast((res && res.msg) || '保存失败', 'error');
         }
+    }
+
+    async saveFailureAsReport() {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+        const recordId = this.trackingSelectedFailureRecordId;
+        if (!recordId) {
+            this.showToast('请先在左侧选择一条失败记录', 'error');
+            return;
+        }
+        this.showLoading();
+        try {
+            const res = await saveFailureReport(recordId, userId);
+            this.hideLoading();
+            if (res && res.success) {
+                this.showToast('已保存到反馈报告列表', 'success');
+                // 重新加载一次报告列表，让新报告立刻出现在 Tab5
+                await this.loadTrackingData();
+            } else {
+                this.showToast((res && res.msg) || '保存失败', 'error');
+            }
+        } catch (e) {
+            this.hideLoading();
+            this.showToast('保存失败，请稍后重试', 'error');
+        }
+    }
+
+    async deleteTrackingJob(recordId) {
+        const userId = getCurrentUserId();
+        if (!recordId || !userId) {
+            this.showToast('用户信息缺失，无法删除', 'error');
+            return;
+        }
+        if (!window.confirm('确定要删除这条求职记录吗？此操作不可恢复。')) {
+            return;
+        }
+        this.showLoading();
+        try {
+            const res = await deleteTrackingRecord(recordId, userId);
+            this.hideLoading();
+            if (res && res.success) {
+                this.showToast('记录已删除', 'success');
+                // 从缓存中移除并刷新总览
+                if (this.trackingRecordsCache) {
+                    delete this.trackingRecordsCache[recordId];
+                }
+                if (this.trackingRecords) {
+                    this.trackingRecords = this.trackingRecords.filter(r => r.record_id !== recordId);
+                }
+                if (this.trackingSelectedRecordId === recordId) {
+                    this.trackingSelectedRecordId = null;
+                    this.renderTrackingSteps(null);
+                }
+                // 重新加载求职跟踪数据（总览 + 左侧列表 + 报告），确保 UI 中这条记录消失
+                await this.loadTrackingData();
+            } else {
+                this.showToast((res && res.msg) || '删除失败', 'error');
+            }
+        } catch (e) {
+            this.hideLoading();
+            this.showToast('删除失败，请稍后重试', 'error');
+        }
+    }
+
+    openTrackingNoteModal() {
+        const modal = document.getElementById('trackingNoteModal');
+        const body = document.getElementById('trackingNoteModalBody');
+        const recordId = this.trackingSelectedRecordId;
+        const record = this.trackingRecordsCache?.[recordId];
+        if (!modal || !body) return;
+        if (!record) {
+            this.showToast('请先在左侧选择一条求职记录', 'error');
+            return;
+        }
+        const esc = (s) => (s == null ? '' : String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;'));
+        const stageNotes = (record.stage_notes && typeof record.stage_notes === 'object') ? record.stage_notes : {};
+        const sections = [];
+        const pushSection = (label, key) => {
+            const txt = stageNotes[key];
+            if (txt && String(txt).trim()) {
+                sections.push(
+                    `<h4>${esc(label)}</h4><p>${esc(txt).replace(/\n/g, '<br>')}</p>`
+                );
+            }
+        };
+        pushSection('投递备注', 'applied');
+        pushSection('笔试备注', 'written_test');
+        pushSection('一面备注', 'interview_1');
+        pushSection('二面备注', 'interview_2');
+        pushSection('HR 面备注', 'final');
+        pushSection('淘汰备注', 'rejected');
+        // 兼容旧数据：如果只有通用的面试备注字段
+        pushSection('面试备注', 'interview');
+        if (!sections.length) {
+            const fallback = record.notes || '';
+            body.innerHTML = fallback
+                ? `<p>${esc(fallback).replace(/\n/g, '<br>')}</p>`
+                : '<p class="hint-text">暂无备注</p>';
+        } else {
+            body.innerHTML = sections.join('<hr class="tracking-note-sep">');
+        }
+        modal.classList.remove('hidden');
+    }
+
+    closeTrackingNoteModal() {
+        const modal = document.getElementById('trackingNoteModal');
+        if (modal) modal.classList.add('hidden');
     }
 
     // Tab3：选中失败记录，展示 AI 分析三列
@@ -4762,7 +4993,8 @@ class CareerPlanningApp {
         if (lineDom) {
             const byDate = {};
             records.forEach(r => {
-                const d = (r.last_updated || r.apply_date || '').slice(0, 10);
+                // 近 30 天投递趋势：时间轴以投递时间为准，若无投递时间再回退到最后更新时间
+                const d = (r.apply_date || r.last_updated || '').slice(0, 10);
                 if (d) byDate[d] = (byDate[d] || 0) + 1;
             });
             const sorted = Object.keys(byDate).sort().slice(-14);

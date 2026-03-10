@@ -179,6 +179,7 @@ def update_record(record_id: str):
         stage_date = body.get("stage_date") or datetime.now().strftime("%Y-%m-%d")
         self_eval = body.get("self_evaluation") or {}
         notes = body.get("notes") or ""
+        stage_notes = body.get("stage_notes") or {}
 
         timeline_entry = {
             "stage": stage,
@@ -191,6 +192,14 @@ def update_record(record_id: str):
         record["current_stage"] = stage
         record["result"] = result
         record["updated_at"] = _now_str()
+        # 分阶段备注：前端按 { applied / written_test / interview / offer } 结构传入
+        if isinstance(stage_notes, dict):
+            existing = record.get("stage_notes") or {}
+            if isinstance(existing, dict):
+                existing.update(stage_notes)
+                record["stage_notes"] = existing
+            else:
+                record["stage_notes"] = stage_notes
 
         # 简单 Agent 提示：基于结果和自评弱项生成一句话建议
         agent_tip = ""
@@ -261,10 +270,28 @@ def failure_analysis(record_id: str):
 
         failure_reports = _load_failure_reports()
         ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-        report_id = f"failure_report_{ts}_{user_id}"
+        # 以 record_id 作为主键，保证每条记录有一份独立报告（多次分析则更新同一条）
+        report_id = f"failure_report_{record_id}"
 
         job_title = record.get("job_title", "")
         company = record.get("company_name", "")
+        stage_notes = record.get("stage_notes") or {}
+
+        # 从阶段备注中提炼一段摘要，尽量保证不同记录的分析文本不相同
+        def _short(text: str, limit: int = 80) -> str:
+            if not text:
+                return ""
+            s = str(text).strip().replace("\n", " ")
+            return s if len(s) <= limit else s[: limit] + "…"
+
+        rejected_note = _short(stage_notes.get("rejected") or "")
+        final_note = _short(stage_notes.get("final") or "")
+        interview_notes = [
+            _short(stage_notes.get("interview_1") or ""),
+            _short(stage_notes.get("interview_2") or ""),
+        ]
+        interview_notes = [n for n in interview_notes if n]
+        written_note = _short(stage_notes.get("written_test") or "")
 
         # 构造简化分析内容（非流式LLM），按 API 文档的结构切块返回
         def event_stream():
@@ -277,18 +304,29 @@ def failure_analysis(record_id: str):
             time.sleep(0.2)
 
             # 复盘报告主体（两段）
-            header = {
-                "chunk": f"## 本次求职复盘报告\\n\\n**岗位**：{job_title}（{company}）\\n**失败阶段**：{final_stage}\\n"
-            }
+            header_lines = [
+                "## 本次求职复盘报告",
+                "",
+                f"**岗位**：{job_title}（{company}）",
+                f"**失败阶段**：{final_stage}",
+            ]
+            header = {"chunk": "\\n".join(header_lines) + "\\n"}
             yield "event: report_chunk\n"
             yield f"data: {json.dumps(header, ensure_ascii=False)}\n\n"
 
-            reasons_lines = [
-                "**核心原因分析**：",
-                "",
-            ]
+            reasons_lines = ["**核心原因分析**：", ""]
             if rejection_feedback:
                 reasons_lines.append(f"- 面试/HR 反馈：{rejection_feedback}")
+            if rejected_note:
+                reasons_lines.append(f"- 淘汰备注关键点：{rejected_note}")
+            if final_note:
+                reasons_lines.append(f"- HR 面阶段记录：{final_note}")
+            if written_note:
+                reasons_lines.append(f"- 笔试阶段记录：{written_note}")
+            if interview_notes:
+                reasons_lines.append(f"- 面试表现记录：{'；'.join(interview_notes)}")
+            if len(reasons_lines) <= 2:
+                reasons_lines.append("- 当前系统尚未捕获到明确的失败原因，请结合自己的复盘备注补充。")
             reasons = {
                 "chunk": "\\n".join(reasons_lines) + "\\n"
             }
@@ -300,18 +338,29 @@ def failure_analysis(record_id: str):
                 "## 更新后的求职规划",
                 "",
                 "**短期（1个月）**：",
-                "- 针对本次面试暴露的关键短板（如产品sense不足、商业敏感度不够等），整理 3–5 个典型问题并准备高质量回答。",
-                "- 至少完成 1 次模拟面试或面试题复盘，将易错点记录在案。",
+                "- 针对本次失败阶段中暴露出来的关键短板，结合上方复盘要点，整理 3–5 个典型问题并准备高质量回答。",
+                "- 至少完成 1 次模拟面试或面试题复盘，将易错点记录在案，并补充到淘汰备注中。",
                 "",
                 "**中期（2–3个月）**：",
-                "- 参与 1 个与目标岗位高度相关的项目实践（如校内项目、开源贡献、产品Demo）。",
-                "- 根据复盘结论，调整目标岗位类型或级别（例如先从助理 / 初级岗位切入）。",
+                "- 参与 1 个与该岗位高度相关的项目实践（如校内项目、开源贡献、业务侧小项目），把这次失败中暴露的短板补齐。",
+                "- 根据复盘结论，必要时调整目标公司或岗位级别（例如先从实习 / 初级岗位切入，再向上跳）。",
             ]
             plan_chunk = {"chunk": "\\n".join(plan_lines) + "\\n"}
             yield "event: new_plan_chunk\n"
             yield f"data: {json.dumps(plan_chunk, ensure_ascii=False)}\n\n"
 
-            # 保存失败报告摘要
+            # 保存失败报告摘要（按 record_id 聚合，一条记录对应一份报告，多次分析覆盖更新）
+            key_weakness_parts = []
+            if rejection_feedback:
+                key_weakness_parts.append(rejection_feedback)
+            if rejected_note:
+                key_weakness_parts.append(f"淘汰备注：{rejected_note}")
+            if written_note:
+                key_weakness_parts.append(f"笔试：{written_note}")
+            if interview_notes:
+                key_weakness_parts.append(f"面试：{'；'.join(interview_notes)}")
+            key_weakness = " | ".join(key_weakness_parts) if key_weakness_parts else "待总结"
+
             failure_reports[report_id] = {
                 "report_id": report_id,
                 "user_id": user_id,
@@ -319,9 +368,10 @@ def failure_analysis(record_id: str):
                 "job_title": job_title,
                 "company_name": company,
                 "failure_stage": final_stage,
-                "key_weakness": rejection_feedback or "待总结",
+                "key_weakness": key_weakness,
                 "plan_updated": True,
-                "created_at": _now_str(),
+                "created_at": failure_reports.get(report_id, {}).get("created_at") or _now_str(),
+                "updated_at": _now_str(),
             }
             _save_failure_reports(failure_reports)
 
@@ -360,13 +410,12 @@ def tracking_overview():
         user_records = [r for r in records.values() if str(r.get("user_id")) == str(user_id)]
 
         total_applied = len(user_records)
-        written_pass = 0
-        written_total = 0
-        interview_pass = 0
-        interview_total = 0
         offer_count = 0
         rejected_count = 0
         in_progress = 0
+        rejected_at_applied_only = 0  # 仅在投递阶段被淘汰（从未进入笔试）
+        # 面试通过率：按岗位算。进入面试阶段的岗位数（一面/二面/HR面任一）为分母，拿到 Offer 的岗位数为分子
+        interview_stage_records = 0  # 进入过面试阶段的岗位数
 
         overview_records = []
         for r in user_records:
@@ -379,18 +428,18 @@ def tracking_overview():
             elif result in ("pending", "in_progress"):
                 in_progress += 1
 
-            # 统计笔试 / 面试通过率（基于时间线）
-            for t in r.get("timeline", []):
-                stg = t.get("stage")
-                res = t.get("result")
-                if stg == "written_test":
-                    written_total += 1
-                    if res == "passed":
-                        written_pass += 1
-                if stg and stg.startswith("interview"):
-                    interview_total += 1
-                    if res == "passed":
-                        interview_pass += 1
+            # 时间线里出现过的阶段
+            stages_in_record = {t.get("stage") for t in r.get("timeline", [])}
+            stages_in_record.add(current_stage)
+            has_written = "written_test" in stages_in_record
+
+            # 仅在投递阶段被淘汰：淘汰且从未进入笔试
+            if result == "rejected" and not has_written:
+                rejected_at_applied_only += 1
+
+            # 是否进入过面试阶段（进入面试 = 笔试通过，用于算 笔试通过率 = 面试人数/笔试人数）
+            if any(s in stages_in_record for s in ("interview_1", "interview_2", "final", "offer")):
+                interview_stage_records += 1
 
             overview_records.append(
                 {
@@ -398,21 +447,27 @@ def tracking_overview():
                     "job_title": r.get("job_title"),
                     "company_name": r.get("company_name"),
                     "current_stage": current_stage,
+                    "apply_date": r.get("apply_date"),
                     "last_updated": r.get("updated_at") or r.get("created_at"),
+                    "stage_notes": r.get("stage_notes") or {},
                     "has_failure_report": bool(r.get("has_failure_report")),
                 }
             )
 
-        written_rate = (written_pass / written_total) if written_total > 0 else 0.0
-        interview_rate = (interview_pass / interview_total) if interview_total > 0 else 0.0
+        # 进入笔试人数 = 投递总数 - 仅在投递阶段被淘汰数（例如投 6 份、1 份投递阶段淘汰 → 5 个进入笔试）
+        written_total = max(0, total_applied - rejected_at_applied_only)
+        # 笔试通过率 = 进入面试人数 / 进入笔试人数
+        written_rate = (interview_stage_records / written_total) if written_total > 0 else 0.0
+        # 面试通过率 = 拿到 Offer 的岗位数 / 进入面试阶段的岗位数（每个岗位有 3 轮面试，按岗位整体算）
+        interview_rate = (offer_count / interview_stage_records) if interview_stage_records > 0 else 0.0
 
-        # 简单 Agent 洞察
+        # 简单 Agent 洞察：笔试通过率 = 参加过笔试且通过的比例，与「简历通过」区分（仅投递就淘汰的不算进笔试）
         if total_applied == 0:
             agent_insight = "你还没有开始任何求职记录，可以先从系统推荐的岗位里选择 1–2 个作为起点。"
         else:
             agent_insight = (
-                f"根据你的求职数据，你的简历通过率约为 {written_rate:.0%}，"
-                f"面试轮次通过率约为 {interview_rate:.0%}。"
+                f"根据你的求职数据，你的笔试通过率约为 {written_rate:.0%}，"
+                f"面试通过率（进入面试→拿到 Offer）约为 {interview_rate:.0%}。"
             )
             if interview_rate < 0.5 and written_rate >= 0.6:
                 agent_insight += " 终面转化率相对偏低，建议重点加强面试表现与案例准备。"
@@ -420,6 +475,8 @@ def tracking_overview():
         summary = {
             "total_applied": total_applied,
             "written_test_pass_rate": round(written_rate, 2),
+            "written_total": written_total,  # 进入笔试的人数（仅 timeline 有 written_test 的才计）
+            "interview_stage_count": interview_stage_records,  # 进入面试阶段的岗位数
             "interview_pass_rate": round(interview_rate, 2),
             "offer_count": offer_count,
             "rejected_count": rejected_count,
@@ -475,5 +532,97 @@ def list_failure_reports():
         )
     except Exception as e:
         logger.error(f"[API] /tracking/failure-reports 异常: {e}", exc_info=True)
+        return _error(500, f"服务器内部错误: {e}")
+
+
+# ============================================================
+# 9.6 保存失败分析为报告
+# ============================================================
+
+@tracking_bp.route("/failure-reports/save", methods=["POST"])
+def save_failure_report():
+    """
+    将某条失败记录的分析结果保存为复盘报告，写入 failure_reports.json。
+    请求体：{ user_id, record_id }
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        user_id = body.get("user_id")
+        record_id = body.get("record_id")
+        if not user_id or not record_id:
+            return _error(400, "请提供 user_id 和 record_id")
+
+        records = _load_records()
+        record = records.get(record_id)
+        if not record:
+            return _error(404, f"记录不存在: {record_id}")
+        if int(record.get("user_id")) != int(user_id):
+            return _error(403, "无权操作该记录")
+
+        # 失败分析结果通常保存在 failure_reports.json 中，此处简单生成一条基础报告
+        store = _load_failure_reports()
+        now_str = _now_str()
+        report_id = f"failure_report_{record_id}"
+
+        report = store.get(report_id) or {}
+        report.update(
+            {
+                "report_id": report_id,
+                "user_id": user_id,
+                "record_id": record_id,
+                "job_title": record.get("job_title"),
+                "company_name": record.get("company_name"),
+                "failure_stage": record.get("current_stage"),
+                "key_weakness": "",  # 具体弱项由前端/后续分析填充，这里先留空
+                "plan_updated": False,
+                "created_at": report.get("created_at") or now_str,
+                "updated_at": now_str,
+            }
+        )
+        store[report_id] = report
+        _save_failure_reports(store)
+
+        # 标记该记录已有失败报告
+        record["has_failure_report"] = True
+        records[record_id] = record
+        _save_records(records)
+
+        return _success(report, msg="失败报告已保存")
+    except Exception as e:
+        logger.error(f"[API] /tracking/failure-reports/save 异常: {e}", exc_info=True)
+        return _error(500, f"服务器内部错误: {e}")
+
+
+# ============================================================
+# 9.7 删除求职跟踪记录
+# ============================================================
+
+@tracking_bp.route("/record/<record_id>/delete", methods=["DELETE"])
+def delete_record(record_id: str):
+    """
+    删除当前用户的一条求职跟踪记录。
+    前端按约定以 JSON 方式传入 { user_id }。
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        user_id = body.get("user_id")
+        if not user_id:
+            return _error(400, "请提供 user_id")
+
+        records = _load_records()
+        record = records.get(record_id)
+        if not record:
+            return _error(404, f"记录不存在: {record_id}")
+        if str(record.get("user_id")) != str(user_id):
+            return _error(403, "无权操作该记录")
+
+        # 从存储中移除该记录
+        records.pop(record_id, None)
+        _save_records(records)
+
+        logger.info(f"[Tracking] 删除求职记录 record_id={record_id}, user_id={user_id}")
+        return _success(msg="记录已删除")
+    except Exception as e:
+        logger.error(f"[API] /tracking/record/{record_id}/delete 异常: {e}", exc_info=True)
         return _error(500, f"服务器内部错误: {e}")
 

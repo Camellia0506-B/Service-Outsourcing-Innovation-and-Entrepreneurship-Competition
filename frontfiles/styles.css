@@ -3730,11 +3730,64 @@ body.on-login-page #globalBlobs { display: none; }
     margin-top: 4px;
 }
 
-/* 保存备注按钮：再细一点 */
+/* 保存备注 / 查看完整备注：更细长 & 浅色次按钮 */
 #trackingPage #trackingSaveNoteBtn {
-    padding: 6px 14px;
+    padding: 5px 16px;
     font-size: 12px;
     line-height: 1.0;
+}
+#trackingPage #trackingViewNoteBtn.btn-secondary {
+    padding: 5px 16px;
+    font-size: 12px;
+    background: #faf9f7;
+    color: #1a1a1a;
+    border-color: #e0dcd4;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+#trackingPage #trackingViewNoteBtn.btn-secondary:hover {
+    background: #f5f3ef;
+    color: #1a1a1a;
+}
+
+/* 求职备注详情弹窗内容样式 */
+.tracking-note-modal-body h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 10px 0 4px;
+}
+.tracking-note-modal-body p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 4px;
+}
+.tracking-note-sep {
+    border: none;
+    border-top: 1px dashed #e0dcd4;
+    margin: 10px 0;
+}
+
+/* 求职记录删除按钮 */
+#trackingPage .tracking-job-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+#trackingPage .tracking-job-main {
+    flex: 1;
+    min-width: 0;
+}
+#trackingPage .tracking-job-delete-btn {
+    border: none;
+    background: none;
+    color: #b91c1c;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 6px;
+}
+#trackingPage .tracking-job-delete-btn:hover {
+    text-decoration: underline;
 }
 
 /* --- 页面背景 & 标题 --- */
@@ -4102,13 +4155,13 @@ body.on-login-page #globalBlobs { display: none; }
     border-radius: 4px;
 }
 
-/* --- FAB 计划定制按钮（去掉蓝色渐变）--- */
+/* --- FAB 计划定制按钮（去掉蓝色渐变，避免遮挡顶部提示）--- */
 #trackingPage .tracking-plan-fab {
     position: fixed;
     right: 24px;
-    top: 92px;
-    bottom: auto;
-    z-index: 10002;
+    bottom: 120px;   /* 下移，腾出顶部提示空间 */
+    top: auto;
+    z-index: 900;    /* 降低层级，让全局提示/弹窗盖在上面 */
     background: #5e8c65;
     box-shadow: 0 4px 14px rgba(94, 140, 101, 0.35);
     border-radius: 22px;
@@ -4131,10 +4184,9 @@ body.on-login-page #globalBlobs { display: none; }
     color: #1a1a1a;
 }
 
-/* 关键操作按钮：更“细长” */
+/* 关键操作按钮：更“细长”（推进 / 淘汰） */
 #trackingPage .tracking-step-actions .btn-primary.tracking-advance-btn,
-#trackingPage .tracking-step-actions .tracking-reject-btn,
-#trackingPage #trackingSaveNoteBtn {
+#trackingPage .tracking-step-actions .tracking-reject-btn {
     padding: 9px 18px;
     font-size: 13px;
     border-radius: 8px;
@@ -4825,9 +4877,7 @@ body.on-login-page #globalBlobs { display: none; }
     border-radius: var(--r); font-size: 11px; font-weight: 700;
     cursor: pointer; font-family: inherit; transition: all .15s;
 }
-#matchingPage .view-btn.on,
 #matchingPage .view-btn.active,
-#matchingPage .sv-btn.on,
 #matchingPage .sv-btn.active { background: var(--ink); border-color: var(--ink); color: #fff; }
 #matchingPage .group-row {
     background: var(--white); border: 1.5px solid var(--cream-3);
@@ -17226,9 +17276,8 @@ body.on-login-page #agentAssistant { display: none !important; }
 .toggle-switch:hover .toggle-slider {
     box-shadow: 0 2px 8px rgba(79, 124, 255, 0.3);
 }
-    .interview-message {
-        max-width: 95%;
-    }
+.interview-message {
+    max-width: 95%;
 }
 
 /* ========== 模拟面试新布局样式（参考 mock_interview_ui.html，仅 #mockInterviewPage） ========== */

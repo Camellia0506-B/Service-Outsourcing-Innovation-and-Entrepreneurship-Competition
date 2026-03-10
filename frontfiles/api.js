@@ -2431,7 +2431,7 @@ async function createTrackingRecord(userId, payload) {
 
 // 9.2 更新求职进展
 // PUT /tracking/record/{record_id}/update
-// 请求体：user_id, stage, result, stage_date?, self_evaluation?, notes?
+// 请求体：user_id, stage, result, stage_date?, self_evaluation?, notes?, stage_notes?
 async function updateTrackingRecord(recordId, payload) {
     const body = { ...payload };
     if (body.stage_date === undefined && body.stage) {
@@ -2450,11 +2450,31 @@ async function getTrackingOverview(userId) {
     return await api.get('/tracking/overview', { user_id: userId });
 }
 
+// 9.6 删除求职记录
+// DELETE /tracking/record/{record_id}
+// 请求体：user_id
+async function deleteTrackingRecord(recordId, userId) {
+    return await api.request(`/tracking/record/${encodeURIComponent(recordId)}/delete`, {
+        method: 'DELETE',
+        body: { user_id: userId }
+    });
+}
+
 // 9.5 获取反馈优化报告列表
 // GET /tracking/failure-reports?user_id=xxx&page=1&size=10
 // 响应：{ total, list: [{ report_id, job_title, company_name, failure_stage, key_weakness, plan_updated, created_at }] }
 async function getFailureReports(userId, page = 1, size = 10) {
     return await api.get('/tracking/failure-reports', { user_id: userId, page, size });
+}
+
+// 9.7 保存失败分析为报告
+// POST /tracking/failure-reports/save
+// 请求体：user_id, record_id
+async function saveFailureReport(recordId, userId) {
+    return await api.post('/tracking/failure-reports/save', {
+        user_id: userId,
+        record_id: recordId
+    });
 }
 
 // 9.3 求职失败反馈分析（SSE）— 与 9.1/9.2/9.4/9.5 同属规划落地跟踪，走 AI 服务 5002

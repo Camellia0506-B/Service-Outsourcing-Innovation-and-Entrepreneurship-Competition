@@ -1471,6 +1471,7 @@
                                     <textarea id="trackingUpdateNotes" rows="3" placeholder="记录面试题目、面试官反馈、个人感受…"></textarea>
                                     <div class="tracking-btn-row">
                                         <button type="button" class="btn-primary" id="trackingSaveNoteBtn">保存备注</button>
+                                        <button type="button" class="btn-secondary" id="trackingViewNoteBtn">查看完整备注</button>
                                     </div>
                                 </div>
                             </div>
@@ -1583,6 +1584,21 @@
                     <div id="trackingPlanStream" class="tracking-plan-stream">
                         <p class="hint-text">点击「生成可执行计划」后，将展示学习资源、竞争力提升建议与项目实践方案。</p>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 求职备注详情弹窗 -->
+        <div id="trackingNoteModal" class="modal-overlay hidden">
+            <div class="modal-content tracking-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div>
+                        <h3>完整备注</h3>
+                    </div>
+                    <button type="button" class="modal-close" id="trackingNoteModalClose" aria-label="关闭">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="trackingNoteModalBody" class="tracking-note-modal-body"></div>
                 </div>
             </div>
         </div>

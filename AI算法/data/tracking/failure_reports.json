@@ -86,5 +86,40 @@
     "key_weakness": "1.  整体竞争力与岗位匹配度有待提升，核心技术栈的深度和广度未达到岗位预期；\n2.  技术面试中，对复杂业务场景的拆解能力、问题排查思路不够清晰；\n\n3.  项目经验偏向基础业务，缺乏高并发、高可用相关的实践经验，与字节业务场景需求契合度不高；\n\n4.  沟通表达中，对技术方案的阐述不够简洁、有条理，未能快速突出自身核心优势。",
     "plan_updated": true,
     "created_at": "2026-03-06 18:23:39"
+  },
+  "failure_report_track_20260310123326448_5": {
+    "report_id": "failure_report_track_20260310123326448_5",
+    "user_id": 5,
+    "record_id": "track_20260310123326448_5",
+    "job_title": "后端开发工程师（实习）",
+    "company_name": "腾讯",
+    "failure_stage": "rejected",
+    "key_weakness": "",
+    "plan_updated": false,
+    "created_at": "2026-03-10 12:39:33",
+    "updated_at": "2026-03-10 12:39:33"
+  },
+  "failure_report_track_20260310125435927_5": {
+    "report_id": "failure_report_track_20260310125435927_5",
+    "user_id": 5,
+    "record_id": "track_20260310125435927_5",
+    "job_title": "Java开发工程师（实习）",
+    "company_name": "阿里巴巴",
+    "failure_stage": "rejected",
+    "key_weakness": "",
+    "plan_updated": false,
+    "created_at": "2026-03-10 12:55:17",
+    "updated_at": "2026-03-10 12:55:17"
+  },
+  "failure_report_20260310130344998_5": {
+    "report_id": "failure_report_20260310130344998_5",
+    "user_id": 5,
+    "record_id": "track_20260310125801028_5",
+    "job_title": "前端开发工程师（实习）",
+    "company_name": "百度",
+    "failure_stage": "rejected",
+    "key_weakness": "系统设计能力不足",
+    "plan_updated": true,
+    "created_at": "2026-03-10 13:03:45"
   }
 }
