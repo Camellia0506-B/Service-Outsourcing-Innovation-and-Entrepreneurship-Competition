@@ -12,7 +12,9 @@ import www.gradquest.com.entity.ForumPost;
 import www.gradquest.com.entity.SharedResource;
 import www.gradquest.com.entity.User;
 import www.gradquest.com.entity.UserFollow;
+import www.gradquest.com.entity.UserProfile;
 import www.gradquest.com.mapper.UserMapper;
+import www.gradquest.com.mapper.UserProfileMapper;
 import www.gradquest.com.service.UserService;
 import www.gradquest.com.mapper.UserFollowMapper;
 import www.gradquest.com.mapper.ForumPostMapper;
@@ -33,6 +35,7 @@ import java.util.Objects;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final UserProfileMapper userProfileMapper;
     private final UserFollowMapper userFollowMapper;
     private final ForumPostMapper forumPostMapper;
     private final SharedResourceMapper sharedResourceMapper;
@@ -74,6 +77,12 @@ public class UserServiceImpl implements UserService {
 
         // 保存用户数据
         userMapper.insert(user);
+
+        // 为学生端与 HR 端打通：注册即创建空档案，HR 列表可见（未完善档案时显示基础信息）
+        UserProfile emptyProfile = new UserProfile();
+        emptyProfile.setUserId(user.getId());
+        emptyProfile.setUpdatedAt(LocalDateTime.now());
+        userProfileMapper.insert(emptyProfile);
 
         return user;
     }

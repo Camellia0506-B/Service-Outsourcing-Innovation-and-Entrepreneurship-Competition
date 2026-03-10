@@ -245,5 +245,102 @@
       ]
     },
     "error": null
+  },
+  "resume_parse_20260310212029427_15_467953": {
+    "status": "processing",
+    "user_id": 15,
+    "created_at": "2026-03-10 21:20:29",
+    "result": null,
+    "error": null
+  },
+  "resume_parse_20260310212453578_15_22255": {
+    "status": "completed",
+    "user_id": 15,
+    "created_at": "2026-03-10 21:24:53",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "SUN YUTING",
+          "phone": "18061253346",
+          "email": "syt18061253346@qq.com",
+          "gender": "Female",
+          "birth_date": null
+        },
+        "education": [
+          {
+            "school": "Wuhan University of Technology",
+            "major": "Computer Science and Technology",
+            "degree": "Bachelor of Engineering",
+            "grade": "Class of 2024",
+            "start_date": "2020-09",
+            "expected_graduation": "2028-06",
+            "gpa": "3.8/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "人工智能/机器学习",
+              "系统设计",
+              "架构设计"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "React",
+              "Spring Boot",
+              "Docker"
+            ]
+          }
+        ],
+        "certificates": [],
+        "internships": [],
+        "projects": [
+          {
+            "name": "AI Career Planning System",
+            "role": null,
+            "start_date": null,
+            "end_date": null,
+            "description": "Developed an intelligent career planning system using AI agents and RAG architecture. Implemented resume parsing with Qwen-max model and vector database integration. Built a three-tier architecture: Python AI service, Spring Boot backend, React frontend. Designed asynchronous task processing for improved system performance.",
+            "tech_stack": [
+              "Python",
+              "Java",
+              "JavaScript",
+              "React",
+              "Spring Boot",
+              "Docker",
+              "Qwen-max",
+              "vector database",
+              "asynchronous task processing"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "17th China College Student Service Outsourcing Innovation Competition",
+            "level": "国家级",
+            "date": null
+          }
+        ]
+      },
+      "confidence_score": 0.9,
+      "suggestions": [
+        "建议补充具体的项目开始和结束时间，以便更好地展示项目经历。",
+        "建议补充出生日期，以完善基本信息。",
+        "建议补充实习经历，如果有相关经验的话。",
+        "建议在技能板块中明确列出所有掌握的技能，方便招聘方快速了解技术栈。"
+      ]
+    },
+    "error": null
   }
 }

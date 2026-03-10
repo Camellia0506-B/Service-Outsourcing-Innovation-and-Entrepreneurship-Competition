@@ -1013,12 +1013,17 @@ class CareerPlanningApp {
             this.generateResume();
         });
 
-        document.getElementById('submitToHrBtn')?.addEventListener('click', () => {
-            this.submitToHr();
-        });
-
         document.getElementById('exportResumeBtn')?.addEventListener('click', () => {
             this.exportResume();
+        });
+
+        document.getElementById('hrInviteRefreshBtn')?.addEventListener('click', () => {
+            this.loadStudentInvitations();
+        });
+
+        // 个人档案页：提交给HR
+        document.getElementById('profileSubmitToHrBtn')?.addEventListener('click', () => {
+            this.submitProfileToHr();
         });
     }
 
@@ -1140,7 +1145,7 @@ class CareerPlanningApp {
                 await this.loadAccessLogs();
                 break;
             case 'resume':
-                await this.loadResume();
+                await this.loadStudentInvitations();
                 break;
         }
     }
@@ -3281,12 +3286,13 @@ class CareerPlanningApp {
             const result = await api.requestToAI(`/security/privacy/consent?user_id=${userId}`, { method: 'GET' });
 
             if (result.success && result.data) {
-                const consents = result.data.consents;
-                document.getElementById('resumeVisibleToHr').checked = consents.resume_visible_to_hr || false;
-                document.getElementById('allowHrContact').checked = consents.allow_hr_contact || false;
-                document.getElementById('allowAlgorithmOptimization').checked = consents.allow_algorithm_optimization || false;
-                document.getElementById('allowResearch').checked = consents.allow_research || false;
-                document.getElementById('dataRetentionYears').value = consents.data_retention_years || 3;
+                const consents = result.data.consents || {};
+                // 默认全部开启：未返回或未保存时显示为开启
+                document.getElementById('resumeVisibleToHr').checked = consents.resume_visible_to_hr !== false;
+                document.getElementById('allowHrContact').checked = consents.allow_hr_contact !== false;
+                document.getElementById('allowAlgorithmOptimization').checked = consents.allow_algorithm_optimization !== false;
+                document.getElementById('allowResearch').checked = consents.allow_research !== false;
+                document.getElementById('dataRetentionYears').value = consents.data_retention_years ?? 3;
             }
         } catch (error) {
             console.error('[Privacy] 加载隐私设置失败:', error);
@@ -3467,6 +3473,89 @@ class CareerPlanningApp {
     // 当前生成的简历数据
     currentResumeData = null;
 
+    // HR邀约页：Mock 假数据，绕过后端
+    async loadStudentInvitations() {
+        const mockData = [
+            {
+                invitation_id: 'INV-2025-001',
+                company_name: '星途智探科技有限公司',
+                hr_name: '孙于婷',
+                target_job: 'AI产品经理',
+                message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。',
+                status: 'accepted',
+                sent_at: '2025-03-08 14:23'
+            },
+            {
+                invitation_id: 'INV-2025-002',
+                company_name: '深蓝智能（北京）有限公司',
+                hr_name: '王雨晴',
+                target_job: '算法工程师',
+                message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。',
+                status: 'pending',
+                sent_at: '2025-03-09 10:05'
+            }
+        ];
+
+        const countEl = document.getElementById('hrInviteCount');
+        const totalEl = document.getElementById('hrInviteTotal');
+        const listEl = document.getElementById('hrInviteList');
+        if (countEl) countEl.textContent = `共 ${mockData.length} 条邀请`;
+        if (totalEl) totalEl.textContent = `共 ${mockData.length} 条记录`;
+        if (!listEl) return;
+
+        const statusText = { pending: '待响应', accepted: '已接受', declined: '已拒绝' };
+        const statusColor = { pending: '#f59e0b', accepted: '#2d6a4f', declined: '#6b7280' };
+
+        listEl.innerHTML = mockData.map(inv => {
+            const status = inv.status || 'pending';
+            const isPending = status === 'pending';
+            const sentAt = (inv.sent_at || '').slice(0, 19).replace('T', ' ');
+            const sub = [inv.company_name, inv.hr_name].filter(Boolean).join(' · ');
+            return `
+            <div class="hr-student-card" style="background:#fff;border:1px solid #e2dfd7;border-radius:10px;padding:18px 20px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:15px;font-weight:700;color:#0f0f0d;margin-bottom:4px;">${(inv.target_job || '招聘岗位').toString().replace(/</g, '&lt;')}</div>
+                        ${sub ? `<div style="font-size:12px;color:#a0a098;margin-bottom:6px;">${sub.replace(/</g, '&lt;')}</div>` : ''}
+                        <div style="font-size:13px;color:#6b6860;margin-bottom:8px;">${(inv.message || '').toString().replace(/</g, '&lt;')}</div>
+                        <div style="font-size:12px;color:#a0a098;">发送时间：${sentAt}</div>
+                        <span style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:600;background:${statusColor[status]}20;color:${statusColor[status]};">${statusText[status] || status}</span>
+                    </div>
+                    ${isPending ? `
+                    <div style="display:flex;gap:8px;">
+                        <button type="button" data-inv-id="${(inv.invitation_id || '').toString().replace(/"/g, '&quot;')}" data-action="accept" style="height:34px;padding:0 16px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#2d6a4f;color:#fff;cursor:pointer;">接受</button>
+                        <button type="button" data-inv-id="${(inv.invitation_id || '').toString().replace(/"/g, '&quot;')}" data-action="decline" style="height:34px;padding:0 16px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid #e2dfd7;background:#fff;color:#6b6860;cursor:pointer;">拒绝</button>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>`;
+        }).join('');
+
+        listEl.querySelectorAll('button[data-inv-id][data-action]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const invId = btn.getAttribute('data-inv-id');
+                const action = btn.getAttribute('data-action');
+                if (!invId || !action) return;
+                this.respondToInvitation(invId, action);
+            });
+        });
+    }
+
+    async respondToInvitation(invitationId, action) {
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('请先登录', 'error');
+            return;
+        }
+        const result = await respondToInvitation(invitationId, userId, action);
+        if (result.success) {
+            this.showToast(result.msg || '操作成功', 'success');
+            this.loadStudentInvitations();
+        } else {
+            this.showToast(result.msg || '操作失败', 'error');
+        }
+    }
+
     // 加载简历
     async loadResume() {
         const userId = getCurrentUserId();
@@ -3481,7 +3570,6 @@ class CareerPlanningApp {
             if (result.success && result.data) {
                 this.currentResumeData = result.data;
                 this.renderResumePreview(result.data);
-                document.getElementById('submitToHrBtn').disabled = false;
                 document.getElementById('exportResumeBtn').disabled = false;
             }
         } catch (error) {
@@ -3509,7 +3597,6 @@ class CareerPlanningApp {
             if (result.success && result.data) {
                 this.currentResumeData = result.data;
                 this.renderResumePreview(result.data);
-                document.getElementById('submitToHrBtn').disabled = false;
                 document.getElementById('exportResumeBtn').disabled = false;
                 statusEl.innerHTML = '<div style="background: #d4edda; padding: 16px; border-radius: 8px; text-align: center; color: #155724;">简历生成成功！</div>';
                 setTimeout(() => {
@@ -3529,45 +3616,29 @@ class CareerPlanningApp {
         }
     }
 
-    // 提交简历给HR
-    async submitToHr() {
+    // 个人档案页：提交简历给HR（调用同一接口，无需先在简历生成页生成）
+    async submitProfileToHr() {
         const userId = getCurrentUserId();
         if (!userId) {
             this.showToast('用户未登录', 'error');
             return;
         }
 
-        if (!this.currentResumeData) {
-            this.showToast('请先生成简历', 'error');
-            return;
-        }
-
-        const statusEl = document.getElementById('resumeStatus');
-        statusEl.style.display = 'block';
-        statusEl.innerHTML = '<div style="background: var(--light-blue-bg); padding: 16px; border-radius: 8px; text-align: center;">正在提交...</div>';
-        
-        document.getElementById('submitToHrBtn').disabled = true;
+        const btn = document.getElementById('profileSubmitToHrBtn');
+        if (btn) btn.disabled = true;
 
         try {
             const result = await api.postToAI('/resume/submit', { user_id: userId });
-
             if (result.success) {
-                this.currentResumeData.submitted_to_hr = true;
-                statusEl.innerHTML = '<div style="background: #d4edda; padding: 16px; border-radius: 8px; text-align: center; color: #155724;">简历已成功提交给HR！</div>';
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 3000);
                 this.showToast('简历已提交给HR', 'success');
             } else {
-                statusEl.innerHTML = `<div style="background: #f8d7da; padding: 16px; border-radius: 8px; text-align: center; color: #721c24;">${result.msg || '提交失败'}</div>`;
-                this.showToast(result.msg || '提交失败', 'error');
-                document.getElementById('submitToHrBtn').disabled = false;
+                this.showToast(result.msg || '提交失败，请稍后重试', 'error');
             }
         } catch (error) {
-            console.error('[Resume] 提交简历失败:', error);
-            statusEl.innerHTML = '<div style="background: #f8d7da; padding: 16px; border-radius: 8px; text-align: center; color: #721c24;">提交失败，请稍后重试</div>';
+            console.error('[Profile] 提交简历给HR失败:', error);
             this.showToast('提交失败，请稍后重试', 'error');
-            document.getElementById('submitToHrBtn').disabled = false;
+        } finally {
+            if (btn) btn.disabled = false;
         }
     }
 
@@ -3630,12 +3701,6 @@ class CareerPlanningApp {
                     ${resume.ability_tags.map(tag => `<span class="hr-ability-tag">${tag}</span>`).join('')}
                 </div>
             </div>
-            
-            ${resume.submitted_to_hr ? `
-                <div style="margin-top: 24px; padding: 16px; background: #d4edda; border-radius: 8px; text-align: center;">
-                    <span style="color: #155724; font-weight: 600;">✓ 简历已提交给HR</span>
-                </div>
-            ` : ''}
         `;
     }
 

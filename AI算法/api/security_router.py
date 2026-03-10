@@ -49,14 +49,14 @@ def _load_privacy_settings(user_id):
                 return json.load(f)
         except Exception as e:
             logger.warning(f"[Security] 加载隐私设置失败 user_id={user_id}: {e}")
-    # 默认隐私设置
+    # 默认隐私设置：全部默认开启
     return {
         "user_id": user_id,
         "consents": {
-            "resume_visible_to_hr": False,
-            "allow_hr_contact": False,
+            "resume_visible_to_hr": True,
+            "allow_hr_contact": True,
             "allow_algorithm_optimization": True,
-            "allow_research": False,
+            "allow_research": True,
             "data_retention_years": 3
         },
         "updated_at": None

@@ -18185,7 +18185,6 @@ body:not(.on-login-page) #agentFab { display: flex !important; }
     display: none;
 }
 
-.hr-content-section:first-child,
 .hr-content-section.active {
     display: block;
 }

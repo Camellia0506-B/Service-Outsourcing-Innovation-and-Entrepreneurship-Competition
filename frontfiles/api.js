@@ -3005,6 +3005,45 @@ async function submitResumeToHr(userId) {
     return await api.postToAI('/resume/submit', { user_id: userId });
 }
 
+// ==================== 学生端 HR 评估邀请 ====================
+// 获取当前学生收到的评估邀请列表（GET，走 AI 服务 5002）
+async function getStudentInvitations(userId) {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const url = `${base}/hr/student/invitations?user_id=${encodeURIComponent(userId)}`;
+    try {
+        const resp = await fetch(url, { method: 'GET' });
+        const data = await resp.json().catch(() => ({}));
+        if (data.code === 200 && Array.isArray(data.data && data.data.list)) {
+            return { success: true, list: data.data.list };
+        }
+        return { success: false, list: [], msg: data.msg || '加载失败' };
+    } catch (e) {
+        console.error('[API] getStudentInvitations:', e);
+        return { success: false, list: [], msg: '网络错误' };
+    }
+}
+
+// 学生响应邀请：接受或拒绝（POST，走 AI 服务 5002）
+async function respondToInvitation(invitationId, userId, action) {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const url = `${base}/hr/student/invitation/${encodeURIComponent(invitationId)}/respond`;
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, action: action })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (data.code === 200) {
+            return { success: true, data: data.data, msg: data.msg };
+        }
+        return { success: false, msg: data.msg || '操作失败' };
+    } catch (e) {
+        console.error('[API] respondToInvitation:', e);
+        return { success: false, msg: '网络错误' };
+    }
+}
+
 // ==================== 隐私设置模块 ====================
 
 // 获取隐私设置
