@@ -4475,111 +4475,109 @@ body.on-login-page #globalBlobs { display: none; }
     gap: 20px;
 }
 
-.ability-profile-card {
-    background: var(--card-bg);
-    border-radius: 12px;
+#abilityProfilePage .ability-profile-card {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
     padding: 20px 24px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
 }
 
-.ability-profile-card.highlight {
-    border-left: 4px solid var(--primary-color);
+#abilityProfilePage .ability-profile-card.highlight {
+    border-left: 4px solid var(--mock-sage);
 }
 
-.ability-profile-card h3 {
+#abilityProfilePage .ability-profile-card h3 {
     font-size: 18px;
     margin-bottom: 12px;
-    color: var(--text-primary);
+    color: var(--mock-ink);
 }
 
-.ability-section p {
+#abilityProfilePage .ability-section p {
     margin: 8px 0;
-    color: var(--text-secondary);
+    color: var(--mock-ink-2);
     font-size: 14px;
 }
 
-.ability-tag {
+#abilityProfilePage .ability-tag {
     display: inline-block;
-    background: #e0e7ff;
-    color: #4338ca;
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
     padding: 2px 10px;
     border-radius: 6px;
     font-size: 13px;
     margin: 2px 4px 2px 0;
 }
 
-.score-highlight {
-    color: var(--primary-color);
+#abilityProfilePage .score-highlight {
+    color: var(--mock-sage);
     font-weight: 700;
 }
 
 /* 推荐岗位卡片（含匹配度） */
-.job-card-match .match-badge {
+#abilityProfilePage .job-card-match .match-badge {
     font-size: 12px;
     padding: 2px 8px;
     border-radius: 6px;
     font-weight: 600;
 }
 
-.match-badge.match-high { background: #dcfce7; color: #166534; }
-.match-badge.match-mid { background: #fef3c7; color: #92400e; }
-.match-badge.match-low { background: #fee2e2; color: #991b1b; }
+#abilityProfilePage .match-badge.match-high { background: var(--mock-sage-soft); color: var(--mock-sage); }
+#abilityProfilePage .match-badge.match-mid { background: var(--mock-amber-soft); color: var(--mock-amber); }
+#abilityProfilePage .match-badge.match-low { background: var(--mock-red-soft); color: var(--mock-red); }
 
-.job-card-match .job-card-header {
+#abilityProfilePage .job-card-match .job-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.match-score-row {
+#abilityProfilePage .match-score-row {
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--mock-line);
 }
 
-.match-score-row .score-value {
+#abilityProfilePage .match-score-row .score-value {
     font-size: 24px;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--mock-sage);
 }
 
-.job-highlights {
+#abilityProfilePage .job-highlights {
     margin-top: 8px;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
 }
 
-.highlight-tag {
+#abilityProfilePage .highlight-tag {
     font-size: 12px;
-    color: #059669;
-    background: #ecfdf5;
+    color: var(--mock-sage);
+    background: var(--mock-sage-soft);
     padding: 2px 8px;
     border-radius: 4px;
 }
 
 /* 匹配分析结果 */
-.analysis-result-card {
-    background: var(--card-bg);
-    border-radius: 16px;
+#abilityProfilePage .analysis-result-card {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
     padding: 28px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
 }
 
-.analysis-result-card h3 {
+#abilityProfilePage .analysis-result-card h3 {
     font-size: 20px;
     margin-bottom: 24px;
-    color: var(--text-primary);
+    color: var(--mock-ink);
 }
 
-.analysis-score-block {
+#abilityProfilePage .analysis-score-block {
     text-align: center;
     margin-bottom: 28px;
 }
 
-.score-circle {
+#abilityProfilePage .score-circle {
     display: inline-block;
     width: 100px;
     height: 100px;
@@ -4590,24 +4588,24 @@ body.on-login-page #globalBlobs { display: none; }
     color: white;
 }
 
-.score-circle.match-high { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.score-circle.match-mid { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.score-circle.match-low { background: linear-gradient(135deg, #ef4444, #dc2626); }
+#abilityProfilePage .score-circle.match-high { background: var(--mock-sage); }
+#abilityProfilePage .score-circle.match-mid { background: var(--mock-amber); }
+#abilityProfilePage .score-circle.match-low { background: var(--mock-red); }
 
-.analysis-job-info {
+#abilityProfilePage .analysis-job-info {
     display: flex;
     gap: 16px;
     margin-bottom: 20px;
-    color: var(--text-secondary);
+    color: var(--mock-ink-2);
     font-size: 14px;
 }
 
-.analysis-dimensions h4,
-.analysis-highlights h4,
-.analysis-gaps h4 {
+#abilityProfilePage .analysis-dimensions h4,
+#abilityProfilePage .analysis-highlights h4,
+#abilityProfilePage .analysis-gaps h4 {
     font-size: 16px;
     margin-bottom: 12px;
-    color: var(--text-primary);
+    color: var(--mock-ink);
 }
 
 .dim-grid {
@@ -4616,21 +4614,21 @@ body.on-login-page #globalBlobs { display: none; }
     gap: 12px;
 }
 
-.dim-score {
+#abilityProfilePage .dim-score {
     display: flex;
     justify-content: space-between;
     padding: 10px 14px;
-    background: #f8fafc;
-    border-radius: 8px;
+    background: var(--mock-line-2);
+    border-radius: var(--mock-radius);
     font-size: 14px;
 }
 
-.analysis-gaps .gap-item {
+#abilityProfilePage .analysis-gaps .gap-item {
     margin-bottom: 16px;
     padding: 14px;
-    background: #fef3c7;
-    border-radius: 8px;
-    border-left: 4px solid #f59e0b;
+    background: var(--mock-amber-soft);
+    border-radius: var(--mock-radius);
+    border-left: 4px solid var(--mock-amber);
 }
 
 /* 职业发展路径（岗位匹配页） */
@@ -16836,6 +16834,641 @@ body.on-login-page #agentAssistant { display: none !important; }
     font-family: 'Noto Sans SC', sans-serif;
     background: var(--mock-bg);
     color: var(--mock-ink);
+}
+
+/* 能力画像页面整体样式（和模拟面试一致） */
+#abilityProfilePage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+}
+
+/* 能力画像页面标题样式（和模拟面试一致） */
+#abilityProfilePage .page-title-bar { background: #5e8c65; }
+#abilityProfilePage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
+#abilityProfilePage .page-subtitle { color: #a0a098; }
+#abilityProfilePage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
+
+/* 能力画像页面按钮样式（和模拟面试一致） */
+#abilityProfilePage .btn-primary {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#abilityProfilePage .btn-primary:hover {
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#abilityProfilePage .btn-secondary {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: 1.5px solid var(--mock-line);
+    transition: all 0.15s;
+    background: none;
+    color: var(--mock-ink-2);
+}
+
+#abilityProfilePage .btn-secondary:hover {
+    border-color: var(--mock-ink);
+    color: var(--mock-ink);
+}
+
+/* 职业规划报告页面整体样式（和模拟面试一致） */
+#reportPage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+}
+
+/* 职业规划报告页面标题样式（和模拟面试一致） */
+#reportPage .page-title-bar { background: #5e8c65; }
+#reportPage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
+#reportPage .page-subtitle { color: #a0a098; }
+#reportPage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
+
+/* 职业规划报告页面卡片样式（和模拟面试一致） */
+#reportPage .report-generate-card,
+#reportPage .preferences-card,
+#reportPage .report-generating-card,
+#reportPage .report-content {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+    box-shadow: none;
+}
+
+/* 职业规划报告页面按钮样式（和模拟面试一致） */
+#reportPage .btn-assessment-primary {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#reportPage .btn-assessment-primary:hover {
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#reportPage .btn-assessment-secondary {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: 1.5px solid var(--mock-line);
+    transition: all 0.15s;
+    background: none;
+    color: var(--mock-ink-2);
+}
+
+#reportPage .btn-assessment-secondary:hover {
+    border-color: var(--mock-ink);
+    color: var(--mock-ink);
+}
+
+/* 职业规划报告页面表单元素样式（和模拟面试一致） */
+#reportPage .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mock-ink-2);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+#reportPage .form-group input,
+#reportPage .form-group select {
+    padding: 11px 14px;
+    border: 1px solid var(--mock-line);
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    color: var(--mock-ink);
+    background: var(--mock-bg);
+    outline: none;
+    appearance: none;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+#reportPage .form-group input:focus,
+#reportPage .form-group select:focus {
+    border-color: var(--mock-sage);
+}
+
+/* 职业规划报告页面评估元数据样式（和模拟面试一致） */
+#reportPage .assessment-meta-label {
+    color: var(--mock-ink-3);
+}
+
+#reportPage .assessment-meta-val {
+    color: var(--mock-ink);
+}
+
+#reportPage .assessment-meta-accent {
+    color: var(--mock-amber);
+}
+
+#reportPage .assessment-meta-green {
+    color: var(--mock-sage);
+}
+
+/* 职业规划报告结果页面工具栏按钮样式（和模拟面试一致） */
+#reportPage .btn-toolbar {
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    cursor: pointer;
+    border: 1px solid var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink-2);
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#reportPage .btn-toolbar:hover {
+    border-color: var(--mock-ink);
+    color: var(--mock-ink);
+    background: var(--mock-line-2);
+}
+
+#reportPage .btn-toolbar.btn-export {
+    background: var(--mock-sage);
+    color: #fff;
+    border-color: var(--mock-sage);
+}
+
+#reportPage .btn-toolbar.btn-export:hover {
+    background: #4a7050;
+    border-color: #4a7050;
+}
+
+/* 职业规划报告结果页面目录样式（和模拟面试一致） */
+#reportPage .report-toc {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    border-radius: var(--mock-radius);
+    box-shadow: none;
+}
+
+#reportPage .report-toc-title {
+    color: var(--mock-ink);
+    border-bottom: 1px solid var(--mock-line);
+}
+
+#reportPage .report-toc-item {
+    color: var(--mock-ink-2);
+    border-radius: 6px;
+}
+
+#reportPage .report-toc-item:hover {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#reportPage .report-toc-item.active {
+    background: var(--mock-sage);
+    color: #fff;
+    box-shadow: none;
+}
+
+/* 职业规划报告结果页面内容样式（和模拟面试一致） */
+#reportPage .report-content {
+    background: var(--mock-white) !important;
+    border-radius: var(--mock-radius) !important;
+    border: 1px solid var(--mock-line) !important;
+    box-shadow: none !important;
+}
+
+#reportPage .report-content:hover {
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* 职业规划报告结果页面返回顶部按钮样式（和模拟面试一致） */
+#reportPage .btn-back-to-top {
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#reportPage .btn-back-to-top:hover {
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+/* 职业规划报告页面弹窗样式（和模拟面试一致） */
+#reportPage .modal-overlay {
+    background: rgba(28, 28, 24, 0.5);
+}
+
+#reportPage .modal-content {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+#reportPage .modal-header {
+    border-bottom: 1px solid var(--mock-line);
+}
+
+#reportPage .modal-header h3,
+#reportPage .modal-header h4 {
+    color: var(--mock-ink);
+}
+
+/* 职业规划报告页面智能体聊天样式（和模拟面试一致） */
+#reportPage .agent-message .message-content {
+    background: var(--mock-line-2);
+    border-radius: var(--mock-radius);
+}
+
+#reportPage .user-message .message-content {
+    background: var(--mock-sage);
+    color: #fff;
+    border-radius: var(--mock-radius);
+}
+
+/* 职业规划报告页面快捷操作按钮样式（和模拟面试一致） */
+#reportPage .quick-action-btn {
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    cursor: pointer;
+    border: 1px solid var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink-2);
+    transition: all 0.15s;
+}
+
+#reportPage .quick-action-btn:hover {
+    border-color: var(--mock-sage);
+    color: var(--mock-sage);
+    background: var(--mock-sage-soft);
+}
+
+/* 职业规划报告编辑弹窗按钮样式（和模拟面试一致） */
+#reportPage #saveReportEditsBtn {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#reportPage #saveReportEditsBtn:hover {
+    background: var(--mock-ink);
+    color: #fff;
+}
+
+#reportPage #previewReportBtn {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: 1.5px solid var(--mock-line);
+    transition: all 0.15s;
+    background: none;
+    color: var(--mock-ink-2);
+}
+
+#reportPage #previewReportBtn:hover {
+    border-color: var(--mock-ink);
+    color: var(--mock-ink);
+}
+
+/* 职业规划历史报告面板样式（和模拟面试一致） */
+#reportPage .report-history-panel {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    border-radius: var(--mock-radius);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+#reportPage .report-history-header {
+    border-bottom: 1px solid var(--mock-line);
+}
+
+#reportPage .report-history-header h3 {
+    color: var(--mock-ink);
+}
+
+#reportPage .btn-close-history {
+    color: var(--mock-ink-3);
+}
+
+#reportPage .btn-close-history:hover {
+    color: var(--mock-ink);
+}
+
+#reportPage .career-history-item {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    border-radius: var(--mock-radius);
+}
+
+#reportPage .career-history-item:hover {
+    border-color: var(--mock-sage);
+    background: var(--mock-sage-soft);
+}
+
+#reportPage .history-item-title {
+    color: var(--mock-ink);
+}
+
+#reportPage .history-item-meta {
+    color: var(--mock-ink-2);
+}
+
+#reportPage .history-item-score {
+    color: var(--mock-sage);
+}
+
+/* 职业规划报告智能体对话模块样式（和模拟面试一致） */
+#reportPage .agent-modal {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+#reportPage .agent-chat-input {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    box-shadow: none;
+    border: 1px solid var(--mock-line);
+}
+
+#reportPage .agent-chat-input input {
+    padding: 11px 14px;
+    border: 1px solid var(--mock-line);
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    color: var(--mock-ink);
+    background: var(--mock-bg);
+    outline: none;
+    appearance: none;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+#reportPage .agent-chat-input input:focus {
+    border-color: var(--mock-sage);
+    box-shadow: none;
+}
+
+#reportPage .agent-chat-input button {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    background: var(--mock-ink);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+}
+
+#reportPage .agent-chat-input button:hover {
+    background: var(--mock-ink);
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+}
+
+#reportPage .agent-chat-input button::before {
+    display: none;
+}
+
+#reportPage .agent-quick-actions {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+    box-shadow: none;
+}
+
+#reportPage .agent-quick-actions h4 {
+    color: var(--mock-ink);
+}
+
+#reportPage .agent-quick-actions .btn-secondary {
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    cursor: pointer;
+    border: 1px solid var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink-2);
+    transition: all 0.15s;
+    box-shadow: none;
+}
+
+#reportPage .agent-quick-actions .btn-secondary:hover {
+    border-color: var(--mock-sage);
+    color: var(--mock-sage);
+    background: var(--mock-sage-soft);
+    transform: none;
+    box-shadow: none;
+}
+
+#reportPage .agent-chat-input-fullrow textarea {
+    padding: 11px 14px;
+    border: 1px solid var(--mock-line);
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    color: var(--mock-ink);
+    background: var(--mock-bg);
+    outline: none;
+    appearance: none;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+#reportPage .agent-chat-input-fullrow textarea:focus {
+    border-color: var(--mock-sage);
+    box-shadow: none;
+}
+
+/* 职业规划报告智能体头像样式（和模拟面试一致） */
+#reportPage .agent-header-info {
+    background: var(--mock-sage-soft);
+    border-radius: var(--mock-radius);
+    padding: 16px;
+    margin: 0;
+    box-shadow: none;
+}
+
+#reportPage .agent-avatar-small {
+    animation: none;
+}
+
+#reportPage .agent-message .message-avatar {
+    background: var(--mock-sage);
+    color: #fff;
+    box-shadow: none;
+}
+
+#reportPage .user-message .message-avatar {
+    background: var(--mock-ink);
+    color: #fff;
+    box-shadow: none;
+}
+
+/* 职业规划报告头部样式（和模拟面试一致） */
+#reportPage .career-report-header {
+    background: var(--mock-sage-soft);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-sage-mid);
+    box-shadow: none;
+    color: var(--mock-ink);
+}
+
+#reportPage .career-report-header:hover {
+    box-shadow: none;
+    transform: none;
+}
+
+#reportPage .career-report-tag {
+    color: var(--mock-sage);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+#reportPage .career-report-header h3 {
+    color: var(--mock-ink);
+    text-shadow: none;
+}
+
+#reportPage .career-report-sub {
+    color: var(--mock-ink-2);
+}
+
+#reportPage .career-report-meta {
+    color: var(--mock-ink-3);
+}
+
+/* 职业规划报告内容模块样式（和模拟面试一致） */
+#reportPage .career-section {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+    box-shadow: none;
+}
+
+#reportPage .career-section:hover {
+    box-shadow: none;
+    transform: none;
+}
+
+/* 去除职业规划报告页面模块标题的左边竖线 */
+#reportPage .career-section-title {
+    border-left: none;
+}
+
+#reportPage .rec-capability-match {
+    border-left: none;
+}
+
+#reportPage .goal-card {
+    border-left: none;
+}
+
+/* 隐藏职业规划报告页面标题旁边的小图案 */
+#reportPage .toc-icon {
+    display: none;
+}
+
+#reportPage .module-icon {
+    display: none;
+}
+
+#reportPage .step-icon {
+    display: none;
+}
+
+#reportPage .toolbar-icon {
+    display: none;
 }
 
 /* 问题2：Tab 索引栏样式 */
