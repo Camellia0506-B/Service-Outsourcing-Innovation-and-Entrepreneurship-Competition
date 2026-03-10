@@ -56,13 +56,7 @@
                 </div>
                 
                 <nav class="hr-sidebar-nav">
-                    <a href="#" class="hr-sidebar-item active" data-section="dashboard">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>仪表板</span>
-                    </a>
-                    <a href="#" class="hr-sidebar-item" data-section="students">
+                    <a href="#" class="hr-sidebar-item active" data-section="students">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -132,79 +126,82 @@
 
                 <!-- 学生简历库区域 -->
                 <div id="students-section" class="hr-content-section">
-                    <!-- 学生简历列表 - 左右分栏布局 -->
-                    <div style="display: flex; gap: 24px;">
-                        <!-- 左侧：学生列表 -->
-                        <div style="flex: 0 0 480px; min-width: 480px;">
-                            <h3 class="hr-section-title">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                学生简历库
-                            </h3>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+                        <h3 class="hr-section-title" style="margin-bottom:0;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            学生简历库
+                        </h3>
+                        <span id="studentStats" style="margin-left:auto;font-size:13px;color:#a0a098;"></span>
+                    </div>
 
-                            <!-- 筛选器 -->
-                            <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e8e6df;">
-                                <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
-                                    <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">招聘岗位</label>
-                                        <select id="filterJob" class="hr-select">
-                                            <option value="">全部岗位</option>
-                                            <option value="AI产品经理">AI产品经理</option>
-                                            <option value="前端开发工程师">前端开发工程师</option>
-                                            <option value="后端开发工程师">后端开发工程师</option>
-                                            <option value="算法工程师">算法工程师</option>
-                                            <option value="数据分析师">数据分析师</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">最低匹配分</label>
-                                        <select id="filterMinScore" class="hr-select">
-                                            <option value="0">不限</option>
-                                            <option value="60">60分以上</option>
-                                            <option value="70">70分以上</option>
-                                            <option value="80">80分以上</option>
-                                            <option value="90">90分以上</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 12px; font-weight: 600; color: #a0a098; margin-bottom: 8px; letter-spacing: 0.3px; text-transform: uppercase;">学历</label>
-                                        <select id="filterEducation" class="hr-select">
-                                            <option value="">不限</option>
-                                            <option value="本科">本科</option>
-                                            <option value="硕士">硕士</option>
-                                            <option value="博士">博士</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <button id="filterBtn" class="hr-invite-btn" style="width: 100%;">筛选</button>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- 表格容器 -->
+                    <div style="background:#fff;border:1px solid #e2dfd7;border-radius:10px;overflow:hidden;">
 
-                            <!-- 学生列表 -->
-                            <div id="studentList" class="hr-student-list">
-                            </div>
-
-                            <!-- 分页 -->
-                            <div style="display: flex; justify-content: center; margin-top: 24px; gap: 8px;">
-                                <button id="prevPage" class="hr-view-btn" disabled>上一页</button>
-                                <span id="pageInfo" style="padding: 10px 16px; color: #a0a098;">第 1 页</span>
-                                <button id="nextPage" class="hr-view-btn">下一页</button>
-                            </div>
+                        <!-- 筛选工具栏嵌入表格顶部 -->
+                        <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;background:#f5f3ee;border-bottom:1px solid #e2dfd7;flex-wrap:wrap;">
+                            <span style="font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;">招聘岗位</span>
+                            <select id="filterJob" class="hr-select" style="height:32px;padding:0 26px 0 9px;font-size:13px;min-width:130px;">
+                                <option value="">全部岗位</option>
+                                <option value="AI产品经理">AI产品经理</option>
+                                <option value="前端开发工程师">前端开发工程师</option>
+                                <option value="后端开发工程师">后端开发工程师</option>
+                                <option value="算法工程师">算法工程师</option>
+                                <option value="数据分析师">数据分析师</option>
+                            </select>
+                            <div style="width:1px;height:22px;background:#e2dfd7;flex-shrink:0;"></div>
+                            <span style="font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;">最低匹配分</span>
+                            <select id="filterMinScore" class="hr-select" style="height:32px;padding:0 26px 0 9px;font-size:13px;min-width:110px;">
+                                <option value="0">不限</option>
+                                <option value="60">60分以上</option>
+                                <option value="70">70分以上</option>
+                                <option value="80">80分以上</option>
+                                <option value="90">90分以上</option>
+                            </select>
+                            <div style="width:1px;height:22px;background:#e2dfd7;flex-shrink:0;"></div>
+                            <span style="font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;">学历</span>
+                            <select id="filterEducation" class="hr-select" style="height:32px;padding:0 26px 0 9px;font-size:13px;min-width:90px;">
+                                <option value="">不限</option>
+                                <option value="本科">本科</option>
+                                <option value="硕士">硕士</option>
+                                <option value="博士">博士</option>
+                            </select>
+                            <button id="filterBtn" class="hr-invite-btn" style="height:32px;padding:0 18px;font-size:12px;font-weight:700;white-space:nowrap;">筛选</button>
                         </div>
 
-                        <!-- 右侧：学生详情 -->
-                        <div style="flex: 1; min-width: 0;">
-                            <div id="studentDetail" class="hr-student-detail">
-                                <div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">
-                                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" style="margin-bottom: 16px; opacity: 0.3;">
-                                        <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <p style="font-size: 16px;">请从左侧选择学生查看详情</p>
-                                </div>
-                            </div>
+                        <!-- 表头 -->
+                        <table id="studentTable" style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#f9f8f5;border-bottom:1px solid #e2dfd7;">
+                                    <th style="padding:9px 14px 9px 16px;text-align:left;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;width:44px;"></th>
+                                    <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;">候选人</th>
+                                    <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;width:72px;">学历</th>
+                                    <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;width:130px;">专业方向</th>
+                                    <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;width:68px;">成绩</th>
+                                    <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;width:80px;">匹配度</th>
+                                    <th style="padding:9px 16px 9px 14px;text-align:right;font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;width:160px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentList"></tbody>
+                        </table>
+
+                        <!-- 分页栏 -->
+                        <div style="display:flex;align-items:center;padding:11px 16px;background:#f5f3ee;border-top:1px solid #e2dfd7;gap:8px;">
+                            <span id="pageTotal" style="flex:1;font-size:12px;color:#a0a098;"></span>
+                            <button id="prevPage" class="hr-view-btn" style="height:30px;padding:0 14px;font-size:12px;" disabled>上一页</button>
+                            <span id="pageInfo" style="font-size:12px;color:#a0a098;padding:0 6px;">第 1 页</span>
+                            <button id="nextPage" class="hr-view-btn" style="height:30px;padding:0 14px;font-size:12px;">下一页</button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- 学生详情弹窗 -->
+                <div id="studentModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,15,13,0.52);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;" onclick="closeStudentModal(event)">
+                    <div id="studentModalBox" style="background:#fff;border-radius:14px;width:100%;max-width:660px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                        <div id="studentModalContent"></div>
                     </div>
                 </div>
 

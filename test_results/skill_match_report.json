@@ -1,6 +1,6 @@
 {
   "standard": "A",
-  "generated_at": "2026-03-10 18:45:32",
+  "generated_at": "2026-03-10 20:09:42",
   "ai_base_url": "http://127.0.0.1:5002/api/v1",
   "mysql": {
     "host": "127.0.0.1",
@@ -10,52 +10,62 @@
     "driver": "pymysql"
   },
   "sample_user_ids": [
-    9,
-    22,
-    17
+    1,
+    4,
+    14
   ],
   "per_student": [
     {
-      "user_id": 9,
-      "job_id": "CCL1224990300J40757782514",
-      "job_name": "项目专员/助理",
-      "required_skills_total": 1,
-      "mastered_skills_total": 0,
-      "matched_skills": [],
-      "missing_skills": [
-        "R"
+      "user_id": 1,
+      "job_id": "CC491699880J40588646303",
+      "job_name": "技术支持工程师",
+      "required_skills_total": 6,
+      "mastered_skills_total": 17,
+      "matched_skills": [
+        "Linux",
+        "数据库",
+        "运维"
       ],
-      "accuracy": 0.0,
-      "elapsed_seconds": 15.102
+      "missing_skills": [
+        "故障排查",
+        "网络",
+        "客户服务"
+      ],
+      "accuracy": 50.0,
+      "elapsed_seconds": 0.211
     },
     {
-      "user_id": 22,
-      "job_id": "CCL1224990300J40757782514",
-      "job_name": "项目专员/助理",
-      "required_skills_total": 1,
-      "mastered_skills_total": 0,
+      "user_id": 4,
+      "job_id": "CCL1218931690J40371804703",
+      "job_name": "科研人员",
+      "required_skills_total": 3,
+      "mastered_skills_total": 11,
       "matched_skills": [],
       "missing_skills": [
-        "R"
+        "实验",
+        "数据分析",
+        "研发"
       ],
       "accuracy": 0.0,
-      "elapsed_seconds": 2.25
+      "elapsed_seconds": 22.539
     },
     {
-      "user_id": 17,
-      "job_id": "CCL1224990300J40757782514",
-      "job_name": "项目专员/助理",
-      "required_skills_total": 1,
-      "mastered_skills_total": 0,
+      "user_id": 14,
+      "job_id": "CCL1218931690J40371804703",
+      "job_name": "科研人员",
+      "required_skills_total": 3,
+      "mastered_skills_total": 6,
       "matched_skills": [],
       "missing_skills": [
-        "R"
+        "实验",
+        "数据分析",
+        "研发"
       ],
       "accuracy": 0.0,
-      "elapsed_seconds": 2.332
+      "elapsed_seconds": 3.568
     }
   ],
-  "average_accuracy": 0.0,
+  "average_accuracy": 16.67,
   "pass_threshold": 0.8,
   "passed": false
 }

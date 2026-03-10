@@ -4,7 +4,6 @@ let currentPage = 1;
 let totalPages = 1;
 let currentHrData = null;
 let currentStudents = [];
-let selectedStudentId = null;
 
 function showLoading() {
     document.getElementById('loading').classList.remove('hidden');
@@ -45,7 +44,7 @@ function initHrDashboard() {
     document.getElementById('hrWelcomeName').textContent = currentHrData.real_name;
     document.getElementById('unreadEvaluations').textContent = currentHrData.unread_evaluations || 0;
 
-    loadStudents();
+    switchToSection('students');
     bindHrDashboardEvents();
     bindSidebarNavigation();
 }
@@ -196,108 +195,113 @@ async function loadStudents() {
 
 function renderStudents(students) {
     currentStudents = students;
-    const container = document.getElementById('studentList');
+    const tbody = document.getElementById('studentList');
+    const stats = document.getElementById('studentStats');
+    const total = document.getElementById('pageTotal');
+    const count = students ? students.length : 0;
+    if (stats) stats.textContent = `共 ${count} 位候选人`;
+    if (total) total.textContent = `共 ${count} 条记录`;
     if (!students || students.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 48px; color: var(--text-secondary);">暂无学生数据</div>';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#a0a098;font-size:14px;">暂无学生数据</td></tr>`;
         return;
     }
-
-    container.innerHTML = students.map((student, index) => {
-        const isSelected = selectedStudentId === student.anonymous_id;
+    tbody.innerHTML = students.map((student, index) => {
+        const tags = (student.ability_tags || []).slice(0, 3)
+            .map(t => `<span style="font-size:10px;font-weight:600;padding:2px 8px;background:#e8f0eb;color:#2d6a4f;border-radius:100px;white-space:nowrap;">${t}</span>`)
+            .join('');
+        const score = student.system_match_score || 0;
+        const scoreColor = score >= 80 ? '#2d6a4f' : '#7a6f3e';
+        const sid = student.anonymous_id;
         return `
-        <div class="hr-student-card ${isSelected ? 'selected' : ''}" onclick="selectStudent('${student.anonymous_id}')">
-            <div class="hr-student-avatar">S${index + 1}</div>
-            <div class="hr-student-info">
-                <div class="hr-student-header">
-                    <h4 class="hr-student-name">${student.anonymous_id}</h4>
-                    <span class="hr-match-score">${student.system_match_score}分匹配</span>
+        <tr style="border-bottom:1px solid #e2dfd7;cursor:pointer;transition:background 0.1s;"
+            onmouseover="this.style.background='#faf9f6'"
+            onmouseout="this.style.background=''"
+            onclick="openStudentModal('${sid}')">
+            <td style="padding:11px 14px 11px 16px;">
+                <div style="width:28px;height:28px;background:#f6f4ef;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#6b6860;">S${index+1}</div>
+            </td>
+            <td style="padding:11px 14px;">
+                <div style="font-size:13px;font-weight:600;color:#0f0f0d;margin-bottom:4px;">${sid}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">${tags}</div>
+            </td>
+            <td style="padding:11px 14px;font-size:13px;color:#6b6860;">${student.education_level || '-'}</td>
+            <td style="padding:11px 14px;font-size:13px;color:#6b6860;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${student.major_category || '-'}</td>
+            <td style="padding:11px 14px;font-size:13px;color:#6b6860;">${student.gpa_level || '-'}</td>
+            <td style="padding:11px 14px;font-size:14px;font-weight:700;color:${scoreColor};">${score}分</td>
+            <td style="padding:11px 16px 11px 14px;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;" onclick="event.stopPropagation()">
+                    <button style="height:28px;padding:0 11px;font-size:12px;font-weight:600;border-radius:5px;border:1px solid #e2dfd7;background:#fff;color:#0f0f0d;cursor:pointer;"
+                        onmouseover="this.style.borderColor='#2d6a4f';this.style.color='#2d6a4f'"
+                        onmouseout="this.style.borderColor='#e2dfd7';this.style.color='#0f0f0d'"
+                        onclick="openStudentModal('${sid}')">查看详情</button>
+                    <button style="height:28px;padding:0 11px;font-size:12px;font-weight:600;border-radius:5px;border:none;background:#0f0f0d;color:#fff;cursor:pointer;"
+                        onmouseover="this.style.background='#2d6a4f'"
+                        onmouseout="this.style.background='#0f0f0d'"
+                        onclick="openInviteModal('${sid}')">发起邀请</button>
                 </div>
-                <div class="hr-student-details">
-                    <p><strong>学历:</strong> ${student.education_level} | <strong>专业:</strong> ${student.major_category} | <strong>成绩:</strong> ${student.gpa_level}</p>
-                    <p style="margin-top: 8px;"><strong>亮点:</strong> ${student.highlight}</p>
-                </div>
-                <div class="hr-ability-tags">
-                    ${student.ability_tags.map(tag => `<span class="hr-ability-tag">${tag}</span>`).join('')}
-                </div>
-                <div class="hr-student-actions">
-                    <button class="hr-view-btn" onclick="event.stopPropagation(); viewStudent('${student.anonymous_id}')">查看详情</button>
-                    <button class="hr-invite-btn" onclick="event.stopPropagation(); openInviteModal('${student.anonymous_id}')">发起评估邀请</button>
-                </div>
-            </div>
-        </div>
-    `}).join('');
+            </td>
+        </tr>`;
+    }).join('');
 }
 
-function selectStudent(studentId) {
-    selectedStudentId = studentId;
-    renderStudents(currentStudents);
-    renderStudentDetail(studentId);
-}
-
-function renderStudentDetail(studentId) {
+function openStudentModal(studentId) {
     const student = currentStudents.find(s => s.anonymous_id === studentId);
-    const container = document.getElementById('studentDetail');
-    
-    if (!student) {
-        container.innerHTML = '<div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">请从左侧选择学生查看详情</div>';
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="hr-student-detail-header">
-            <div class="hr-student-detail-avatar">${student.anonymous_id.charAt(student.anonymous_id.length - 1)}</div>
-            <div class="hr-student-detail-info">
-                <h4>${student.anonymous_id}</h4>
-                <span class="hr-student-detail-score">${student.system_match_score}分匹配</span>
+    if (!student) return;
+    const tags = (student.ability_tags || [])
+        .map(t => `<span style="padding:4px 12px;border:1.5px solid #2d6a4f;color:#2d6a4f;font-size:12px;font-weight:600;border-radius:100px;background:#fff;">${t}</span>`)
+        .join('');
+    const contactColor = student.is_open_to_contact ? '#2d6a4f' : '#a0a098';
+    const contactText  = student.is_open_to_contact ? '✓ 可联系' : '暂不可联系';
+    const score = student.system_match_score || 0;
+    const letter = student.anonymous_id.slice(-1).toUpperCase();
+    document.getElementById('studentModalContent').innerHTML = `
+        <div style="background:#0f0f0d;border-radius:14px 14px 0 0;padding:26px 26px 22px;display:flex;gap:16px;align-items:flex-start;position:relative;">
+            <button onclick="document.getElementById('studentModal').classList.add('hidden')"
+                style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+            <div style="width:52px;height:52px;background:#2d6a4f;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;">${letter}</div>
+            <div>
+                <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:4px;">${student.anonymous_id}</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5);">应聘岗位：${student.target_job || '待定'}</div>
+                <div style="margin-top:10px;display:inline-flex;align-items:center;gap:5px;background:#2d6a4f;color:#fff;padding:4px 12px;border-radius:100px;font-size:12px;font-weight:700;">★ ${score}分匹配</div>
             </div>
         </div>
-        
-        <div class="hr-student-detail-section">
-            <div class="hr-student-detail-section-title">基本信息</div>
-            <div class="hr-student-detail-grid">
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">学历</div>
-                    <div class="hr-student-detail-item-value">${student.education_level}</div>
+        <div style="padding:22px 26px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+                <div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:11px 13px;">
+                    <div style="font-size:10px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">学历</div>
+                    <div style="font-size:14px;font-weight:600;color:#0f0f0d;">${student.education_level || '-'}</div>
                 </div>
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">专业</div>
-                    <div class="hr-student-detail-item-value">${student.major_category}</div>
+                <div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:11px 13px;">
+                    <div style="font-size:10px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">专业</div>
+                    <div style="font-size:14px;font-weight:600;color:#0f0f0d;">${student.major_category || '-'}</div>
                 </div>
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">成绩</div>
-                    <div class="hr-student-detail-item-value">${student.gpa_level}</div>
+                <div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:11px 13px;">
+                    <div style="font-size:10px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">成绩水平</div>
+                    <div style="font-size:14px;font-weight:600;color:#0f0f0d;">${student.gpa_level || '-'}</div>
                 </div>
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">联系状态</div>
-                    <div class="hr-student-detail-item-value">${student.is_open_to_contact ? '可联系' : '暂不可联系'}</div>
+                <div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:11px 13px;">
+                    <div style="font-size:10px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">联系状态</div>
+                    <div style="font-size:14px;font-weight:600;color:${contactColor};">${contactText}</div>
                 </div>
             </div>
+            <div style="font-size:10px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">个人亮点</div>
+            <div style="background:#e8f0eb;border-left:3px solid #2d6a4f;border-radius:0 8px 8px 0;padding:13px 15px;font-size:13px;line-height:1.75;color:#2a3d2f;margin-bottom:18px;">${student.highlight || '暂无亮点描述'}</div>
+            <div style="font-size:10px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">能力标签</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">${tags}</div>
         </div>
-        
-        <div class="hr-student-detail-section">
-            <div class="hr-student-detail-section-title">个人亮点</div>
-            <div class="hr-student-detail-highlight">
-                <p>${student.highlight}</p>
-            </div>
-        </div>
-        
-        <div class="hr-student-detail-section">
-            <div class="hr-student-detail-section-title">能力标签</div>
-            <div class="hr-ability-tags">
-                ${student.ability_tags.map(tag => `<span class="hr-ability-tag">${tag}</span>`).join('')}
-            </div>
-        </div>
-        
-        <div class="hr-student-detail-actions">
-            <button class="hr-view-btn" onclick="viewStudent('${student.anonymous_id}')">查看详情</button>
-            <button class="hr-invite-btn" onclick="openInviteModal('${student.anonymous_id}')">发起评估邀请</button>
+        <div style="border-top:1px solid #e2dfd7;padding:14px 26px;display:flex;justify-content:flex-end;gap:10px;">
+            <button onclick="document.getElementById('studentModal').classList.add('hidden')"
+                style="padding:8px 20px;border:1px solid #e2dfd7;background:#fff;border-radius:7px;font-size:13px;font-weight:600;color:#0f0f0d;cursor:pointer;">关闭</button>
+            <button onclick="document.getElementById('studentModal').classList.add('hidden');openInviteModal('${student.anonymous_id}')"
+                style="padding:8px 20px;border:none;background:#2d6a4f;border-radius:7px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;">发起评估邀请</button>
         </div>
     `;
+    document.getElementById('studentModal').classList.remove('hidden');
 }
 
-function viewStudent(studentId) {
-    if (selectedStudentId !== studentId) {
-        selectStudent(studentId);
+function closeStudentModal(e) {
+    if (e.target === document.getElementById('studentModal')) {
+        document.getElementById('studentModal').classList.add('hidden');
     }
 }
 
