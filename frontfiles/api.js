@@ -1943,7 +1943,7 @@ async function getHotJobs() {
 // 真实招聘数据：GET http://localhost:5002/api/v1/job/real-data?jobName=xxx&size=5
 async function getJobRealData(jobName, size = 5) {
     const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://localhost:5002/api/v1');
-    const url = `${base}/job/real-data?jobName=${encodeURIComponent(jobName || '')}&size=${Math.max(1, Math.min(20, size))}`;
+    const url = `${base}/job/real-data?jobName=${encodeURIComponent(jobName || '')}&size=${Math.max(1, Math.min(200, size))}`;
     try {
         const res = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
         const data = await res.json();
