@@ -19817,7 +19817,7 @@ body.on-login-page::after {
 }
 
 #loginPage .eyebrow-text {
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.18em;
   color: var(--sage-light);
   font-family: 'Instrument Serif', serif;
@@ -19840,7 +19840,7 @@ body.on-login-page::after {
 }
 
 #loginPage .hero-sub {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 2;
   color: var(--text-soft);
   margin-top: 26px;
@@ -19884,7 +19884,7 @@ body.on-login-page::after {
 }
 
 #loginPage .meaning-text {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.65;
   color: var(--text-soft);
   text-align: center;
@@ -19933,7 +19933,7 @@ body.on-login-page::after {
   left: 18px;
   font-family: 'Instrument Serif', serif;
   font-style: italic;
-  font-size: 11px;
+  font-size: 13px;
   color: rgba(245,240,232,0.5);
   letter-spacing: 0.14em;
   pointer-events: none;
@@ -19943,7 +19943,7 @@ body.on-login-page::after {
   display: block;
   font-style: normal;
   font-family: 'Noto Serif SC', serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
   color: rgba(245,240,232,0.85);
   letter-spacing: 0.08em;
@@ -19965,7 +19965,7 @@ body.on-login-page::after {
   background: rgba(26,46,30,0.06);
   border: 1px solid var(--login-border-mid);
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-mid);
   font-weight: 300;
   letter-spacing: 0.04em;
@@ -20013,7 +20013,7 @@ body.on-login-page::after {
 }
 
 #loginPage .theme-desc {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.9;
   color: var(--text-soft);
   font-weight: 300;
@@ -20049,12 +20049,12 @@ body.on-login-page::after {
 }
 
 #loginPage .stat-num sup {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--sage);
 }
 
 #loginPage .stat-label {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   color: var(--text-soft);
   margin-top: 5px;
@@ -20115,7 +20115,7 @@ body.on-login-page::after {
   background: rgba(61,107,79,0.07);
   border: 1px solid rgba(61,107,79,0.18);
   border-radius: 100px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--sage);
   letter-spacing: 0.08em;
   font-weight: 300;
@@ -20131,7 +20131,7 @@ body.on-login-page::after {
 }
 
 #loginPage .login-sub {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-soft);
   font-weight: 300;
   letter-spacing: 0.04em;
@@ -20142,7 +20142,7 @@ body.on-login-page::after {
 }
 
 #loginPage .form-label {
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.13em;
   color: var(--text-mid);
   display: block;
@@ -20172,7 +20172,7 @@ body.on-login-page::after {
   border-radius: 11px;
   padding: 13px 14px 13px 42px;
   font-family: 'Noto Serif SC', serif;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-deep);
   outline: none;
   transition: border-color 0.22s, background 0.22s, box-shadow 0.22s;
@@ -20200,7 +20200,7 @@ body.on-login-page::after {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-soft);
   cursor: pointer;
   font-weight: 300;
@@ -20214,7 +20214,7 @@ body.on-login-page::after {
 }
 
 #loginPage .forgot-link {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--sage);
   text-decoration: none;
   font-weight: 300;
@@ -20232,14 +20232,10 @@ body.on-login-page::after {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 22px;
-  padding: 13px 15px;
-  background: rgba(245,240,232,0.55);
-  border: 1px solid var(--login-border-mid);
-  border-radius: 11px;
 }
 
 #loginPage .consent-text {
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1.75;
   color: var(--text-soft);
   font-weight: 300;
@@ -20334,7 +20330,7 @@ body.on-login-page::after {
   border-radius: 11px;
   padding: 13px;
   font-family: 'Noto Serif SC', serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 300;
   cursor: pointer;
   letter-spacing: 0.06em;
@@ -20361,7 +20357,7 @@ body.on-login-page::after {
 }
 
 #loginPage .divider-text {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-soft);
   font-weight: 300;
   letter-spacing: 0.1em;
@@ -20382,7 +20378,7 @@ body.on-login-page::after {
   border-radius: 11px;
   padding: 12px;
   font-family: 'Noto Serif SC', serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   cursor: pointer;
   letter-spacing: 0.08em;
@@ -20406,7 +20402,7 @@ body.on-login-page::after {
 
 #loginPage .login-tos {
   text-align: center;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-soft);
   font-weight: 300;
   line-height: 1.6;
