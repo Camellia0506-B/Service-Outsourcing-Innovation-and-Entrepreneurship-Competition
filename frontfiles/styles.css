@@ -849,7 +849,7 @@
     flex-shrink: 0;
 }
 #profilePage .prog-card {
-    background: #1f1f1f;
+    background: linear-gradient(145deg, #2C4A3E 0%, #3D6458 55%, #2C4A3E 100%);
     border-radius: 0;
     color: #fff;
     box-shadow: none;
