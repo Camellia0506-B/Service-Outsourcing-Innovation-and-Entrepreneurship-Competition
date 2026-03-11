@@ -7,10 +7,10 @@
     "company_name": "字节跳动",
     "apply_date": "2026-03-14",
     "source": "system_recommend",
-    "current_stage": "written_test",
-    "result": "failed",
+    "current_stage": "rejected",
+    "result": "rejected",
     "created_at": "2026-03-06 17:12:47",
-    "updated_at": "2026-03-06 17:13:26",
+    "updated_at": "2026-03-11 21:05:14",
     "timeline": [
       {
         "stage": "applied",
@@ -31,9 +31,17 @@
         "stage_date": "2026-03-06",
         "self_evaluation": {},
         "notes": ""
+      },
+      {
+        "stage": "rejected",
+        "result": "rejected",
+        "stage_date": "2026-03-11",
+        "self_evaluation": {},
+        "notes": ""
       }
     ],
-    "has_failure_report": false
+    "has_failure_report": false,
+    "stage_notes": {}
   },
   "track_20260306171307500_1": {
     "record_id": "track_20260306171307500_1",

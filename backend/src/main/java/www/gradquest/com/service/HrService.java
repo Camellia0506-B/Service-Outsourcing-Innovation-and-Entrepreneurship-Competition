@@ -6,6 +6,8 @@ import www.gradquest.com.dto.HrRegisterResponse;
 import www.gradquest.com.dto.hr.BrowseStudentsResult;
 import www.gradquest.com.entity.Hr;
 
+import java.util.Map;
+
 public interface HrService {
     HrRegisterResponse register(String username, String password, String realName, String companyName, String companySize, String industry, String hrRole, MultipartFile businessLicense);
     HrLoginResponse login(String username, String password);
@@ -16,4 +18,9 @@ public interface HrService {
      * 数据来源：user_profiles + privacy_settings(resume_visible_to_hr) + profile_skills
      */
     BrowseStudentsResult browseStudents(Long hrId, String targetJob, Integer minMatchScore, String educationLevel, int page, int size);
+
+    /**
+     * 根据匿名ID获取学生详情（供 HR 查看简历详情），数据来自 user_profiles + users，与前端 _renderFullStudentDetail 所需结构一致。
+     */
+    Map<String, Object> getStudentDetailByAnonymousId(String anonymousId);
 }

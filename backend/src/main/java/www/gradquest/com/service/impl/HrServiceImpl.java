@@ -14,10 +14,12 @@ import www.gradquest.com.dto.hr.BrowseStudentsResult;
 import www.gradquest.com.entity.Hr;
 import www.gradquest.com.entity.PrivacySetting;
 import www.gradquest.com.entity.ProfileSkill;
+import www.gradquest.com.entity.User;
 import www.gradquest.com.entity.UserProfile;
 import www.gradquest.com.mapper.HrMapper;
 import www.gradquest.com.mapper.PrivacySettingMapper;
 import www.gradquest.com.mapper.ProfileSkillMapper;
+import www.gradquest.com.mapper.UserMapper;
 import www.gradquest.com.mapper.UserProfileMapper;
 import www.gradquest.com.service.HrService;
 import www.gradquest.com.utils.JwtUtil;
@@ -26,7 +28,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -38,6 +42,7 @@ public class HrServiceImpl implements HrService {
     private final HrMapper hrMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserProfileMapper userProfileMapper;
+    private final UserMapper userMapper;
     private final PrivacySettingMapper privacySettingMapper;
     private final ProfileSkillMapper profileSkillMapper;
 
@@ -165,5 +170,57 @@ public class HrServiceImpl implements HrService {
         if (gpa.contains("3.7") || gpa.contains("优秀")) return "优秀（3.7+）";
         if (gpa.contains("3.0") || gpa.contains("中等")) return "中等（3.0-3.3）";
         return "良好（3.3-3.7）";
+    }
+
+    @Override
+    public Map<String, Object> getStudentDetailByAnonymousId(String anonymousId) {
+        if (anonymousId == null || anonymousId.isBlank()) return null;
+        Long userId = null;
+        String id = anonymousId.strip();
+        if (id.startsWith("student_")) {
+            try {
+                userId = Long.parseLong(id.substring("student_".length()).trim());
+            } catch (NumberFormatException ignored) {}
+        } else if (id.startsWith("求职者_")) {
+            try {
+                userId = Long.parseLong(id.substring("求职者_".length()).trim());
+            } catch (NumberFormatException ignored) {}
+        }
+        if (userId == null) return null;
+        UserProfile profile = userProfileMapper.selectById(userId);
+        if (profile == null) return null;
+        User user = userMapper.selectById(userId);
+        String nickname = user != null ? user.getNickname() : null;
+
+        Map<String, Object> basicInfo = new HashMap<>();
+        basicInfo.put("name", nickname);
+        basicInfo.put("nickname", nickname);
+        basicInfo.put("gender", profile.getGender());
+        basicInfo.put("phone", profile.getPhone());
+        basicInfo.put("email", profile.getEmail());
+        if (profile.getBirthDate() != null) {
+            basicInfo.put("birth_date", profile.getBirthDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            basicInfo.put("birthday", profile.getBirthDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+
+        Map<String, Object> educationInfo = new HashMap<>();
+        educationInfo.put("school", profile.getSchool());
+        educationInfo.put("major", profile.getMajor());
+        educationInfo.put("degree", profile.getDegree());
+        educationInfo.put("grade", profile.getGrade());
+        educationInfo.put("gpa", profile.getGpa());
+        educationInfo.put("expected_graduation", profile.getExpectedGraduation());
+
+        Map<String, Object> profileMap = new HashMap<>();
+        profileMap.put("basic_info", basicInfo);
+        profileMap.put("education_info", educationInfo);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("anonymous_id", "student_" + String.format("%03d", userId));
+        data.put("user_id", userId);
+        data.put("realName", nickname);
+        data.put("profile", profileMap);
+        data.put("ability_profile", new HashMap<String, Object>());
+        return data;
     }
 }

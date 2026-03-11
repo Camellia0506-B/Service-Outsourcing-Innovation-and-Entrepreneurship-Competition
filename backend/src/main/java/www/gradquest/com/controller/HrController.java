@@ -26,6 +26,7 @@ import www.gradquest.com.service.HrService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -104,6 +105,18 @@ public class HrController {
             @RequestParam(value = "size", defaultValue = "10") int size) {
         BrowseStudentsResult result = hrService.browseStudents(hrId, targetJob, minMatchScore, educationLevel, page, size);
         return ApiResponse.success("success", result);
+    }
+
+    @GetMapping("/students/detail")
+    public ApiResponse<Map<String, Object>> getStudentDetail(@RequestParam("anonymous_id") String anonymousId) {
+        if (anonymousId == null || anonymousId.isBlank()) {
+            return ApiResponse.badRequest("anonymous_id 不能为空");
+        }
+        Map<String, Object> data = hrService.getStudentDetailByAnonymousId(anonymousId);
+        if (data == null) {
+            return ApiResponse.failure(404, "未找到该学生档案");
+        }
+        return ApiResponse.success("success", data);
     }
 
     @GetMapping("/evaluation/invitations")

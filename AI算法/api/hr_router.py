@@ -401,7 +401,7 @@ def hr_login():
         hr_data = {
             "hr_id": "hr_001",
             "real_name": "HR管理员",
-            "company_name": "示例公司",
+            "company_name": "星途智探",
             "token": "mock_hr_token_" + str(int(datetime.now().timestamp())),
             "unread_evaluations": 0
         }
@@ -575,13 +575,25 @@ def browse_students():
 def student_detail():
     """
     获取学生个人档案完整信息（供 HR 浏览简历详情）。
-    参数：anonymous_id，如 求职者_001
-    返回：profile（profiles.json 单条）+ ability_profile（ability_profiles.json 单条），涵盖基础信息、教育、技能、证书、实习、项目、获奖、能力画像等。
+    若配置了 JAVA_BACKEND_URL 且 anonymous_id 为 student_XXX，优先从 Java（user_profiles）拉取真实档案，保证学生端填写的信息在 HR 详情中展示。
+    否则从本地 profiles.json / ability_profiles.json 读取。
     """
     try:
         anonymous_id = (request.args.get("anonymous_id") or "").strip()
         if not anonymous_id:
             return error_response(400, "请提供 anonymous_id 参数")
+
+        if JAVA_BACKEND_URL and anonymous_id.startswith("student_"):
+            try:
+                url = f"{JAVA_BACKEND_URL}/api/v1/hr/students/detail?anonymous_id={anonymous_id}"
+                r = requests.get(url, timeout=10)
+                if r.status_code == 200:
+                    body = r.json()
+                    if isinstance(body, dict) and body.get("code") == 200 and body.get("data") is not None:
+                        return success_response(body["data"])
+                logger.warning("[HR] Java 学生详情返回非常规: status=%s，回退本地数据", r.status_code)
+            except Exception as e:
+                logger.warning("[HR] 请求 Java 学生详情失败: %s，回退本地数据", e)
 
         user_id = None
         if anonymous_id.startswith("求职者_"):

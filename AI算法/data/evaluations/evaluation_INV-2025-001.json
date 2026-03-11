@@ -6,19 +6,19 @@
   "status": "completed",
   "overall_impression": "excellent",
   "dimension_scores": {
-    "专业技能匹配度": 100,
-    "学习能力": 100,
-    "沟通表达": 100,
-    "团队协作意愿": 100,
-    "抗压能力": 100,
-    "职业成熟度": 100
+    "专业技能匹配度": 99,
+    "学习能力": 92,
+    "沟通表达": 80,
+    "团队协作意愿": 80,
+    "抗压能力": 90,
+    "职业成熟度": 98
   },
-  "hiring_intent": "moderate",
-  "strengths_noted": "能力强",
-  "weaknesses_noted": "沟通能力弱",
+  "hiring_intent": "strong",
+  "strengths_noted": "学习能力强 愿意吃苦 技术掌握的很多",
+  "weaknesses_noted": "沟通能力弱 需要加强团队协作能力",
   "recommended_positions": [
-    "产品经理"
+    "算法工程师"
   ],
-  "evaluation_basis": "online_test",
-  "submitted_at": "2026-03-10T22:30:28.177799"
+  "evaluation_basis": "resume_review",
+  "submitted_at": "2026-03-11T21:15:55.527742"
 }

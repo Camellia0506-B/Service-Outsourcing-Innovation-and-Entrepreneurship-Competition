@@ -476,6 +476,87 @@ function getCsvJobName(displayNameOrInput) {
     return displayNameOrInput; // 无匹配，原样传给后端模糊搜索
 }
 
+// 学生端 HR 邀约卡片渲染（pending/accepted 均显示接受/拒绝按钮，accepted 时按钮禁用变灰）
+function renderInvitationCard(inv) {
+    var isPending = inv.status === 'pending';
+    var isAccepted = inv.status === 'accepted';
+    var isRejected = inv.status === 'rejected';
+
+    var statusBadge = isAccepted
+        ? '<span style="background:#e8f4ee;color:#2d6a4f;padding:4px 12px;border-radius:20px;font-size:12px;">已接受</span>'
+        : isRejected
+        ? '<span style="background:#f5f5f5;color:#999;padding:4px 12px;border-radius:20px;font-size:12px;">已拒绝</span>'
+        : '<span style="background:#fff8ec;color:#b56a00;padding:4px 12px;border-radius:20px;font-size:12px;">待响应</span>';
+
+    var invIdEsc = String(inv.invitationId || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    var actionBtns = isRejected ? '' :
+        '<div style="display:flex;gap:8px;margin-left:auto;">'
+        + '<button '
+        + 'style="background:#2d6a4f;color:#fff;' + (isAccepted ? 'cursor:not-allowed;opacity:0.6;' : 'cursor:pointer;') + 'border:none;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;"'
+        + (isAccepted ? ' disabled' : ' onclick="acceptInvitation(\'' + invIdEsc + '\')"')
+        + '>'
+        + (isAccepted ? '已接受' : '接受')
+        + '</button>'
+        + '<button '
+        + 'style="background:#fff;color:' + (isAccepted ? '#ccc' : '#333') + ';border:1px solid ' + (isAccepted ? '#eee' : '#ddd') + ';padding:8px 20px;border-radius:8px;font-size:14px;white-space:nowrap;' + (isAccepted ? 'cursor:not-allowed;opacity:0.6;' : 'cursor:pointer;') + '"'
+        + (isAccepted ? ' disabled' : ' onclick="rejectInvitation(\'' + invIdEsc + '\')"')
+        + '>拒绝</button>'
+        + '</div>';
+
+    var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    return '<div style="background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;">'
+        + '<div style="display:flex;align-items:flex-start;">'
+        + '<div style="flex:1;">'
+        + '<h3 style="font-size:16px;font-weight:600;margin:0 0 4px;">' + esc(inv.targetJob) + '</h3>'
+        + '<p style="color:#888;font-size:13px;margin:0 0 12px;">' + esc(inv.companyName) + ' · ' + esc(inv.hrName) + '</p>'
+        + '<p style="color:#333;font-size:14px;margin:0 0 12px;">' + esc(inv.message) + '</p>'
+        + '<p style="color:#aaa;font-size:12px;margin:0 0 12px;">发送时间：' + esc(inv.sentAt) + '</p>'
+        + statusBadge
+        + '</div>'
+        + actionBtns
+        + '</div>'
+        + '</div>';
+}
+
+function acceptInvitation(invitationId) {
+    if (!invitationId) return;
+    if (window.MockStore) {
+        var store = window.MockStore.getMockStore();
+        var inv = store.myInvitations && store.myInvitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
+        if (inv) inv.status = 'accepted';
+        var hrInv = store.invitations && store.invitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
+        if (hrInv) hrInv.status = 'accepted';
+        var evalExists = store.evaluations && store.evaluations.find(function (e) { return (e.invitationId || e.invitation_id) === invitationId; });
+        if (!evalExists && hrInv) {
+            store.evaluations = store.evaluations || [];
+            store.evaluations.push({
+                evaluationId: 'eval_' + Date.now(),
+                invitationId: invitationId,
+                anonymousStudentId: hrInv.anonymousStudentId || hrInv.anonymous_student_id,
+                studentUserId: hrInv.studentUserId || hrInv.student_user_id,
+                targetJob: hrInv.targetJob || hrInv.target_job,
+                status: 'in_progress',
+                createdAt: new Date().toLocaleString('zh-CN').replace(/\//g, '-')
+            });
+        }
+        window.MockStore.saveMockStore(store);
+    }
+    if (window.app && typeof window.app.loadStudentInvitations === 'function') window.app.loadStudentInvitations();
+}
+
+function rejectInvitation(invitationId) {
+    if (!invitationId) return;
+    if (window.MockStore) {
+        var store = window.MockStore.getMockStore();
+        var inv = store.myInvitations && store.myInvitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
+        if (inv) inv.status = 'rejected';
+        var hrInv = store.invitations && store.invitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
+        if (hrInv) hrInv.status = 'rejected';
+        window.MockStore.saveMockStore(store);
+    }
+    if (window.app && typeof window.app.loadStudentInvitations === 'function') window.app.loadStudentInvitations();
+}
+
 // 应用主类
 class CareerPlanningApp {
     constructor() {
@@ -3523,78 +3604,54 @@ class CareerPlanningApp {
     // 当前生成的简历数据
     currentResumeData = null;
 
-    // HR邀约页：Mock 假数据，绕过后端
+    // HR邀约页：优先 MockStore.myInvitations，否则兜底假数据；使用 renderInvitationCard 统一渲染
     async loadStudentInvitations() {
-        const mockData = [
-            {
-                invitation_id: 'INV-2025-001',
-                company_name: '星途智探科技有限公司',
-                hr_name: '孙于婷',
-                target_job: 'AI产品经理',
-                message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。',
-                status: 'accepted',
-                sent_at: '2025-03-08 14:23'
-            },
-            {
-                invitation_id: 'INV-2025-002',
-                company_name: '深蓝智能（北京）有限公司',
-                hr_name: '王雨晴',
-                target_job: '算法工程师',
-                message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。',
-                status: 'pending',
-                sent_at: '2025-03-09 10:05'
-            }
-        ];
+        let list = [];
+        if (window.MockStore) {
+            const store = window.MockStore.getMockStore();
+            list = (store.myInvitations || []).slice();
+        }
+        if (!list.length) {
+            list = [
+                { invitationId: 'INV-2025-001', companyName: '星途智探科技有限公司', hrName: '孙于婷', targetJob: 'AI产品经理', message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'accepted', sentAt: '2025-03-08 14:23' },
+                { invitationId: 'INV-2025-002', companyName: '深蓝智能（北京）有限公司', hrName: '王雨晴', targetJob: '算法工程师', message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。', status: 'pending', sentAt: '2025-03-09 10:05' }
+            ];
+        }
+        list = list.map(inv => ({
+            invitationId: inv.invitationId || inv.invitation_id || '',
+            targetJob: inv.targetJob || inv.target_job || '',
+            companyName: inv.companyName || inv.company_name || '',
+            hrName: inv.hrName || inv.hr_name || '',
+            message: inv.message || '',
+            sentAt: inv.sentAt || inv.sent_at || '',
+            status: inv.status === 'declined' ? 'rejected' : (inv.status || 'pending')
+        }));
 
         const countEl = document.getElementById('hrInviteCount');
         const totalEl = document.getElementById('hrInviteTotal');
         const listEl = document.getElementById('hrInviteList');
-        if (countEl) countEl.textContent = `共 ${mockData.length} 条邀请`;
-        if (totalEl) totalEl.textContent = `共 ${mockData.length} 条记录`;
+        if (countEl) countEl.textContent = `共 ${list.length} 条邀请`;
+        if (totalEl) totalEl.textContent = `共 ${list.length} 条记录`;
         if (!listEl) return;
 
-        const statusText = { pending: '待响应', accepted: '已接受', declined: '已拒绝' };
-        const statusColor = { pending: '#f59e0b', accepted: '#2d6a4f', declined: '#6b7280' };
+        if (list.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#a0a098;font-size:14px;">暂无HR评估邀请，请先完善个人档案并允许HR联系</div>';
+            return;
+        }
 
-        listEl.innerHTML = mockData.map(inv => {
-            const status = inv.status || 'pending';
-            const isPending = status === 'pending';
-            const sentAt = (inv.sent_at || '').slice(0, 19).replace('T', ' ');
-            const sub = [inv.company_name, inv.hr_name].filter(Boolean).join(' · ');
-            return `
-            <div class="hr-student-card" style="background:#fff;border:1px solid #e2dfd7;border-radius:10px;padding:18px 20px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
-                    <div style="flex:1;min-width:0;">
-                        <div style="font-size:15px;font-weight:700;color:#0f0f0d;margin-bottom:4px;">${(inv.target_job || '招聘岗位').toString().replace(/</g, '&lt;')}</div>
-                        ${sub ? `<div style="font-size:12px;color:#a0a098;margin-bottom:6px;">${sub.replace(/</g, '&lt;')}</div>` : ''}
-                        <div style="font-size:13px;color:#6b6860;margin-bottom:8px;">${(inv.message || '').toString().replace(/</g, '&lt;')}</div>
-                        <div style="font-size:12px;color:#a0a098;">发送时间：${sentAt}</div>
-                        <span style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:600;background:${statusColor[status]}20;color:${statusColor[status]};">${statusText[status] || status}</span>
-                    </div>
-                    ${isPending ? `
-                    <div style="display:flex;gap:8px;">
-                        <button type="button" data-inv-id="${(inv.invitation_id || '').toString().replace(/"/g, '&quot;')}" data-action="accept" style="height:34px;padding:0 16px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#2d6a4f;color:#fff;cursor:pointer;">接受</button>
-                        <button type="button" data-inv-id="${(inv.invitation_id || '').toString().replace(/"/g, '&quot;')}" data-action="decline" style="height:34px;padding:0 16px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid #e2dfd7;background:#fff;color:#6b6860;cursor:pointer;">拒绝</button>
-                    </div>
-                    ` : ''}
-                </div>
-            </div>`;
-        }).join('');
-
-        listEl.querySelectorAll('button[data-inv-id][data-action]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const invId = btn.getAttribute('data-inv-id');
-                const action = btn.getAttribute('data-action');
-                if (!invId || !action) return;
-                this.respondToInvitation(invId, action);
-            });
-        });
+        listEl.innerHTML = list.map(inv => renderInvitationCard(inv)).join('');
     }
 
     async respondToInvitation(invitationId, action) {
         const userId = getCurrentUserId();
         if (!userId) {
             this.showToast('请先登录', 'error');
+            return;
+        }
+        if (window.MockStore && (action === 'accept' || action === 'decline')) {
+            if (action === 'accept') acceptInvitation(invitationId);
+            else rejectInvitation(invitationId);
+            this.showToast(action === 'accept' ? '已接受邀请' : '已拒绝邀请', 'success');
             return;
         }
         const result = await respondToInvitation(invitationId, userId, action);
