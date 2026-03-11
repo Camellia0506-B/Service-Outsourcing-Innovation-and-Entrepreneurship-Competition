@@ -7058,9 +7058,9 @@ class CareerPlanningApp {
         container.innerHTML = '';
         const list = data.list || [];
         const stripeGradients = [
-            'linear-gradient(90deg, #2563eb, #0ea5e9)',
-            'linear-gradient(90deg, #0ea5e9, #4f46e5)',
-            'linear-gradient(90deg, #4f46e5, #2563eb)',
+            'linear-gradient(90deg, #5e8c65, #4a7350)',
+            'linear-gradient(90deg, #4a7350, #6aa571)',
+            'linear-gradient(90deg, #6aa571, #5e8c65)',
         ];
         list.forEach((job, idx) => {
             const jobCard = document.createElement('div');
@@ -9547,7 +9547,7 @@ class CareerPlanningApp {
             // 使用与岗位列表相同的 job-card 卡片样式展示 AI 生成的岗位画像
             const softTagsHtml = (professional || []).slice(0, 4).map(s => `<span class="tag-soft">${escape(s)}</span>`).join('');
             const techTagsHtml = (tools || []).slice(0, 4).map(s => `<span class="tag-tech">${escape(s)}</span>`).join('');
-            const stripeStyle = 'linear-gradient(90deg, #2563eb, #0ea5e9)';
+            const stripeStyle = 'linear-gradient(90deg, #5e8c65, #4a7350)';
             const industryEsc = (d.industry && escape(d.industry).trim()) || '';
             const aiCardMeta = industryEsc ? industryEsc + ' | AI 生成岗位画像' : 'AI 生成岗位画像';
 
@@ -11067,17 +11067,54 @@ class CareerPlanningApp {
                     <span class="module-arrow">▶</span>
                 </div>
                 <div class="career-module-body career-module-collapsed">
-                    <div class="career-action-plan">
-                        <h5>短期行动计划：${stp.period || ''}</h5>
-                        <p class="plan-goal">${san(stp.goal || '')}</p>
-                        ${mp.map(m => `
-                            <div class="monthly-plan">
-                                <div class="plan-header"><span class="plan-month">${m.month || ''}</span><span class="plan-focus">${m.focus || ''}</span></div>
-                                <ul>${(m.tasks || []).map(t => `<li><strong>${san(t.task)}</strong>：${Array.isArray(t['具体行动']) ? san(t['具体行动'].join('；')) : ''} — ${san(t['预期成果'] || '')}</li>`).join('')}</ul>
-                                <p class="plan-milestone">✓ ${san(m.milestone || '')}</p>
-                            </div>
+                    ${stp.period || stp.goal ? `
+                    <div class="plan-goal-highlight">
+                        <h6>行动计划目标</h6>
+                        <p>${stp.period ? `<strong>周期：</strong>${san(stp.period)}<br>` : ''}${san(stp.goal || '')}</p>
+                    </div>
+                    ` : ''}
+                    ${mp.length > 0 ? `
+                    <div class="action-plan-tabs" data-action-plan-tabs>
+                        ${mp.map((m, i) => `
+                            <button type="button" class="action-plan-tab ${i === 0 ? 'active' : ''}" data-action-plan-tab="${i}">
+                                ${m.month || `第${i + 1}月`}
+                            </button>
                         `).join('')}
                     </div>
+                    ${mp.map((m, i) => `
+                        <div class="action-plan-content ${i === 0 ? 'active' : ''}" data-action-plan-content="${i}">
+                            <div class="monthly-plan-card">
+                                <div class="monthly-plan-header">
+                                    <span class="monthly-plan-month">${m.month || `第${i + 1}月`}</span>
+                                    ${m.focus ? `<span class="monthly-plan-focus">${san(m.focus)}</span>` : ''}
+                                </div>
+                                ${(m.tasks || []).length > 0 ? `
+                                <div class="monthly-plan-tasks">
+                                    ${(m.tasks || []).map(t => `
+                                        <div class="monthly-plan-task">
+                                            <div class="monthly-plan-task-title">${san(t.task || '')}</div>
+                                            ${(t['具体行动'] || t.description) ? `
+                                            <div class="monthly-plan-task-details">
+                                                ${Array.isArray(t['具体行动']) ? san(t['具体行动'].join('；')) : san(t['具体行动'] || t.description || '')}
+                                            </div>
+                                            ` : ''}
+                                            <div class="monthly-plan-task-meta">
+                                                ${t['时间投入'] ? `<span class="task-meta-item"><span class="task-meta-icon">⏱</span>${san(t['时间投入'])}</span>` : ''}
+                                                ${t['预期成果'] ? `<span class="task-meta-item"><span class="task-meta-icon">📦</span>${san(t['预期成果'])}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ` : ''}
+                                ${m.milestone ? `
+                                <div class="monthly-plan-milestone">
+                                    <strong>✓ 里程碑</strong>：${san(m.milestone)}
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                    ` : ''}
                     ${skills.length ? `
                     <div class="learning-path">
                         <h5>学习路径</h5>
@@ -11092,7 +11129,6 @@ class CareerPlanningApp {
                             }).join('')}
                         </div>
                     </div>` : ''}
-                    ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${san(v.goal || '')}</p><ul>${(v.actions || []).map(a => `<li>${san(a)}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
                     ${s3.evaluation_metrics ? `<div class="evaluation-metrics"><h5>评估指标与调整机制</h5><p>${san(s3.evaluation_metrics.overview || '')}</p><ul>${(s3.evaluation_metrics.metrics || []).map(m => `<li><strong>${san(m.metric)}</strong>：${san(m.description)}；目标值：${san(m.target_value || '')}；评估周期：${san(m.evaluation_cycle || '')}</li>`).join('')}</ul><p class="adjustment-note">${san(s3.evaluation_metrics.adjustment_mechanism || '')}</p></div>` : ''}
                 </div>
             </section>`;
@@ -11209,6 +11245,25 @@ class CareerPlanningApp {
                 mod?.classList.toggle('career-module-open', !isOpen);
             });
         });
+        
+        wrap.querySelectorAll('.action-plan-tab[data-action-plan-tab]').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabsContainer = tab.closest('[data-action-plan-tabs]');
+                if (!tabsContainer) return;
+                
+                const tabIndex = tab.getAttribute('data-action-plan-tab');
+                const allTabs = tabsContainer.querySelectorAll('.action-plan-tab');
+                const allContents = wrap.querySelectorAll('[data-action-plan-content]');
+                
+                allTabs.forEach(t => t.classList.remove('active'));
+                allContents.forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const content = wrap.querySelector(`[data-action-plan-content="${tabIndex}"]`);
+                if (content) content.classList.add('active');
+            });
+        });
+        
         const backBtn = document.getElementById('reportBackToTop');
         if (backBtn) {
             const onScroll = () => backBtn.classList.toggle('hidden', (window.scrollY || document.documentElement.scrollTop) < 200);

@@ -20995,3 +20995,554 @@ body.on-login-page::after {
     width: 100%;
   }
 }
+
+/* ========== 职业规划报告行动计划横向标签页样式 ========== */
+#reportPage .action-plan-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--mock-line);
+    padding-bottom: 0;
+}
+
+#reportPage .action-plan-tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--mock-ink-2);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+}
+
+#reportPage .action-plan-tab:hover {
+    color: var(--mock-ink);
+}
+
+#reportPage .action-plan-tab.active {
+    color: var(--mock-sage);
+    border-bottom-color: var(--mock-sage);
+}
+
+#reportPage .action-plan-content {
+    display: none;
+}
+
+#reportPage .action-plan-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#reportPage .monthly-plan-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    border-radius: var(--mock-radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+#reportPage .monthly-plan-card:hover {
+    border-color: var(--mock-sage-mid);
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.08);
+}
+
+#reportPage .monthly-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--mock-line);
+}
+
+#reportPage .monthly-plan-month {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--mock-ink);
+}
+
+#reportPage .monthly-plan-focus {
+    font-size: 13px;
+    color: var(--mock-sage);
+    background: var(--mock-sage-soft);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+#reportPage .monthly-plan-tasks {
+    margin-bottom: 16px;
+}
+
+#reportPage .monthly-plan-task {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--mock-line-2);
+}
+
+#reportPage .monthly-plan-task:last-child {
+    border-bottom: none;
+}
+
+#reportPage .monthly-plan-task-title {
+    font-weight: 600;
+    color: var(--mock-ink);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+#reportPage .monthly-plan-task-details {
+    font-size: 13px;
+    color: var(--mock-ink-2);
+    line-height: 1.6;
+}
+
+#reportPage .monthly-plan-task-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+#reportPage .task-meta-item {
+    color: var(--mock-ink-3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#reportPage .task-meta-icon {
+    font-size: 14px;
+}
+
+#reportPage .monthly-plan-milestone {
+    background: var(--mock-amber-soft);
+    border-left: 3px solid var(--mock-amber);
+    padding: 12px 16px;
+    border-radius: var(--mock-radius);
+    font-size: 13px;
+    color: var(--mock-ink);
+}
+
+#reportPage .monthly-plan-milestone strong {
+    color: var(--mock-amber);
+    font-weight: 600;
+}
+
+#reportPage .plan-goal-highlight {
+    background: var(--mock-sage-soft);
+    border: 1px solid var(--mock-sage-mid);
+    border-radius: var(--mock-radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+#reportPage .plan-goal-highlight h6 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mock-sage);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+}
+
+#reportPage .plan-goal-highlight p {
+    font-size: 14px;
+    color: var(--mock-ink);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ========== 岗位画像页面配色调整（与模拟面试页面一致） ========== */
+#jobProfilePage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-profile-tag {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .job-profile-title-bar {
+    background: linear-gradient(180deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .job-profile-title {
+    color: var(--mock-ink);
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+#jobProfilePage .job-profile-subtitle {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-profile-stat-card {
+    background: var(--mock-white);
+    box-shadow: var(--mock-shadow);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .job-profile-stat-value-1 { color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-stat-value-2 { color: var(--mock-amber);
+}
+
+#jobProfilePage .job-profile-stat-value-3 { color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-stat-label {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-profile-tabs {
+    border-bottom-color: var(--mock-line);
+}
+
+#jobProfilePage .job-profile-tabs .tab-btn.active {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-tabs .tab-btn.active::after {
+    background: linear-gradient(90deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .skill-badge {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .strength-pill {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .ai-hint-blue {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .ai-hint-purple {
+    background: var(--mock-amber-soft);
+    color: var(--mock-amber);
+}
+
+#jobProfilePage .ai-hint-label {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .path-step {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-pagination .pagination-btn.active {
+    background: var(--mock-sage);
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-pagination .pagination-btn:hover:not(:disabled) {
+    border-color: var(--mock-sage);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-back-featured {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-show-all {
+    background: var(--mock-sage);
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-show-all:hover {
+    background: #4a7350;
+    border-color: #4a7350;
+}
+
+#jobProfilePage .real-data-expand {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-detail {
+    background: var(--mock-white);
+    border-color: var(--mock-line);
+    box-shadow: var(--mock-shadow);
+}
+
+#jobProfilePage .job-detail-modal-content .btn-primary {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .job-detail-modal-content .btn-primary:hover {
+    box-shadow: 0 8px 24px rgba(94, 140, 101, 0.35);
+}
+
+#jobProfilePage .job-detail-modal-content .skeleton {
+    background: linear-gradient(90deg, rgba(94, 140, 101, 0.06) 25%, rgba(94, 140, 101, 0.12) 50%, rgba(94, 140, 101, 0.06) 75%);
+}
+
+#jobProfilePage .job-detail-modal-content .loading-dots::after {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .btn-primary {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    border-color: var(--mock-sage);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .btn-primary:hover {
+    background: #4a7350;
+    border-color: #4a7350;
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.35);
+    transform: translateY(-1px);
+}
+
+#jobProfilePage .btn-secondary {
+    background: var(--mock-white);
+    border-color: var(--mock-line);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .btn-secondary:hover {
+    border-color: var(--mock-sage);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-card {
+    background: var(--mock-white);
+    box-shadow: var(--mock-shadow);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .job-card:hover {
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.12);
+    border-color: var(--mock-sage-mid);
+}
+
+#jobProfilePage .card-salary {
+    background: var(--mock-amber-soft);
+    color: var(--mock-amber);
+}
+
+#jobProfilePage .tag-soft {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .tag-tech {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-card-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-card-meta {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-footer .growth-trend {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-filters input,
+#jobProfilePage .job-profile-filters select {
+    border-color: var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-profile-filters input:focus,
+#jobProfilePage .job-profile-filters select:focus {
+    border-color: var(--mock-sage);
+    box-shadow: 0 0 0 2px rgba(94, 140, 101, 0.15);
+}
+
+#jobProfilePage .job-profile-clear-btn {
+    background: var(--mock-line-2);
+    color: var(--mock-ink-3);
+}
+
+#jobProfilePage .job-profile-clear-btn:hover {
+    background: var(--mock-line);
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .graph-controls input,
+#jobProfilePage .graph-controls select {
+    border-color: var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .graph-controls input:focus,
+#jobProfilePage .graph-controls select:focus {
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .graph-empty-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .graph-empty-desc {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .ai-agent-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    box-shadow: var(--mock-shadow);
+}
+
+#jobProfilePage .ai-agent-card-divider {
+    background: var(--mock-line);
+}
+
+#jobProfilePage .ai-agent-tag {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+    border: 1px solid var(--mock-sage-mid);
+}
+
+#jobProfilePage .ai-agent-step-circle {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    color: #fff;
+}
+
+#jobProfilePage .ai-agent-step-line {
+    background: var(--mock-line);
+}
+
+#jobProfilePage .ai-agent-step-label {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .ai-agent-btn {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .ai-agent-btn:hover {
+    background: #4a7350;
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.35);
+}
+
+#jobProfilePage .ai-gen-guide-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .ai-gen-hot-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .ai-gen-guide-title,
+#jobProfilePage .ai-gen-hot-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .ai-gen-guide-num {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .ai-gen-guide-text {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .real-data-modal-header {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .real-data-modal-box {
+    box-shadow: 0 20px 60px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .job-detail-modal-box {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    box-shadow: 0 20px 60px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .job-profile-detail {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    box-shadow: var(--mock-shadow);
+}
+
+#jobProfilePage .job-card-footer {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-demand-num {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-trend-label {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .btn-profile {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .btn-profile:hover {
+    background: #4a7350;
+}
+
+#jobProfilePage .btn-realdata {
+    color: var(--mock-sage);
+    border-color: var(--mock-sage-mid);
+}
+
+#jobProfilePage .btn-realdata:hover {
+    background: var(--mock-sage-soft);
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .job-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-company {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .card-stripe {
+    background: linear-gradient(90deg, var(--mock-sage), #4a7350);
+}

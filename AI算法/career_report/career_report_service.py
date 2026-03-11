@@ -70,6 +70,11 @@ def _build_career_chain():
    - evaluation: 包含evaluation_system和adjustment_scenarios
    - pain_points: 包含identified_risks和contingency_plans
 
+特别注意行动计划的格式：
+- short_term_plan应该包含period, goal, monthly_plans
+- monthly_plans是一个数组，每个元素包含month, focus, tasks, milestone
+- tasks是一个数组，每个元素包含task, 具体行动, 时间投入, 预期成果
+
 JSON输出：
 """
     template = PromptTemplate.from_template(prompt_text)
