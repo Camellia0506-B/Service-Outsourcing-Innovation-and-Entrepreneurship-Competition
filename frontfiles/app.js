@@ -1757,29 +1757,44 @@ class CareerPlanningApp {
         if (!parsed || typeof parsed !== 'object') {
             return { basic_info: {}, education_info: {}, skills: [] };
         }
-
-        const basic = parsed.basic_info || {};
-        const firstEdu = Array.isArray(parsed.education)
-            ? (parsed.education[0] || {})
-            : (parsed.education || {});
+        const basicRaw = parsed.basic_info || {};
+        const basic = {
+            name: basicRaw.name || basicRaw.full_name || basicRaw.nickname || basicRaw['姓名'] || '',
+            nickname: basicRaw.nickname || basicRaw.name || basicRaw.full_name || basicRaw['姓名'] || '',
+            gender: basicRaw.gender || basicRaw.sex || basicRaw['性别'] || '',
+            birth_date: basicRaw.birth_date || basicRaw.birthday || basicRaw.date_of_birth || basicRaw.dob || basicRaw['出生日期'] || '',
+            phone: basicRaw.phone || basicRaw['电话'] || '',
+            email: basicRaw.email || basicRaw['邮箱'] || '',
+            summary: basicRaw.summary || basicRaw.intro || basicRaw.about || basicRaw['简介'] || ''
+        };
+        const eduList = parsed.education;
+        const firstEdu = Array.isArray(eduList) ? (eduList[0] || {}) : (eduList && typeof eduList === 'object' ? eduList : {});
+        const firstEduNorm = {
+            school: firstEdu.school || firstEdu.school_name || firstEdu['学校'] || '',
+            major: firstEdu.major || firstEdu['专业'] || '',
+            degree: firstEdu.degree || firstEdu.education || firstEdu['学历'] || '',
+            grade: firstEdu.grade || firstEdu['年级'] || '',
+            expected_graduation: firstEdu.expected_graduation || firstEdu.graduation_date || firstEdu.end_date || firstEdu['毕业时间'] || '',
+            gpa: firstEdu.gpa || firstEdu['GPA'] || ''
+        };
         const skillsFromResume = Array.isArray(parsed.skills) ? parsed.skills : [];
 
         const profileData = {
             basic_info: {
-                nickname: basic.name || basic.full_name || basic.nickname || '',
-                gender: basic.gender || basic.sex || '',
-                birth_date: basic.birth_date || basic.birthday || basic.date_of_birth || basic.dob || '',
+                nickname: basic.nickname || basic.name || '',
+                gender: basic.gender || '',
+                birth_date: basic.birth_date || '',
                 phone: basic.phone || '',
                 email: basic.email || '',
-                summary: basic.summary || basic.intro || basic.about || ''
+                summary: basic.summary || ''
             },
             education_info: {
-                school: firstEdu.school || firstEdu.school_name || '',
-                major: firstEdu.major || '',
-                degree: firstEdu.degree || firstEdu.education || '',
-                grade: firstEdu.grade || '',
-                expected_graduation: firstEdu.expected_graduation || firstEdu.graduation_date || firstEdu.end_date || '',
-                gpa: firstEdu.gpa || ''
+                school: firstEduNorm.school || '',
+                major: firstEduNorm.major || '',
+                degree: firstEduNorm.degree || '',
+                grade: firstEduNorm.grade || '',
+                expected_graduation: firstEduNorm.expected_graduation || '',
+                gpa: firstEduNorm.gpa || ''
             },
             skills: []
         };
@@ -2377,10 +2392,21 @@ class CareerPlanningApp {
         const progressWrap = document.getElementById('resumeParseProgressWrap');
         const doneState = document.getElementById('resumeParseDoneState');
         const countEl = document.getElementById('resumeParseDoneCount');
+        const subEl = document.getElementById('resumeParseDoneSub');
+        const btnEl = document.getElementById('resumeParseDoneBtn');
         if (stepsWrap) stepsWrap.style.display = 'none';
         if (progressWrap) progressWrap.style.display = 'none';
         if (doneState) doneState.style.display = 'flex';
         if (countEl) countEl.textContent = String(filledCount);
+        if (subEl) {
+            if (filledCount > 0) {
+                subEl.innerHTML = '已填充 <span id="resumeParseDoneCount">' + filledCount + '</span> 项信息到档案';
+                if (btnEl) btnEl.textContent = '查看填充结果';
+            } else {
+                subEl.innerHTML = '未识别到可填充项。请确认：① PDF 为可复制文本（非扫描件）；② 已启动 AI 服务（见启动指南）；或尝试重新上传。';
+                if (btnEl) btnEl.textContent = '关闭';
+            }
+        }
     }
 
     hideResumeParseModal() {
@@ -2416,7 +2442,7 @@ class CareerPlanningApp {
                 return;
             }
             const result = await getResumeParseResult(userId, taskId);
-            if (!result.success) {
+            if (!result.success || !result.data) {
                 attempts++;
                 setTimeout(poll, 3000);
                 return;
@@ -2428,12 +2454,35 @@ class CareerPlanningApp {
                     stepIndex++;
                 }
                 this.advanceResumeParseStep(5, '生成中…');
-                const parsedData = result.data.parsed_data || result.data.profile || null;
+                let parsedData = result.data.parsed_data || result.data.profile || result.data.data?.parsed_data || null;
+                if (!parsedData && result.data && (result.data.basic_info || result.data.education || result.data.skills)) {
+                    parsedData = result.data;
+                }
                 const filledCount = this._countParsedFields(parsedData);
                 this._resumeParseLastResult = { parsedData, userId };
+                // 第 5 步「填充档案字段」：解析完成后立即自动写入档案，使「自动写入所有信息」真正生效
+                const hasValidData = parsedData && filledCount > 0;
+                if (hasValidData) {
+                    try {
+                        const profileData = this.transformParsedResumeData(parsedData);
+                        this.fillProfileFormFromResume(profileData);
+                        this.saveProfile().then(() => {
+                            this.showToast('档案已自动填充并保存', 'success');
+                            aiGenerateAbilityProfile(userId, 'profile').then((res) => {
+                                if (res.success) this.showToast('能力画像已更新', 'success');
+                            }).catch(() => {});
+                        }).catch((e) => {
+                            console.error('自动保存档案失败:', e);
+                            this.showToast('档案已填充，保存失败请稍后在个人档案页重试', 'warning');
+                        });
+                    } catch (e) {
+                        console.error('自动填充档案失败:', e);
+                        this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');
+                    }
+                }
                 setTimeout(() => this.showResumeParseDone(filledCount), 1000);
                 if (statusDiv) {
-                    statusDiv.textContent = '解析完成！请点击弹窗内按钮查看填充结果';
+                    statusDiv.textContent = hasValidData ? '解析完成！已自动写入档案，可点击弹窗内按钮查看' : '解析完成！请点击弹窗内按钮查看填充结果';
                     statusDiv.style.background = '#dcfce7';
                 }
                 return;
@@ -2462,7 +2511,8 @@ class CareerPlanningApp {
                 if (v != null && String(v).trim() !== '') n++;
             }
         }
-        if (Array.isArray(parsedData.education)) n += parsedData.education.length;
+        const edu = parsedData.education;
+        if (Array.isArray(edu)) n += edu.length; else if (edu && typeof edu === 'object' && (edu.school || edu.school_name || edu.major)) n += 1;
         if (Array.isArray(parsedData.skills)) n += parsedData.skills.length;
         if (Array.isArray(parsedData.internships)) n += parsedData.internships.length;
         if (Array.isArray(parsedData.projects)) n += parsedData.projects.length;

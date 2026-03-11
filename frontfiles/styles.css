@@ -984,6 +984,88 @@
     color: #5a524a;
     line-height: 1.6;
 }
+
+/* 个人档案 - 简历解析区（panel-upload）墨绿色版本 */
+#profilePage #panel-upload .upload-panel {
+    gap: 22px;
+}
+
+#profilePage #panel-upload .ai-hero {
+    background: linear-gradient(145deg, #2C4A3E 0%, #3D6458 55%, #2C4A3E 100%);
+    border-radius: 18px;
+    padding: 34px 30px;
+    box-shadow: 0 12px 40px rgba(44, 74, 62, 0.18);
+}
+
+#profilePage #panel-upload .ai-hero:hover {
+    transform: none;
+    box-shadow: 0 12px 40px rgba(44, 74, 62, 0.18);
+}
+
+#profilePage #panel-upload .ai-hero::before {
+    display: block;
+    top: -70px;
+    right: -90px;
+    width: 280px;
+    height: 280px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+#profilePage #panel-upload .ai-hero::after {
+    display: block;
+    bottom: -90px;
+    left: -70px;
+    width: 260px;
+    height: 260px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#profilePage #panel-upload .ai-hero-badge {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#profilePage #panel-upload .drop-zone {
+    border: 1px dashed rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 28px 22px;
+}
+
+#profilePage #panel-upload .btn-upload {
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+#profilePage #panel-upload .btn-upload:hover {
+    background: #f7f3ef;
+    transform: translateY(-1px);
+}
+
+#profilePage #panel-upload .ai-feat {
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+#profilePage #panel-upload .manual-side {
+    padding-top: 2px;
+}
+
+#profilePage #panel-upload .manual-divider span {
+    color: #9a8f82;
+}
+
+#profilePage #panel-upload .manual-grid-card {
+    border-radius: 14px;
+    padding: 16px 16px;
+}
+
+#profilePage #panel-upload .profile-tip-box {
+    border-radius: 14px;
+    background: #f7f3ef;
+    border: 1px solid #e4d6c8;
+}
 #profilePage .field label {
     color: #9a8f82;
 }
@@ -2070,6 +2152,7 @@ body.on-login-page #globalBlobs { display: none; }
     padding: 12px;
     border-radius: 8px;
     font-size: 14px;
+    color: #2C4A3E;
 }
 
 .form-actions {
