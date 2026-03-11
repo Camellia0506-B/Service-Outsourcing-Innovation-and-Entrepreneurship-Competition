@@ -14857,6 +14857,14 @@ body.on-login-page #globalBlobs { display: none; }
     content: none !important;
 }
 
+/* 求职失败复盘：开始 AI 分析按钮更细长一些 */
+#trackingFailureStartBtn.btn-primary {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    min-width: 100px;
+}
+
 .modal-content {
     background: var(--card-bg);
     border-radius: 20px;

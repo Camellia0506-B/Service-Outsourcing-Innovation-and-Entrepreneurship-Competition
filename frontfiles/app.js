@@ -4716,8 +4716,77 @@ class CareerPlanningApp {
             // 保持当前选中并刷新右侧步骤与备注
             this.trackingSelectedRecordId = recordId;
             this.renderTrackingSteps(updated);
+
+            // 静默触发一次失败复盘分析：根据当前记录的阶段备注自动生成个性化报告
+            // 不弹出弹窗、不打断当前操作，生成完成后 Tab3 会自动出现这条记录的 AI 分析
+            this._autoRunFailureAnalysis(recordId);
         } else {
             this.showToast((res && res.msg) || '更新失败', 'error');
+        }
+    }
+
+    async _autoRunFailureAnalysis(recordId) {
+        try {
+            const userId = getCurrentUserId();
+            const record = this.trackingRecordsCache?.[recordId];
+            if (!userId || !record || !recordId) return;
+
+            const url = (typeof getTrackingFailureAnalysisURL === 'function')
+                ? getTrackingFailureAnalysisURL(recordId)
+                : `${(typeof API_CONFIG !== 'undefined' ? (API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL) : '') || 'http://127.0.0.1:5002/api/v1'}/tracking/record/${encodeURIComponent(recordId)}/failure-analysis`;
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    record_id: recordId,
+                    final_stage: record.current_stage || 'final',
+                    final_result: 'rejected',
+                    rejection_feedback: '' // 标记淘汰时默认没有额外反馈
+                })
+            });
+            if (!res.ok || !res.body) {
+                return;
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let bufferText = '';
+            let doneReportId = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data:')) continue;
+                    const payloadStr = trimmed.slice(5).trim();
+                    if (!payloadStr) continue;
+                    let payload;
+                    try {
+                        payload = JSON.parse(payloadStr);
+                    } catch (_) {
+                        continue;
+                    }
+                    if (payload.chunk) {
+                        bufferText += payload.chunk;
+                    }
+                    if (payload.report_id) {
+                        doneReportId = payload.report_id;
+                    }
+                }
+            }
+
+            if (doneReportId && bufferText) {
+                // 缓存本次分析结果，并刷新失败记录/报告列表
+                this._cacheTrackingFailureAnalysis(recordId, bufferText);
+                await this.loadTrackingData();
+            }
+        } catch (e) {
+            console.error('自动失败复盘分析异常:', e);
         }
     }
 
@@ -4971,9 +5040,9 @@ class CareerPlanningApp {
         const toUl = (arr) => arr && arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>—</li></ul>';
         detailEl.innerHTML = `
             <h3>${esc(title)}</h3>
-            <div class="tracking-detail-section"><h4>🔍 技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
-            <div class="tracking-detail-section"><h4>📄 简历优化建议</h4>${toUl(parsed.resume)}</div>
-            <div class="tracking-detail-section"><h4>🗣️ 面试准备行动计划</h4>${toUl(parsed.interview)}</div>
+            <div class="tracking-detail-section"><h4>技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
+            <div class="tracking-detail-section"><h4>简历优化建议</h4>${toUl(parsed.resume)}</div>
+            <div class="tracking-detail-section"><h4>面试准备行动计划</h4>${toUl(parsed.interview)}</div>
         `;
     }
 

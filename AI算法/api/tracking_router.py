@@ -20,6 +20,7 @@ from flask import Blueprint, request, jsonify, Response
 
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
+from model.factory import chat_model
 
 tracking_bp = Blueprint("tracking", __name__, url_prefix="/api/v1/tracking")
 
@@ -292,8 +293,64 @@ def failure_analysis(record_id: str):
         ]
         interview_notes = [n for n in interview_notes if n]
         written_note = _short(stage_notes.get("written_test") or "")
+        applied_note = _short(stage_notes.get("applied") or "")
 
-        # 构造简化分析内容（非流式LLM），按 API 文档的结构切块返回
+        # 尝试调用大模型，基于阶段备注生成个性化复盘（失败时回退到模板逻辑）
+        llm_markdown = None
+        try:
+            # 将阶段备注整理成可读文本，方便 LLM 引用具体细节
+            notes_summary_lines = []
+            if applied_note:
+                notes_summary_lines.append(f"- 投递阶段备注：{applied_note}")
+            if written_note:
+                notes_summary_lines.append(f"- 笔试阶段备注：{written_note}")
+            if interview_notes:
+                notes_summary_lines.append(f"- 面试阶段备注：{'；'.join(interview_notes)}")
+            if final_note:
+                notes_summary_lines.append(f"- HR 面阶段备注：{final_note}")
+            if rejected_note:
+                notes_summary_lines.append(f"- 淘汰备注：{rejected_note}")
+            if rejection_feedback:
+                notes_summary_lines.append(f"- 面试官/HR 明确反馈：{rejection_feedback}")
+
+            notes_block = "\n".join(notes_summary_lines) if notes_summary_lines else "（学生未填写任何阶段备注，仅有岗位与失败阶段信息。）"
+
+            prompt = f"""
+你是一名资深求职教练，请根据下面的求职记录做一次失败复盘，并输出 Markdown 文本。
+
+【岗位信息】
+- 公司：{company or "（未知公司）"}
+- 岗位：{job_title or "（未知岗位）"}
+- 最终失败阶段：{final_stage}
+
+【学生阶段性备注与反馈】
+{notes_block}
+
+请严格按照下面结构输出（使用中文）：
+
+## 技能 Gap
+- 从上述备注中提炼出 5～10 条「与该岗位技能要求相关的关键差距」，每条尽量具体，指向某个知识点或实践薄弱点。
+- 避免空泛话术（如“多刷题”“多投简历”），要结合备注里的具体内容来分析。
+
+## 简历优化点
+- 从备注中结合岗位信息，给出 5～10 条「如何修改简历/项目描述」的建议。
+- 建议要围绕该岗位的核心要求，例如如何突出相关项目、量化成果、补充缺失的经历。
+
+## 面试准备建议
+- 从备注中暴露的问题出发，总结 5～10 条「下一次面试如何改进」的建议。
+- 建议要可执行，例如需要准备哪些高频问题、如何复盘失败问题、如何补充案例。
+
+要求：
+- 只输出上述三个一级标题及对应的无序列表内容，不要再加多余说明。
+- 每条建议前用 "-" 开头。
+"""
+            response = chat_model.invoke(prompt)
+            llm_markdown = getattr(response, "content", None) or str(response)
+        except Exception as e:
+            logger.error(f"[Tracking] LLM 生成失败复盘报告失败，将回退到模板内容: {e}", exc_info=True)
+            llm_markdown = None
+
+        # 构造 SSE 流响应：优先使用 LLM 结果，失败时回退到原有模板
         def event_stream():
             # analyzing 阶段
             yield "event: analyzing\n"
@@ -303,51 +360,56 @@ def failure_analysis(record_id: str):
             yield 'data: {"description": "正在分析你在各面试阶段的表现数据..."}\n\n'
             time.sleep(0.2)
 
-            # 复盘报告主体（两段）
-            header_lines = [
-                "## 本次求职复盘报告",
-                "",
-                f"**岗位**：{job_title}（{company}）",
-                f"**失败阶段**：{final_stage}",
-            ]
-            header = {"chunk": "\\n".join(header_lines) + "\\n"}
-            yield "event: report_chunk\n"
-            yield f"data: {json.dumps(header, ensure_ascii=False)}\n\n"
+            if llm_markdown:
+                # 直接将 LLM 生成的 Markdown 作为整份复盘报告流式返回
+                chunk = {"chunk": llm_markdown}
+                yield "event: report_chunk\n"
+                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+            else:
+                # 回退：使用原有的模板化内容（保证功能可用）
+                header_lines = [
+                    "## 本次求职复盘报告",
+                    "",
+                    f"**岗位**：{job_title}（{company}）",
+                    f"**失败阶段**：{final_stage}",
+                ]
+                header = {"chunk": "\\n".join(header_lines) + "\\n"}
+                yield "event: report_chunk\n"
+                yield f"data: {json.dumps(header, ensure_ascii=False)}\n\n"
 
-            reasons_lines = ["**核心原因分析**：", ""]
-            if rejection_feedback:
-                reasons_lines.append(f"- 面试/HR 反馈：{rejection_feedback}")
-            if rejected_note:
-                reasons_lines.append(f"- 淘汰备注关键点：{rejected_note}")
-            if final_note:
-                reasons_lines.append(f"- HR 面阶段记录：{final_note}")
-            if written_note:
-                reasons_lines.append(f"- 笔试阶段记录：{written_note}")
-            if interview_notes:
-                reasons_lines.append(f"- 面试表现记录：{'；'.join(interview_notes)}")
-            if len(reasons_lines) <= 2:
-                reasons_lines.append("- 当前系统尚未捕获到明确的失败原因，请结合自己的复盘备注补充。")
-            reasons = {
-                "chunk": "\\n".join(reasons_lines) + "\\n"
-            }
-            yield "event: report_chunk\n"
-            yield f"data: {json.dumps(reasons, ensure_ascii=False)}\n\n"
+                reasons_lines = ["**核心原因分析**：", ""]
+                if rejection_feedback:
+                    reasons_lines.append(f"- 面试/HR 反馈：{rejection_feedback}")
+                if rejected_note:
+                    reasons_lines.append(f"- 淘汰备注关键点：{rejected_note}")
+                if final_note:
+                    reasons_lines.append(f"- HR 面阶段记录：{final_note}")
+                if written_note:
+                    reasons_lines.append(f"- 笔试阶段记录：{written_note}")
+                if interview_notes:
+                    reasons_lines.append(f"- 面试表现记录：{'；'.join(interview_notes)}")
+                if len(reasons_lines) <= 2:
+                    reasons_lines.append("- 当前系统尚未捕获到明确的失败原因，请结合自己的复盘备注补充。")
+                reasons = {
+                    "chunk": "\\n".join(reasons_lines) + "\\n"
+                }
+                yield "event: report_chunk\n"
+                yield f"data: {json.dumps(reasons, ensure_ascii=False)}\n\n"
 
-            # 新规划建议
-            plan_lines = [
-                "## 更新后的求职规划",
-                "",
-                "**短期（1个月）**：",
-                "- 针对本次失败阶段中暴露出来的关键短板，结合上方复盘要点，整理 3–5 个典型问题并准备高质量回答。",
-                "- 至少完成 1 次模拟面试或面试题复盘，将易错点记录在案，并补充到淘汰备注中。",
-                "",
-                "**中期（2–3个月）**：",
-                "- 参与 1 个与该岗位高度相关的项目实践（如校内项目、开源贡献、业务侧小项目），把这次失败中暴露的短板补齐。",
-                "- 根据复盘结论，必要时调整目标公司或岗位级别（例如先从实习 / 初级岗位切入，再向上跳）。",
-            ]
-            plan_chunk = {"chunk": "\\n".join(plan_lines) + "\\n"}
-            yield "event: new_plan_chunk\n"
-            yield f"data: {json.dumps(plan_chunk, ensure_ascii=False)}\n\n"
+                plan_lines = [
+                    "## 更新后的求职规划",
+                    "",
+                    "**短期（1个月）**：",
+                    "- 针对本次失败阶段中暴露出来的关键短板，结合上方复盘要点，整理 3–5 个典型问题并准备高质量回答。",
+                    "- 至少完成 1 次模拟面试或面试题复盘，将易错点记录在案，并补充到淘汰备注中。",
+                    "",
+                    "**中期（2–3个月）**：",
+                    "- 参与 1 个与该岗位高度相关的项目实践（如校内项目、开源贡献、业务侧小项目），把这次失败中暴露的短板补齐。",
+                    "- 根据复盘结论，必要时调整目标公司或岗位级别（例如先从实习 / 初级岗位切入，再向上跳）。",
+                ]
+                plan_chunk = {"chunk": "\\n".join(plan_lines) + "\\n"}
+                yield "event: new_plan_chunk\n"
+                yield f"data: {json.dumps(plan_chunk, ensure_ascii=False)}\n\n"
 
             # 保存失败报告摘要（按 record_id 聚合，一条记录对应一份报告，多次分析覆盖更新）
             key_weakness_parts = []
