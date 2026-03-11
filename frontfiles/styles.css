@@ -596,8 +596,12 @@
 
 #profilePage .manual-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 1fr 1fr;
     gap: 10px;
+    width: 100%;
+    height: 150px;
+    align-items: stretch;
 }
 
 /* 技能 / 实习 / 项目 列表样式复用设计稿 */
@@ -951,10 +955,19 @@
 #profilePage .manual-title {
     color: #1f1f1f;
 }
+#profilePage .manual-grid .manual-grid-card {
+    margin-top: 0;
+}
 #profilePage .manual-grid-card {
     padding: 14px 16px;
     cursor: pointer;
     border-radius: 0;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    align-self: stretch;
 }
 #profilePage .manual-grid-label {
     font-size: 13px;
@@ -1062,6 +1075,7 @@
 }
 
 #profilePage #panel-upload .profile-tip-box {
+    margin-top: 24px;
     border-radius: 14px;
     background: #f7f3ef;
     border: 1px solid #e4d6c8;
