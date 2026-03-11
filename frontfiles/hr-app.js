@@ -4,7 +4,6 @@ let currentPage = 1;
 let totalPages = 1;
 let currentHrData = null;
 let currentStudents = [];
-let selectedStudentId = null;
 
 function showLoading() {
     document.getElementById('loading').classList.remove('hidden');
@@ -40,12 +39,12 @@ function checkHrAuth() {
 function initHrDashboard() {
     if (!checkHrAuth()) return;
 
-    document.getElementById('hrUserName').textContent = currentHrData.real_name;
-    document.getElementById('hrCompanyName').textContent = currentHrData.company_name;
+    document.getElementById('hrUserName').textContent = currentHrData.real_name || 'HR';
+    document.getElementById('hrCompanyName').textContent = currentHrData.company_name || '请完善企业信息';
     document.getElementById('hrWelcomeName').textContent = currentHrData.real_name;
     document.getElementById('unreadEvaluations').textContent = currentHrData.unread_evaluations || 0;
 
-    loadStudents();
+    switchToSection('students');
     bindHrDashboardEvents();
     bindSidebarNavigation();
 }
@@ -81,7 +80,7 @@ function switchToSection(sectionId) {
     }
 
     if (sectionId === 'students') {
-        loadStudents();
+        loadJobOptions().then(() => loadStudents());
     } else if (sectionId === 'invitations') {
         loadInvitations();
     } else if (sectionId === 'evaluations') {
@@ -151,6 +150,32 @@ function bindHrDashboardEvents() {
     }
 }
 
+async function loadJobOptions() {
+    const sel = document.getElementById('filterJob');
+    if (!sel) return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/hr/students/job-options`, {
+            headers: { 'Authorization': `Bearer ${currentHrData.token}` }
+        });
+        const result = await response.json();
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">全部岗位</option>';
+        if (result.code === 200 && result.data && result.data.jobs && result.data.jobs.length) {
+            result.data.jobs.forEach(job => {
+                const opt = document.createElement('option');
+                opt.value = job;
+                opt.textContent = job;
+                sel.appendChild(opt);
+            });
+        }
+        if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+            sel.value = currentVal;
+        }
+    } catch (e) {
+        console.error('加载岗位选项失败:', e);
+    }
+}
+
 async function loadStudents() {
     showLoading();
     try {
@@ -177,7 +202,7 @@ async function loadStudents() {
         const result = await response.json();
         if (result.code === 200) {
             renderStudents(result.data.list);
-            document.getElementById('totalStudents').textContent = result.data.total;
+            if (document.getElementById('totalStudents')) document.getElementById('totalStudents').textContent = result.data.total;
             
             totalPages = Math.ceil(result.data.total / 10);
             document.getElementById('pageInfo').textContent = `第 ${currentPage} 页`;
@@ -196,108 +221,222 @@ async function loadStudents() {
 
 function renderStudents(students) {
     currentStudents = students;
-    const container = document.getElementById('studentList');
+    const tbody = document.getElementById('studentList');
+    const stats = document.getElementById('studentStats');
+    const total = document.getElementById('pageTotal');
+    const count = students ? students.length : 0;
+    if (stats) stats.textContent = `共 ${count} 位候选人`;
+    if (total) total.textContent = `共 ${count} 条记录`;
     if (!students || students.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 48px; color: var(--text-secondary);">暂无学生数据</div>';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#a0a098;font-size:14px;">暂无学生数据</td></tr>`;
         return;
     }
-
-    container.innerHTML = students.map((student, index) => {
-        const isSelected = selectedStudentId === student.anonymous_id;
+    tbody.innerHTML = students.map((student, index) => {
+        const tags = (student.ability_tags || []).slice(0, 3)
+            .map(t => `<span style="font-size:10px;font-weight:600;padding:2px 8px;background:#e8f0eb;color:#2d6a4f;border-radius:100px;white-space:nowrap;">${t}</span>`)
+            .join('');
+        const score = student.system_match_score || 0;
+        const scoreColor = score >= 80 ? '#2d6a4f' : '#7a6f3e';
+        const sid = student.anonymous_id;
+        const gpaDisplay = (student.gpa_level || '-').replace(/\s*[（(][^）)]*[）)]\s*$/g, '').trim() || '-';
         return `
-        <div class="hr-student-card ${isSelected ? 'selected' : ''}" onclick="selectStudent('${student.anonymous_id}')">
-            <div class="hr-student-avatar">S${index + 1}</div>
-            <div class="hr-student-info">
-                <div class="hr-student-header">
-                    <h4 class="hr-student-name">${student.anonymous_id}</h4>
-                    <span class="hr-match-score">${student.system_match_score}分匹配</span>
+        <tr style="border-bottom:1px solid #e2dfd7;cursor:pointer;transition:background 0.1s;"
+            onmouseover="this.style.background='#faf9f6'"
+            onmouseout="this.style.background=''"
+            onclick="openStudentModal('${sid}')">
+            <td style="padding:11px 10px 11px 16px;">
+                <div style="width:28px;height:28px;background:#f6f4ef;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#6b6860;">S${index+1}</div>
+            </td>
+            <td style="padding:11px 10px;font-size:13px;color:#6b6860;max-width:140px;overflow:hidden;text-overflow:ellipsis;">
+                <div style="font-size:13px;font-weight:600;color:#0f0f0d;margin-bottom:4px;">${sid}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">${tags}</div>
+            </td>
+            <td style="padding:11px 10px;font-size:13px;color:#6b6860;">${student.education_level || '-'}</td>
+            <td style="padding:11px 10px;font-size:13px;color:#6b6860;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${student.major_category || '-'}</td>
+            <td style="padding:11px 10px;font-size:13px;color:#6b6860;">${gpaDisplay}</td>
+            <td style="padding:11px 10px;font-size:14px;font-weight:700;color:${scoreColor};">${score}分</td>
+            <td style="padding:11px 12px 11px 10px;white-space:nowrap;">
+                <div style="display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end;align-items:center;" onclick="event.stopPropagation()">
+                    <button style="height:28px;padding:0 8px;font-size:12px;font-weight:600;border-radius:5px;border:1px solid #e2dfd7;background:#fff;color:#0f0f0d;cursor:pointer;white-space:nowrap;"
+                        onmouseover="this.style.borderColor='#2d6a4f';this.style.color='#2d6a4f'"
+                        onmouseout="this.style.borderColor='#e2dfd7';this.style.color='#0f0f0d'"
+                        onclick="openStudentModal('${sid}')">查看详情</button>
+                    <button style="height:28px;padding:0 8px;font-size:12px;font-weight:600;border-radius:5px;border:none;background:#0f0f0d;color:#fff;cursor:pointer;white-space:nowrap;"
+                        onmouseover="this.style.background='#2d6a4f'"
+                        onmouseout="this.style.background='#0f0f0d'"
+                        onclick="openInviteModal('${sid}')">发起邀请</button>
                 </div>
-                <div class="hr-student-details">
-                    <p><strong>学历:</strong> ${student.education_level} | <strong>专业:</strong> ${student.major_category} | <strong>成绩:</strong> ${student.gpa_level}</p>
-                    <p style="margin-top: 8px;"><strong>亮点:</strong> ${student.highlight}</p>
-                </div>
-                <div class="hr-ability-tags">
-                    ${student.ability_tags.map(tag => `<span class="hr-ability-tag">${tag}</span>`).join('')}
-                </div>
-                <div class="hr-student-actions">
-                    <button class="hr-view-btn" onclick="event.stopPropagation(); viewStudent('${student.anonymous_id}')">查看详情</button>
-                    <button class="hr-invite-btn" onclick="event.stopPropagation(); openInviteModal('${student.anonymous_id}')">发起评估邀请</button>
-                </div>
-            </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function _esc(s) {
+    if (s == null || s === undefined) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _section(title, body) {
+    if (!body || body.trim() === '') return '';
+    return `<div style="margin-bottom:20px;"><div style="font-size:11px;font-weight:700;color:#a0a098;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${title}</div>${body}</div>`;
+}
+
+function _renderFullStudentDetail(data) {
+    const profile = data.profile || {};
+    const ability = data.ability_profile || {};
+    const anonymousId = data.anonymous_id || '';
+    const basic = profile.basic_info || {};
+    const abBasic = ability.basic_info || {};
+    const edu = profile.education_info || {};
+    const targetJob = basic.target_job || abBasic.target_job || '待定';
+    const letter = (anonymousId.slice(-1) || 'S').toUpperCase();
+
+    let html = `
+    <div style="background:#0f0f0d;border-radius:14px 14px 0 0;padding:26px 26px 22px;display:flex;gap:16px;align-items:flex-start;position:relative;">
+        <button onclick="document.getElementById('studentModal').classList.add('hidden')"
+            style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);font-size:16px;cursor:pointer;">✕</button>
+        <div style="width:52px;height:52px;background:#2d6a4f;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;">${_esc(letter)}</div>
+        <div>
+            <div style="font-size:19px;font-weight:700;color:#fff;">${_esc(anonymousId)}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5);">应聘岗位：${_esc(targetJob)}</div>
         </div>
-    `}).join('');
-}
+    </div>
+    <div style="padding:22px 26px;max-height:60vh;overflow-y:auto;">`;
 
-function selectStudent(studentId) {
-    selectedStudentId = studentId;
-    renderStudents(currentStudents);
-    renderStudentDetail(studentId);
-}
-
-function renderStudentDetail(studentId) {
-    const student = currentStudents.find(s => s.anonymous_id === studentId);
-    const container = document.getElementById('studentDetail');
-    
-    if (!student) {
-        container.innerHTML = '<div style="text-align: center; padding: 80px 20px; color: var(--text-secondary);">请从左侧选择学生查看详情</div>';
-        return;
+    const basicFields = [
+        ['姓名', basic.name],
+        ['昵称', basic.nickname],
+        ['性别', basic.gender],
+        ['出生日期', basic.birth_date || basic.birthday],
+        ['手机', basic.phone],
+        ['邮箱', basic.email]
+    ].filter(([, v]) => v != null && String(v).trim() !== '');
+    if (basicFields.length) {
+        html += _section('基础信息', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;"><table style="width:100%;font-size:13px;"><tbody>${basicFields.map(([k, v]) => `<tr><td style="color:#a0a098;width:80px;padding:4px 0;">${_esc(k)}</td><td style="color:#0f0f0d;">${_esc(v)}</td></tr>`).join('')}</tbody></table></div>`);
     }
-    
-    container.innerHTML = `
-        <div class="hr-student-detail-header">
-            <div class="hr-student-detail-avatar">${student.anonymous_id.charAt(student.anonymous_id.length - 1)}</div>
-            <div class="hr-student-detail-info">
-                <h4>${student.anonymous_id}</h4>
-                <span class="hr-student-detail-score">${student.system_match_score}分匹配</span>
-            </div>
-        </div>
-        
-        <div class="hr-student-detail-section">
-            <div class="hr-student-detail-section-title">基本信息</div>
-            <div class="hr-student-detail-grid">
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">学历</div>
-                    <div class="hr-student-detail-item-value">${student.education_level}</div>
-                </div>
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">专业</div>
-                    <div class="hr-student-detail-item-value">${student.major_category}</div>
-                </div>
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">成绩</div>
-                    <div class="hr-student-detail-item-value">${student.gpa_level}</div>
-                </div>
-                <div class="hr-student-detail-item">
-                    <div class="hr-student-detail-item-label">联系状态</div>
-                    <div class="hr-student-detail-item-value">${student.is_open_to_contact ? '可联系' : '暂不可联系'}</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="hr-student-detail-section">
-            <div class="hr-student-detail-section-title">个人亮点</div>
-            <div class="hr-student-detail-highlight">
-                <p>${student.highlight}</p>
-            </div>
-        </div>
-        
-        <div class="hr-student-detail-section">
-            <div class="hr-student-detail-section-title">能力标签</div>
-            <div class="hr-ability-tags">
-                ${student.ability_tags.map(tag => `<span class="hr-ability-tag">${tag}</span>`).join('')}
-            </div>
-        </div>
-        
-        <div class="hr-student-detail-actions">
-            <button class="hr-view-btn" onclick="viewStudent('${student.anonymous_id}')">查看详情</button>
-            <button class="hr-invite-btn" onclick="openInviteModal('${student.anonymous_id}')">发起评估邀请</button>
-        </div>
-    `;
+
+    const eduFields = [
+        ['学校', edu.school],
+        ['专业', edu.major],
+        ['学历', edu.degree],
+        ['年级', edu.grade],
+        ['GPA', edu.gpa],
+        ['入学日期', edu.start_date],
+        ['预计毕业', edu.expected_graduation]
+    ].filter(([, v]) => v != null && String(v).trim() !== '');
+    if (eduFields.length) {
+        html += _section('教育信息', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;"><table style="width:100%;font-size:13px;"><tbody>${eduFields.map(([k, v]) => `<tr><td style="color:#a0a098;width:90px;padding:4px 0;">${_esc(k)}</td><td style="color:#0f0f0d;">${_esc(v)}</td></tr>`).join('')}</tbody></table></div>`);
+    }
+    if (!eduFields.length && (abBasic.school || abBasic.major || abBasic.education || abBasic.gpa)) {
+        html += _section('教育信息（能力画像）', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;font-size:13px;color:#0f0f0d;">学校 ${_esc(abBasic.school || '-')} · 专业 ${_esc(abBasic.major || '-')} · 学历 ${_esc(abBasic.education || '-')} · GPA ${_esc(abBasic.gpa || '-')}</div>`);
+    }
+
+    const skills = profile.skills || [];
+    if (skills.length) {
+        const skillsHtml = skills.map(cat => {
+            const items = (cat.items || []).map(i => typeof i === 'string' ? i : (i.skill || i.name || '')).filter(Boolean);
+            const label = cat.category || cat.name || '技能';
+            return `<div style="margin-bottom:8px;"><span style="font-size:12px;font-weight:600;color:#6b6860;">${_esc(label)}</span><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">${items.map(i => `<span style="padding:3px 10px;background:#e8f0eb;color:#2d6a4f;font-size:12px;border-radius:100px;">${_esc(i)}</span>`).join('')}</div></div>`;
+        }).join('');
+        html += _section('技能', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${skillsHtml}</div>`);
+    }
+
+    const proSkills = ability.professional_skills || {};
+    const pl = (proSkills.programming_languages || []).map(x => (x && x.skill) || x).filter(Boolean);
+    const ft = (proSkills.frameworks_tools || []).map(x => (x && x.skill) || x).filter(Boolean);
+    const dk = (proSkills.domain_knowledge || []).map(x => (x && x.skill) || x).filter(Boolean);
+    if (pl.length || ft.length || dk.length) {
+        let proHtml = '';
+        if (pl.length) proHtml += `<div style="margin-bottom:6px;"><span style="font-size:12px;color:#a0a098;">编程语言</span> ${pl.map(s => `<span style="padding:2px 8px;background:#e0f2fe;color:#0369a1;font-size:12px;border-radius:4px;">${_esc(s)}</span>`).join(' ')}</div>`;
+        if (ft.length) proHtml += `<div style="margin-bottom:6px;"><span style="font-size:12px;color:#a0a098;">框架/工具</span> ${ft.map(s => `<span style="padding:2px 8px;background:#fef3e2;color:#b56a00;font-size:12px;border-radius:4px;">${_esc(s)}</span>`).join(' ')}</div>`;
+        if (dk.length) proHtml += `<div><span style="font-size:12px;color:#a0a098;">领域知识</span> ${dk.map(s => `<span style="padding:2px 8px;background:#e8f0eb;color:#2d6a4f;font-size:12px;border-radius:4px;">${_esc(s)}</span>`).join(' ')}</div>`;
+        html += _section('专业技能（能力画像）', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${proHtml}</div>`);
+    }
+
+    const certs = profile.certificates || [];
+    if (certs.length) {
+        const certHtml = certs.map(c => `<div style="padding:6px 0;border-bottom:1px solid #e2dfd7;font-size:13px;">${_esc(c.name || c)}${c.issue_date ? ' · ' + _esc(c.issue_date) : ''}</div>`).join('');
+        html += _section('证书', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${certHtml}</div>`);
+    }
+
+    const internships = profile.internships || [];
+    if (internships.length) {
+        const internHtml = internships.map(i => `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e2dfd7;"><div style="font-size:13px;font-weight:600;color:#0f0f0d;">${_esc(i.company)} · ${_esc(i.position)}</div><div style="font-size:11px;color:#a0a098;">${_esc(i.start_date || '')} - ${_esc(i.end_date || '')}</div><div style="font-size:12px;color:#6b6860;margin-top:4px;line-height:1.5;">${_esc(i.description || '')}</div></div>`).join('');
+        html += _section('实习经历', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${internHtml}</div>`);
+    }
+
+    const projects = profile.projects || [];
+    if (projects.length) {
+        const projHtml = projects.map(p => `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e2dfd7;"><div style="font-size:13px;font-weight:600;color:#0f0f0d;">${_esc(p.name)}</div><div style="font-size:11px;color:#a0a098;">${_esc(p.start_date || '')} - ${_esc(p.end_date || '')}</div><div style="font-size:12px;color:#6b6860;margin-top:4px;line-height:1.5;">${_esc(p.description || '')}</div>${(p.tech_stack && p.tech_stack.length) ? '<div style="margin-top:6px;">' + (p.tech_stack.map(t => `<span style="padding:2px 8px;background:#f5f3ee;font-size:11px;border-radius:4px;margin-right:4px;">${_esc(t)}</span>`).join('')) + '</div>' : ''}</div>`).join('');
+        html += _section('项目经历', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${projHtml}</div>`);
+    }
+
+    const awards = profile.awards || [];
+    if (awards.length) {
+        const awardHtml = awards.map(a => `<div style="padding:4px 0;font-size:13px;">${_esc(a.name)}${a.level ? ' · ' + _esc(a.level) : ''}${a.date ? ' · ' + _esc(a.date) : ''}</div>`).join('');
+        html += _section('获奖', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${awardHtml}</div>`);
+    }
+
+    const overall = ability.overall_assessment || {};
+    const strengths = overall.strengths || [];
+    const weaknesses = overall.weaknesses || [];
+    if (strengths.length || weaknesses.length || overall.competitiveness || overall.total_score != null) {
+        let oa = '';
+        if (overall.total_score != null) oa += `<div style="margin-bottom:6px;"><span style="color:#a0a098;">综合得分</span> <strong>${_esc(overall.total_score)}</strong></div>`;
+        if (overall.competitiveness) oa += `<div style="margin-bottom:6px;"><span style="color:#a0a098;">竞争力</span> ${_esc(overall.competitiveness)}</div>`;
+        if (strengths.length) oa += `<div style="margin-bottom:6px;"><span style="color:#a0a098;">优势</span> ${strengths.map(s => `<span style="padding:2px 8px;background:#e8f0eb;color:#2d6a4f;font-size:12px;border-radius:4px;margin-right:4px;">${_esc(s)}</span>`).join('')}</div>`;
+        if (weaknesses.length) oa += `<div><span style="color:#a0a098;">待提升</span> ${weaknesses.map(w => `<span style="padding:2px 8px;background:#fee2e2;color:#b91c1c;font-size:12px;border-radius:4px;margin-right:4px;">${_esc(w)}</span>`).join('')}</div>`;
+        html += _section('能力画像总评', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;">${oa}</div>`);
+    }
+
+    const inno = ability.innovation_ability;
+    const learn = ability.learning_ability;
+    const pressure = ability.pressure_resistance;
+    const comm = ability.communication_ability;
+    if (inno || learn || pressure || comm) {
+        let dims = [];
+        if (inno && inno.level) dims.push(`创新/竞赛：${_esc(inno.level)}`);
+        if (learn && learn.level) dims.push(`学习能力：${_esc(learn.level)}`);
+        if (pressure && pressure.level) dims.push(`抗压：${_esc(pressure.level)}`);
+        if (comm && comm.level) dims.push(`沟通：${_esc(comm.level)}`);
+        if (dims.length) html += _section('能力维度', `<div style="background:#faf9f6;border:1px solid #e2dfd7;border-radius:8px;padding:12px 14px;font-size:13px;color:#0f0f0d;">${dims.join(' · ')}</div>`);
+    }
+
+    html += `</div>
+    <div style="border-top:1px solid #e2dfd7;padding:14px 26px;display:flex;justify-content:flex-end;gap:10px;">
+        <button onclick="document.getElementById('studentModal').classList.add('hidden')"
+            style="padding:8px 20px;border:1px solid #e2dfd7;background:#fff;border-radius:7px;font-size:13px;font-weight:600;color:#0f0f0d;cursor:pointer;">关闭</button>
+        <button onclick="document.getElementById('studentModal').classList.add('hidden');openInviteModal('${_esc(anonymousId).replace(/'/g, "\\'")}')"
+            style="padding:8px 20px;border:none;background:#2d6a4f;border-radius:7px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;">发起评估邀请</button>
+    </div>`;
+    return html;
 }
 
-function viewStudent(studentId) {
-    if (selectedStudentId !== studentId) {
-        selectStudent(studentId);
+async function openStudentModal(studentId) {
+    const contentEl = document.getElementById('studentModalContent');
+    contentEl.innerHTML = '<div style="padding:48px;text-align:center;color:#a0a098;">加载中...</div>';
+    document.getElementById('studentModal').classList.remove('hidden');
+
+    try {
+        const params = new URLSearchParams({ anonymous_id: studentId });
+        const response = await fetch(`${API_BASE_URL}/hr/students/detail?${params}`, {
+            headers: { 'Authorization': `Bearer ${currentHrData.token}` }
+        });
+        const result = await response.json();
+        if (result.code !== 200 || !result.data) {
+            contentEl.innerHTML = '<div style="padding:48px;text-align:center;color:#b91c1c;">加载档案失败：' + (result.msg || '未知错误') + '</div>';
+            return;
+        }
+        contentEl.innerHTML = _renderFullStudentDetail(result.data);
+    } catch (err) {
+        console.error('加载学生详情错误:', err);
+        contentEl.innerHTML = '<div style="padding:48px;text-align:center;color:#b91c1c;">网络错误，请稍后重试</div>';
+    }
+}
+
+function closeStudentModal(e) {
+    if (e.target === document.getElementById('studentModal')) {
+        document.getElementById('studentModal').classList.add('hidden');
     }
 }
 
@@ -362,217 +501,188 @@ async function handleHrLogin(e) {
 
 async function handleInviteSubmit(e) {
     e.preventDefault();
-    showLoading();
-
-    const data = {
-        hr_id: currentHrData.hr_id,
-        anonymous_student_id: document.getElementById('inviteStudentId').value,
-        target_job: document.getElementById('inviteTargetJob').value,
-        message: document.getElementById('inviteMessage').value
-    };
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/hr/evaluation/invite`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentHrData.token}`
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-        if (result.code === 200) {
-            alert('邀请已发送！');
-            closeInviteModal();
-            document.getElementById('pendingInvitations').textContent = 
-                parseInt(document.getElementById('pendingInvitations').textContent) + 1;
-        } else {
-            alert(result.msg || '发送邀请失败');
-        }
-    } catch (error) {
-        console.error('发送邀请错误:', error);
-        alert('网络错误，请稍后重试');
-    } finally {
-        hideLoading();
-    }
+    // Mock: 直接模拟成功
+    alert('邀请已发送！');
+    closeInviteModal();
+    loadInvitations();
 }
 
 async function loadInvitations() {
-    showLoading();
-    try {
-        const params = new URLSearchParams({
-            hr_id: currentHrData.hr_id
-        });
-
-        const statusFilter = document.getElementById('invitationStatusFilter')?.value;
-        if (statusFilter) {
-            params.append('status', statusFilter);
+    const mockData = [
+        {
+            invitation_id: 'INV-2025-001',
+            anonymous_student_id: 'student_anon_001',
+            target_job: 'AI产品经理',
+            message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。',
+            status: 'accepted',
+            sent_at: '2025-03-08 14:23'
+        },
+        {
+            invitation_id: 'INV-2025-002',
+            anonymous_student_id: 'student_anon_003',
+            target_job: '算法工程师',
+            message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。',
+            status: 'pending',
+            sent_at: '2025-03-09 10:05'
+        },
+        {
+            invitation_id: 'INV-2025-003',
+            anonymous_student_id: 'student_anon_007',
+            target_job: '后端开发工程师',
+            message: '您好，看到您有Spring Boot和分布式系统经验，与我们岗位高度匹配，希望进一步了解。',
+            status: 'pending',
+            sent_at: '2025-03-10 09:30'
         }
-
-        const response = await fetch(`${API_BASE_URL}/hr/evaluation/invitations?${params}`, {
-            headers: {
-                'Authorization': `Bearer ${currentHrData.token}`
-            }
-        });
-
-        const result = await response.json();
-        if (result.code === 200) {
-            renderInvitations(result.data.list);
-            document.getElementById('pendingInvitations').textContent = 
-                result.data.list.filter(inv => inv.status === 'pending').length;
-        } else {
-            alert('加载邀请列表失败: ' + (result.msg || '未知错误'));
-        }
-    } catch (error) {
-        console.error('加载邀请列表错误:', error);
-        alert('网络错误，请稍后重试');
-    } finally {
-        hideLoading();
-    }
+    ];
+    renderInvitations(mockData);
+    const pendingEl = document.getElementById('pendingInvitations');
+    if (pendingEl) pendingEl.textContent = mockData.filter(inv => inv.status === 'pending').length;
 }
 
 function renderInvitations(invitations) {
-    const container = document.getElementById('invitationList');
+    const tbody = document.getElementById('invitationList');
+    const stats = document.getElementById('invitationStats');
+    const total = document.getElementById('invitationTotal');
+    const count = invitations ? invitations.length : 0;
+    if (stats) stats.textContent = `共 ${count} 条邀请`;
+    if (total) total.textContent = `共 ${count} 条记录`;
+
     if (!invitations || invitations.length === 0) {
-        container.innerHTML = '<div style="background: white; padding: 48px; border-radius: 8px; text-align: center; color: #a0a098;">暂无邀请数据</div>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;color:#a0a098;font-size:14px;">暂无邀请数据</td></tr>`;
         return;
     }
 
-    const statusLabels = {
-        'pending': { text: '待确认', color: '#f59e0b' },
-        'accepted': { text: '已接受', color: '#5e8c65' },
-        'declined': { text: '已拒绝', color: '#dc2626' }
+    const statusMap = {
+        'pending':  { text: '待确认', bg: '#fef3e2', color: '#b56a00' },
+        'accepted': { text: '已接受', bg: '#e8f0eb', color: '#2d6a4f' },
+        'declined': { text: '已拒绝', bg: '#fee2e2', color: '#b91c1c' }
     };
 
-    container.innerHTML = invitations.map(invitation => {
-        const statusInfo = statusLabels[invitation.status] || { text: invitation.status, color: '#666' };
+    tbody.innerHTML = invitations.map(inv => {
+        const s = statusMap[inv.status] || { text: inv.status, bg: '#f0f0f0', color: '#666' };
+        const canEval = inv.status === 'accepted';
+        const msgPreview = (inv.message || '').slice(0, 40) + ((inv.message || '').length > 40 ? '...' : '');
         return `
-        <div class="hr-student-card">
-            <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h4 style="margin: 0; color: #1c1c18; font-size: 16px;">邀请 #${invitation.invitation_id}</h4>
-                    <span style="background: ${statusInfo.color}20; color: ${statusInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                        ${statusInfo.text}
-                    </span>
+        <tr style="border-bottom:1px solid #e2dfd7;transition:background 0.1s;"
+            onmouseover="this.style.background='#faf9f6'"
+            onmouseout="this.style.background=''">
+            <td style="padding:12px 14px 12px 16px;">
+                <div style="font-size:13px;font-weight:600;color:#0f0f0d;">${inv.anonymous_student_id || '-'}</div>
+                <div style="font-size:11px;color:#a0a098;margin-top:2px;">${inv.invitation_id}</div>
+            </td>
+            <td style="padding:12px 14px;font-size:13px;color:#6b6860;">${inv.target_job || '-'}</td>
+            <td style="padding:12px 14px;font-size:12px;color:#a0a098;white-space:nowrap;">${inv.sent_at || '-'}</td>
+            <td style="padding:12px 14px;font-size:12px;color:#a0a098;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${msgPreview || '-'}</td>
+            <td style="padding:12px 14px;">
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};">
+                    <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0;"></span>
+                    ${s.text}
+                </span>
+            </td>
+            <td style="padding:12px 16px 12px 14px;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                    ${canEval ? `<button style="height:28px;padding:0 11px;font-size:12px;font-weight:600;border-radius:5px;border:none;background:#2d6a4f;color:#fff;cursor:pointer;"
+                        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'"
+                        onclick="openEvaluationModal('${inv.invitation_id}')">填写评估</button>` : ''}
                 </div>
-                <p style="margin: 4px 0; color: #666; font-size: 14px;">
-                    <strong>目标岗位:</strong> ${invitation.target_job}
-                </p>
-                <p style="margin: 4px 0; color: #666; font-size: 14px;">
-                    <strong>学生ID:</strong> ${invitation.anonymous_student_id}
-                </p>
-                <p style="margin: 8px 0 0 0; color: #888; font-size: 13px;">
-                    ${invitation.message}
-                </p>
-                <p style="margin: 8px 0 0 0; color: #a0a098; font-size: 12px;">
-                    发送时间: ${invitation.sent_at}
-                </p>
-            </div>
-        </div>
-    `}).join('');
+            </td>
+        </tr>`;
+    }).join('');
 }
 
 async function loadEvaluations() {
-    showLoading();
-    try {
-        const params = new URLSearchParams({
-            hr_id: currentHrData.hr_id
-        });
-
-        const statusFilter = document.getElementById('evaluationStatusFilter')?.value;
-        if (statusFilter) {
-            params.append('status', statusFilter);
+    const mockData = [
+        {
+            evaluation_id: 'EVAL-2025-001',
+            anonymous_student_id: 'student_anon_001',
+            target_job: 'AI产品经理',
+            overall_impression: 'excellent',
+            hiring_intent: 'strong',
+            status: 'completed',
+            submitted_at: '2025-03-09 16:40'
+        },
+        {
+            evaluation_id: 'EVAL-2025-002',
+            anonymous_student_id: 'student_anon_003',
+            target_job: '算法工程师',
+            overall_impression: 'good',
+            hiring_intent: 'moderate',
+            status: 'in_progress',
+            created_at: '2025-03-10 10:05'
         }
-
-        const response = await fetch(`${API_BASE_URL}/hr/evaluation/evaluations?${params}`, {
-            headers: {
-                'Authorization': `Bearer ${currentHrData.token}`
-            }
-        });
-
-        const result = await response.json();
-        if (result.code === 200) {
-            renderEvaluations(result.data.list);
-            document.getElementById('completedEvaluations').textContent = 
-                result.data.list.filter(eval => eval.status === 'completed').length;
-        } else {
-            alert('加载评估列表失败: ' + (result.msg || '未知错误'));
-        }
-    } catch (error) {
-        console.error('加载评估列表错误:', error);
-        alert('网络错误，请稍后重试');
-    } finally {
-        hideLoading();
-    }
+    ];
+    renderEvaluations(mockData);
+    const completedEl = document.getElementById('completedEvaluations');
+    if (completedEl) completedEl.textContent = mockData.filter(e => e.status === 'completed').length;
 }
 
 function renderEvaluations(evaluations) {
-    const container = document.getElementById('evaluationList');
+    const tbody = document.getElementById('evaluationList');
+    const stats = document.getElementById('evaluationStats');
+    const total = document.getElementById('evaluationTotal');
+    const count = evaluations ? evaluations.length : 0;
+    const completed = evaluations ? evaluations.filter(e => e.status === 'completed').length : 0;
+    if (stats) stats.textContent = `共 ${count} 条评估`;
+    if (total) total.textContent = `共 ${count} 条 · 已完成 ${completed} 条 · 进行中 ${count - completed} 条`;
+
     if (!evaluations || evaluations.length === 0) {
-        container.innerHTML = '<div style="background: white; padding: 48px; border-radius: 8px; text-align: center; color: #a0a098;">暂无评估数据</div>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;color:#a0a098;font-size:14px;">暂无评估数据</td></tr>`;
         return;
     }
 
-    const statusLabels = {
-        'in_progress': { text: '进行中', color: '#3b82f6' },
-        'completed': { text: '已完成', color: '#5e8c65' }
+    const statusMap = {
+        'in_progress': { text: '进行中', bg: '#e0f2fe', color: '#0369a1' },
+        'completed':   { text: '已完成', bg: '#e8f0eb', color: '#2d6a4f' }
+    };
+    const impressionMap = {
+        'excellent': { text: '优秀', color: '#2d6a4f' },
+        'good':      { text: '良好', color: '#2d6a4f' },
+        'average':   { text: '一般', color: '#7a6f3e' },
+        'below_average': { text: '有待提升', color: '#b91c1c' }
+    };
+    const intentMap = {
+        'strong':   { text: '强烈推荐', color: '#2d6a4f' },
+        'moderate': { text: '有意向',   color: '#2d6a4f' },
+        'weak':     { text: '可考虑',   color: '#7a6f3e' },
+        'no':       { text: '暂不考虑', color: '#b91c1c' }
     };
 
-    const hiringIntentLabels = {
-        'strong': '强烈意向',
-        'moderate': '有一定意向',
-        'weak': '意向较弱',
-        'no': '暂无意向'
-    };
-
-    const overallImpressionLabels = {
-        'excellent': '优秀',
-        'good': '良好',
-        'average': '一般',
-        'below_average': '有待提升'
-    };
-
-    container.innerHTML = evaluations.map(evaluation => {
-        const statusInfo = statusLabels[evaluation.status] || { text: evaluation.status, color: '#666' };
+    tbody.innerHTML = evaluations.map(ev => {
+        const s = statusMap[ev.status] || { text: ev.status, bg: '#f0f0f0', color: '#666' };
+        const imp = impressionMap[ev.overall_impression] || { text: '-', color: '#a0a098' };
+        const intent = intentMap[ev.hiring_intent] || { text: '-', color: '#a0a098' };
+        const isCompleted = ev.status === 'completed';
         return `
-        <div class="hr-student-card">
-            <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h4 style="margin: 0; color: #1c1c18; font-size: 16px;">评估 #${evaluation.evaluation_id}</h4>
-                    <span style="background: ${statusInfo.color}20; color: ${statusInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                        ${statusInfo.text}
-                    </span>
+        <tr style="border-bottom:1px solid #e2dfd7;transition:background 0.1s;"
+            onmouseover="this.style.background='#faf9f6'"
+            onmouseout="this.style.background=''">
+            <td style="padding:12px 14px 12px 16px;">
+                <div style="font-size:13px;font-weight:600;color:#0f0f0d;">${ev.anonymous_student_id || '-'}</div>
+                <div style="font-size:11px;color:#a0a098;margin-top:2px;">${ev.evaluation_id} · ${ev.submitted_at || ev.created_at || ''}</div>
+            </td>
+            <td style="padding:12px 14px;font-size:13px;color:#6b6860;">${ev.target_job || '-'}</td>
+            <td style="padding:12px 14px;font-size:13px;font-weight:600;color:${imp.color};">${isCompleted ? imp.text : '—'}</td>
+            <td style="padding:12px 14px;font-size:13px;font-weight:600;color:${intent.color};">${isCompleted ? intent.text : '—'}</td>
+            <td style="padding:12px 14px;">
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};">
+                    <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0;"></span>
+                    ${s.text}
+                </span>
+            </td>
+            <td style="padding:12px 16px 12px 14px;">
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                    ${!isCompleted ? `
+                    <button style="height:28px;padding:0 11px;font-size:12px;font-weight:600;border-radius:5px;border:none;background:#2d6a4f;color:#fff;cursor:pointer;"
+                        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'"
+                        onclick="openEvaluationModal('${ev.evaluation_id}')">填写评估</button>` : `
+                    <button style="height:28px;padding:0 11px;font-size:12px;font-weight:600;border-radius:5px;border:1px solid #e2dfd7;background:#fff;color:#0f0f0d;cursor:pointer;"
+                        onmouseover="this.style.borderColor='#2d6a4f';this.style.color='#2d6a4f'"
+                        onmouseout="this.style.borderColor='#e2dfd7';this.style.color='#0f0f0d'"
+                        onclick="openEvaluationModal('${ev.evaluation_id}')">查看报告</button>`}
                 </div>
-                <p style="margin: 4px 0; color: #666; font-size: 14px;">
-                    <strong>目标岗位:</strong> ${evaluation.target_job}
-                </p>
-                <p style="margin: 4px 0; color: #666; font-size: 14px;">
-                    <strong>学生ID:</strong> ${evaluation.anonymous_student_id}
-                </p>
-                ${evaluation.status === 'completed' ? `
-                <p style="margin: 4px 0; color: #666; font-size: 14px;">
-                    <strong>整体印象:</strong> ${overallImpressionLabels[evaluation.overall_impression] || evaluation.overall_impression}
-                </p>
-                <p style="margin: 4px 0; color: #666; font-size: 14px;">
-                    <strong>聘用意向:</strong> ${hiringIntentLabels[evaluation.hiring_intent] || evaluation.hiring_intent}
-                </p>
-                <p style="margin: 8px 0 0 0; color: #a0a098; font-size: 12px;">
-                    提交时间: ${evaluation.submitted_at}
-                </p>
-                ` : `
-                <p style="margin: 8px 0 0 0; color: #a0a098; font-size: 12px;">
-                    创建时间: ${evaluation.created_at}
-                </p>
-                `}
-            </div>
-            ${evaluation.status === 'in_progress' ? `
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-left: 16px;">
-                <button class="hr-invite-btn" onclick="openEvaluationModal('${evaluation.evaluation_id}')">填写评估</button>
-            </div>
-            ` : ''}
-        </div>
-    `}).join('');
+            </td>
+        </tr>`;
+    }).join('');
 }
 
 function openEvaluationModal(evaluationId) {

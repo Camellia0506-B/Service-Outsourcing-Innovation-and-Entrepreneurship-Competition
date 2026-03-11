@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import www.gradquest.com.common.ApiResponse;
 import www.gradquest.com.dto.HrLoginResponse;
 import www.gradquest.com.dto.HrRegisterResponse;
+import www.gradquest.com.dto.hr.BrowseStudentsResult;
 import www.gradquest.com.service.HrService;
 
 import java.util.ArrayList;
@@ -94,77 +95,15 @@ public class HrController {
     }
 
     @GetMapping("/students/browse")
-    public ApiResponse<BrowseStudentsResponse> browseStudents(
+    public ApiResponse<BrowseStudentsResult> browseStudents(
             @RequestParam("hr_id") Long hrId,
             @RequestParam(value = "target_job", required = false) String targetJob,
-            @RequestParam(value = "min_match_score", required = false, defaultValue = "0") Integer minMatchScore,
+            @RequestParam(value = "min_match_score", required = false) Integer minMatchScore,
             @RequestParam(value = "education_level", required = false) String educationLevel,
-            @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "size", defaultValue = "10") Integer size) {
-        
-        List<BrowseStudentsResponse.StudentItem> students = new ArrayList<>();
-        
-        students.add(BrowseStudentsResponse.StudentItem.builder()
-                .anonymousId("student_anon_001")
-                .educationLevel("本科")
-                .majorCategory("计算机科学与技术")
-                .gpaLevel("优秀（3.7+）")
-                .systemMatchScore(88)
-                .abilityTags(List.of("Python", "机器学习", "数据分析", "项目管理"))
-                .highlight("主导开发AI辅助系统，具备独立项目落地经验")
-                .isOpenToContact(true)
-                .build());
-        
-        students.add(BrowseStudentsResponse.StudentItem.builder()
-                .anonymousId("student_anon_002")
-                .educationLevel("硕士")
-                .majorCategory("软件工程")
-                .gpaLevel("良好（3.3-3.7）")
-                .systemMatchScore(92)
-                .abilityTags(List.of("Java", "Spring Boot", "微服务", "Docker"))
-                .highlight("在大型互联网公司有实习经验，参与过百万级用户产品开发")
-                .isOpenToContact(true)
-                .build());
-        
-        students.add(BrowseStudentsResponse.StudentItem.builder()
-                .anonymousId("student_anon_003")
-                .educationLevel("本科")
-                .majorCategory("人工智能")
-                .gpaLevel("优秀（3.8+）")
-                .systemMatchScore(85)
-                .abilityTags(List.of("深度学习", "PyTorch", "计算机视觉", "NLP"))
-                .highlight("发表过会议论文，有算法竞赛获奖经历")
-                .isOpenToContact(true)
-                .build());
-        
-        students.add(BrowseStudentsResponse.StudentItem.builder()
-                .anonymousId("student_anon_004")
-                .educationLevel("博士")
-                .majorCategory("数据科学")
-                .gpaLevel("优秀（3.9+）")
-                .systemMatchScore(95)
-                .abilityTags(List.of("R", "Python", "统计分析", "数据可视化"))
-                .highlight("有丰富的数据分析项目经验，擅长从数据中发现商业价值")
-                .isOpenToContact(true)
-                .build());
-        
-        students.add(BrowseStudentsResponse.StudentItem.builder()
-                .anonymousId("student_anon_005")
-                .educationLevel("本科")
-                .majorCategory("电子信息工程")
-                .gpaLevel("良好（3.2-3.6）")
-                .systemMatchScore(78)
-                .abilityTags(List.of("C++", "嵌入式", "单片机", "电路设计"))
-                .highlight("参加过电子设计竞赛，有硬件开发经验")
-                .isOpenToContact(true)
-                .build());
-        
-        BrowseStudentsResponse response = BrowseStudentsResponse.builder()
-                .total(students.size())
-                .list(students)
-                .build();
-        
-        return ApiResponse.success("success", response);
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        BrowseStudentsResult result = hrService.browseStudents(hrId, targetJob, minMatchScore, educationLevel, page, size);
+        return ApiResponse.success("success", result);
     }
 
     @GetMapping("/evaluation/invitations")
@@ -339,37 +278,6 @@ public class HrController {
         private String password;
     }
     
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class BrowseStudentsResponse {
-        private Integer total;
-        private List<StudentItem> list;
-        
-        @Data
-        @Builder
-        @NoArgsConstructor
-        @AllArgsConstructor
-        private static class StudentItem {
-            @JsonProperty("anonymous_id")
-            private String anonymousId;
-            @JsonProperty("education_level")
-            private String educationLevel;
-            @JsonProperty("major_category")
-            private String majorCategory;
-            @JsonProperty("gpa_level")
-            private String gpaLevel;
-            @JsonProperty("system_match_score")
-            private Integer systemMatchScore;
-            @JsonProperty("ability_tags")
-            private List<String> abilityTags;
-            private String highlight;
-            @JsonProperty("is_open_to_contact")
-            private Boolean isOpenToContact;
-        }
-    }
-
     @Data
     @Builder
     @NoArgsConstructor

@@ -243,10 +243,31 @@ def generate_resume():
 
 
 # ========== 2.2 提交简历给HR ==========
+def _build_resume_from_profile_for_submit(user_id):
+    """
+    当用户未生成过简历时，根据个人档案与能力画像组装一份简历并返回，
+    供提交给HR时保存，与 HR 端学生信息同步。
+    """
+    from api import hr_router
+    profile_store = hr_router._load_profile_store()
+    ability_store = hr_router._load_ability_profiles_store()
+    uid = int(user_id) if user_id is not None else 0
+    profile = profile_store.get(str(uid))
+    ability_profile = ability_store.get(f"profile_{uid}")
+    entry = hr_router._build_resume_entry_from_student_sources(uid, profile, ability_profile)
+    resume_data = {
+        **entry,
+        "generated_at": datetime.now().isoformat(),
+        "submitted_to_hr": True,
+        "submitted_at": datetime.now().isoformat(),
+    }
+    return resume_data
+
+
 @resume_bp.route("/submit", methods=["POST"])
 def submit_resume():
     """
-    提交简历给HR管理模块
+    提交简历给HR管理模块。若尚未生成简历，则根据个人档案与能力画像自动生成并提交，HR 端学生信息同步可见。
     请求体：{ user_id }
     """
     try:
@@ -256,17 +277,14 @@ def submit_resume():
         if not user_id:
             return error_response(400, "请提供 user_id 参数")
 
-        # 加载已生成的简历
         resume_data = _load_resume(user_id)
         if not resume_data:
-            return error_response(404, "请先生成简历")
-
-        # 标记为已提交
-        resume_data["submitted_to_hr"] = True
-        resume_data["submitted_at"] = datetime.now().isoformat()
-
-        # 保存更新后的简历
-        _save_resume(user_id, resume_data)
+            resume_data = _build_resume_from_profile_for_submit(user_id)
+            _save_resume(user_id, resume_data)
+        else:
+            resume_data["submitted_to_hr"] = True
+            resume_data["submitted_at"] = datetime.now().isoformat()
+            _save_resume(user_id, resume_data)
 
         return success_response({
             "user_id": user_id,

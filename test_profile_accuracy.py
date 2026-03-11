@@ -1,33 +1,25 @@
 """
 test_profile_accuracy.py
-=======================
-比赛指标自动化验证 - 标准B：岗位画像 + 学生画像关键信息准确率 >= 90%
+========================
+赛题标准B（可执行量化验证）：生成的岗位画像与学生画像关键信息准确率超过 90%
 
-你给的口径是：
-- 抽 10 名“匹配成功”的学生
-- 核对 3 项：学历、专业、证书 是否满足岗位要求
-- 3 项全符合才算该学生合格；合格率 >= 90% 通过
+赛题口径：
+  关键信息包含学历、专业、证书。抽取 10 名人岗匹配成功的学生，看这 3 项信息与岗位画像
+  学历、专业、证书是否符合；3 项中有一个不符合的即为不合格。10 个学生中有 9 个完全符合的即为 90%。
 
-本项目现状说明（按代码与表结构落地）：
-- 学生画像数据在 MySQL（users/user_profiles/profile_skills/profile_certificates）
-- 岗位画像与岗位要求在 AI 服务（/job/profile/detail 返回 requirements.basic_requirements 等）
-- “匹配状态=成功”数据库里没有独立 MatchResult 表；因此本脚本以“recommend-jobs 能返回 Top1 岗位”
-  作为“匹配成功”的可运行定义（更贴近系统实际可用性）。
+本脚本实现（与赛题一一对应）：
+1) 从 MySQL 拉取候选用户，逐个调用 /matching/recommend-jobs，收集 10 名“匹配成功”样本
+   （“匹配成功”可执行定义：recommend-jobs 能返回 Top1 岗位）
+2) 对每名样本：从 MySQL 取学生学历(degree)、专业(major)、证书(profile_certificates)
+3) 从 AI /job/profile/detail 取岗位 requirements.basic_requirements：学历、preferred_majors、certifications
+4) 学历/专业/证书三项分别校验；任一项不满足则该生不合格
+5) 合格率 = 合格人数 / 10；合格率 ≥ 90% 视为通过
 
-脚本流程：
-1) 从 MySQL 拉取候选用户（优先有 user_profiles + skills 的用户）
-2) 逐个调用 /matching/recommend-jobs，直到收集到 10 名“匹配成功”样本
-3) 对每个样本：
-   - 从 MySQL 取学生：degree/major + 证书列表
-   - 从 AI 取岗位画像：requirements.basic_requirements.education.level、preferred_majors、certifications
-   - 校验 学历/专业/证书 三项
-4) 输出明细并写入 test_results/profile_accuracy_report.json
-5) 若已存在标准A报告，同时生成/更新 test_results/final_report.md（答辩可展示）
+输出：控制台明细 + test_results/profile_accuracy_report.json；若存在标准A报告则更新 test_results/final_report.md
 
-运行示例：
+运行（需先启动 AI 服务 5002 与 MySQL）：
   python test_profile_accuracy.py
   python test_profile_accuracy.py --sample-size 10
-  python test_profile_accuracy.py --ai-base-url http://127.0.0.1:5002/api/v1
 """
 
 from __future__ import annotations
@@ -468,13 +460,14 @@ def main() -> int:
     print("=== 标准B：画像关键信息准确率 ===")
     print("| user_id | job | 学历 | 专业 | 证书 | 合格 |")
     print("|---:|---|---|---|---|---|")
+    _ck, _x = "Y", "N"  # ASCII so table prints on Windows GBK
     for r in per_student:
         uid = r["user_id"]
         job = r.get("job_name") or r.get("job_id") or ""
-        edu = "✓" if r["education_ok"] else "✗"
-        maj = "✓" if r["major_ok"] else "✗"
-        cert = "✓" if r["cert_ok"] else "✗"
-        ok = "✓" if r["qualified"] else "✗"
+        edu = _ck if r["education_ok"] else _x
+        maj = _ck if r["major_ok"] else _x
+        cert = _ck if r["cert_ok"] else _x
+        ok = _ck if r["qualified"] else _x
         print(f"| {uid} | {job} | {edu} | {maj} | {cert} | {ok} |")
     print(f"合格率：{report['pass_rate']}%")
     print("判定：{}".format("通过" if passed else "不通过"))
