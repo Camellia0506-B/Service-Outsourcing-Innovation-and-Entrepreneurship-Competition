@@ -127,19 +127,19 @@ function buildGraph(dynamicNodes) {
     if (!svg) return;
     let defs = `<defs>
   <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#10b981"/>
+    <path d="M0,0 L7,3 L0,6 Z" fill="#5e8c65"/>
   </marker>
   <marker id="arr-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#f59e0b"/>
+    <path d="M0,0 L7,3 L0,6 Z" fill="#b8862a"/>
   </marker>
   <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#ef4444"/>
+    <path d="M0,0 L7,3 L0,6 Z" fill="#b94040"/>
   </marker>
   <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#7c5cff" opacity="0.6"/>
+    <path d="M0,0 L7,3 L0,6 Z" fill="#6aa571" opacity="0.6"/>
   </marker>
   <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L7,3 L0,6 Z" fill="#4f7cff"/>
+    <path d="M0,0 L7,3 L0,6 Z" fill="#4a7350"/>
   </marker>
 </defs>`;
     let paths = '';
@@ -152,7 +152,7 @@ function buildGraph(dynamicNodes) {
         const p2 = pos[id];
         if (!p1 || !p2) return;
 
-        const color = n.match >= 80 ? '#10b981' : n.match >= 60 ? '#f59e0b' : '#ef4444';
+        const color = n.match >= 80 ? '#5e8c65' : n.match >= 60 ? '#b8862a' : '#b94040';
         const arrId = n.match >= 80 ? 'arr-green' : n.match >= 60 ? 'arr-gold' : 'arr-red';
         const dash = n.match < 60 ? 'stroke-dasharray="7 4"'
             : n.match < 80 ? 'stroke-dasharray="10 3"'
@@ -234,9 +234,9 @@ function buildGraph(dynamicNodes) {
             el.style.cssText = `left:${p.x - CARD.center.w / 2}px;top:${p.y - CARD.center.h / 2}px;animation-delay:0s`;
             el.innerHTML = `<div class="cn"><div class="cn-ico">${n.icon || '🤖'}</div><div class="cn-name">${(n.name || '当前岗位').replace(/</g, '&lt;')}</div><div class="cn-badge">当前岗位</div></div>`;
         } else {
-            const diff_color = n.match >= 80 ? '#059669' : n.match >= 60 ? '#d97706' : '#dc2626';
-            const diff_bg = n.match >= 80 ? 'rgba(16,185,129,0.1)' : n.match >= 60 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.08)';
-            const diff_bd = n.match >= 80 ? 'rgba(16,185,129,0.2)' : n.match >= 60 ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.18)';
+            const diff_color = n.match >= 80 ? '#4a7350' : n.match >= 60 ? '#9c6d1f' : '#943333';
+            const diff_bg = n.match >= 80 ? 'rgba(94,140,101,0.1)' : n.match >= 60 ? 'rgba(184,134,42,0.1)' : 'rgba(185,64,64,0.08)';
+            const diff_bd = n.match >= 80 ? 'rgba(94,140,101,0.2)' : n.match >= 60 ? 'rgba(184,134,42,0.2)' : 'rgba(185,64,64,0.18)';
             el.style.cssText = `left:${p.x - CARD.job.w / 2}px;top:${p.y - CARD.job.h / 2}px;animation-delay:${delay}s;opacity:0`;
             const nameEsc = (n.name || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
             const descEsc = (n.desc || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -251,7 +251,7 @@ function buildGraph(dynamicNodes) {
           <div class="jn-bar-bg"><div class="jn-bar" style="width:${n.match}%;background:${n.color}"></div></div>
           <div class="jn-tags">
             <span class="jn-tag" style="background:${diff_bg};color:${diff_color};border:1px solid ${diff_bd}">难度${n.diff}</span>
-            <span class="jn-tag" style="background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.15)">⏱ ${(n.time || '').replace(/</g, '&lt;')}</span>
+            <span class="jn-tag" style="background:rgba(94,140,101,0.07);color:#4a7350;border:1px solid rgba(94,140,101,0.15)">⏱ ${(n.time || '').replace(/</g, '&lt;')}</span>
           </div>
           <div class="jn-skills"><em>可迁移：</em>${skillsEsc}</div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${descEsc}</div>
@@ -298,7 +298,7 @@ function convertToGraphNodes(centerJobName, transferNodes) {
             else if (i < nGreen + nYellow) match = 80 + (i % 10);
             else match = 65 + (i % 15);
             nodes[key].match = match;
-            nodes[key].color = match >= 80 ? '#10b981' : match >= 60 ? '#f59e0b' : '#ef4444';
+            nodes[key].color = match >= 80 ? '#5e8c65' : match >= 60 ? '#b8862a' : '#b94040';
         });
     }
     (transferNodes || []).forEach((node, index) => {
@@ -315,7 +315,7 @@ function convertToGraphNodes(centerJobName, transferNodes) {
 
 function showGraphError(wrap, msg) {
     const el = document.createElement('div');
-    el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#ff4d6d';
+    el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#b94040';
     el.innerHTML = `<div>${msg}</div><div style="font-size:11px;color:#aab4cc">请检查 AI 服务是否启动，或查看 Console</div>`;
     wrap.appendChild(el);
 }
@@ -8026,7 +8026,7 @@ class CareerPlanningApp {
                 container.innerHTML = '<div style="padding:40px;text-align:center;color:#aab4cc">暂无该岗位的晋升路径数据</div>';
             }
         } catch (e) {
-            container.innerHTML = `<div style="color:#ff4d6d;padding:20px;text-align:center">请求失败: ${(e.message||'').replace(/</g,'&lt;')}</div>`;
+            container.innerHTML = `<div style="color:#b94040;padding:20px;text-align:center">请求失败: ${(e.message||'').replace(/</g,'&lt;')}</div>`;
         }
     }
 
@@ -8037,7 +8037,7 @@ class CareerPlanningApp {
         let html = '<div style="display:flex;flex-direction:column;align-items:center;padding:10px 20px 20px;position:relative">';
         stages.forEach((stage, idx) => {
             if (idx > 0 && !stages[idx - 1].forks) {
-                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#4f7cff,#7c5cff)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #7c5cff"></div></div>`;
+                html += `<div style="display:flex;flex-direction:column;align-items:center;padding:4px 0;height:52px"><div style="width:2px;height:28px;background:linear-gradient(180deg,#5e8c65,#4a7350)"></div><div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #4a7350"></div></div>`;
             }
             if (stage.forks) {
                 html += '<div style="display:flex;gap:14px;width:100%">';
@@ -8055,13 +8055,13 @@ class CareerPlanningApp {
                 const cur = !!stage.is_current;
                 const dotIcon = idx === 0 ? '🌱' : cur ? '🤖' : idx === stages.length - 2 ? '⭐' : '🚀';
                 html += `<div style="display:flex;align-items:center;width:100%;gap:16px">
-                    <div style="width:200px;flex-shrink:0;text-align:right;padding-right:8px"><div style="font-size:11px;font-weight:600;color:#aab4cc">${esc(stage.years)}${cur?' ← 当前':''}</div><div style="font-size:13px;font-weight:700;font-family:monospace;color:${cur?'#7c5cff':'#4f7cff'}">${esc(stage.salary)}</div></div>
-                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:48px"><div style="width:44px;height:44px;border-radius:50%;background:${cur?'linear-gradient(135deg,#4f7cff,#7c5cff)':'#fff'};border:3px solid ${cur?'#fff':'#4f7cff'};display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:${cur?'0 4px 18px rgba(79,124,255,0.4)':'0 2px 12px rgba(79,124,255,0.2)'};position:relative;z-index:2">${dotIcon}</div></div>
-                    <div style="flex:1;background:${cur?'linear-gradient(135deg,rgba(79,124,255,0.06),rgba(124,92,255,0.04))':'#fff'};border:1.5px solid ${cur?'rgba(79,124,255,0.3)':idx===0?'rgba(0,184,148,0.2)':'rgba(79,124,255,0.12)'};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden">
-                        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:14px 0 0 14px;background:${cur?'linear-gradient(180deg,#4f7cff,#7c5cff)':idx===0?'#00b894':'#f5a623'}"></div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:14px;font-weight:700;color:#1a2340">${esc(stage.title)}</span><span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:${cur?'rgba(79,124,255,0.1)':idx===0?'rgba(0,184,148,0.1)':'rgba(245,166,35,0.1)'};color:${cur?'#3d65e0':idx===0?'#009e7a':'#c47d00'};border:1px solid ${cur?'rgba(79,124,255,0.2)':idx===0?'rgba(0,184,148,0.2)':'rgba(245,166,35,0.2)'}">${esc(stage.badge)}</span></div>
+                    <div style="width:200px;flex-shrink:0;text-align:right;padding-right:8px"><div style="font-size:11px;font-weight:600;color:#aab4cc">${esc(stage.years)}${cur?' ← 当前':''}</div><div style="font-size:13px;font-weight:700;font-family:monospace;color:${cur?'#5e8c65':'#5e8c65'}">${esc(stage.salary)}</div></div>
+                    <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:48px"><div style="width:44px;height:44px;border-radius:50%;background:${cur?'linear-gradient(135deg,#5e8c65,#4a7350)':'#fff'};border:3px solid ${cur?'#fff':'#5e8c65'};display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:${cur?'0 4px 18px rgba(94,140,101,0.4)':'0 2px 12px rgba(94,140,101,0.2)'};position:relative;z-index:2">${dotIcon}</div></div>
+                    <div style="flex:1;background:${cur?'linear-gradient(135deg,rgba(94,140,101,0.06),rgba(74,115,80,0.04))':'#fff'};border:1.5px solid ${cur?'rgba(94,140,101,0.3)':idx===0?'rgba(94,140,101,0.2)':'rgba(94,140,101,0.12)'};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden">
+                        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:14px 0 0 14px;background:${cur?'linear-gradient(180deg,#5e8c65,#4a7350)':idx===0?'#5e8c65':'#b8862a'}"></div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:14px;font-weight:700;color:#1a2340">${esc(stage.title)}</span><span style="margin-left:auto;font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:${cur?'rgba(94,140,101,0.1)':idx===0?'rgba(94,140,101,0.1)':'rgba(184,134,42,0.1)'};color:${cur?'#5e8c65':idx===0?'#5e8c65':'#b8862a'};border:1px solid ${cur?'rgba(94,140,101,0.2)':idx===0?'rgba(94,140,101,0.2)':'rgba(184,134,42,0.2)'}">${esc(stage.badge)}</span></div>
                         <div style="font-size:12px;color:#5a6a8a;line-height:1.6;margin-bottom:10px">${esc(stage.description)}</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${(stage.skills||[]).map(s=>`<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(79,124,255,0.07);color:#3d65e0;border:1px solid rgba(79,124,255,0.14)">${esc(s)}</span>`).join('')}</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${(stage.skills||[]).map(s=>`<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(94,140,101,0.07);color:#5e8c65;border:1px solid rgba(94,140,101,0.14)">${esc(s)}</span>`).join('')}</div>
                         <div style="font-size:11px;color:#aab4cc">${esc(stage.companies)}</div></div></div>`;
             }
         });
@@ -8114,10 +8114,10 @@ class CareerPlanningApp {
         svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
         svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         const defs = '<defs>' +
-            '<marker id="arrow-green" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#10b981" stroke="#10b981"/></marker>' +
-            '<marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#f59e0b" stroke="#f59e0b"/></marker>' +
-            '<marker id="arrow-red" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#ef4444" stroke="#ef4444"/></marker>' +
-            '<marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#7c5cff" stroke="#7c5cff" opacity="0.7"/></marker>' +
+            '<marker id="arrow-green" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#5e8c65" stroke="#5e8c65"/></marker>' +
+            '<marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#b8862a" stroke="#b8862a"/></marker>' +
+            '<marker id="arrow-red" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 Z" fill="#b94040" stroke="#b94040"/></marker>' +
+            '<marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L8,4 L0,8 Z" fill="#4a7350" stroke="#4a7350" opacity="0.7"/></marker>' +
             '</defs>';
         let pathsHtml = '';
         const pathLabels = [];
@@ -8126,7 +8126,7 @@ class CareerPlanningApp {
             const job = (rel.job || '').trim();
             const match = Number(rel.match) || 0;
             const diffText = match >= 80 ? '高' : match >= 60 ? '中' : '低';
-            const color = match >= 80 ? '#10b981' : match >= 60 ? '#f59e0b' : '#ef4444';
+            const color = match >= 80 ? '#5e8c65' : match >= 60 ? '#b8862a' : '#b94040';
             const arrId = match >= 80 ? 'arrow-green' : match >= 60 ? 'arrow-orange' : 'arrow-red';
             const dash = match >= 80 ? '' : (match >= 60 ? 'stroke-dasharray="10 6"' : 'stroke-dasharray="7 5"');
             const dashClass = dash ? ' graph-path-dash' : '';
@@ -8461,7 +8461,7 @@ class CareerPlanningApp {
                     { label: '薪资涨幅', value: salaryIncrease || '—' },
                     { label: '团队角色', value: role }
                 ];
-            const infoHtml = infoItems.map(it => `<div class="info-item"><div class="info-item-label">${esc(it.label)}</div><div class="info-item-value"${it.label === '薪资涨幅' && it.value !== '—' ? ' style="color:#10b981"' : ''}>${esc(it.value)}</div></div>`).join('');
+            const infoHtml = infoItems.map(it => `<div class="info-item"><div class="info-item-label">${esc(it.label)}</div><div class="info-item-value"${it.label === '薪资涨幅' && it.value !== '—' ? ' style="color:#5e8c65"' : ''}>${esc(it.value)}</div></div>`).join('');
             const reqHtml = requirements.length
                 ? `<div class="requirements"><div class="requirements-title"><span>📋</span> 核心要求</div><div class="requirements-list">${requirements.map(r => `<div class="requirement-item">${esc(r)}</div>`).join('')}</div></div>`
                 : '';
@@ -8524,9 +8524,9 @@ class CareerPlanningApp {
     // 转岗节点匹配度样式（与图例一致：高=绿、中=黄、低=红）
     _getTransferMatchStyle(score) {
         const s = Number(score);
-        if (s >= 80) return { border: '#10b981', barColor: '#10b981', badgeBg: '#d1fae5', badgeColor: '#065f46', label: '高', iconBg: 'linear-gradient(135deg,#10b981,#059669)' };
-        if (s >= 60) return { border: '#f59e0b', barColor: '#f59e0b', badgeBg: '#fef3c7', badgeColor: '#92400e', label: '中', iconBg: 'linear-gradient(135deg,#f59e0b,#d97706)' };
-        return { border: '#ef4444', barColor: '#ef4444', badgeBg: '#fee2e2', badgeColor: '#991b1b', label: '低', iconBg: 'linear-gradient(135deg,#ef4444,#dc2626)' };
+        if (s >= 80) return { border: '#5e8c65', barColor: '#5e8c65', badgeBg: '#eef4ee', badgeColor: '#3a5a3f', label: '高', iconBg: 'linear-gradient(135deg,#5e8c65,#4a7350)' };
+        if (s >= 60) return { border: '#b8862a', barColor: '#b8862a', badgeBg: '#fdf5e4', badgeColor: '#7a5a1a', label: '中', iconBg: 'linear-gradient(135deg,#b8862a,#9a6a15)' };
+        return { border: '#b94040', barColor: '#b94040', badgeBg: '#fdf2f2', badgeColor: '#7a2a2a', label: '低', iconBg: 'linear-gradient(135deg,#b94040,#9a2a2a)' };
     }
 
     // 转岗节点：优先使用 GET /career-graph 返回的 _realTransferPaths，否则用 relation-graph 的 transfer_graph（最多 8 个对应 Grid 八宫格）
@@ -10664,7 +10664,14 @@ class CareerPlanningApp {
         const userId = getCurrentUserId();
         contentDiv.innerHTML = '<div class="loading-message">加载报告内容中...</div>';
         this.showReportContentArea();
-        let result = await getCareerReport(userId || 10001, reportId);
+        const REPORT_TIMEOUT_MS = 120000; // 延长超时时间到120秒
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('REPORT_TIMEOUT')), REPORT_TIMEOUT_MS));
+        let result;
+        try {
+            result = await Promise.race([getCareerReport(userId || 10001, reportId), timeoutPromise]);
+        } catch (e) {
+            result = { success: false, msg: e.message === 'REPORT_TIMEOUT' ? '请求超时' : '网络错误' };
+        }
         if (!result.success || !result.data) {
             const msg = (result.msg || '') + '';
             const canRetry = /超时|无法连接|网络|请求超时/.test(msg);
@@ -10751,7 +10758,6 @@ class CareerPlanningApp {
             { id: 'module-job-requirements', title: '岗位能力要求拆解', icon: '📋', defaultOpen: false },
             { id: 'module-goal', title: '目标规划', icon: '📈', defaultOpen: false },
             { id: 'module-action', title: '行动计划', icon: '📋', defaultOpen: false },
-            { id: 'module-eval', title: '评估调整', icon: '🔄', defaultOpen: false },
             { id: 'module-painpoints', title: '痛点解决方案', icon: '🎯', defaultOpen: false }
         ];
 
@@ -11134,43 +11140,7 @@ class CareerPlanningApp {
             </section>`;
         }
 
-        // === 模块 5：评估调整（含风险决策树）===
-        if (s4.title) {
-            const ev = s4.evaluation_system || {};
-            const adj = s4.adjustment_scenarios || [];
-            const rm = s4.risk_management || {};
-            const contingencyPlans = rm.contingency_plans || [];
-            html += `<section id="module-eval" class="career-module career-module-eval" data-module="eval">
-                <div class="career-module-header" data-toggle="module-eval">
-                    <span class="module-icon">🔄</span>
-                    <span class="module-title">评估调整</span>
-                    <span class="module-arrow">▶</span>
-                </div>
-                <div class="career-module-body career-module-collapsed">
-                    <div class="evaluation-system">
-                        ${ev.monthly_review ? `<div class="eval-item"><span>${ev.monthly_review.frequency || ''}</span> ${san((ev.monthly_review.review_items || []).join('；'))}</div>` : ''}
-                        ${ev.quarterly_review ? `<div class="eval-item"><span>${ev.quarterly_review.frequency || ''}</span> ${san((ev.quarterly_review.review_items || []).join('；'))}</div>` : ''}
-                        ${ev.annual_review ? `<div class="eval-item"><span>${ev.annual_review.frequency || ''}</span> ${san((ev.annual_review.review_items || []).join('；'))}</div>` : ''}
-                    </div>
-                    ${adj.length ? `<div class="adjustment-scenarios"><h5>调整场景</h5>${adj.map(a => `<div class="adj-card"><h6>${san(a.scenario)}</h6><p>可能原因：${(a.possible_reasons || []).map(san).join('、')}</p><p>应对：${(a.adjustment_plan?.immediate_actions || []).map(san).join('；')}</p></div>`).join('')}</div>` : ''}
-                    ${(rm.identified_risks?.length || contingencyPlans.length) ? `
-                    <div class="risk-decision-tree">
-                        <h5>风险预案与备选路径</h5>
-                        ${rm.identified_risks?.length ? `<div class="risk-list"><ul>${(rm.identified_risks || []).map(r => `<li><span class="risk-dot">●</span> ${san(r.risk)} → ${san(r.mitigation)}</li>`).join('')}</ul></div>` : ''}
-                        ${contingencyPlans.length ? `
-                        <div class="contingency-priority">
-                            <h6>优先级备选方案</h6>
-                            <ol class="priority-list">
-                                ${contingencyPlans.map((p, i) => {
-                                    const txt = typeof p === 'string' ? p.replace(/^plan\s*[A-Z]\s*[:：]\s*/i, '') : p;
-                                    return `<li><span class="priority-label">方案 ${String.fromCharCode(65 + i)}</span> ${san(txt)}</li>`;
-                                }).join('')}
-                            </ol>
-                        </div>` : ''}
-                    </div>` : ''}
-                </div>
-            </section>`;
-        }
+
 
         // === 模块 6：痛点解决方案 ===
         html += `<section id="module-painpoints" class="career-module career-module-painpoints" data-module="painpoints">
