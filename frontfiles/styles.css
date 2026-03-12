@@ -1798,6 +1798,42 @@ body.on-login-page #globalBlobs { display: none; }
     #loginPage .login-floating-card { margin-bottom: 24px; }
 }
 
+.login-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.login-tab {
+    flex: 1;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.login-tab.active {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.login-form.hidden {
+    display: none;
+}
+
+.login-form.active {
+    display: block;
+}
+
 .login-card {
     background: var(--card-bg);
     border-radius: 16px;

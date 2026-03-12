@@ -600,6 +600,32 @@ class CareerPlanningApp {
             this.handleLogin();
         });
 
+        // HR 登录表单提交
+        document.getElementById('hrLoginForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleHrLogin();
+        });
+
+        // 登录标签切换
+        document.getElementById('studentLoginTab')?.addEventListener('click', () => {
+            document.getElementById('studentLoginTab').classList.add('active');
+            document.getElementById('hrLoginTab').classList.remove('active');
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('hrLoginForm').classList.add('hidden');
+            document.getElementById('hrLoginForm').classList.remove('active');
+        });
+
+        // HR 登录标签切换
+        document.getElementById('hrLoginTab')?.addEventListener('click', () => {
+            document.getElementById('hrLoginTab').classList.add('active');
+            document.getElementById('studentLoginTab').classList.remove('active');
+            document.getElementById('hrLoginForm').classList.add('active');
+            document.getElementById('hrLoginForm').classList.remove('hidden');
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('active');
+        });
+
         // 创建账户 - 注册表单提交
         document.getElementById('registerForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1308,6 +1334,62 @@ class CareerPlanningApp {
         } catch (e) {
             console.error('登录异常:', e);
             this.showToast('登录失败: ' + (e.message || '网络异常，请检查 mock 模式或后端服务'), 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    // 处理 HR 登录
+    async handleHrLogin() {
+        const usernameInput = document.getElementById('hrLoginUsername');
+        const passwordInput = document.getElementById('hrLoginPassword');
+        const usernameError = document.getElementById('hrLoginUsernameError');
+        const passwordError = document.getElementById('hrLoginPasswordError');
+        
+        const username = (usernameInput?.value || '').trim();
+        const password = (passwordInput?.value || '').trim();
+
+        // 清除之前的错误状态
+        usernameInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+        usernameError.classList.remove('show');
+        passwordError.classList.remove('show');
+
+        // 验证账号格式
+        if (!username) {
+            usernameInput.classList.add('error');
+            usernameError.textContent = '请输入 HR 账号';
+            usernameError.classList.add('show');
+            return;
+        }
+
+        if (!password) {
+            passwordInput.classList.add('error');
+            passwordError.textContent = '请输入密码';
+            passwordError.classList.add('show');
+            return;
+        }
+
+        this.showLoading('登录中...');
+
+        try {
+            const result = await api.post('/api/hr/login', {
+                username,
+                password
+            });
+
+            if (result.success) {
+                _storage.setItem('token', result.data.token);
+                saveUserInfo(result.data);
+                this.currentUser = result.data;
+                this.showToast('HR 登录成功', 'success');
+                this.showMainApp();
+            } else {
+                this.showToast(result.msg || 'HR 登录失败', 'error');
+            }
+        } catch (e) {
+            console.error('HR 登录异常:', e);
+            this.showToast('HR 登录失败: ' + (e.message || '网络异常，请检查 mock 模式或后端服务'), 'error');
         } finally {
             this.hideLoading();
         }
@@ -7184,9 +7266,15 @@ class CareerPlanningApp {
         container.innerHTML = '';
         const list = data.list || [];
         const stripeGradients = [
+<<<<<<< Updated upstream
             'linear-gradient(90deg, #2d6a4f, #3d7a5f)',
             'linear-gradient(90deg, #245a41, #2d6a4f)',
             'linear-gradient(90deg, #2d6a4f, #1e4d3a)',
+=======
+            'linear-gradient(90deg, #5e8c65, #4a7350)',
+            'linear-gradient(90deg, #4a7350, #5e8c65)',
+            'linear-gradient(90deg, #5e8c65, #4a7350)',
+>>>>>>> Stashed changes
         ];
         list.forEach((job, idx) => {
             const jobCard = document.createElement('div');
@@ -9673,7 +9761,7 @@ class CareerPlanningApp {
             // 使用与岗位列表相同的 job-card 卡片样式展示 AI 生成的岗位画像
             const softTagsHtml = (professional || []).slice(0, 4).map(s => `<span class="tag-soft">${escape(s)}</span>`).join('');
             const techTagsHtml = (tools || []).slice(0, 4).map(s => `<span class="tag-tech">${escape(s)}</span>`).join('');
-            const stripeStyle = 'linear-gradient(90deg, #2563eb, #0ea5e9)';
+            const stripeStyle = 'linear-gradient(90deg, #5e8c65, #4a7350)';
             const industryEsc = (d.industry && escape(d.industry).trim()) || '';
             const aiCardMeta = industryEsc ? industryEsc + ' | AI 生成岗位画像' : 'AI 生成岗位画像';
 

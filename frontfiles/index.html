@@ -199,7 +199,13 @@
             <!-- 右侧登录卡片 -->
             <div class="right-panel">
                 <div class="login-card">
-                    <form id="loginForm" class="login-form">
+                    <div class="login-tabs">
+                        <button type="button" id="studentLoginTab" class="login-tab active">学生登录</button>
+                        <button type="button" id="hrLoginTab" class="login-tab">HR 登录</button>
+                    </div>
+
+                    <!-- 学生登录表单 -->
+                    <form id="loginForm" class="login-form active">
                         <div class="login-header">
                             <div class="login-badge">
                                 <span>星途智探 · AI Agent 职业规划</span>
@@ -236,16 +242,48 @@
                         <button type="submit" class="btn-primary">登录</button>
                         <button type="button" id="goRegister" class="btn-secondary">创建新账号</button>
 
-                        <div class="divider">
-                            <div class="divider-line"></div>
-                            <div class="divider-text">企业 HR 入口</div>
-                            <div class="divider-line"></div>
+                        <div class="login-tos">
+                            登录即表示同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a>
+                        </div>
+                    </form>
+
+                    <!-- HR 登录表单 -->
+                    <form id="hrLoginForm" class="login-form hidden">
+                        <div class="login-header">
+                            <div class="login-badge">
+                                <span>星途智探 · 企业 HR 平台</span>
+                            </div>
+                            <div class="login-title">HR 登录</div>
+                            <div class="login-sub">登录以继续评估学生简历</div>
                         </div>
 
-                        <div class="hr-row">
-                            <button type="button" id="hrLoginBtn" class="btn-hr">HR 登录</button>
-                            <button type="button" id="hrRegisterBtn" class="btn-hr outline">HR 注册</button>
+                        <div class="form-group">
+                            <label class="form-label">账号</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">◎</span>
+                                <input type="text" id="hrLoginUsername" class="form-input" placeholder="请输入 HR 账号" required>
+                            </div>
+                            <div class="error-message" id="hrLoginUsernameError"></div>
                         </div>
+
+                        <div class="form-group">
+                            <label class="form-label">密码</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">⊟</span>
+                                <input type="password" id="hrLoginPassword" class="form-input" placeholder="请输入密码" required>
+                            </div>
+                            <div class="error-message" id="hrLoginPasswordError"></div>
+                        </div>
+
+                        <div class="form-footer">
+                            <label class="remember-label">
+                                <input type="checkbox" id="hrRememberMe"> 记住我
+                            </label>
+                            <a href="#" class="forgot-link forgot-password">忘记密码？</a>
+                        </div>
+
+                        <button type="submit" class="btn-primary">登录</button>
+                        <button type="button" id="hrRegisterBtn" class="btn-secondary">创建 HR 账号</button>
 
                         <div class="login-tos">
                             登录即表示同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a>
