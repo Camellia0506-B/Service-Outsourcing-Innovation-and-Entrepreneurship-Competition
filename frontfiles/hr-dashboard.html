@@ -338,6 +338,97 @@
             transition: all .15s;
         }
         #studentModal .resume-btn-secondary:hover { background: var(--ink); color: var(--cream); }
+
+        /* S3 简历详情弹窗（resume-s3-anon 风格，仅用于 student_anon_003） */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
+        #s3ResumeModalOverlay {
+            --cream: #f6f4ef;
+            --sage: #2d6a4f;
+            --sage-light: #e8f0eb;
+            --ink: #0f0f0d;
+            --ink-50: rgba(15,15,13,0.5);
+            --amber: #b56a00;
+            --rule: #d8d4cc;
+            position: fixed; inset: 0;
+            background: rgba(15,15,13,.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity .2s;
+            font-family: 'Noto Serif SC', serif;
+            color: var(--ink);
+        }
+        #s3ResumeModalOverlay.active { display: flex; }
+        #s3ResumeModalOverlay.visible { opacity: 1; }
+        #s3ResumeModalOverlay .modal { width: 92vw; max-width: 1100px; max-height: 88vh; background: var(--cream); border: 1px solid var(--rule); overflow: hidden; display: flex; flex-direction: column; transform: translateY(12px); transition: transform .22s ease; }
+        #s3ResumeModalOverlay.visible .modal { transform: translateY(0); }
+        #s3ResumeModalOverlay .modal-bar { display: flex; align-items: center; padding: 0 32px; height: 48px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+        #s3ResumeModalOverlay .breadcrumb { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--ink-50); letter-spacing: .06em; }
+        #s3ResumeModalOverlay .breadcrumb span { color: var(--ink); }
+        #s3ResumeModalOverlay .privacy-badge { margin-left: 16px; font-size: 10px; font-family: 'DM Mono', monospace; padding: 3px 10px; border: 1px solid var(--amber); color: var(--amber); letter-spacing: .06em; }
+        #s3ResumeModalOverlay .modal-close { margin-left: auto; width: 28px; height: 28px; border: 1px solid var(--rule); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all .15s; color: var(--ink); }
+        #s3ResumeModalOverlay .modal-close:hover { background: var(--ink); color: var(--cream); }
+        #s3ResumeModalOverlay .modal-body { display: grid; grid-template-columns: 300px 1fr; overflow: hidden; flex: 1; }
+        #s3ResumeModalOverlay .col-left { border-right: 1px solid var(--rule); overflow-y: auto; padding: 32px 28px; display: flex; flex-direction: column; gap: 28px; background: #f0ede6; }
+        #s3ResumeModalOverlay .candidate-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-50); letter-spacing: .1em; margin-bottom: 4px; }
+        #s3ResumeModalOverlay .candidate-name { font-size: 22px; font-weight: 500; line-height: 1.2; }
+        #s3ResumeModalOverlay .masked { display: inline-block; color: var(--amber); font-family: 'DM Mono', monospace; font-size: .9em; letter-spacing: .15em; user-select: none; }
+        #s3ResumeModalOverlay .masked-soft { color: var(--ink-50); font-family: 'DM Mono', monospace; letter-spacing: .08em; }
+        #s3ResumeModalOverlay .candidate-sub { font-size: 12px; color: var(--ink-50); margin-top: 4px; line-height: 1.6; }
+        #s3ResumeModalOverlay .divider { width: 100%; height: 1px; background: var(--rule); }
+        #s3ResumeModalOverlay .meta-block { display: flex; flex-direction: column; gap: 10px; }
+        #s3ResumeModalOverlay .meta-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+        #s3ResumeModalOverlay .meta-label { color: var(--ink-50); }
+        #s3ResumeModalOverlay .meta-value { font-weight: 500; }
+        #s3ResumeModalOverlay .score-display { background: var(--sage); color: white; padding: 16px 20px; display: flex; align-items: baseline; gap: 6px; }
+        #s3ResumeModalOverlay .score-num { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 300; line-height: 1; }
+        #s3ResumeModalOverlay .score-label { font-size: 12px; opacity: .75; }
+        #s3ResumeModalOverlay .section-title { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-50); margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+        #s3ResumeModalOverlay .skill-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+        #s3ResumeModalOverlay .skill-chip { font-size: 11px; font-family: 'DM Mono', monospace; padding: 3px 9px; border: 1px solid var(--rule); background: var(--cream); color: var(--ink); }
+        #s3ResumeModalOverlay .skill-chip.highlight { background: var(--sage-light); border-color: rgba(45,106,79,.3); color: var(--sage); }
+        #s3ResumeModalOverlay .contact-block { display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-family: 'DM Mono', monospace; }
+        #s3ResumeModalOverlay .col-right { overflow-y: auto; }
+        #s3ResumeModalOverlay .section-block { padding: 28px 36px; border-bottom: 1px solid var(--rule); }
+        #s3ResumeModalOverlay .section-block:last-child { border-bottom: none; }
+        #s3ResumeModalOverlay .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        #s3ResumeModalOverlay .sec-head h3 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 400; font-family: 'DM Mono', monospace; color: var(--ink-50); white-space: nowrap; }
+        #s3ResumeModalOverlay .sec-head::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+        #s3ResumeModalOverlay .exp-item { display: grid; grid-template-columns: 180px 1fr; gap: 0 28px; margin-bottom: 24px; }
+        #s3ResumeModalOverlay .exp-item:last-child { margin-bottom: 0; }
+        #s3ResumeModalOverlay .exp-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); letter-spacing: .04em; margin-bottom: 4px; }
+        #s3ResumeModalOverlay .exp-org { font-size: 12px; font-weight: 500; color: var(--sage); margin-bottom: 2px; }
+        #s3ResumeModalOverlay .exp-role { font-size: 11px; color: var(--ink-50); }
+        #s3ResumeModalOverlay .exp-title { font-size: 14px; font-weight: 500; margin-bottom: 7px; line-height: 1.3; }
+        #s3ResumeModalOverlay .exp-desc { font-size: 12px; color: rgba(15,15,13,.7); line-height: 1.75; }
+        #s3ResumeModalOverlay .exp-tech { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+        #s3ResumeModalOverlay .tech-tag { font-size: 10px; font-family: 'DM Mono', monospace; padding: 2px 8px; background: #ede9e1; color: var(--ink-50); }
+        #s3ResumeModalOverlay .edu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--rule); }
+        #s3ResumeModalOverlay .edu-cell { padding: 16px 20px; border-right: 1px solid var(--rule); }
+        #s3ResumeModalOverlay .edu-cell:last-child { border-right: none; }
+        #s3ResumeModalOverlay .edu-cell-label { font-size: 10px; color: var(--ink-50); letter-spacing: .08em; font-family: 'DM Mono', monospace; text-transform: uppercase; margin-bottom: 6px; }
+        #s3ResumeModalOverlay .edu-cell-value { font-size: 14px; font-weight: 500; }
+        #s3ResumeModalOverlay .edu-cell-sub { font-size: 11px; color: var(--ink-50); margin-top: 2px; }
+        #s3ResumeModalOverlay .remark-box { background: rgba(45,106,79,.05); border-left: 3px solid var(--sage); padding: 14px 18px; font-size: 12px; color: rgba(15,15,13,.7); line-height: 1.9; }
+        #s3ResumeModalOverlay .remark-box strong { color: var(--sage); font-weight: 500; }
+        #s3ResumeModalOverlay .award-list { display: flex; flex-direction: column; gap: 10px; }
+        #s3ResumeModalOverlay .award-item { display: flex; align-items: baseline; gap: 12px; font-size: 12px; padding: 10px 14px; background: rgba(15,15,13,.03); border-left: 2px solid transparent; }
+        #s3ResumeModalOverlay .award-item.top { border-left-color: var(--amber); }
+        #s3ResumeModalOverlay .award-year { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); flex-shrink: 0; width: 36px; }
+        #s3ResumeModalOverlay .award-name { flex: 1; line-height: 1.4; }
+        #s3ResumeModalOverlay .award-level { font-size: 10px; font-family: 'DM Mono', monospace; padding: 2px 6px; background: var(--sage-light); color: var(--sage); flex-shrink: 0; }
+        #s3ResumeModalOverlay .award-level.amber { background: #fdf0e0; color: var(--amber); }
+        #s3ResumeModalOverlay .cert-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        #s3ResumeModalOverlay .cert-chip { font-size: 11px; font-family: 'DM Mono', monospace; padding: 5px 14px; border: 1px solid var(--rule); display: flex; align-items: center; gap: 6px; }
+        #s3ResumeModalOverlay .cert-chip::before { content: '✓'; color: var(--sage); font-size: 10px; }
+        #s3ResumeModalOverlay .modal-footer { padding: 14px 32px; border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 12px; flex-shrink: 0; background: #f0ede6; }
+        #s3ResumeModalOverlay .footer-status { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); letter-spacing: .06em; }
+        #s3ResumeModalOverlay .btn-primary { margin-left: auto; padding: 9px 24px; background: var(--sage); color: white; border: none; font-family: 'Noto Serif SC', serif; font-size: 12px; cursor: pointer; transition: background .15s; }
+        #s3ResumeModalOverlay .btn-primary:hover { background: #245a41; }
+        #s3ResumeModalOverlay .btn-secondary { padding: 9px 24px; background: transparent; color: var(--ink); border: 1px solid var(--rule); font-family: 'Noto Serif SC', serif; font-size: 12px; cursor: pointer; transition: all .15s; }
+        #s3ResumeModalOverlay .btn-secondary:hover { background: var(--ink); color: var(--cream); }
     </style>
 </head>
 <body class="hr-page-body">
@@ -699,6 +790,9 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- S3 简历详情弹窗（student_anon_003 专用，内容由 hr-app.js 注入） -->
+                <div id="s3ResumeModalOverlay" onclick="closeS3ResumeModal(event)"></div>
 
                 <!-- 评估邀请区域 -->
                 <div id="invitations-section" class="hr-content-section">

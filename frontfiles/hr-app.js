@@ -509,7 +509,96 @@ function _mockStudentToDetailData(student) {
     };
 }
 
+/** S3 (student_anon_003) 简历详情弹窗 HTML（与 resume-s3-anon.html 一致，隐私保护模式） */
+function getS3ResumeModalHTML() {
+    return '<div class="modal" onclick="event.stopPropagation()">' +
+        '<div class="modal-bar">' +
+        '<span class="breadcrumb">学生简历库 / <span>student_anon_003</span></span>' +
+        '<span class="privacy-badge">&#9895; 隐私保护模式</span>' +
+        '<button type="button" class="modal-close" onclick="closeS3ResumeModal()">&#10005;</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+        '<div class="col-left">' +
+        '<div><div class="candidate-id">S3 &#183; 2026-03-12</div><div class="candidate-name"><span class="masked">***</span></div>' +
+        '<div class="candidate-sub"><span class="masked">***</span> &#183; 计算机科学与技术<br>2022&#32423; &#183; 预计毕业 2026.06</div></div>' +
+        '<div class="score-display"><div class="score-num">75</div><div class="score-label">综合匹配分</div></div>' +
+        '<div class="divider"></div>' +
+        '<div class="meta-block">' +
+        '<div class="meta-row"><span class="meta-label">学历</span><span class="meta-value">本科</span></div>' +
+        '<div class="meta-row"><span class="meta-label">GPA</span><span class="meta-value">3.4 / 4.0</span></div>' +
+        '<div class="meta-row"><span class="meta-label">成绩等级</span><span class="meta-value">良好</span></div>' +
+        '<div class="meta-row"><span class="meta-label">年级</span><span class="meta-value">2022 &#32423;</span></div>' +
+        '</div><div class="divider"></div>' +
+        '<div><div class="section-title">核心技能</div><div class="skill-grid">' +
+        '<span class="skill-chip highlight">数据结构</span><span class="skill-chip highlight">算法</span><span class="skill-chip highlight">机器学习</span><span class="skill-chip highlight">C++</span>' +
+        '<span class="skill-chip">Python</span><span class="skill-chip">Linux</span><span class="skill-chip">Git</span><span class="skill-chip">LeetCode 200+</span>' +
+        '</div></div><div class="divider"></div>' +
+        '<div class="contact-block"><span class="masked-soft">182****3947</span><span class="masked-soft">z****g@stu.edu.cn</span></div>' +
+        '</div>' +
+        '<div class="col-right">' +
+        '<div class="section-block"><div class="sec-head"><h3>教育背景</h3></div><div class="edu-grid">' +
+        '<div class="edu-cell"><div class="edu-cell-label">学校</div><div class="edu-cell-value"><span class="masked">***</span></div><div class="edu-cell-sub">211 &#37325;&#28857;&#39640;&#26657;</div></div>' +
+        '<div class="edu-cell"><div class="edu-cell-label">专业 &#183; 学历</div><div class="edu-cell-value">计算机科学与技术</div><div class="edu-cell-sub">本科 &#183; 2022&#32423;</div></div>' +
+        '<div class="edu-cell"><div class="edu-cell-label">绩点 &#183; 毕业</div><div class="edu-cell-value">GPA 3.4 / 4.0</div><div class="edu-cell-sub">预计 2026.06 &#27605;&#19994;</div></div>' +
+        '</div></div>' +
+        '<div class="section-block"><div class="sec-head"><h3>AI &#21305;&#37197;&#35780;&#27880;</h3></div>' +
+        '<div class="remark-box">&#20505;&#36873;&#20154;&#20855;&#22791;&#25166;&#23454;&#30340;<strong>&#31639;&#27861;&#19982;&#25968;&#25454;&#32467;&#26500;</strong>&#22522;&#30784;&#65292;LeetCode &#21047;&#39064;&#37327;&#36229; 200 &#39064;&#65292;&#36866;&#21512;&#23545;&#20195;&#30721;&#33021;&#21147;&#35201;&#27714;&#36739;&#39640;&#30340;&#23703;&#20301;&#12290;<strong>&#26426;&#22120;&#23398;&#20064;</strong>&#25216;&#33021;&#19982;&#30446;&#26631;&#23703;&#20301;&#26377;&#19968;&#23450;&#21305;&#37197;&#65292;&#20294;&#32570;&#20047;&#23436;&#25972;&#30340;&#24037;&#31243;&#39033;&#30446;&#33853;&#22320;&#32463;&#39564;&#65292;&#24314;&#35758;&#38754;&#35797;&#29615;&#33410;&#37325;&#28857;&#32771;&#23519;&#23454;&#38469;&#24314;&#27169;&#33021;&#21147;&#12290;&#32508;&#21512;&#35780;&#20998; <strong>75 &#20998;</strong>&#65292;&#23646;&#28508;&#21147;&#22411;&#20505;&#36873;&#20154;&#65292;&#21487;&#32435;&#20837;&#20505;&#36873;&#27744;&#36827;&#19968;&#27493;&#35780;&#20272;&#12290;</div>' +
+        '</div>' +
+        '<div class="section-block"><div class="sec-head"><h3>&#39033;&#30446;&#32463;&#21382;</h3></div>' +
+        '<div class="exp-item"><div class="exp-meta"><div class="exp-date">2024.09 &#8212; 2024.12</div><div class="exp-org">&#35838;&#31243;&#39033;&#30446;</div><div class="exp-role">&#29420;&#31435;&#24320;&#21457;</div></div>' +
+        '<div class="exp-content"><div class="exp-title">&#39640;&#24615;&#33021;&#22270;&#31639;&#27861;&#24211;</div><div class="exp-desc">&#20351;&#29992; C++ &#23454;&#29616;&#21253;&#21547; Dijkstra&#12289;Bellman-Ford&#12289;Floyd&#12289;&#25299;&#23618;&#25490;&#24207;&#31561;&#32463;&#20856;&#22270;&#31639;&#27861;&#30340;&#36890;&#29992;&#24211;&#65292;&#25903;&#25345;&#30828;&#31354;&#22270;&#19982;&#27987;&#23494;&#22270;&#33258;&#36866;&#24212;&#23384;&#20648;&#65292;&#30334;&#19975;&#32423;&#33410;&#28857;&#26368;&#30701;&#36335;&#24452;&#26597;&#35810;&#32791;&#26102;&#25511;&#21046;&#22312; 200ms &#20197;&#20869;&#12290;</div>' +
+        '<div class="exp-tech"><span class="tech-tag">C++</span><span class="tech-tag">&#22270;&#31639;&#27861;</span><span class="tech-tag">&#25968;&#25454;&#32467;&#26500;</span></div></div></div>' +
+        '<div class="exp-item"><div class="exp-meta"><div class="exp-date">2025.03 &#8212; 2025.05</div><div class="exp-org">&#31454;&#36187;&#39033;&#30446;</div><div class="exp-role">&#26680;&#24515;&#24320;&#21457;</div></div>' +
+        '<div class="exp-content"><div class="exp-title">&#36731;&#37327;&#32423;&#26426;&#22120;&#23398;&#20064;&#25512;&#29702;&#24341;&#25806;</div><div class="exp-desc">&#20174;&#38646;&#23454;&#29616;&#25903;&#25345;&#20840;&#36830;&#25509;&#23618;&#12289;&#21367;&#31215;&#23618;&#12289;BatchNorm &#30340;&#36731;&#37327;&#25512;&#29702;&#26694;&#26550;&#65292;&#19981;&#20381;&#36182;&#31532;&#19977;&#26041;&#24211;&#65292;&#22312; MNIST &#25968;&#25454;&#38598;&#19978;&#36798;&#21040; 98.7% &#20934;&#30830;&#29575;&#65292;&#25512;&#29702;&#24310;&#36831;&#36739;&#21516;&#31867; Python &#23454;&#29616;&#38477;&#20302;&#32422; 40%&#12290;</div>' +
+        '<div class="exp-tech"><span class="tech-tag">C++</span><span class="tech-tag">&#26426;&#22120;&#23398;&#20064;</span><span class="tech-tag">&#30697;&#38453;&#36816;&#31639;</span><span class="tech-tag">SIMD</span></div></div></div>' +
+        '</div>' +
+        '<div class="section-block"><div class="sec-head"><h3>&#33635;&#35465;&#22870;&#39033;</h3></div><div class="award-list">' +
+        '<div class="award-item top"><div class="award-year">2025</div><div class="award-name">ACM-ICPC &#21306;&#22495;&#36187;</div><div class="award-level amber">&#38108;&#29260;</div></div>' +
+        '<div class="award-item top"><div class="award-year">2024</div><div class="award-name">&#20840;&#22269;&#22823;&#23398;&#29983;&#31639;&#27861;&#35774;&#35745;&#19982;&#32534;&#31243;&#25361;&#25112;&#36187;</div><div class="award-level amber">&#19977;&#31561;&#22870;</div></div>' +
+        '<div class="award-item"><div class="award-year">2023</div><div class="award-name">&#26657;&#32423;&#31243;&#24207;&#35774;&#35745;&#31454;&#36187;</div><div class="award-level">&#19968;&#31561;&#22870;</div></div>' +
+        '<div class="award-item"><div class="award-year">2024</div><div class="award-name">&#38498;&#32423;&#20248;&#31168;&#23398;&#29983;&#22870;&#23398;&#37329;</div><div class="award-level">&#20108;&#31561;&#22870;</div></div>' +
+        '</div></div>' +
+        '<div class="section-block"><div class="sec-head"><h3>&#35777;&#20070;&#36164;&#36136;</h3></div><div class="cert-row">' +
+        '<div class="cert-chip">&#33521;&#35821;&#22235;&#32423; CET-4</div><div class="cert-chip">&#35745;&#31639;&#26426;&#20108;&#32423; &#183; C&#35821;&#35328;</div>' +
+        '<div class="cert-chip">LeetCode 200+ &#39064;</div><div class="cert-chip">&#26222;&#36890;&#35821;&#20108;&#32423;&#20057;&#31561;</div>' +
+        '</div></div>' +
+        '</div></div>' +
+        '<div class="modal-footer"><span class="footer-status">&#20505;&#36873;&#20154; S3 &#183; &#31192;&#31169;&#20445;&#25252; &#183; &#24453;&#22788;&#29702;</span>' +
+        '<button type="button" class="btn-secondary" onclick="closeS3ResumeModal()">&#20851;&#38381;</button><button type="button" class="btn-primary">&#21457;&#36215;&#35780;&#20272;&#36992;&#35831;</button></div>' +
+        '</div>';
+}
+
+function openS3ResumeModal() {
+    var overlay = document.getElementById('s3ResumeModalOverlay');
+    if (!overlay) return;
+    if (!overlay.querySelector('.modal')) {
+        overlay.innerHTML = getS3ResumeModalHTML();
+    }
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            overlay.classList.add('visible');
+        });
+    });
+}
+
+function closeS3ResumeModal(e) {
+    var overlay = document.getElementById('s3ResumeModalOverlay');
+    if (!overlay) return;
+    if (e && e.target !== overlay) return;
+    overlay.classList.remove('visible');
+    setTimeout(function () {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none';
+    }, 220);
+}
+
 function openStudentModal(studentId) {
+    if (studentId === 'student_anon_003') {
+        openS3ResumeModal();
+        return;
+    }
     var overlay = document.getElementById('studentModal');
     if (!overlay) return;
     overlay.style.display = 'flex';

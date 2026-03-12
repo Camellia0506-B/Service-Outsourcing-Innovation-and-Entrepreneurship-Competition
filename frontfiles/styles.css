@@ -36,15 +36,15 @@
     --bg: var(--page-bg);
     /* 换岗路径图谱模板变量 */
     --white: #fff;
-    --accent: #4f7cff;
-    --accent2: #7c5cff;
-    --green: #00b894;
-    --gold: #f5a623;
-    --red: #ff4d6d;
+    --accent: #5e8c65;
+    --accent2: #4a7350;
+    --green: #5e8c65;
+    --gold: #b8862a;
+    --red: #b94040;
     --text: #1a2340;
     --dim: #5a6a8a;
     --muted: #aab4cc;
-    --border: rgba(79,124,255,0.12);
+    --border: rgba(94,140,101,0.12);
     --sidebar-w: 220px;
 }
 
@@ -1957,8 +1957,8 @@ body.on-login-page #globalBlobs { display: none; }
 .btn-secondary {
     padding: 12px 24px;
     background: transparent;
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
+    color: #5e8c65;
+    border: 1px solid #5e8c65;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
@@ -1967,7 +1967,7 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .btn-secondary:hover {
-    background: var(--primary-color);
+    background: #5e8c65;
     color: white;
 }
 
@@ -6669,7 +6669,7 @@ body.on-login-page #globalBlobs { display: none; }
     padding: 4px 8px;
     border-radius: 999px;
     font-size: 11px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
 }
 
@@ -6692,8 +6692,8 @@ body.on-login-page #globalBlobs { display: none; }
     display: inline-block;
     padding: 2px 6px;
     border-radius: 10px;
-    background: #eef2ff;
-    color: #3730a3;
+    background: #eef4ee;
+    color: #5e8c65;
     font-size: 11px;
 }
 
@@ -6759,8 +6759,8 @@ body.on-login-page #globalBlobs { display: none; }
     display: inline-block;
     padding: 2px 6px;
     border-radius: 999px;
-    background: #eef2ff;
-    color: #3730a3;
+    background: #eef4ee;
+    color: #5e8c65;
     margin-right: 4px;
 }
 .career-transitions {
@@ -6790,8 +6790,8 @@ body.on-login-page #globalBlobs { display: none; }
     padding: 2px 6px;
     border-radius: 999px;
     font-size: 11px;
-    background: #ecfeff;
-    color: #0369a1;
+    background: #eef4ee;
+    color: #5e8c65;
 }
 
 .job-footer .demand-score {
@@ -6801,8 +6801,8 @@ body.on-login-page #globalBlobs { display: none; }
 .job-footer .growth-trend {
     padding: 3px 8px;
     border-radius: 999px;
-    background: rgba(74, 144, 226, 0.06);
-    color: var(--primary-color);
+    background: rgba(94,140,101,0.06);
+    color: #5e8c65;
 }
 
 /* 真实招聘数据弹窗：弹窗形式，半透明遮罩，无整屏蓝色背景；内容可滚动 */
@@ -6825,7 +6825,7 @@ body.on-login-page #globalBlobs { display: none; }
     background: #fff;
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(67, 97, 238, 0.25);
+    box-shadow: 0 20px 60px rgba(94,140,101,0.25);
     max-width: 1100px;
     width: 100%;
     max-height: 90vh;
@@ -6838,7 +6838,7 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .real-data-modal-header {
-    background: linear-gradient(135deg, #4361ee 0%, #5a72f0 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
     padding: 14px 20px;
     display: flex;
@@ -7250,7 +7250,7 @@ body.on-login-page #globalBlobs { display: none; }
     width: 3px;
     height: 16px;
     border-radius: 2px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
 }
 
 .detail-section h5 {
@@ -7306,7 +7306,7 @@ body.on-login-page #globalBlobs { display: none; }
     padding: 56px 24px;
     background: var(--card-bg);
     border-radius: 16px;
-    border: 1px dashed rgba(37, 99, 235, 0.2);
+    border: 1px dashed rgba(94, 140, 101, 0.2);
     text-align: center;
 }
 
@@ -7472,7 +7472,7 @@ body.on-login-page #globalBlobs { display: none; }
 }
 .graph-job-title-h2 {
     font-size: 28px;
-    color: #667eea;
+    color: #5e8c65;
     margin-bottom: 16px;
     display: flex;
     align-items: center;
@@ -7507,9 +7507,9 @@ body.on-login-page #globalBlobs { display: none; }
 }
 .graph-tab-btn:hover { background: #e8ecf4; color: #333; }
 .graph-tab-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
-    box-shadow: 0 8px 25px rgba(102,126,234,0.35);
+    box-shadow: 0 8px 25px rgba(94,140,101,0.35);
     transform: translateY(-2px);
 }
 
@@ -7531,7 +7531,7 @@ body.on-login-page #globalBlobs { display: none; }
 .graph-tab-bar-v2 {
     display: flex;
     background: #fff;
-    border: 1px solid rgba(79,124,255,0.12);
+    border: 1px solid rgba(94,140,101,0.12);
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 16px;
@@ -7548,17 +7548,17 @@ body.on-login-page #globalBlobs { display: none; }
     color: #aab4cc;
     transition: all 0.2s;
 }
-.graph-tab-v2.active { background: linear-gradient(135deg, #4f7cff, #7c5cff); color: #fff; }
-.graph-tab-v2:not(.active):hover { background: rgba(79,124,255,0.04); color: #4f7cff; }
+.graph-tab-v2.active { background: linear-gradient(135deg, #5e8c65, #4a7350); color: #fff; }
+.graph-tab-v2:not(.active):hover { background: rgba(94,140,101,0.04); color: #5e8c65; }
 .graph-panel-v2 { display: none; }
 .graph-panel-v2.active { display: block; }
 .promo-container-v2 { padding: 10px 0; }
 .transfer-container-v2 {
     background: #fff;
-    border: 1px solid rgba(79,124,255,0.12);
+    border: 1px solid rgba(94,140,101,0.12);
     border-radius: 16px;
     padding: 16px;
-    box-shadow: 0 2px 16px rgba(79,100,200,0.06);
+    box-shadow: 0 2px 16px rgba(94,140,101,0.06);
     position: relative;
 }
 .legend-row-v2 { display: flex; gap: 14px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
@@ -7572,36 +7572,36 @@ body.on-login-page #globalBlobs { display: none; }
     width: 100%;
     height: 880px;
     min-height: 880px;
-    background: linear-gradient(180deg, #f8faff 0%, #f0f4ff 100%);
-    background-image: radial-gradient(circle at 50% 50%, rgba(79, 124, 255, 0.04) 1px, transparent 1px);
+    background: linear-gradient(180deg, #f7f6f2 0%, #f0ede6 100%);
+    background-image: radial-gradient(circle at 50% 50%, rgba(94, 140, 101, 0.04) 1px, transparent 1px);
     background-size: 24px 24px;
     border-radius: 12px;
-    box-shadow: inset 0 0 0 1px rgba(79, 124, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(94, 140, 101, 0.06);
 }
 .graph-center-node .cn-product {
     width: 152px;
     min-height: 120px;
-    background: linear-gradient(135deg, #4f7cff 0%, #7c5cff 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
     border-radius: 16px;
     padding: 18px 16px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(79, 124, 255, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 40px 8px rgba(79, 124, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(94, 140, 101, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 40px 8px rgba(94, 140, 101, 0.25);
     animation: graph-center-breathe 2.5s ease-in-out infinite;
 }
 @keyframes graph-center-breathe {
-    0%, 100% { box-shadow: 0 8px 32px rgba(79, 124, 255, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 40px 8px rgba(79, 124, 255, 0.25); transform: scale(1); }
-    50% { box-shadow: 0 8px 36px rgba(79, 124, 255, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 56px 12px rgba(79, 124, 255, 0.35); transform: scale(1.02); }
+    0%, 100% { box-shadow: 0 8px 32px rgba(94, 140, 101, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15), 0 0 40px 8px rgba(94, 140, 101, 0.25); transform: scale(1); }
+    50% { box-shadow: 0 8px 36px rgba(94, 140, 101, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 56px 12px rgba(94, 140, 101, 0.35); transform: scale(1.02); }
 }
 .graph-job-node-product {
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(79, 100, 200, 0.08);
+    box-shadow: 0 2px 12px rgba(94, 140, 101, 0.08);
     transition: transform 0.25s ease, box-shadow 0.25s ease, z-index 0s;
     animation: graph-node-fadein 0.5s ease both;
 }
 .graph-job-node-product:hover {
     transform: scale(1.05) translateY(-4px);
-    box-shadow: 0 12px 32px rgba(79, 100, 200, 0.18);
+    box-shadow: 0 12px 32px rgba(94, 140, 101, 0.18);
     z-index: 10;
 }
 @keyframes graph-node-fadein {
@@ -7610,7 +7610,7 @@ body.on-login-page #globalBlobs { display: none; }
 }
 .graph-job-bar-bg {
     height: 4px;
-    background: rgba(79, 124, 255, 0.1);
+    background: rgba(94, 140, 101, 0.1);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 8px;
@@ -7945,8 +7945,8 @@ body.on-login-page #globalBlobs { display: none; }
     padding-left: 12px;
 }
 #jobProfileGraph .graph-panel-transfer .legend-row {
-    background: linear-gradient(135deg, rgba(79, 124, 255, 0.04), rgba(124, 92, 255, 0.02));
-    border: 1px solid rgba(79, 124, 255, 0.12);
+    background: linear-gradient(135deg, rgba(94, 140, 101, 0.04), rgba(74, 115, 80, 0.02));
+    border: 1px solid rgba(94, 140, 101, 0.12);
     border-radius: 10px;
     padding: 8px 14px;
 }
@@ -7965,7 +7965,7 @@ body.on-login-page #globalBlobs { display: none; }
 #jobProfileGraph .graph-panel-transfer .graph-svg-wrap::before {
     content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(circle, rgba(79,124,255,0.045) 1px, transparent 1px);
+    background: radial-gradient(circle, rgba(94,140,101,0.045) 1px, transparent 1px);
     background-size: 30px 30px;
     pointer-events: none;
 }
@@ -7978,7 +7978,7 @@ body.on-login-page #globalBlobs { display: none; }
     position: absolute;
     font-size: 9px; font-weight: 600;
     background: #fff;
-    border: 1px solid rgba(79,124,255,0.15);
+    border: 1px solid rgba(94,140,101,0.15);
     padding: 1px 7px; border-radius: 8px;
     z-index: 2;
 }
@@ -8016,7 +8016,7 @@ body.on-login-page #globalBlobs { display: none; }
 }
 #jobProfileGraph .graph-panel-transfer .g-node:hover {
     transform: scale(1.03) translateY(-3px);
-    box-shadow: 0 10px 28px rgba(79, 100, 200, 0.15);
+    box-shadow: 0 10px 28px rgba(94, 140, 101, 0.15);
     z-index: 10;
 }
 @keyframes transfer-fadeUp {
@@ -8027,12 +8027,12 @@ body.on-login-page #globalBlobs { display: none; }
 /* 中心节点 .cn（template + 指南③：光晕圆环） */
 #jobProfileGraph .graph-panel-transfer .g-node .cn {
     width: 136px;
-    background: linear-gradient(135deg, #4f7cff 0%, #7c5cff 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
     border-radius: 16px;
     padding: 16px 14px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(79, 124, 255, 0.5), 0 0 0 7px rgba(79, 124, 255, 0.18), 0 0 0 14px rgba(79, 124, 255, 0.08), 0 0 0 22px rgba(79, 124, 255, 0.04);
+    box-shadow: 0 8px 32px rgba(94, 140, 101, 0.5), 0 0 0 7px rgba(94, 140, 101, 0.18), 0 0 0 14px rgba(94, 140, 101, 0.08), 0 0 0 22px rgba(94, 140, 101, 0.04);
 }
 #jobProfileGraph .graph-panel-transfer .cn-ico {
     font-size: 24px;
@@ -8059,7 +8059,7 @@ body.on-login-page #globalBlobs { display: none; }
     border: 1.5px solid;
     border-radius: 14px;
     padding: 11px 13px;
-    box-shadow: 0 4px 20px rgba(79, 100, 200, 0.12);
+    box-shadow: 0 4px 20px rgba(94, 140, 101, 0.12);
 }
 #jobProfileGraph .graph-panel-transfer .g-node .jn.jn-with-bar .jn-accent-bar {
     position: absolute;
@@ -8506,7 +8506,7 @@ body.on-login-page #globalBlobs { display: none; }
     display: inline-block;
 }
 .graph-transfer-empty-hint a {
-    color: #4f7cff;
+    color: #5e8c65;
     text-decoration: none;
 }
 .graph-transfer-empty-hint a:hover {
@@ -8527,7 +8527,7 @@ body.on-login-page #globalBlobs { display: none; }
     top: 0;
     width: 4px;
     height: 100%;
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(180deg, #5e8c65 0%, #4a7350 100%);
     border-radius: 2px;
     transform: translateX(-50%);
     opacity: 0.35;
@@ -8569,15 +8569,15 @@ body.on-login-page #globalBlobs { display: none; }
     width: 18px;
     height: 18px;
     background: #fff;
-    border: 4px solid #667eea;
+    border: 4px solid #5e8c65;
     border-radius: 50%;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+    box-shadow: 0 4px 12px rgba(94,140,101,0.3);
 }
 .career-path .career-level.current .connection-dot {
     width: 24px;
     height: 24px;
-    background: #667eea;
+    background: #5e8c65;
     animation: careerDotPulse 2s infinite;
 }
 @keyframes careerDotPulse {
@@ -8586,8 +8586,8 @@ body.on-login-page #globalBlobs { display: none; }
 }
 .career-path .level-card {
     background: #fff;
-    border: 1.5px solid rgba(79,124,255,0.12);
-    border-left: 4px solid #f5a623;
+    border: 1.5px solid rgba(94,140,101,0.12);
+    border-left: 4px solid #b8862a;
     border-radius: 14px;
     padding: 24px 28px;
     width: 100%;
@@ -8596,19 +8596,19 @@ body.on-login-page #globalBlobs { display: none; }
     transition: all 0.3s;
     cursor: default;
 }
-.career-path .career-level:nth-child(1) .level-card { border-left-color: #00b894; }
-.career-path .career-level:nth-child(n+2) .level-card { border-left-color: #f5a623; }
+.career-path .career-level:nth-child(1) .level-card { border-left-color: #5e8c65; }
+.career-path .career-level:nth-child(n+2) .level-card { border-left-color: #b8862a; }
 .career-path .level-card:hover {
     transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 15px 45px rgba(102,126,234,0.22);
-    border-color: rgba(102,126,234,0.35);
+    box-shadow: 0 15px 45px rgba(94,140,101,0.22);
+    border-color: rgba(94,140,101,0.35);
 }
 .career-path .level-card.current {
-    border-color: #667eea;
-    border-left-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #5e8c65;
+    border-left-color: #5e8c65;
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
-    box-shadow: 0 12px 40px rgba(102,126,234,0.35);
+    box-shadow: 0 12px 40px rgba(94,140,101,0.35);
 }
 .career-path .level-header {
     display: flex;
@@ -8635,7 +8635,7 @@ body.on-login-page #globalBlobs { display: none; }
     font-size: 12px;
 }
 .career-path .level-real-data .real-badge {
-    color: #00b894;
+    color: #5e8c65;
     font-weight: 600;
     margin-right: 6px;
 }
@@ -8649,7 +8649,7 @@ body.on-login-page #globalBlobs { display: none; }
 
 /* AI 晋升路径卡片：级别信息、核心要求、晋升行动、技能标签 */
 .career-path .level-card-ai .level-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.career-path .level-card-ai .stage-badge { padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.career-path .level-card-ai .stage-badge { padding: 6px 12px; background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .career-path .level-card-ai .stage-subtitle { font-size: 13px; color: #64748b; margin-top: 4px; margin-bottom: 10px; }
 .career-path .level-card-ai .stage-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .career-path .level-card-ai .info-item { padding: 10px; background: #f8fafc; border-radius: 10px; text-align: center; }
@@ -8659,13 +8659,13 @@ body.on-login-page #globalBlobs { display: none; }
 .career-path .level-card-ai .requirements-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
 .career-path .level-card-ai .requirements-list { display: grid; gap: 6px; }
 .career-path .level-card-ai .requirement-item { display: flex; align-items: start; gap: 8px; padding: 8px 10px; background: #f1f5f9; border-radius: 8px; font-size: 13px; color: #475569; line-height: 1.4; }
-.career-path .level-card-ai .requirement-item::before { content: '✓'; flex-shrink: 0; width: 18px; height: 18px; background: #10b981; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-.career-path .level-card-ai .actions { background: #fffbeb; padding: 12px; border-radius: 12px; border-left: 4px solid #f59e0b; margin-bottom: 12px; }
-.career-path .level-card-ai .actions-title { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+.career-path .level-card-ai .requirement-item::before { content: '✓'; flex-shrink: 0; width: 18px; height: 18px; background: #5e8c65; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.career-path .level-card-ai .actions { background: #fdf5e4; padding: 12px; border-radius: 12px; border-left: 4px solid #b8862a; margin-bottom: 12px; }
+.career-path .level-card-ai .actions-title { font-size: 13px; font-weight: 700; color: #b8862a; margin-bottom: 8px; }
 .career-path .level-card-ai .actions-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.career-path .level-card-ai .action-tag { padding: 5px 10px; background: #fff; border: 1px solid #fbbf24; border-radius: 6px; font-size: 12px; color: #92400e; font-weight: 500; }
+.career-path .level-card-ai .action-tag { padding: 5px 10px; background: #fff; border: 1px solid #b8862a; border-radius: 6px; font-size: 12px; color: #b8862a; font-weight: 500; }
 .career-path .level-card-ai .skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.career-path .level-card-ai .skill-tag { padding: 5px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.career-path .level-card-ai .skill-tag { padding: 5px 12px; background: #eef4ee; color: #5e8c65; border-radius: 20px; font-size: 12px; font-weight: 500; }
 .career-path .level-card-ai.current .stage-badge { background: rgba(255,255,255,0.25); }
 .career-path .level-card-ai.current .stage-subtitle { color: rgba(255,255,255,0.9); }
 .career-path .level-card-ai.current .info-item { background: rgba(255,255,255,0.15); }
@@ -8692,7 +8692,7 @@ body.on-login-page #globalBlobs { display: none; }
     top: 0;
     bottom: 0;
     width: 4px;
-    background: linear-gradient(to bottom, #10b981, #3b82f6, #8b5cf6, #ec4899);
+    background: linear-gradient(to bottom, #5e8c65, #6aa571, #4a7350, #5e8c65);
     border-radius: 2px;
     z-index: 0;
 }
@@ -8741,16 +8741,16 @@ body.on-login-page #globalBlobs { display: none; }
     padding: 28px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     transition: all 0.3s;
-    border: 1px solid rgba(102,126,234,0.1);
+    border: 1px solid rgba(94,140,101,0.1);
 }
 .career-path .timeline.timeline-ai .stage-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(0,0,0,0.18);
 }
 .career-path .timeline.timeline-ai .stage-card.current {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
-    box-shadow: 0 12px 32px rgba(102,126,234,0.35);
+    box-shadow: 0 12px 32px rgba(94,140,101,0.35);
 }
 .career-path .timeline.timeline-ai .stage-header {
     display: flex;
@@ -9300,8 +9300,8 @@ body.on-login-page #globalBlobs { display: none; }
     font-size: 12px;
     padding: 3px 8px;
     border-radius: 6px;
-    background: rgba(102, 126, 234, 0.12);
-    color: #4f46e5;
+    background: rgba(94, 140, 101, 0.12);
+    color: #5e8c65;
 }
 .level-card.current .level-skill-tag {
     background: rgba(255, 255, 255, 0.25);
@@ -9402,7 +9402,7 @@ body.on-login-page #globalBlobs { display: none; }
 .job-detail-modal-content .modal-header {
     position: relative;
     padding: 32px 32px 28px;
-    background: linear-gradient(135deg, #eef2ff 0%, #f3f0ff 60%, #edf6ff 100%);
+    background: linear-gradient(135deg, #eef4ee 0%, #f0f7f0 60%, #e8f5e9 100%);
     border-radius: 20px 20px 0 0;
     overflow: hidden;
 }
@@ -9412,7 +9412,7 @@ body.on-login-page #globalBlobs { display: none; }
     position: absolute;
     top: -60px; right: -60px;
     width: 240px; height: 240px;
-    background: radial-gradient(circle, rgba(79,124,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(94,140,101,0.1) 0%, transparent 70%);
     border-radius: 50%;
 }
 
@@ -9452,13 +9452,13 @@ body.on-login-page #globalBlobs { display: none; }
     font-size: 12px;
     color: #5a6a8a;
     background: rgba(255,255,255,0.6);
-    border: 1px solid rgba(79,124,255,0.15);
+    border: 1px solid rgba(94,140,101,0.15);
     padding: 3px 10px;
     border-radius: 20px;
 }
 
 .job-detail-modal-content .salary-badge {
-    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    background: linear-gradient(135deg, #5e8c65, #4a7350);
     color: #fff;
     font-size: 18px;
     font-weight: 700;
@@ -9466,7 +9466,7 @@ body.on-login-page #globalBlobs { display: none; }
     border-radius: 12px;
     letter-spacing: 0.5px;
     white-space: nowrap;
-    box-shadow: 0 4px 20px rgba(79,124,255,0.35);
+    box-shadow: 0 4px 20px rgba(94,140,101,0.35);
 }
 
 .job-detail-modal-content .header-stats {
@@ -9531,7 +9531,7 @@ body.on-login-page #globalBlobs { display: none; }
 
 .job-detail-modal-content .stat-demand-bar {
     height: 6px;
-    background: rgba(79,124,255,0.12);
+    background: rgba(94,140,101,0.12);
     border-radius: 4px;
     overflow: hidden;
     margin-top: 6px;
@@ -9542,7 +9542,7 @@ body.on-login-page #globalBlobs { display: none; }
 .job-detail-modal-content .stat-demand-fill {
     height: 100%;
     border-radius: 4px;
-    background: linear-gradient(90deg, #4f7cff, #7c5cff);
+    background: linear-gradient(90deg, #5e8c65, #4a7350);
 }
 
 /* Body sections */
@@ -9570,7 +9570,7 @@ body.on-login-page #globalBlobs { display: none; }
     width: 4px;
     height: 16px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #4f7cff, #7c5cff);
+    background: linear-gradient(180deg, #5e8c65, #4a7350);
 }
 
 .job-detail-modal-content .quick-stats {
@@ -9587,7 +9587,7 @@ body.on-login-page #globalBlobs { display: none; }
 
 .job-detail-modal-content .qs-card {
     background: #fff;
-    border: 1px solid rgba(79,124,255,0.1);
+    border: 1px solid rgba(94,140,101,0.1);
     border-radius: 12px;
     padding: 14px 16px;
     min-height: 88px;
@@ -11162,11 +11162,11 @@ body.on-login-page #globalBlobs { display: none; }
     display: flex;
     align-items: center;
     padding: 24px;
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: white;
     border-radius: 12px;
     margin: 20px;
-    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+    box-shadow: 0 8px 25px rgba(94,140,101,0.3);
 }
 
 .agent-avatar {
@@ -11268,12 +11268,12 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .agent-message .message-avatar {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: white;
 }
 
 .user-message .message-avatar {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: white;
 }
 
@@ -11300,14 +11300,14 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .user-message .message-content {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: white;
     padding: 16px 20px;
     border-radius: 20px 20px 6px 20px;
     max-width: 80%;
     display: inline-block;
     text-align: left;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 4px 15px rgba(94,140,101,0.2);
     font-size: 16px;
     line-height: 1.5;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -11345,8 +11345,8 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .agent-chat-input-fullrow textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(45, 91, 227, 0.15);
+    border-color: #5e8c65;
+    box-shadow: 0 0 0 4px rgba(94,140,101,0.15);
 }
 
 .agent-chat-input-fullrow button {
@@ -11369,21 +11369,21 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .agent-chat-input input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(45, 91, 227, 0.15);
+    border-color: #5e8c65;
+    box-shadow: 0 0 0 4px rgba(94,140,101,0.15);
 }
 
 .agent-chat-input button {
     padding: 16px 32px;
     border-radius: 24px;
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: white;
     border: none;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(26, 63, 168, 0.3);
+    box-shadow: 0 4px 15px rgba(94,140,101,0.3);
     font-family: var(--font-body);
     white-space: nowrap;
     flex-shrink: 0;
@@ -11412,12 +11412,12 @@ body.on-login-page #globalBlobs { display: none; }
 
 .agent-chat-input button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(26, 63, 168, 0.4);
+    box-shadow: 0 8px 25px rgba(94,140,101,0.4);
 }
 
 .agent-chat-input button:active {
     transform: translateY(0);
-    box-shadow: 0 4px 15px rgba(26, 63, 168, 0.3);
+    box-shadow: 0 4px 15px rgba(94,140,101,0.3);
 }
 
 .agent-quick-actions {
@@ -11452,8 +11452,8 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .agent-quick-actions .btn-secondary:hover {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
+    border-color: #5e8c65;
     color: white;
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
@@ -11876,6 +11876,7 @@ body.on-login-page #globalBlobs { display: none; }
     color: var(--text-primary);
     user-select: none;
     transition: all 0.2s ease;
+    font-family: 'Noto Sans SC', sans-serif;
 }
 
 .career-module-header:hover {
@@ -12248,8 +12249,9 @@ body.on-login-page #globalBlobs { display: none; }
 .career-report-wrap {
     padding: 0;
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.7;
     color: var(--text-primary);
+    font-family: 'Noto Sans SC', sans-serif;
 }
 
 .career-report-header {
@@ -12275,6 +12277,7 @@ body.on-login-page #globalBlobs { display: none; }
     color: #ffffff;
     margin-bottom: 12px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: 'Noto Sans SC', sans-serif;
 }
 
 .career-report-sub {
@@ -17711,7 +17714,7 @@ body.on-login-page #agentAssistant { display: none !important; }
 }
 
 #reportPage .user-message .message-content {
-    background: var(--mock-sage);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
     color: #fff;
     border-radius: var(--mock-radius);
 }
@@ -20986,4 +20989,638 @@ body.on-login-page::after {
   #loginPage .right-panel {
     width: 100%;
     }
+  }
+}
+
+/* ========== 职业规划报告行动计划横向标签页样式 ========== */
+#reportPage .action-plan-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--mock-line);
+    padding-bottom: 0;
+}
+
+#reportPage .action-plan-tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--mock-ink-2);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+}
+
+#reportPage .action-plan-tab:hover {
+    color: var(--mock-ink);
+}
+
+#reportPage .action-plan-tab.active {
+    color: var(--mock-sage);
+    border-bottom-color: var(--mock-sage);
+}
+
+#reportPage .action-plan-content {
+    display: none;
+}
+
+#reportPage .action-plan-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#reportPage .monthly-plan-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    border-radius: var(--mock-radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+#reportPage .monthly-plan-card:hover {
+    border-color: var(--mock-sage-mid);
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.08);
+}
+
+#reportPage .monthly-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--mock-line);
+}
+
+#reportPage .monthly-plan-month {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--mock-ink);
+}
+
+#reportPage .monthly-plan-focus {
+    font-size: 13px;
+    color: var(--mock-sage);
+    background: var(--mock-sage-soft);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+#reportPage .monthly-plan-tasks {
+    margin-bottom: 16px;
+}
+
+#reportPage .monthly-plan-task {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--mock-line-2);
+}
+
+#reportPage .monthly-plan-task:last-child {
+    border-bottom: none;
+}
+
+#reportPage .monthly-plan-task-title {
+    font-weight: 600;
+    color: var(--mock-ink);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+#reportPage .monthly-plan-task-details {
+    font-size: 13px;
+    color: var(--mock-ink-2);
+    line-height: 1.6;
+}
+
+#reportPage .monthly-plan-task-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+#reportPage .task-meta-item {
+    color: var(--mock-ink-3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#reportPage .task-meta-icon {
+    font-size: 14px;
+}
+
+#reportPage .monthly-plan-milestone {
+    background: var(--mock-amber-soft);
+    border-left: 3px solid var(--mock-amber);
+    padding: 12px 16px;
+    border-radius: var(--mock-radius);
+    font-size: 13px;
+    color: var(--mock-ink);
+}
+
+#reportPage .monthly-plan-milestone strong {
+    color: var(--mock-amber);
+    font-weight: 600;
+}
+
+#reportPage .plan-goal-highlight {
+    background: var(--mock-sage-soft);
+    border: 1px solid var(--mock-sage-mid);
+    border-radius: var(--mock-radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+#reportPage .plan-goal-highlight h6 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mock-sage);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+}
+
+#reportPage .plan-goal-highlight p {
+    font-size: 14px;
+    color: var(--mock-ink);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ========== 岗位画像页面配色调整（与模拟面试页面一致） ========== */
+#jobProfilePage {
+    --mock-ink: #1c1c18;
+    --mock-ink-2: #5a5a52;
+    --mock-ink-3: #a0a098;
+    --mock-line: #e8e6df;
+    --mock-line-2: #f0ede6;
+    --mock-bg: #f7f6f2;
+    --mock-white: #ffffff;
+    background: #f7f6f2 !important;
+    --mock-sage: #5e8c65;
+    --mock-sage-soft: #eef4ee;
+    --mock-sage-mid: #c9deca;
+    --mock-amber: #b8862a;
+    --mock-amber-soft: #fdf5e4;
+    --mock-red: #b94040;
+    --mock-red-soft: #fdf2f2;
+    --mock-radius: 8px;
+    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--mock-bg);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-profile-tag {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .job-profile-title-bar {
+    background: linear-gradient(180deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .job-profile-title {
+    color: var(--mock-ink);
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+#jobProfilePage .job-profile-subtitle {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-profile-stat-card {
+    background: var(--mock-white);
+    box-shadow: var(--mock-shadow);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .job-profile-stat-value-1 { color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-stat-value-2 { color: var(--mock-amber);
+}
+
+#jobProfilePage .job-profile-stat-value-3 { color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-stat-label {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-profile-tabs {
+    border-bottom-color: var(--mock-line);
+}
+
+#jobProfilePage .job-profile-tabs .tab-btn.active {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-tabs .tab-btn.active::after {
+    background: linear-gradient(90deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .skill-badge {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .strength-pill {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .ai-hint-blue {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .ai-hint-purple {
+    background: var(--mock-amber-soft);
+    color: var(--mock-amber);
+}
+
+#jobProfilePage .ai-hint-label {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .path-step {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-pagination .pagination-btn.active {
+    background: var(--mock-sage);
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-pagination .pagination-btn:hover:not(:disabled) {
+    border-color: var(--mock-sage);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-back-featured {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-show-all {
+    background: var(--mock-sage);
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-show-all:hover {
+    background: #4a7350;
+    border-color: #4a7350;
+}
+
+#jobProfilePage .real-data-expand {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-detail {
+    background: var(--mock-white);
+    border-color: var(--mock-line);
+    box-shadow: var(--mock-shadow);
+}
+
+#jobProfilePage .job-detail-modal-content .btn-primary {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .job-detail-modal-content .btn-primary:hover {
+    box-shadow: 0 8px 24px rgba(94, 140, 101, 0.35);
+}
+
+#jobProfilePage .job-detail-modal-content .skeleton {
+    background: linear-gradient(90deg, rgba(94, 140, 101, 0.06) 25%, rgba(94, 140, 101, 0.12) 50%, rgba(94, 140, 101, 0.06) 75%);
+}
+
+#jobProfilePage .job-detail-modal-content .loading-dots::after {
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .btn-primary {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    border-color: var(--mock-sage);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .btn-primary:hover {
+    background: #4a7350;
+    border-color: #4a7350;
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.35);
+    transform: translateY(-1px);
+}
+
+#jobProfilePage .btn-secondary {
+    background: var(--mock-white);
+    border-color: var(--mock-line);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .btn-secondary:hover {
+    border-color: var(--mock-sage);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-card {
+    background: var(--mock-white);
+    box-shadow: var(--mock-shadow);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .job-card:hover {
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.12);
+    border-color: var(--mock-sage-mid);
+}
+
+#jobProfilePage .card-salary {
+    background: var(--mock-amber-soft);
+    color: var(--mock-amber);
+}
+
+#jobProfilePage .tag-soft {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .tag-tech {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-card-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-card-meta {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-footer .growth-trend {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .job-profile-filters input,
+#jobProfilePage .job-profile-filters select {
+    border-color: var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-profile-filters input:focus,
+#jobProfilePage .job-profile-filters select:focus {
+    border-color: var(--mock-sage);
+    box-shadow: 0 0 0 2px rgba(94, 140, 101, 0.15);
+}
+
+#jobProfilePage .job-profile-clear-btn {
+    background: var(--mock-line-2);
+    color: var(--mock-ink-3);
+}
+
+#jobProfilePage .job-profile-clear-btn:hover {
+    background: var(--mock-line);
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .graph-controls input,
+#jobProfilePage .graph-controls select {
+    border-color: var(--mock-line);
+    background: var(--mock-white);
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .graph-controls input:focus,
+#jobProfilePage .graph-controls select:focus {
+    border-color: var(--mock-sage);
+}
+
+#jobProfilePage .graph-empty-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .graph-empty-desc {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .ai-agent-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    box-shadow: var(--mock-shadow);
+}
+
+#jobProfilePage .ai-agent-card-divider {
+    background: var(--mock-line);
+}
+
+#jobProfilePage .ai-agent-tag {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+    border: 1px solid var(--mock-sage-mid);
+}
+
+#jobProfilePage .ai-agent-step-circle {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    color: #fff;
+}
+
+#jobProfilePage .ai-agent-step-line {
+    background: var(--mock-line);
+}
+
+#jobProfilePage .ai-agent-step-label {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .ai-agent-btn {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .ai-agent-btn:hover {
+    background: #4a7350;
+    box-shadow: 0 4px 16px rgba(94, 140, 101, 0.35);
+}
+
+#jobProfilePage .ai-gen-guide-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .ai-gen-hot-card {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+}
+
+#jobProfilePage .ai-gen-guide-title,
+#jobProfilePage .ai-gen-hot-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .ai-gen-guide-num {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .ai-gen-guide-text {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .real-data-modal-header {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .real-data-modal-box {
+    box-shadow: 0 20px 60px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .job-detail-modal-box {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    box-shadow: 0 20px 60px rgba(94, 140, 101, 0.25);
+}
+
+#jobProfilePage .job-profile-detail {
+    background: var(--mock-white);
+    border: 1px solid var(--mock-line);
+    box-shadow: var(--mock-shadow);
+}
+
+#jobProfilePage .job-card-footer {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .job-demand-num {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-trend-label {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .btn-profile {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .btn-profile:hover {
+    background: #4a7350;
+}
+
+#jobProfilePage .btn-realdata {
+    color: var(--mock-sage);
+    border-color: var(--mock-sage-mid);
+}
+
+#jobProfilePage .btn-realdata:hover {
+    background: var(--mock-sage-soft);
+    border-color: var(--mock-sage);
+}
+
+/* 岗位画像页面覆盖所有剩余的蓝色样式 */
+#jobProfilePage .welcome-section h2 {
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#jobProfilePage .action-card {
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
+}
+
+#jobProfilePage .assessment-welcome-card .assessment-illus-badge {
+    background: linear-gradient(135deg, #5e8c65, #6aa571);
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.3);
+}
+
+#jobProfilePage .assessment-welcome-card .assessment-meta-val.green {
+    color: #5e8c65;
+}
+
+#jobProfilePage .assessment-report-footer .btn-secondary {
+    border: 2px solid #5e8c65;
+    color: #5e8c65;
+}
+
+#jobProfilePage .assessment-report-footer .btn-secondary:hover {
+    background: #eef4ee;
+}
+
+#jobProfilePage .card-salary {
+    background: var(--mock-amber-soft);
+    color: var(--mock-amber);
+}
+
+#jobProfilePage .tag-soft {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .tag-tech {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .btn-profile {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .btn-profile:hover {
+    opacity: 0.9;
+}
+
+#jobProfilePage .job-title {
+    color: var(--mock-ink);
+}
+
+#jobProfilePage .job-company {
+    color: var(--mock-ink-2);
+}
+
+#jobProfilePage .card-stripe {
+    background: linear-gradient(90deg, var(--mock-sage), #4a7350);
+}
+
+/* 岗位画像页面覆盖全局的蓝色样式 */
+#jobProfilePage .card-salary {
+    background: var(--mock-amber-soft);
+    color: var(--mock-amber);
+}
+
+#jobProfilePage .tag-soft {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .tag-tech {
+    background: var(--mock-sage-soft);
+    color: var(--mock-sage);
+}
+
+#jobProfilePage .btn-profile {
+    background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+}
+
+#jobProfilePage .btn-realdata {
+    color: var(--mock-sage);
+    border-color: var(--mock-sage-mid);
+}
+
+#jobProfilePage .btn-realdata:hover {
+    background: var(--mock-sage-soft);
+    border-color: var(--mock-sage);
 }
