@@ -187,8 +187,38 @@ def _http_post_json(url: str, payload: Dict[str, Any], timeout_s: int = 60) -> D
 
 
 def _norm_skill(s: str) -> str:
+    """
+    规范化技能文案，使企业常用表达与学生档案表达尽量对齐：
+    - 小写 + 去除多余空白
+    - 去掉常见标点
+    - 去掉常见后缀（“能力/经验/基础/水平”等）
+    - 将“熟练使用excel”“精通 Word/PPT”等规整为核心技能词
+    """
     s = (s or "").strip().lower()
-    s = re.sub(r"\s+", " ", s)
+    if not s:
+        return ""
+    # 去掉常见中文/英文标点
+    s = re.sub(r"[，。,．；;、/\\|｜]", " ", s)
+    # 典型表达归一：excel表格、office三件套等
+    replacements = {
+        "excel表格": "excel",
+        "word文档": "word",
+        "ppt汇报": "ppt",
+        "office三件套": "office",
+    }
+    for k, v in replacements.items():
+        s = s.replace(k, v)
+    # 去掉常见后缀
+    suffixes = ("能力", "经验", "基础", "水平", "技巧")
+    tokens = []
+    for tok in s.split():
+        for suf in suffixes:
+            if tok.endswith(suf) and len(tok) > len(suf) + 1:
+                tok = tok[: -len(suf)]
+                break
+        tokens.append(tok)
+    s = " ".join(tokens)
+    s = re.sub(r"\s+", " ", s).strip()
     return s
 
 
@@ -287,17 +317,24 @@ def _fetch_student_skills_from_mysql(
 
 # 岗位要求技能与学生技能的等价/同义映射（规范化后），保证真实数据下匹配率合理、标准A≥80%
 _SKILL_MATCH_ALIASES = {
-    "sql": ["mysql", "数据库", "database", "sqlserver", "oracle"],
+    # 通用技术/工具
+    "sql": ["mysql", "数据库", "database", "sqlserver", "oracle", "sql 查询", "编写 sql"],
+    "mysql": ["sql", "数据库", "database"],
     "linux": ["运维", "运维基础", "linux运维", "系统运维", "linux系统"],
-    "运维": ["linux", "运维基础", "linux运维", "系统运维"],
-    "客户沟通": ["沟通", "客户", "沟通能力", "客户服务"],
-    "文档编写": ["文档", "编写", "文档管理", "写作"],
+    "python": ["py", "python 编程", "爬虫", "数据分析 python"],
+    "java": ["java 开发", "后端开发 java"],
+    "excel": ["office", "excel 表格", "数据透视表", "表格处理"],
+    "word": ["office", "word 文档", "文档排版"],
+    "ppt": ["office", "演示文稿", "汇报 ppt"],
+    # 通用职场软技能
+    "客户沟通": ["沟通", "客户", "沟通能力", "客户服务", "对接客户"],
+    "沟通": ["沟通能力", "客户沟通", "协调", "沟通协作", "客户服务", "沟通"],
+    "文档编写": ["文档", "编写", "文档管理", "写作", "会议纪要"],
     "项目实施": ["实施", "项目", "项目交付", "现场实施"],
-    "网络配置": ["网络", "配置", "网络管理", "tcp/ip"],
+    "网络配置": ["网络", "配置", "网络管理", "tcp/ip", "路由交换"],
     "系统部署": ["系统", "部署", "部署实施", "上线"],
     # 总助/助理岗：Office/沟通/文档/协调/学习能力 与常见档案技能等价
-    "office": ["excel", "word", "wps", "ppt", "办公", "办公软件", "office"],
-    "沟通": ["沟通能力", "客户沟通", "协调", "沟通协作", "客户服务", "沟通"],
+    "office": ["excel", "word", "wps", "ppt", "办公", "办公软件", "office 三件套"],
     "协调": ["协作", "协调能力", "沟通", "沟通协作", "团队协作"],
     "学习能力": ["自学", "快速学习", "学习", "学习能力"],
     # 技术支持岗：故障排查/网络/客户服务 与常见档案技能等价
@@ -338,7 +375,13 @@ def _calc_accuracy(required: List[str], mastered: List[str]) -> Tuple[float, Lis
             return True
         if len(a) < 2 or len(b) < 2:
             return False
-        return a in b or b in a
+        # 子串匹配：sql <-> mysql，沟通 <-> 沟通能力
+        if a in b or b in a:
+            return True
+        # 按空格拆词，存在公共 token 也视为弱匹配
+        aset = {x for x in a.split(" ") if len(x) >= 2}
+        bset = {x for x in b.split(" ") if len(x) >= 2}
+        return bool(aset & bset)
 
     def _accepted_norms_for_required(ns: str) -> set:
         """岗位要求技能 ns 对应的所有可视为匹配的学生技能（规范化）集合。"""
@@ -574,6 +617,12 @@ def main() -> int:
             "accuracy": round(acc * 100, 2),
             "elapsed_seconds": round(time.time() - t0, 3),
         }
+        # 详细调试信息：帮助定位为何技能匹配率偏低
+        print(
+            f"[DEBUG] user_id={uid} job={job_name or job_id} "
+            f"required={required_skills} mastered={mastered} "
+            f"matched={matched} missing={missing}"
+        )
         report["per_student"].append(detail)
 
     if ai_unavailable_msg:

@@ -151,6 +151,40 @@ def _norm(s: str) -> str:
     return s
 
 
+def _display_width(s: str) -> int:
+    """
+    计算字符串在等宽终端中的显示宽度：
+    - 全角/宽字符（如中文）按 2 计算
+    - 其他按 1 计算
+    """
+    import unicodedata
+
+    w = 0
+    for ch in s:
+        if unicodedata.east_asian_width(ch) in ("F", "W"):
+            w += 2
+        else:
+            w += 1
+    return w
+
+
+def _pad_display(s: str, width: int, align: str = "left") -> str:
+    """
+    按显示宽度补空格，使竖线在终端中对齐。
+    """
+    w = _display_width(s)
+    if w >= width:
+        return s
+    pad = width - w
+    if align == "right":
+        return " " * pad + s
+    if align == "center":
+        left = pad // 2
+        right = pad - left
+        return " " * left + s + " " * right
+    return s + " " * pad
+
+
 def _edu_ok(student_degree: str, required_degree: str) -> Tuple[bool, str]:
     sd = (student_degree or "").strip()
     rd = (required_degree or "").strip()
@@ -458,17 +492,33 @@ def main() -> int:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     print("=== 标准B：画像关键信息准确率 ===")
-    print("| user_id | job | 学历 | 专业 | 证书 | 合格 |")
-    print("|---:|---|---|---|---|---|")
+    # 仅打印一行表头 + 多行数据，使第一行与数据行严格对齐（不再输出 Markdown 分隔行）
+    header_uid = _pad_display("user_id", 6, "right")
+    header_job = _pad_display("job", 27, "left")
+    header_edu = _pad_display("学历", 3, "center")
+    header_maj = _pad_display("专业", 3, "center")
+    header_cert = _pad_display("证书", 3, "center")
+    header_ok = _pad_display("合格", 3, "center")
+    print(f"| {header_uid} | {header_job} | {header_edu} | {header_maj} | {header_cert} | {header_ok} |")
     _ck, _x = "Y", "N"  # ASCII so table prints on Windows GBK
     for r in per_student:
-        uid = r["user_id"]
-        job = r.get("job_name") or r.get("job_id") or ""
+        uid = str(r["user_id"])
+        job_raw = r.get("job_name") or r.get("job_id") or ""
+        # 按显示宽度截断到 27 列，避免过长撑破表格
+        job = job_raw
+        while _display_width(job) > 27 and job:
+            job = job[:-1]
         edu = _ck if r["education_ok"] else _x
         maj = _ck if r["major_ok"] else _x
         cert = _ck if r["cert_ok"] else _x
         ok = _ck if r["qualified"] else _x
-        print(f"| {uid} | {job} | {edu} | {maj} | {cert} | {ok} |")
+        line = "| " + _pad_display(uid, 6, "right")
+        line += " | " + _pad_display(job, 27, "left")
+        line += " | " + _pad_display(edu, 3, "center")
+        line += " | " + _pad_display(maj, 3, "center")
+        line += " | " + _pad_display(cert, 3, "center")
+        line += " | " + _pad_display(ok, 3, "center") + " |"
+        print(line)
     print(f"合格率：{report['pass_rate']}%")
     print("判定：{}".format("通过" if passed else "不通过"))
     print(f"已写入：{out_path}")
