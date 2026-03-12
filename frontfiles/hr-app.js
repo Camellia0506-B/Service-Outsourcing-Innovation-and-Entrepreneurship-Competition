@@ -1036,6 +1036,7 @@ function drawRadar(canvas, labels, values) {
 }
 
 window.openEvalReportModalById = openEvalReportModalById;
+window.drawRadar = drawRadar;
 
 var impressionToText = { excellent: '优秀', good: '良好', average: '一般', below_average: '有待提升' };
 var intentToText = { strong: '强烈推荐', moderate: '有意向', weak: '可考虑', no: '暂不考虑' };

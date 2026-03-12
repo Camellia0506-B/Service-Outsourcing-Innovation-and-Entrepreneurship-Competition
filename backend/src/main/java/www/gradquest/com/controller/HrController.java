@@ -131,8 +131,8 @@ public class HrController {
         invitations.add(GetInvitationsResponse.InvitationItem.builder()
                 .invitationId("inv_001")
                 .anonymousStudentId("student_anon_001")
-                .targetJob("AI产品经理")
-                .message("您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。")
+                .targetJob("算法工程师")
+                .message("您好，我们公司正在招聘算法工程师，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。")
                 .status("pending")
                 .sentAt("2025-03-10 15:00:00")
                 .build());

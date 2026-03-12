@@ -17353,6 +17353,85 @@ body.on-login-page #agentAssistant { display: none !important; }
 #resumePage .page-subtitle { color: #a0a098; }
 #resumePage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
 
+/* HR邀约页 Tab：墨绿选中态，细线分隔，无圆角 */
+.hr-invite-tabs {
+    display: flex;
+    border-bottom: 1px solid #e2dfd7;
+    margin-bottom: 20px;
+    gap: 0;
+}
+.hr-invite-tab {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b6860;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    border-radius: 0;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.hr-invite-tab:hover { color: #0f0f0d; }
+.hr-invite-tab.active {
+    color: #2d6a4f;
+    border-bottom-color: #2d6a4f;
+}
+.hr-invite-panel.hidden { display: none !important; }
+
+/* 评估报告详情弹窗 */
+.hr-report-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+.hr-report-modal-overlay.hidden { display: none !important; }
+.hr-report-modal {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.hr-report-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2dfd7;
+    flex-shrink: 0;
+}
+.hr-report-modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    color: #a0a098;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 4px;
+}
+.hr-report-modal-close:hover { color: #0f0f0d; background: #f5f5f5; }
+.hr-report-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
 /* 隐私设置页面整体样式（和模拟面试一致） */
 #privacyPage {
     --mock-ink: #1c1c18;

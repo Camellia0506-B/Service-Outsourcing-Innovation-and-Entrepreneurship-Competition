@@ -1084,6 +1084,30 @@ class CareerPlanningApp {
             this.loadStudentInvitations();
         });
 
+        // HR邀约页：Tab 切换
+        document.querySelectorAll('.hr-invite-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                var t = tab.dataset.tab;
+                document.querySelectorAll('.hr-invite-tab').forEach(function (x) { x.classList.remove('active'); });
+                document.getElementById('hrInviteTabInvitations').classList.toggle('active', t === 'invitations');
+                document.getElementById('hrInviteTabReports').classList.toggle('active', t === 'reports');
+                document.getElementById('hrInvitePanelInvitations').classList.toggle('hidden', t !== 'invitations');
+                document.getElementById('hrInvitePanelReports').classList.toggle('hidden', t !== 'reports');
+                if (t === 'reports' && window.app && typeof window.app.loadStudentEvaluationReports === 'function') {
+                    window.app.loadStudentEvaluationReports();
+                }
+            });
+        });
+        document.getElementById('hrReportRefreshBtn')?.addEventListener('click', () => {
+            this.loadStudentEvaluationReports();
+        });
+        document.getElementById('hrReportDetailClose')?.addEventListener('click', () => {
+            this.closeReportDetailModal();
+        });
+        document.getElementById('hrReportDetailModal')?.addEventListener('click', function (e) {
+            if (e.target === this) window.app && window.app.closeReportDetailModal();
+        });
+
         // 个人档案页：提交给HR
         document.getElementById('profileSubmitToHrBtn')?.addEventListener('click', () => {
             this.submitProfileToHr();
@@ -3648,6 +3672,190 @@ class CareerPlanningApp {
         } else {
             this.showToast(result.msg || '操作失败', 'error');
         }
+    }
+
+    // 加载 HR 评估报告列表（接口不可用时用 mock）
+    async loadStudentEvaluationReports() {
+        const countEl = document.getElementById('hrReportCount');
+        const listEl = document.getElementById('hrReportList');
+        if (!listEl) return;
+        const userId = getCurrentUserId();
+        if (!userId) {
+            listEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#a0a098;font-size:14px;">请先登录</div>';
+            if (countEl) countEl.textContent = '共 0 条报告';
+            return;
+        }
+        let list = [];
+        const result = typeof getStudentEvaluationReports === 'function' ? await getStudentEvaluationReports(userId) : { success: false };
+        if (result.success && Array.isArray(result.list) && result.list.length > 0) {
+            list = result.list;
+        } else {
+            if (window.MockStore) {
+                const store = window.MockStore.getMockStore();
+                list = (store.myReports || []).slice();
+            }
+            if (!list.length) {
+                list = [
+                    { evaluation_id: 'EVAL-2025-001', target_job: '算法工程师', company_name: '星途智探科技有限公司', hr_name: '孙于婷', submitted_at: '2025-03-09 16:40', status: 'completed' }
+                ];
+            }
+            list = list.map(function (r) {
+                return {
+                    evaluation_id: r.evaluation_id || r.evaluationId,
+                    target_job: r.target_job || r.targetJob || '',
+                    company_name: r.company_name || r.companyName || '',
+                    hr_name: r.hr_name || r.hrName || '',
+                    submitted_at: r.submitted_at || r.submittedAt || '',
+                    status: r.status || 'completed'
+                };
+            });
+        }
+        if (countEl) countEl.textContent = '共 ' + list.length + ' 条报告';
+        if (list.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#a0a098;font-size:14px;">暂无评估报告，接受邀请后 HR 填写评估即可在此查看</div>';
+            return;
+        }
+        const esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+        listEl.innerHTML = list.map(function (r) {
+            var id = r.evaluation_id || r.evaluationId;
+            var idEsc = String(id).replace(/'/g, "\\'");
+            var statusText = (r.status === 'completed' || r.status === '已完成') ? '已生成' : '生成中';
+            var statusCls = (r.status === 'completed' || r.status === '已完成') ? '#2d6a4f' : '#b56a00';
+            return '<div style="background:#fff;border-radius:12px;padding:24px;">'
+                + '<div style="display:flex;align-items:flex-start;">'
+                + '<div style="flex:1;">'
+                + '<h3 style="font-size:16px;font-weight:600;margin:0 0 4px;">' + esc(r.target_job) + '</h3>'
+                + '<p style="color:#888;font-size:13px;margin:0 0 8px;">' + esc(r.company_name) + (r.hr_name ? ' · ' + esc(r.hr_name) : '') + '</p>'
+                + '<p style="color:#aaa;font-size:12px;margin:0 0 12px;">报告生成时间：' + esc(r.submitted_at) + '</p>'
+                + '<span style="background:' + statusCls + ';color:#fff;padding:4px 10px;border-radius:20px;font-size:12px;">' + statusText + '</span>'
+                + '</div>'
+                + '<button type="button" onclick="window.app.openReportDetailModal(\'' + idEsc + '\')" style="background:#0f0f0d;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;">查看详情</button>'
+                + '</div></div>';
+        }).join('');
+    }
+
+    async openReportDetailModal(evaluationId) {
+        const overlay = document.getElementById('hrReportDetailModal');
+        const titleEl = document.getElementById('hrReportDetailTitle');
+        if (!overlay) return;
+        overlay.classList.remove('hidden');
+
+        const setEl = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text || '—'; };
+        setEl('reportCompanyName', '');
+        setEl('reportTargetJob', '');
+        setEl('reportSubmittedAt', '');
+        setEl('reportOverall', '');
+        setEl('reportHiring', '');
+        setEl('reportStrengths', '');
+        setEl('reportWeaknesses', '');
+        document.getElementById('reportScoreBars').innerHTML = '';
+        document.getElementById('reportPositions').innerHTML = '';
+        setEl('reportInsight', '');
+
+        const userId = getCurrentUserId();
+        if (!userId) {
+            setEl('reportInsight', '请先登录');
+            return;
+        }
+        let data = null;
+        if (typeof getStudentEvaluationReportDetail === 'function') {
+            const res = await getStudentEvaluationReportDetail(userId, evaluationId);
+            if (res.success && res.data) data = res.data;
+        }
+        if (!data && window.MockStore) {
+            const store = window.MockStore.getMockStore();
+            const report = (store.myReports || []).find(function (r) {
+                return (r.evaluationId || r.evaluation_id) === evaluationId;
+            });
+            if (report) {
+                data = {
+                    target_job: report.targetJob,
+                    company_name: report.companyName,
+                    overall_impression: report.overallImpression,
+                    hiring_intent: report.hiringIntent,
+                    dimension_scores: report.dimensionScores || {},
+                    strengths_noted: report.strengthsNoted,
+                    weaknesses_noted: report.weaknessesNoted,
+                    recommended_positions: report.recommendedPositions || [],
+                    evaluation_basis: report.evaluationBasis,
+                    submitted_at: report.submittedAt
+                };
+            }
+        }
+        if (!data) {
+            data = {
+                target_job: '算法工程师',
+                company_name: '星途智探科技有限公司',
+                overall_impression: '优秀',
+                hiring_intent: '强烈推荐',
+                dimension_scores: { '专业技能匹配度': 95, '学习能力': 95, '沟通表达': 80, '团队协作意愿': 86, '抗压能力': 99, '职业成熟度': 94 },
+                strengths_noted: '掌握技术种类多样，学习能力与抗压能力较强，具有较高的培养潜力，在开发项目中有极好的发挥优势',
+                weaknesses_noted: '沟通能力弱，团队协作意愿弱',
+                recommended_positions: ['算法工程师', '开发员'],
+                evaluation_basis: '简历审阅',
+                submitted_at: '2025-03-09 16:40'
+            };
+        }
+
+        var impressionToText = { excellent: '优秀', good: '良好', average: '一般', below_average: '有待提升' };
+        var intentToText = { strong: '强烈推荐', moderate: '有意向', weak: '可考虑', no: '暂不考虑' };
+        var dimensions = ['专业技能匹配度', '学习能力', '沟通表达', '团队协作意愿', '抗压能力', '职业成熟度'];
+        var scores = data.dimension_scores || data.dimensionScores || {};
+        var overallRaw = data.overall_impression || data.overallImpression || '—';
+        var hiringRaw = data.hiring_intent || data.hiringIntent || '—';
+        var overallText = impressionToText[overallRaw] || overallRaw;
+        var hiringText = intentToText[hiringRaw] || hiringRaw;
+
+        if (titleEl) titleEl.textContent = '评估报告详情 · ' + (data.target_job || data.targetJob || '');
+        setEl('reportCompanyName', data.company_name || data.companyName || '—');
+        setEl('reportTargetJob', data.target_job || data.targetJob || '—');
+        setEl('reportSubmittedAt', data.submitted_at || data.submittedAt || '—');
+        setEl('reportOverall', overallText);
+        setEl('reportHiring', hiringText);
+        setEl('reportStrengths', data.strengths_noted || data.strengthsNoted || '—');
+        setEl('reportWeaknesses', data.weaknesses_noted || data.weaknessesNoted || '—');
+
+        var positions = data.recommended_positions || data.recommendedPositions || [];
+        var posEl = document.getElementById('reportPositions');
+        if (posEl) {
+            if (Array.isArray(positions) && positions.length) {
+                posEl.innerHTML = positions.map(function (p) {
+                    return '<span style="background:#e8f4ee;color:#2d6a4f;padding:4px 12px;border-radius:20px;font-size:13px;">' + String(p).replace(/</g, '&lt;') + '</span>';
+                }).join('');
+            } else {
+                posEl.innerHTML = '<span style="color:#999;font-size:13px;">暂无推荐岗位</span>';
+            }
+        }
+
+        var barsHtml = dimensions.map(function (dim) {
+            var val = scores[dim] !== undefined ? scores[dim] : 0;
+            var color = val >= 85 ? '#2d6a4f' : val >= 70 ? '#b56a00' : '#888';
+            return '<div style="margin-bottom:12px;">' +
+                '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">' +
+                '<span>' + dim + '</span><span style="font-weight:600;color:' + color + '">' + val + '</span></div>' +
+                '<div style="background:#eee;border-radius:4px;height:6px;">' +
+                '<div style="width:' + Math.min(100, val) + '%;background:' + color + ';height:6px;border-radius:4px;transition:width 0.6s;"></div></div></div>';
+        }).join('');
+        var barsEl = document.getElementById('reportScoreBars');
+        if (barsEl) barsEl.innerHTML = barsHtml;
+
+        var dimValues = dimensions.map(function (d) { return Number(scores[d]) || 0; });
+        var avgScore = dimValues.length ? dimValues.reduce(function (a, b) { return a + b; }, 0) / dimValues.length : 0;
+        var topDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) > (scores[b] || 0) ? a : b; });
+        var lowDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) < (scores[b] || 0) ? a : b; });
+        var insightText = '综合6项维度评分，平均得分为 ' + avgScore.toFixed(1) + ' 分，整体表现' + (avgScore >= 85 ? '优秀' : avgScore >= 75 ? '良好' : '中等') + '。' +
+            '其中「' + topDim + '」维度表现最为突出（' + (scores[topDim] || 0) + '分）；' +
+            '「' + lowDim + '」维度（' + (scores[lowDim] || 0) + '分）仍有提升空间，建议后续重点关注。' +
+            'HR录用意向为「' + hiringText + '」，综合建议优先考虑 ' + (positions[0] || '相关') + ' 方向岗位。';
+        setEl('reportInsight', insightText);
+
+        var canvas = document.getElementById('reportRadarChart');
+        if (canvas && typeof window.drawRadar === 'function') window.drawRadar(canvas, dimensions, dimValues);
+    }
+
+    closeReportDetailModal() {
+        const overlay = document.getElementById('hrReportDetailModal');
+        if (overlay) overlay.classList.add('hidden');
     }
 
     // 加载简历
@@ -6976,9 +7184,9 @@ class CareerPlanningApp {
         container.innerHTML = '';
         const list = data.list || [];
         const stripeGradients = [
-            'linear-gradient(90deg, #2563eb, #0ea5e9)',
-            'linear-gradient(90deg, #0ea5e9, #4f46e5)',
-            'linear-gradient(90deg, #4f46e5, #2563eb)',
+            'linear-gradient(90deg, #2d6a4f, #3d7a5f)',
+            'linear-gradient(90deg, #245a41, #2d6a4f)',
+            'linear-gradient(90deg, #2d6a4f, #1e4d3a)',
         ];
         list.forEach((job, idx) => {
             const jobCard = document.createElement('div');
