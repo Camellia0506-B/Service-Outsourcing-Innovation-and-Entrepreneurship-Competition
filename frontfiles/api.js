@@ -3044,6 +3044,40 @@ async function respondToInvitation(invitationId, userId, action) {
     }
 }
 
+// 学生端：获取 HR 评估报告列表（GET，走 AI 服务 5002）
+async function getStudentEvaluationReports(userId) {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const url = `${base}/hr/student/evaluation-reports?user_id=${encodeURIComponent(userId)}`;
+    try {
+        const resp = await fetch(url, { method: 'GET' });
+        const data = await resp.json().catch(() => ({}));
+        if (data.code === 200 && data.data && Array.isArray(data.data.list)) {
+            return { success: true, list: data.data.list };
+        }
+        return { success: false, list: [], msg: data.msg || '加载失败' };
+    } catch (e) {
+        console.error('[API] getStudentEvaluationReports:', e);
+        return { success: false, list: [], msg: '网络错误' };
+    }
+}
+
+// 学生端：获取单条评估报告详情（GET）
+async function getStudentEvaluationReportDetail(userId, evaluationId) {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const url = `${base}/hr/student/evaluation-reports/${encodeURIComponent(evaluationId)}?user_id=${encodeURIComponent(userId)}`;
+    try {
+        const resp = await fetch(url, { method: 'GET' });
+        const data = await resp.json().catch(() => ({}));
+        if (data.code === 200 && data.data) {
+            return { success: true, data: data.data };
+        }
+        return { success: false, data: null, msg: data.msg || '加载失败' };
+    } catch (e) {
+        console.error('[API] getStudentEvaluationReportDetail:', e);
+        return { success: false, data: null, msg: '网络错误' };
+    }
+}
+
 // ==================== 隐私设置模块 ====================
 
 // 获取隐私设置

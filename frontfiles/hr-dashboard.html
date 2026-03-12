@@ -59,6 +59,376 @@
         }
         .invite-table .btn-fill-eval:hover,
         .btn-fill-eval:hover { opacity: 0.85; }
+
+        /* 简历详情弹窗：沿用 resume-modal 双栏、暖白+墨绿+墨黑、无圆角、细边框 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
+        #studentModal.resume-detail-overlay {
+            --cream: #f6f4ef;
+            --sage: #2d6a4f;
+            --sage-light: #e8f0eb;
+            --ink: #0f0f0d;
+            --ink-50: rgba(15,15,13,0.5);
+            --rule: #d8d4cc;
+            --amber: #b56a00;
+            position: fixed; inset: 0;
+            background: rgba(15,15,13,.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity .2s;
+            font-family: 'Noto Serif SC', serif;
+            color: var(--ink);
+        }
+        #studentModal.resume-detail-overlay.active { display: flex; }
+        #studentModal.resume-detail-overlay.visible { opacity: 1; }
+        #studentModal .resume-detail-modal {
+            width: 92vw;
+            max-width: 1100px;
+            max-height: 88vh;
+            background: var(--cream);
+            border: 1px solid var(--rule);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(12px);
+            transition: transform .22s ease;
+        }
+        #studentModal.visible .resume-detail-modal { transform: translateY(0); }
+        #studentModal .resume-modal-bar {
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            height: 48px;
+            border-bottom: 1px solid var(--rule);
+            flex-shrink: 0;
+        }
+        #studentModal .resume-modal-bar .breadcrumb {
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            color: var(--ink-50);
+            letter-spacing: .06em;
+        }
+        #studentModal .resume-modal-bar .breadcrumb span { color: var(--ink); }
+        #studentModal .resume-modal-close {
+            margin-left: auto;
+            width: 28px; height: 28px;
+            border: 1px solid var(--rule);
+            background: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            transition: all .15s;
+            color: var(--ink);
+        }
+        #studentModal .resume-modal-close:hover { background: var(--ink); color: var(--cream); }
+        #studentModal .resume-modal-body {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            overflow: hidden;
+            flex: 1;
+        }
+        #studentModal .resume-col-left {
+            border-right: 1px solid var(--ink);
+            overflow-y: auto;
+            padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            background: #f0ede6;
+        }
+        #studentModal .resume-candidate-id {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--ink-50);
+            letter-spacing: .1em;
+            margin-bottom: 4px;
+        }
+        #studentModal .resume-candidate-name {
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: .02em;
+            line-height: 1.2;
+        }
+        #studentModal .resume-candidate-sub {
+            font-size: 12px;
+            color: var(--ink-50);
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+        #studentModal .resume-divider { width: 100%; height: 1px; background: var(--rule); }
+        #studentModal .resume-meta-block { display: flex; flex-direction: column; gap: 10px; }
+        #studentModal .resume-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 12px;
+        }
+        #studentModal .resume-meta-label { color: var(--ink-50); }
+        #studentModal .resume-meta-value { font-weight: 500; }
+        #studentModal .resume-score-display {
+            background: var(--sage);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        #studentModal .resume-score-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 36px;
+            font-weight: 300;
+            line-height: 1;
+        }
+        #studentModal .resume-score-label { font-size: 12px; opacity: .75; }
+        #studentModal .resume-skill-section { display: flex; flex-direction: column; gap: 8px; }
+        #studentModal .resume-section-title {
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--ink-50);
+            margin-bottom: 2px;
+            font-family: 'DM Mono', monospace;
+        }
+        #studentModal .resume-skill-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+        #studentModal .resume-skill-chip {
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            padding: 3px 9px;
+            border: 1px solid var(--rule);
+            background: var(--cream);
+            color: var(--ink);
+        }
+        #studentModal .resume-skill-chip.highlight {
+            background: var(--sage-light);
+            border-color: rgba(45,106,79,.3);
+            color: var(--sage);
+        }
+        #studentModal .resume-contact-block { display: flex; flex-direction: column; gap: 6px; font-size: 11px; color: var(--ink-50); font-family: 'DM Mono', monospace; }
+        #studentModal .resume-contact-block a { color: var(--ink-50); text-decoration: none; }
+        #studentModal .resume-col-right { overflow-y: auto; padding: 0; }
+        #studentModal .resume-section-block {
+            padding: 28px 36px;
+            border-bottom: 1px solid var(--rule);
+        }
+        #studentModal .resume-section-block:last-child { border-bottom: none; }
+        #studentModal .resume-sec-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        #studentModal .resume-sec-head h3 {
+            font-size: 11px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            font-weight: 400;
+            font-family: 'DM Mono', monospace;
+            color: var(--ink-50);
+        }
+        #studentModal .resume-sec-head::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--rule);
+        }
+        #studentModal .resume-exp-item {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 0 28px;
+            margin-bottom: 24px;
+        }
+        #studentModal .resume-exp-item:last-child { margin-bottom: 0; }
+        #studentModal .resume-exp-meta { padding-top: 2px; }
+        #studentModal .resume-exp-date {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: var(--ink-50);
+            letter-spacing: .04em;
+            margin-bottom: 4px;
+        }
+        #studentModal .resume-exp-org { font-size: 12px; font-weight: 500; color: var(--sage); margin-bottom: 2px; }
+        #studentModal .resume-exp-role { font-size: 11px; color: var(--ink-50); }
+        #studentModal .resume-exp-title { font-size: 14px; font-weight: 500; margin-bottom: 7px; line-height: 1.3; }
+        #studentModal .resume-exp-desc { font-size: 12px; color: rgba(15,15,13,.7); line-height: 1.75; }
+        #studentModal .resume-exp-tech { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+        #studentModal .resume-tech-tag {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            padding: 2px 8px;
+            background: #ede9e1;
+            color: var(--ink-50);
+        }
+        #studentModal .resume-edu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+        #studentModal .resume-edu-cell {
+            padding: 16px 20px;
+            border-right: 1px solid var(--rule);
+        }
+        #studentModal .resume-edu-cell:last-child { border-right: none; }
+        #studentModal .resume-edu-cell-label { font-size: 10px; color: var(--ink-50); letter-spacing: .08em; font-family: 'DM Mono', monospace; text-transform: uppercase; margin-bottom: 6px; }
+        #studentModal .resume-edu-cell-value { font-size: 14px; font-weight: 500; }
+        #studentModal .resume-edu-cell-sub { font-size: 11px; color: var(--ink-50); margin-top: 2px; }
+        #studentModal .resume-award-list { display: flex; flex-direction: column; gap: 10px; }
+        #studentModal .resume-award-item {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            font-size: 12px;
+            padding: 10px 14px;
+            background: rgba(15,15,13,.03);
+            border-left: 2px solid transparent;
+        }
+        #studentModal .resume-award-item.top { border-left-color: var(--amber); }
+        #studentModal .resume-award-year { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); flex-shrink: 0; width: 36px; }
+        #studentModal .resume-award-name { flex: 1; line-height: 1.4; }
+        #studentModal .resume-award-level {
+            font-size: 10px;
+            font-family: 'DM Mono', monospace;
+            padding: 2px 6px;
+            background: var(--sage-light);
+            color: var(--sage);
+            flex-shrink: 0;
+        }
+        #studentModal .resume-award-level.amber { background: #fdf0e0; color: var(--amber); }
+        #studentModal .resume-cert-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        #studentModal .resume-cert-chip {
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            padding: 5px 14px;
+            border: 1px solid var(--ink);
+            display: flex; align-items: center; gap: 6px;
+        }
+        #studentModal .resume-cert-chip::before {
+            content: '✓';
+            color: var(--sage);
+            font-size: 10px;
+        }
+        #studentModal .resume-modal-footer {
+            padding: 14px 32px;
+            border-top: 1px solid var(--rule);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            background: #f0ede6;
+        }
+        #studentModal .resume-footer-status { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); letter-spacing: .06em; }
+        #studentModal .resume-btn-primary {
+            margin-left: auto;
+            padding: 9px 24px;
+            background: var(--sage);
+            color: white;
+            border: none;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 12px;
+            cursor: pointer;
+            letter-spacing: .04em;
+            transition: background .15s;
+        }
+        #studentModal .resume-btn-primary:hover { background: #245a41; }
+        #studentModal .resume-btn-secondary {
+            padding: 9px 24px;
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid var(--ink);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+        #studentModal .resume-btn-secondary:hover { background: var(--ink); color: var(--cream); }
+
+        /* S3 简历详情弹窗（resume-s3-anon 风格，仅用于 student_anon_003） */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap');
+        #s3ResumeModalOverlay {
+            --cream: #f6f4ef;
+            --sage: #2d6a4f;
+            --sage-light: #e8f0eb;
+            --ink: #0f0f0d;
+            --ink-50: rgba(15,15,13,0.5);
+            --amber: #b56a00;
+            --rule: #d8d4cc;
+            position: fixed; inset: 0;
+            background: rgba(15,15,13,.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity .2s;
+            font-family: 'Noto Serif SC', serif;
+            color: var(--ink);
+        }
+        #s3ResumeModalOverlay.active { display: flex; }
+        #s3ResumeModalOverlay.visible { opacity: 1; }
+        #s3ResumeModalOverlay .modal { width: 92vw; max-width: 1100px; max-height: 88vh; background: var(--cream); border: 1px solid var(--rule); overflow: hidden; display: flex; flex-direction: column; transform: translateY(12px); transition: transform .22s ease; }
+        #s3ResumeModalOverlay.visible .modal { transform: translateY(0); }
+        #s3ResumeModalOverlay .modal-bar { display: flex; align-items: center; padding: 0 32px; height: 48px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+        #s3ResumeModalOverlay .breadcrumb { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--ink-50); letter-spacing: .06em; }
+        #s3ResumeModalOverlay .breadcrumb span { color: var(--ink); }
+        #s3ResumeModalOverlay .privacy-badge { margin-left: 16px; font-size: 10px; font-family: 'DM Mono', monospace; padding: 3px 10px; border: 1px solid var(--amber); color: var(--amber); letter-spacing: .06em; }
+        #s3ResumeModalOverlay .modal-close { margin-left: auto; width: 28px; height: 28px; border: 1px solid var(--rule); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all .15s; color: var(--ink); }
+        #s3ResumeModalOverlay .modal-close:hover { background: var(--ink); color: var(--cream); }
+        #s3ResumeModalOverlay .modal-body { display: grid; grid-template-columns: 300px 1fr; overflow: hidden; flex: 1; }
+        #s3ResumeModalOverlay .col-left { border-right: 1px solid var(--rule); overflow-y: auto; padding: 32px 28px; display: flex; flex-direction: column; gap: 28px; background: #f0ede6; }
+        #s3ResumeModalOverlay .candidate-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-50); letter-spacing: .1em; margin-bottom: 4px; }
+        #s3ResumeModalOverlay .candidate-name { font-size: 22px; font-weight: 500; line-height: 1.2; }
+        #s3ResumeModalOverlay .masked { display: inline-block; color: var(--amber); font-family: 'DM Mono', monospace; font-size: .9em; letter-spacing: .15em; user-select: none; }
+        #s3ResumeModalOverlay .masked-soft { color: var(--ink-50); font-family: 'DM Mono', monospace; letter-spacing: .08em; }
+        #s3ResumeModalOverlay .candidate-sub { font-size: 12px; color: var(--ink-50); margin-top: 4px; line-height: 1.6; }
+        #s3ResumeModalOverlay .divider { width: 100%; height: 1px; background: var(--rule); }
+        #s3ResumeModalOverlay .meta-block { display: flex; flex-direction: column; gap: 10px; }
+        #s3ResumeModalOverlay .meta-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+        #s3ResumeModalOverlay .meta-label { color: var(--ink-50); }
+        #s3ResumeModalOverlay .meta-value { font-weight: 500; }
+        #s3ResumeModalOverlay .score-display { background: var(--sage); color: white; padding: 16px 20px; display: flex; align-items: baseline; gap: 6px; }
+        #s3ResumeModalOverlay .score-num { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 300; line-height: 1; }
+        #s3ResumeModalOverlay .score-label { font-size: 12px; opacity: .75; }
+        #s3ResumeModalOverlay .section-title { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-50); margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+        #s3ResumeModalOverlay .skill-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+        #s3ResumeModalOverlay .skill-chip { font-size: 11px; font-family: 'DM Mono', monospace; padding: 3px 9px; border: 1px solid var(--rule); background: var(--cream); color: var(--ink); }
+        #s3ResumeModalOverlay .skill-chip.highlight { background: var(--sage-light); border-color: rgba(45,106,79,.3); color: var(--sage); }
+        #s3ResumeModalOverlay .contact-block { display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-family: 'DM Mono', monospace; }
+        #s3ResumeModalOverlay .col-right { overflow-y: auto; }
+        #s3ResumeModalOverlay .section-block { padding: 28px 36px; border-bottom: 1px solid var(--rule); }
+        #s3ResumeModalOverlay .section-block:last-child { border-bottom: none; }
+        #s3ResumeModalOverlay .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        #s3ResumeModalOverlay .sec-head h3 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 400; font-family: 'DM Mono', monospace; color: var(--ink-50); white-space: nowrap; }
+        #s3ResumeModalOverlay .sec-head::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+        #s3ResumeModalOverlay .exp-item { display: grid; grid-template-columns: 180px 1fr; gap: 0 28px; margin-bottom: 24px; }
+        #s3ResumeModalOverlay .exp-item:last-child { margin-bottom: 0; }
+        #s3ResumeModalOverlay .exp-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); letter-spacing: .04em; margin-bottom: 4px; }
+        #s3ResumeModalOverlay .exp-org { font-size: 12px; font-weight: 500; color: var(--sage); margin-bottom: 2px; }
+        #s3ResumeModalOverlay .exp-role { font-size: 11px; color: var(--ink-50); }
+        #s3ResumeModalOverlay .exp-title { font-size: 14px; font-weight: 500; margin-bottom: 7px; line-height: 1.3; }
+        #s3ResumeModalOverlay .exp-desc { font-size: 12px; color: rgba(15,15,13,.7); line-height: 1.75; }
+        #s3ResumeModalOverlay .exp-tech { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+        #s3ResumeModalOverlay .tech-tag { font-size: 10px; font-family: 'DM Mono', monospace; padding: 2px 8px; background: #ede9e1; color: var(--ink-50); }
+        #s3ResumeModalOverlay .edu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--rule); }
+        #s3ResumeModalOverlay .edu-cell { padding: 16px 20px; border-right: 1px solid var(--rule); }
+        #s3ResumeModalOverlay .edu-cell:last-child { border-right: none; }
+        #s3ResumeModalOverlay .edu-cell-label { font-size: 10px; color: var(--ink-50); letter-spacing: .08em; font-family: 'DM Mono', monospace; text-transform: uppercase; margin-bottom: 6px; }
+        #s3ResumeModalOverlay .edu-cell-value { font-size: 14px; font-weight: 500; }
+        #s3ResumeModalOverlay .edu-cell-sub { font-size: 11px; color: var(--ink-50); margin-top: 2px; }
+        #s3ResumeModalOverlay .remark-box { background: rgba(45,106,79,.05); border-left: 3px solid var(--sage); padding: 14px 18px; font-size: 12px; color: rgba(15,15,13,.7); line-height: 1.9; }
+        #s3ResumeModalOverlay .remark-box strong { color: var(--sage); font-weight: 500; }
+        #s3ResumeModalOverlay .award-list { display: flex; flex-direction: column; gap: 10px; }
+        #s3ResumeModalOverlay .award-item { display: flex; align-items: baseline; gap: 12px; font-size: 12px; padding: 10px 14px; background: rgba(15,15,13,.03); border-left: 2px solid transparent; }
+        #s3ResumeModalOverlay .award-item.top { border-left-color: var(--amber); }
+        #s3ResumeModalOverlay .award-year { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); flex-shrink: 0; width: 36px; }
+        #s3ResumeModalOverlay .award-name { flex: 1; line-height: 1.4; }
+        #s3ResumeModalOverlay .award-level { font-size: 10px; font-family: 'DM Mono', monospace; padding: 2px 6px; background: var(--sage-light); color: var(--sage); flex-shrink: 0; }
+        #s3ResumeModalOverlay .award-level.amber { background: #fdf0e0; color: var(--amber); }
+        #s3ResumeModalOverlay .cert-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        #s3ResumeModalOverlay .cert-chip { font-size: 11px; font-family: 'DM Mono', monospace; padding: 5px 14px; border: 1px solid var(--rule); display: flex; align-items: center; gap: 6px; }
+        #s3ResumeModalOverlay .cert-chip::before { content: '✓'; color: var(--sage); font-size: 10px; }
+        #s3ResumeModalOverlay .modal-footer { padding: 14px 32px; border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 12px; flex-shrink: 0; background: #f0ede6; }
+        #s3ResumeModalOverlay .footer-status { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-50); letter-spacing: .06em; }
+        #s3ResumeModalOverlay .btn-primary { margin-left: auto; padding: 9px 24px; background: var(--sage); color: white; border: none; font-family: 'Noto Serif SC', serif; font-size: 12px; cursor: pointer; transition: background .15s; }
+        #s3ResumeModalOverlay .btn-primary:hover { background: #245a41; }
+        #s3ResumeModalOverlay .btn-secondary { padding: 9px 24px; background: transparent; color: var(--ink); border: 1px solid var(--rule); font-family: 'Noto Serif SC', serif; font-size: 12px; cursor: pointer; transition: all .15s; }
+        #s3ResumeModalOverlay .btn-secondary:hover { background: var(--ink); color: var(--cream); }
     </style>
 </head>
 <body class="hr-page-body">
@@ -216,12 +586,213 @@
                     </div>
                 </div>
 
-                <!-- 学生详情弹窗 -->
-                <div id="studentModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,15,13,0.52);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;" onclick="closeStudentModal(event)">
-                    <div id="studentModalBox" style="background:#fff;border-radius:14px;width:100%;max-width:660px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
-                        <div id="studentModalContent"></div>
+                <!-- 学生简历详情弹窗（双栏布局，沿用 resume-modal 样式，静态李明远数据） -->
+                <div id="studentModal" class="resume-detail-overlay" onclick="closeStudentModal(event)">
+                    <div class="resume-detail-modal" onclick="event.stopPropagation()">
+                        <div class="resume-modal-bar">
+                            <span class="breadcrumb">学生简历库 / <span>李明远</span></span>
+                            <button type="button" class="resume-modal-close" onclick="closeStudentModal()" aria-label="关闭">✕</button>
+                        </div>
+                        <div class="resume-modal-body">
+                            <div class="resume-col-left">
+                                <div>
+                                    <div class="resume-candidate-id">S1 · 2026-03-12</div>
+                                    <div class="resume-candidate-name">李明远</div>
+                                    <div class="resume-candidate-sub">武汉理工大学 · 计算机科学与技术<br>2023级 · 预计毕业 2027.06</div>
+                                </div>
+                                <div class="resume-score-display">
+                                    <div class="resume-score-num">88</div>
+                                    <div class="resume-score-label">综合匹配分</div>
+                                </div>
+                                <div class="resume-divider"></div>
+                                <div class="resume-meta-block">
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">学历</span>
+                                        <span class="resume-meta-value">本科</span>
+                                    </div>
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">GPA</span>
+                                        <span class="resume-meta-value">3.6 / 4.0</span>
+                                    </div>
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">性别</span>
+                                        <span class="resume-meta-value">男</span>
+                                    </div>
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">出生年月</span>
+                                        <span class="resume-meta-value">2003 / 08</span>
+                                    </div>
+                                </div>
+                                <div class="resume-divider"></div>
+                                <div class="resume-skill-section">
+                                    <div class="resume-section-title">核心技能</div>
+                                    <div class="resume-skill-grid">
+                                        <span class="resume-skill-chip highlight">机器学习</span>
+                                        <span class="resume-skill-chip highlight">深度学习</span>
+                                        <span class="resume-skill-chip highlight">Python</span>
+                                        <span class="resume-skill-chip highlight">Java</span>
+                                        <span class="resume-skill-chip">Spring Boot</span>
+                                        <span class="resume-skill-chip">Vue.js</span>
+                                        <span class="resume-skill-chip">MySQL</span>
+                                        <span class="resume-skill-chip">Linux</span>
+                                        <span class="resume-skill-chip">数据结构</span>
+                                        <span class="resume-skill-chip">算法</span>
+                                    </div>
+                                </div>
+                                <div class="resume-divider"></div>
+                                <div class="resume-contact-block">
+                                    <span>138 1234 5678</span>
+                                    <a href="mailto:liminyuan2023@whut.edu.cn">liminyuan2023@whut.edu.cn</a>
+                                </div>
+                            </div>
+                            <div class="resume-col-right">
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>教育背景</h3></div>
+                                    <div class="resume-edu-grid" style="border:1px solid var(--rule)">
+                                        <div class="resume-edu-cell">
+                                            <div class="resume-edu-cell-label">学校</div>
+                                            <div class="resume-edu-cell-value">武汉理工大学</div>
+                                            <div class="resume-edu-cell-sub">985 / 211 重点高校</div>
+                                        </div>
+                                        <div class="resume-edu-cell">
+                                            <div class="resume-edu-cell-label">专业 · 学历</div>
+                                            <div class="resume-edu-cell-value">计算机科学与技术</div>
+                                            <div class="resume-edu-cell-sub">本科 · 2023级</div>
+                                        </div>
+                                        <div class="resume-edu-cell">
+                                            <div class="resume-edu-cell-label">绩点 · 毕业</div>
+                                            <div class="resume-edu-cell-value">GPA 3.6 / 4.0</div>
+                                            <div class="resume-edu-cell-sub">预计 2027.06 毕业</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>实习经历</h3></div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2024.07 — 2024.09</div>
+                                            <div class="resume-exp-org">腾讯科技</div>
+                                            <div class="resume-exp-role">后端开发实习生 · 深圳</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">微信支付模块性能优化</div>
+                                            <div class="resume-exp-desc">参与微信支付模块性能优化，使用 Java Spring Boot 重构部分核心接口，接口响应时间降低 30%。协助完成代码审查与单元测试编写，累计提交有效 PR 12 个，获组内导师好评。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">Java</span>
+                                                <span class="resume-tech-tag">Spring Boot</span>
+                                                <span class="resume-tech-tag">微服务</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2025.03 — 2025.06</div>
+                                            <div class="resume-exp-org">字节跳动</div>
+                                            <div class="resume-exp-role">算法实习生 · 北京</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">推荐系统召回模块优化</div>
+                                            <div class="resume-exp-desc">参与推荐系统召回模块的优化工作，使用 Python 对用户行为数据进行特征工程处理，配合团队完成离线模型训练与 A/B 实验评估。独立完成数据清洗流水线重构，处理效率提升 25%。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">Python</span>
+                                                <span class="resume-tech-tag">特征工程</span>
+                                                <span class="resume-tech-tag">A/B Test</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>项目经历</h3></div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2024.03 — 2024.06</div>
+                                            <div class="resume-exp-org">独立开发</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">基于深度学习的图像识别系统</div>
+                                            <div class="resume-exp-desc">使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">Python</span>
+                                                <span class="resume-tech-tag">PyTorch</span>
+                                                <span class="resume-tech-tag">Vue.js</span>
+                                                <span class="resume-tech-tag">Flask</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2024.09 — 2024.12</div>
+                                            <div class="resume-exp-org">核心开发</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">校园智能问答系统</div>
+                                            <div class="resume-exp-desc">基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库，集成 LangChain 框架实现多轮对话，日均查询响应时间小于 2 秒。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">Python</span>
+                                                <span class="resume-tech-tag">LangChain</span>
+                                                <span class="resume-tech-tag">ChromaDB</span>
+                                                <span class="resume-tech-tag">FastAPI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2025.01 — 至今</div>
+                                            <div class="resume-exp-org">AI算法负责人</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">GradQuest 职业规划智能体</div>
+                                            <div class="resume-exp-desc">参与服务外包创新创业竞赛，负责 AI 算法模块开发。基于 ReAct Agent 架构实现多工具调用与任务自动分解，集成 BGE-M3 语义嵌入模型与 ChromaDB，岗位语义匹配准确率达 90% 以上。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">Python</span>
+                                                <span class="resume-tech-tag">LangChain</span>
+                                                <span class="resume-tech-tag">Qwen</span>
+                                                <span class="resume-tech-tag">ChromaDB</span>
+                                                <span class="resume-tech-tag">FastAPI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>荣誉奖项</h3></div>
+                                    <div class="resume-award-list">
+                                        <div class="resume-award-item top">
+                                            <div class="resume-award-year">2024</div>
+                                            <div class="resume-award-name">全国大学生数学建模竞赛</div>
+                                            <div class="resume-award-level amber">二等奖</div>
+                                        </div>
+                                        <div class="resume-award-item top">
+                                            <div class="resume-award-year">2023</div>
+                                            <div class="resume-award-name">武汉理工大学优秀学生奖学金</div>
+                                            <div class="resume-award-level">一等奖</div>
+                                        </div>
+                                        <div class="resume-award-item top">
+                                            <div class="resume-award-year">2024</div>
+                                            <div class="resume-award-name">计算机程序设计竞赛 · 校级</div>
+                                            <div class="resume-award-level">三等奖</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>证书资质</h3></div>
+                                    <div class="resume-cert-row">
+                                        <div class="resume-cert-chip">英语六级 CET-6</div>
+                                        <div class="resume-cert-chip">计算机二级 · Python</div>
+                                        <div class="resume-cert-chip">普通话二级甲等</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="resume-modal-footer">
+                            <span class="resume-footer-status">候选人 S1 · 待处理</span>
+                            <button type="button" class="resume-btn-secondary" onclick="closeStudentModal()">关闭</button>
+                            <button type="button" class="resume-btn-primary">发起评估邀请</button>
+                        </div>
                     </div>
                 </div>
+
+                <!-- S3 简历详情弹窗（student_anon_003 专用，内容由 hr-app.js 注入） -->
+                <div id="s3ResumeModalOverlay" onclick="closeS3ResumeModal(event)"></div>
 
                 <!-- 评估邀请区域 -->
                 <div id="invitations-section" class="hr-content-section">
@@ -358,7 +929,7 @@
                     <input type="hidden" id="inviteStudentId">
                     <div class="hr-form-group">
                         <label class="hr-form-label">招聘岗位</label>
-                        <input type="text" id="inviteTargetJob" class="hr-form-input" placeholder="例如：AI产品经理" required>
+                        <input type="text" id="inviteTargetJob" class="hr-form-input" placeholder="例如：算法工程师" required>
                     </div>
                     <div class="hr-form-group">
                         <label class="hr-form-label">邀请信息</label>

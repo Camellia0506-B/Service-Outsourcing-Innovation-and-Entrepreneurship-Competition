@@ -476,32 +476,32 @@ function getCsvJobName(displayNameOrInput) {
     return displayNameOrInput; // 无匹配，原样传给后端模糊搜索
 }
 
-// 学生端 HR 邀约卡片渲染（pending/accepted 均显示接受/拒绝按钮，accepted 时按钮禁用变灰）
-function renderInvitationCard(inv) {
-    var isPending = inv.status === 'pending';
-    var isAccepted = inv.status === 'accepted';
-    var isRejected = inv.status === 'rejected';
+// 学生端 HR 邀约卡片渲染；displayStatus 仅来自组件内存（pending/accepted/declined），不持久化
+function renderInvitationCard(inv, displayStatus) {
+    var status = (displayStatus || inv._displayStatus || 'pending').toLowerCase();
+    var isPending = status === 'pending';
+    var isAccepted = status === 'accepted';
+    var isDeclined = status === 'declined' || status === 'rejected';
 
+    // 初始：待响应角标 + 接受/拒绝按钮；接受后：绿色「已接受」标签；拒绝后：灰色「已拒绝」标签
     var statusBadge = isAccepted
-        ? '<span style="background:#e8f4ee;color:#2d6a4f;padding:4px 12px;border-radius:20px;font-size:12px;">已接受</span>'
-        : isRejected
-        ? '<span style="background:#f5f5f5;color:#999;padding:4px 12px;border-radius:20px;font-size:12px;">已拒绝</span>'
+        ? '<span style="background:#2d6a4f;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;">已接受</span>'
+        : isDeclined
+        ? '<span style="background:#888;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;">已拒绝</span>'
         : '<span style="background:#fff8ec;color:#b56a00;padding:4px 12px;border-radius:20px;font-size:12px;">待响应</span>';
 
     var invIdEsc = String(inv.invitationId || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    var actionBtns = isRejected ? '' :
-        '<div style="display:flex;gap:8px;margin-left:auto;">'
-        + '<button '
-        + 'style="background:#2d6a4f;color:#fff;' + (isAccepted ? 'cursor:not-allowed;opacity:0.6;' : 'cursor:pointer;') + 'border:none;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;"'
-        + (isAccepted ? ' disabled' : ' onclick="acceptInvitation(\'' + invIdEsc + '\')"')
-        + '>'
-        + (isAccepted ? '已接受' : '接受')
-        + '</button>'
-        + '<button '
-        + 'style="background:#fff;color:' + (isAccepted ? '#ccc' : '#333') + ';border:1px solid ' + (isAccepted ? '#eee' : '#ddd') + ';padding:8px 20px;border-radius:8px;font-size:14px;white-space:nowrap;' + (isAccepted ? 'cursor:not-allowed;opacity:0.6;' : 'cursor:pointer;') + '"'
-        + (isAccepted ? ' disabled' : ' onclick="rejectInvitation(\'' + invIdEsc + '\')"')
-        + '>拒绝</button>'
-        + '</div>';
+    var actionBtns = '';
+    if (isPending) {
+        actionBtns = '<div style="display:flex;gap:8px;margin-left:auto;">'
+            + '<button type="button" style="background:#2d6a4f;color:#fff;border:none;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:500;white-space:nowrap;cursor:pointer;" onclick="acceptInvitation(\'' + invIdEsc + '\')">接受</button>'
+            + '<button type="button" style="background:transparent;color:#666;border:1px solid #999;padding:8px 20px;border-radius:8px;font-size:14px;white-space:nowrap;cursor:pointer;" onclick="rejectInvitation(\'' + invIdEsc + '\')">拒绝</button>'
+            + '</div>';
+    } else if (isAccepted) {
+        actionBtns = '<div style="margin-left:auto;"><span style="background:#2d6a4f;color:#fff;padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;">已接受</span></div>';
+    } else {
+        actionBtns = '<div style="margin-left:auto;"><span style="background:#888;color:#fff;padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;">已拒绝</span></div>';
+    }
 
     var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
     return '<div style="background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;">'
@@ -518,43 +518,25 @@ function renderInvitationCard(inv) {
         + '</div>';
 }
 
+// 状态仅保存在组件内存，不持久化，刷新后恢复初始
 function acceptInvitation(invitationId) {
     if (!invitationId) return;
-    if (window.MockStore) {
-        var store = window.MockStore.getMockStore();
-        var inv = store.myInvitations && store.myInvitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
-        if (inv) inv.status = 'accepted';
-        var hrInv = store.invitations && store.invitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
-        if (hrInv) hrInv.status = 'accepted';
-        var evalExists = store.evaluations && store.evaluations.find(function (e) { return (e.invitationId || e.invitation_id) === invitationId; });
-        if (!evalExists && hrInv) {
-            store.evaluations = store.evaluations || [];
-            store.evaluations.push({
-                evaluationId: 'eval_' + Date.now(),
-                invitationId: invitationId,
-                anonymousStudentId: hrInv.anonymousStudentId || hrInv.anonymous_student_id,
-                studentUserId: hrInv.studentUserId || hrInv.student_user_id,
-                targetJob: hrInv.targetJob || hrInv.target_job,
-                status: 'in_progress',
-                createdAt: new Date().toLocaleString('zh-CN').replace(/\//g, '-')
-            });
-        }
-        window.MockStore.saveMockStore(store);
+    var app = window.app;
+    if (app) {
+        app._hrInvitationStates = app._hrInvitationStates || {};
+        app._hrInvitationStates[invitationId] = 'accepted';
+        if (typeof app.loadStudentInvitations === 'function') app.loadStudentInvitations();
     }
-    if (window.app && typeof window.app.loadStudentInvitations === 'function') window.app.loadStudentInvitations();
 }
 
 function rejectInvitation(invitationId) {
     if (!invitationId) return;
-    if (window.MockStore) {
-        var store = window.MockStore.getMockStore();
-        var inv = store.myInvitations && store.myInvitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
-        if (inv) inv.status = 'rejected';
-        var hrInv = store.invitations && store.invitations.find(function (i) { return (i.invitationId || i.invitation_id) === invitationId; });
-        if (hrInv) hrInv.status = 'rejected';
-        window.MockStore.saveMockStore(store);
+    var app = window.app;
+    if (app) {
+        app._hrInvitationStates = app._hrInvitationStates || {};
+        app._hrInvitationStates[invitationId] = 'declined';
+        if (typeof app.loadStudentInvitations === 'function') app.loadStudentInvitations();
     }
-    if (window.app && typeof window.app.loadStudentInvitations === 'function') window.app.loadStudentInvitations();
 }
 
 // 应用主类
@@ -3604,8 +3586,9 @@ class CareerPlanningApp {
     // 当前生成的简历数据
     currentResumeData = null;
 
-    // HR邀约页：优先 MockStore.myInvitations，否则兜底假数据；使用 renderInvitationCard 统一渲染
+    // HR邀约页：列表来自 MockStore 或兜底假数据；展示状态仅用内存 _hrInvitationStates（不持久化，刷新恢复初始）
     async loadStudentInvitations() {
+        this._hrInvitationStates = this._hrInvitationStates || {};
         let list = [];
         if (window.MockStore) {
             const store = window.MockStore.getMockStore();
@@ -3613,7 +3596,7 @@ class CareerPlanningApp {
         }
         if (!list.length) {
             list = [
-                { invitationId: 'INV-2025-001', companyName: '星途智探科技有限公司', hrName: '孙于婷', targetJob: 'AI产品经理', message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'accepted', sentAt: '2025-03-08 14:23' },
+                { invitationId: 'INV-2025-001', companyName: '星途智探科技有限公司', hrName: '孙于婷', targetJob: '算法工程师', message: '您好，我们公司正在招聘算法工程师，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'pending', sentAt: '2025-03-08 14:23' },
                 { invitationId: 'INV-2025-002', companyName: '深蓝智能（北京）有限公司', hrName: '王雨晴', targetJob: '算法工程师', message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。', status: 'pending', sentAt: '2025-03-09 10:05' }
             ];
         }
@@ -3639,7 +3622,11 @@ class CareerPlanningApp {
             return;
         }
 
-        listEl.innerHTML = list.map(inv => renderInvitationCard(inv)).join('');
+        listEl.innerHTML = list.map(inv => {
+            var displayStatus = this._hrInvitationStates[inv.invitationId];
+            if (!displayStatus) displayStatus = 'pending';
+            return renderInvitationCard(inv, displayStatus);
+        }).join('');
     }
 
     async respondToInvitation(invitationId, action) {
@@ -4955,77 +4942,8 @@ class CareerPlanningApp {
             // 保持当前选中并刷新右侧步骤与备注
             this.trackingSelectedRecordId = recordId;
             this.renderTrackingSteps(updated);
-
-            // 静默触发一次失败复盘分析：根据当前记录的阶段备注自动生成个性化报告
-            // 不弹出弹窗、不打断当前操作，生成完成后 Tab3 会自动出现这条记录的 AI 分析
-            this._autoRunFailureAnalysis(recordId);
         } else {
             this.showToast((res && res.msg) || '更新失败', 'error');
-        }
-    }
-
-    async _autoRunFailureAnalysis(recordId) {
-        try {
-            const userId = getCurrentUserId();
-            const record = this.trackingRecordsCache?.[recordId];
-            if (!userId || !record || !recordId) return;
-
-            const url = (typeof getTrackingFailureAnalysisURL === 'function')
-                ? getTrackingFailureAnalysisURL(recordId)
-                : `${(typeof API_CONFIG !== 'undefined' ? (API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL) : '') || 'http://127.0.0.1:5002/api/v1'}/tracking/record/${encodeURIComponent(recordId)}/failure-analysis`;
-
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    record_id: recordId,
-                    final_stage: record.current_stage || 'final',
-                    final_result: 'rejected',
-                    rejection_feedback: '' // 标记淘汰时默认没有额外反馈
-                })
-            });
-            if (!res.ok || !res.body) {
-                return;
-            }
-
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            let bufferText = '';
-            let doneReportId = null;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (!trimmed.startsWith('data:')) continue;
-                    const payloadStr = trimmed.slice(5).trim();
-                    if (!payloadStr) continue;
-                    let payload;
-                    try {
-                        payload = JSON.parse(payloadStr);
-                    } catch (_) {
-                        continue;
-                    }
-                    if (payload.chunk) {
-                        bufferText += payload.chunk;
-                    }
-                    if (payload.report_id) {
-                        doneReportId = payload.report_id;
-                    }
-                }
-            }
-
-            if (doneReportId && bufferText) {
-                // 缓存本次分析结果，并刷新失败记录/报告列表
-                this._cacheTrackingFailureAnalysis(recordId, bufferText);
-                await this.loadTrackingData();
-            }
-        } catch (e) {
-            console.error('自动失败复盘分析异常:', e);
         }
     }
 
@@ -5279,9 +5197,9 @@ class CareerPlanningApp {
         const toUl = (arr) => arr && arr.length ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>—</li></ul>';
         detailEl.innerHTML = `
             <h3>${esc(title)}</h3>
-            <div class="tracking-detail-section"><h4>技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
-            <div class="tracking-detail-section"><h4>简历优化建议</h4>${toUl(parsed.resume)}</div>
-            <div class="tracking-detail-section"><h4>面试准备行动计划</h4>${toUl(parsed.interview)}</div>
+            <div class="tracking-detail-section"><h4>🔍 技能 Gap 分析</h4>${toUl(parsed.skill)}</div>
+            <div class="tracking-detail-section"><h4>📄 简历优化建议</h4>${toUl(parsed.resume)}</div>
+            <div class="tracking-detail-section"><h4>🗣️ 面试准备行动计划</h4>${toUl(parsed.interview)}</div>
         `;
     }
 
@@ -7058,9 +6976,9 @@ class CareerPlanningApp {
         container.innerHTML = '';
         const list = data.list || [];
         const stripeGradients = [
-            'linear-gradient(90deg, #5e8c65, #4a7350)',
-            'linear-gradient(90deg, #4a7350, #6aa571)',
-            'linear-gradient(90deg, #6aa571, #5e8c65)',
+            'linear-gradient(90deg, #2563eb, #0ea5e9)',
+            'linear-gradient(90deg, #0ea5e9, #4f46e5)',
+            'linear-gradient(90deg, #4f46e5, #2563eb)',
         ];
         list.forEach((job, idx) => {
             const jobCard = document.createElement('div');
@@ -9547,7 +9465,7 @@ class CareerPlanningApp {
             // 使用与岗位列表相同的 job-card 卡片样式展示 AI 生成的岗位画像
             const softTagsHtml = (professional || []).slice(0, 4).map(s => `<span class="tag-soft">${escape(s)}</span>`).join('');
             const techTagsHtml = (tools || []).slice(0, 4).map(s => `<span class="tag-tech">${escape(s)}</span>`).join('');
-            const stripeStyle = 'linear-gradient(90deg, #5e8c65, #4a7350)';
+            const stripeStyle = 'linear-gradient(90deg, #2563eb, #0ea5e9)';
             const industryEsc = (d.industry && escape(d.industry).trim()) || '';
             const aiCardMeta = industryEsc ? industryEsc + ' | AI 生成岗位画像' : 'AI 生成岗位画像';
 
@@ -11073,54 +10991,17 @@ class CareerPlanningApp {
                     <span class="module-arrow">▶</span>
                 </div>
                 <div class="career-module-body career-module-collapsed">
-                    ${stp.period || stp.goal ? `
-                    <div class="plan-goal-highlight">
-                        <h6>行动计划目标</h6>
-                        <p>${stp.period ? `<strong>周期：</strong>${san(stp.period)}<br>` : ''}${san(stp.goal || '')}</p>
-                    </div>
-                    ` : ''}
-                    ${mp.length > 0 ? `
-                    <div class="action-plan-tabs" data-action-plan-tabs>
-                        ${mp.map((m, i) => `
-                            <button type="button" class="action-plan-tab ${i === 0 ? 'active' : ''}" data-action-plan-tab="${i}">
-                                ${m.month || `第${i + 1}月`}
-                            </button>
+                    <div class="career-action-plan">
+                        <h5>短期行动计划：${stp.period || ''}</h5>
+                        <p class="plan-goal">${san(stp.goal || '')}</p>
+                        ${mp.map(m => `
+                            <div class="monthly-plan">
+                                <div class="plan-header"><span class="plan-month">${m.month || ''}</span><span class="plan-focus">${m.focus || ''}</span></div>
+                                <ul>${(m.tasks || []).map(t => `<li><strong>${san(t.task)}</strong>：${Array.isArray(t['具体行动']) ? san(t['具体行动'].join('；')) : ''} — ${san(t['预期成果'] || '')}</li>`).join('')}</ul>
+                                <p class="plan-milestone">✓ ${san(m.milestone || '')}</p>
+                            </div>
                         `).join('')}
                     </div>
-                    ${mp.map((m, i) => `
-                        <div class="action-plan-content ${i === 0 ? 'active' : ''}" data-action-plan-content="${i}">
-                            <div class="monthly-plan-card">
-                                <div class="monthly-plan-header">
-                                    <span class="monthly-plan-month">${m.month || `第${i + 1}月`}</span>
-                                    ${m.focus ? `<span class="monthly-plan-focus">${san(m.focus)}</span>` : ''}
-                                </div>
-                                ${(m.tasks || []).length > 0 ? `
-                                <div class="monthly-plan-tasks">
-                                    ${(m.tasks || []).map(t => `
-                                        <div class="monthly-plan-task">
-                                            <div class="monthly-plan-task-title">${san(t.task || '')}</div>
-                                            ${(t['具体行动'] || t.description) ? `
-                                            <div class="monthly-plan-task-details">
-                                                ${Array.isArray(t['具体行动']) ? san(t['具体行动'].join('；')) : san(t['具体行动'] || t.description || '')}
-                                            </div>
-                                            ` : ''}
-                                            <div class="monthly-plan-task-meta">
-                                                ${t['时间投入'] ? `<span class="task-meta-item"><span class="task-meta-icon">⏱</span>${san(t['时间投入'])}</span>` : ''}
-                                                ${t['预期成果'] ? `<span class="task-meta-item"><span class="task-meta-icon">📦</span>${san(t['预期成果'])}</span>` : ''}
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                ` : ''}
-                                ${m.milestone ? `
-                                <div class="monthly-plan-milestone">
-                                    <strong>✓ 里程碑</strong>：${san(m.milestone)}
-                                </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `).join('')}
-                    ` : ''}
                     ${skills.length ? `
                     <div class="learning-path">
                         <h5>学习路径</h5>
@@ -11135,6 +11016,7 @@ class CareerPlanningApp {
                             }).join('')}
                         </div>
                     </div>` : ''}
+                    ${ash.portfolio_building ? `<div class="achievement-showcase"><h5>成果展示计划</h5><div class="showcase-grid">${Object.entries(ash.portfolio_building || {}).map(([k, v]) => `<div class="showcase-item"><h6>${k}</h6><p>${san(v.goal || '')}</p><ul>${(v.actions || []).map(a => `<li>${san(a)}</li>`).join('')}</ul></div>`).join('')}</div></div>` : ''}
                     ${s3.evaluation_metrics ? `<div class="evaluation-metrics"><h5>评估指标与调整机制</h5><p>${san(s3.evaluation_metrics.overview || '')}</p><ul>${(s3.evaluation_metrics.metrics || []).map(m => `<li><strong>${san(m.metric)}</strong>：${san(m.description)}；目标值：${san(m.target_value || '')}；评估周期：${san(m.evaluation_cycle || '')}</li>`).join('')}</ul><p class="adjustment-note">${san(s3.evaluation_metrics.adjustment_mechanism || '')}</p></div>` : ''}
                 </div>
             </section>`;
@@ -11215,25 +11097,6 @@ class CareerPlanningApp {
                 mod?.classList.toggle('career-module-open', !isOpen);
             });
         });
-        
-        wrap.querySelectorAll('.action-plan-tab[data-action-plan-tab]').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabsContainer = tab.closest('[data-action-plan-tabs]');
-                if (!tabsContainer) return;
-                
-                const tabIndex = tab.getAttribute('data-action-plan-tab');
-                const allTabs = tabsContainer.querySelectorAll('.action-plan-tab');
-                const allContents = wrap.querySelectorAll('[data-action-plan-content]');
-                
-                allTabs.forEach(t => t.classList.remove('active'));
-                allContents.forEach(c => c.classList.remove('active'));
-                
-                tab.classList.add('active');
-                const content = wrap.querySelector(`[data-action-plan-content="${tabIndex}"]`);
-                if (content) content.classList.add('active');
-            });
-        });
-        
         const backBtn = document.getElementById('reportBackToTop');
         if (backBtn) {
             const onScroll = () => backBtn.classList.toggle('hidden', (window.scrollY || document.documentElement.scrollTop) < 200);
@@ -14043,6 +13906,7 @@ function resumeInterview(interviewId) {
 var _agentHistory = [];
 var _agentLoading = false;
 var _agentOpen = false;
+var _agentQuickBarClickBound = false;
 
 var AGENT_QUICK_NAV = {
     assessment: 'assessment',
@@ -14054,12 +13918,74 @@ var AGENT_QUICK_NAV = {
 
 /** 快捷按钮：点击后发送 userMsg 到智能体接口，由 Qwen 流式输出回复再显示按钮 */
 var AGENT_QUICK_BUTTON_CONTENT = {
-    assessment: { userMsg: '我想做职业测评' },
-    ability:     { userMsg: '查看能力画像' },
-    matching:    { userMsg: '岗位匹配' },
-    report:      { userMsg: '职业规划报告' },
-    query:       { userMsg: '查看岗位画像' }
+    assessment:   { userMsg: '我想做职业测评' },
+    ability:      { userMsg: '查看能力画像' },
+    matching:     { userMsg: '岗位匹配' },
+    report:       { userMsg: '职业规划报告' },
+    query:        { userMsg: '查看岗位画像' },
+    tracking:     { userMsg: '我想使用求职跟踪' },
+    mockInterview: { userMsg: '我想进行模拟面试' }
 };
+
+/** 跟踪/面试快捷按钮：流式说明文案（不含按钮，按钮单独渲染），语气生动、带表情符号 */
+var AGENT_LOCAL_NAV_MESSAGES = {
+    tracking: '📋 在这里可以记录你的每一次投递、笔试、面试进展，还能查看失败分析与复盘报告，让求职有据可查～ ✨ 点击下方按钮进入求职跟踪页面。',
+    mockInterview: '🎤 在这里可以和 AI 面试官进行模拟面试练习，实时获得回答评估与改进建议，越练越稳～ 💪 点击下方按钮开始你的模拟面试吧！'
+};
+/** 跟踪/面试跳转按钮文案与页面 */
+var AGENT_LOCAL_NAV_BUTTONS = {
+    tracking:     { label: '进入求职跟踪', page: 'tracking' },
+    mockInterview: { label: '进入模拟面试', page: 'mockInterview' }
+};
+
+function showAgentLocalNavMessage(key, userMsg) {
+    var msgs = document.getElementById('agentMessages');
+    if (!msgs) return;
+    var text = AGENT_LOCAL_NAV_MESSAGES[key];
+    var btnCfg = AGENT_LOCAL_NAV_BUTTONS[key];
+    if (!text || !btnCfg) return;
+    var userDiv = document.createElement('div');
+    userDiv.className = 'agent-msg agent-msg-user';
+    userDiv.innerHTML = '<div class="agent-msg-bubble">' + agentEscapeHtml(userMsg) + '</div>';
+    msgs.appendChild(userDiv);
+    var botDiv = document.createElement('div');
+    botDiv.className = 'agent-msg agent-msg-bot agent-msg-pop-in';
+    var bubble = document.createElement('div');
+    bubble.className = 'agent-msg-bubble';
+    botDiv.appendChild(bubble);
+    msgs.appendChild(botDiv);
+    var chars = Array.from(text);
+    var idx = 0;
+    var delayMs = 38;
+    function streamNext() {
+        if (idx >= chars.length) {
+            var row = document.createElement('div');
+            row.className = 'agent-bubble-capsule';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'agent-capsule-btn';
+            btn.textContent = btnCfg.label;
+            btn.onclick = function() {
+                if (window.app && typeof window.app.navigateTo === 'function') window.app.navigateTo(btnCfg.page);
+            };
+            row.appendChild(btn);
+            bubble.appendChild(row);
+            if (typeof agentScrollToBottom === 'function') agentScrollToBottom();
+            return;
+        }
+        var chunk = chars[idx];
+        idx += 1;
+        if (/[\n\s，。、；：]/.test(chunk) && idx < chars.length) {
+            chunk += chars[idx];
+            idx += 1;
+        }
+        var accumulated = chars.slice(0, idx).join('');
+        bubble.innerHTML = agentFormatText(accumulated);
+        if (typeof agentScrollToBottom === 'function') agentScrollToBottom();
+        setTimeout(streamNext, delayMs);
+    }
+    streamNext();
+}
 
 function initFloatingAgent() {
     var fab = document.getElementById('agentFab');
@@ -14122,24 +14048,33 @@ function initFloatingAgent() {
         }
     });
 
-    document.body.addEventListener('click', function(e) {
-        var q = e.target.closest('#agentInputQuickBar .agent-quick-btn');
-        if (q && q.dataset.key) {
-            var key = q.dataset.key;
-            var content = AGENT_QUICK_BUTTON_CONTENT[key];
-            if (!content || !content.userMsg) return;
-            if (_agentLoading) return;
-            if (typeof window.sendAgentMessageAndStream === 'function') {
-                window.sendAgentMessageAndStream(content.userMsg);
+    // 快捷栏 + 智能体内链跳转：只绑定一次，避免登录后 initFloatingAgent 再次执行导致重复触发
+    if (!_agentQuickBarClickBound) {
+        _agentQuickBarClickBound = true;
+        document.body.addEventListener('click', function(e) {
+            var q = e.target.closest('#agentInputQuickBar .agent-quick-btn');
+            if (q && q.dataset.key) {
+                var key = q.dataset.key;
+                var content = AGENT_QUICK_BUTTON_CONTENT[key];
+                if (!content || !content.userMsg) return;
+                // 跟踪 / 面试 不依赖流式接口，即使在加载中也允许点击本地跳转
+                if (key === 'tracking' || key === 'mockInterview') {
+                    showAgentLocalNavMessage(key, content.userMsg);
+                    return;
+                }
+                if (_agentLoading) return;
+                if (typeof window.sendAgentMessageAndStream === 'function') {
+                    window.sendAgentMessageAndStream(content.userMsg);
+                }
+                return;
             }
-            return;
-        }
-        var link = e.target.closest('#agentMessages .agent-inline-link');
-        if (link && link.dataset.agentNav) {
-            e.preventDefault();
-            if (window.app && typeof window.app.navigateTo === 'function') window.app.navigateTo(link.dataset.agentNav);
-        }
-    });
+            var link = e.target.closest('#agentMessages .agent-inline-link');
+            if (link && link.dataset.agentNav) {
+                e.preventDefault();
+                if (window.app && typeof window.app.navigateTo === 'function') window.app.navigateTo(link.dataset.agentNav);
+            }
+        });
+    }
 
     setTimeout(function () {
         var n = document.getElementById('navbar');
@@ -14152,7 +14087,7 @@ function initFloatingAgent() {
 function showAgentWelcomeIfEmpty() {
     var msgs = document.getElementById('agentMessages');
     if (!msgs || msgs.querySelector('.agent-msg-bot')) return;
-    var welcome = '你好呀～ 👋 我是智能体小智，你的职业规划助手。\n\n我可以帮你：\n✨ 完成职业倾向与能力潜力测评，生成专属报告\n📊 查看能力画像与岗位画像，了解匹配岗位\n🎯 获取人岗匹配推荐与职业规划报告\n💬 解答职业发展、转岗路径等问题\n\n随时在下方输入或点击快捷按钮，我们开始吧～ 😊';
+    var welcome = '你好呀～ 👋 我是智能体小智，你的职业规划助手，支持求职进展跟踪与模拟面试练习。\n\n我可以帮你：\n✨ 完成职业倾向与能力潜力测评，生成专属报告\n📊 查看能力画像与岗位画像，了解匹配岗位\n🎯 获取人岗匹配推荐与职业规划报告\n💬 解答职业发展、转岗路径等问题\n\n随时在下方输入或点击快捷按钮，我们开始吧～ 😊';
     var div = document.createElement('div');
     div.className = 'agent-msg agent-msg-bot agent-msg-pop-in';
     var bubble = document.createElement('div');
@@ -14381,6 +14316,8 @@ function agentFormatText(text) {
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/【立即开始测评】/g, '<a href="#" class="agent-inline-link" data-agent-nav="assessment">【立即开始测评】</a>')
+        .replace(/【进入求职跟踪】/g, '<a href="#" class="agent-inline-link" data-agent-nav="tracking">【进入求职跟踪】</a>')
+        .replace(/【进入模拟面试】/g, '<a href="#" class="agent-inline-link" data-agent-nav="mockInterview">【进入模拟面试】</a>')
         .replace(/\n/g, '<br>');
 }
 

@@ -126,15 +126,15 @@
       }
     ],
     invitations: [
-      { invitationId: 'inv_001', hrId: 1, hrName: '孙于婷', companyName: '星途智探科技有限公司', anonymousStudentId: 'student_anon_001', studentUserId: 1, targetJob: '算法工程师', message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'accepted', sentAt: '2025-03-08 14:23' },
-      { invitationId: 'inv_002', hrId: 1, hrName: '王雨晴', companyName: '深蓝智能（北京）有限公司', anonymousStudentId: 'student_anon_003', studentUserId: 3, targetJob: 'AI产品经理', message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。', status: 'accepted', sentAt: '2025-03-09 10:05' }
+      { invitationId: 'inv_001', hrId: 1, hrName: '孙于婷', companyName: '星途智探科技有限公司', anonymousStudentId: 'student_anon_001', studentUserId: 1, targetJob: '算法工程师', message: '您好，我们公司正在招聘算法工程师，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'accepted', sentAt: '2025-03-08 14:23' },
+      { invitationId: 'inv_002', hrId: 1, hrName: '王雨晴', companyName: '深蓝智能（北京）有限公司', anonymousStudentId: 'student_anon_003', studentUserId: 3, targetJob: '算法工程师', message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。', status: 'accepted', sentAt: '2025-03-09 10:05' }
     ],
     evaluations: [
       { evaluationId: 'eval_001', invitationId: 'inv_001', anonymousStudentId: 'student_anon_001', studentUserId: 1, targetJob: '算法工程师', status: 'completed', createdAt: '2025-03-09 10:00', submittedAt: '2025-03-09 16:40', overallImpression: '优秀', hiringIntent: '强烈推荐', dimensionScores: { '专业技能匹配度': 95, '学习能力': 95, '沟通表达': 80, '团队协作意愿': 86, '抗压能力': 99, '职业成熟度': 94 }, strengthsNoted: '掌握技术种类多样，学习能力与抗压能力较强，具有较高的培养潜力，在开发项目中有极好的发挥优势', weaknessesNoted: '沟通能力弱，团队协作意愿弱', recommendedPositions: ['算法工程师', '开发员'], evaluationBasis: '简历审阅' }
     ],
     myInvitations: [
-      { invitationId: 'inv_001', companyName: '星途智探科技有限公司', hrName: '孙于婷', targetJob: '算法工程师', message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'accepted', sentAt: '2025-03-08 14:23' },
-      { invitationId: 'inv_005', companyName: '深蓝智能（北京）有限公司', hrName: '王雨晴', targetJob: 'AI产品经理', message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。', status: 'pending', sentAt: '2025-03-09 10:05' }
+      { invitationId: 'inv_001', companyName: '星途智探科技有限公司', hrName: '孙于婷', targetJob: '算法工程师', message: '您好，我们公司正在招聘算法工程师，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。', status: 'accepted', sentAt: '2025-03-08 14:23' },
+      { invitationId: 'inv_005', companyName: '深蓝智能（北京）有限公司', hrName: '王雨晴', targetJob: '算法工程师', message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。', status: 'pending', sentAt: '2025-03-09 10:05' }
     ],
     myReports: [
       { evaluationId: 'eval_001', companyName: '星途智探科技有限公司', targetJob: '算法工程师', submittedAt: '2025-03-09 16:40', overallImpression: '优秀', hiringIntent: '强烈推荐', dimensionScores: { '专业技能匹配度': 95, '学习能力': 95, '沟通表达': 80, '团队协作意愿': 86, '抗压能力': 99, '职业成熟度': 94 }, strengthsNoted: '掌握技术种类多样，学习能力与抗压能力较强，具有较高的培养潜力，在开发项目中有极好的发挥优势', weaknessesNoted: '沟通能力弱，团队协作意愿弱', recommendedPositions: ['算法工程师', '开发员'] }

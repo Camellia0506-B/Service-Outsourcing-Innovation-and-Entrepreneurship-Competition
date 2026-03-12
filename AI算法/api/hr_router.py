@@ -891,3 +891,88 @@ def submit_evaluation(evaluation_id):
         logger.error(f"[HR] /hr/evaluation/submit 异常: {e}", exc_info=True)
         return error_response(500, f"服务器内部错误: {str(e)}")
 
+
+# ========== 学生端：查看 HR 评估报告 ==========
+def _invitation_user_id(invitation_id):
+    """根据 invitation_id 读取对应邀请文件，返回 user_id（不存在或无 user_id 返回 None）"""
+    store_path = _get_evaluation_store_path()
+    file_path = os.path.join(store_path, f"invitation_{invitation_id}.json")
+    if not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            inv = json.load(f)
+        uid = inv.get("user_id")
+        return int(uid) if uid is not None else None
+    except Exception:
+        return None
+
+
+@hr_bp.route("/student/evaluation-reports", methods=["GET"])
+def student_get_evaluation_reports():
+    """学生获取自己收到的 HR 评估报告列表。按 user_id 过滤（邀请中存了 user_id）。"""
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return error_response(400, "请提供 user_id 参数")
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            return error_response(400, "user_id 必须为数字")
+
+        all_ev = _load_all_evaluations()
+        result = []
+        for ev in all_ev:
+            inv_user_id = _invitation_user_id(ev.get("evaluation_id"))
+            if inv_user_id is None or inv_user_id != user_id:
+                continue
+            hr_info = _get_hr_info_by_id(ev.get("hr_id"))
+            submitted = ev.get("submitted_at") or ""
+            if submitted and len(submitted) > 19:
+                submitted = submitted[:19].replace("T", " ")
+            result.append({
+                "evaluation_id": ev.get("evaluation_id"),
+                "target_job": ev.get("target_job") or "",
+                "company_name": hr_info.get("company_name") or "",
+                "hr_name": hr_info.get("real_name") or "",
+                "submitted_at": submitted,
+                "status": "completed" if ev.get("status") == "completed" else "in_progress",
+            })
+        result.sort(key=lambda x: x.get("submitted_at") or "", reverse=True)
+        return success_response({"list": result})
+    except Exception as e:
+        logger.error(f"[HR] /hr/student/evaluation-reports 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
+
+@hr_bp.route("/student/evaluation-reports/<evaluation_id>", methods=["GET"])
+def student_get_evaluation_report_detail(evaluation_id):
+    """学生查看某条评估报告详情（维度分数、评语等）。"""
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return error_response(400, "请提供 user_id 参数")
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            return error_response(400, "user_id 必须为数字")
+
+        inv_user_id = _invitation_user_id(evaluation_id)
+        if inv_user_id is None or inv_user_id != user_id:
+            return error_response(404, "报告不存在或无权查看")
+
+        store_path = _get_evaluation_store_path()
+        file_path = os.path.join(store_path, f"evaluation_{evaluation_id}.json")
+        if not os.path.exists(file_path):
+            return error_response(404, "报告不存在")
+        with open(file_path, "r", encoding="utf-8") as f:
+            ev = json.load(f)
+        hr_info = _get_hr_info_by_id(ev.get("hr_id"))
+        detail = dict(ev)
+        detail["company_name"] = hr_info.get("company_name") or ""
+        detail["hr_name"] = hr_info.get("real_name") or ""
+        return success_response(detail)
+    except Exception as e:
+        logger.error(f"[HR] /hr/student/evaluation-reports/<id> 异常: {e}", exc_info=True)
+        return error_response(500, f"服务器内部错误: {str(e)}")
+
