@@ -509,44 +509,27 @@ function _mockStudentToDetailData(student) {
     };
 }
 
-async function openStudentModal(studentId) {
-    var contentEl = document.getElementById('studentModalContent');
-    contentEl.innerHTML = '<div style="padding:48px;text-align:center;color:#a0a098;">加载中...</div>';
-    document.getElementById('studentModal').classList.remove('hidden');
-
-    if (typeof window.MockStore !== 'undefined') {
-        var store = window.MockStore.getMockStore();
-        var student = store.students && store.students.find(function (s) { return s.anonymousId === studentId; });
-        if (student) {
-            contentEl.innerHTML = _renderFullStudentDetail(_mockStudentToDetailData(student));
-            return;
-        }
-    }
-
-    try {
-        var params = new URLSearchParams({ anonymous_id: studentId });
-        var response = await fetch(HR_BACKEND_BASE.replace(/\/$/, '') + '/hr/students/detail?' + params, {
-            headers: { 'Authorization': 'Bearer ' + (currentHrData.token || '') }
+function openStudentModal(studentId) {
+    var overlay = document.getElementById('studentModal');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            overlay.classList.add('visible');
         });
-        var result = await response.json();
-        if (result.code !== 200 || !result.data) {
-            contentEl.innerHTML = '<div style="padding:48px;text-align:center;color:#b91c1c;">加载档案失败：' + (result.msg || '未知错误') + '</div>';
-            return;
-        }
-        if (!result.data.realName && result.data.profile && result.data.profile.basic_info) {
-            result.data.realName = result.data.profile.basic_info.name;
-        }
-        contentEl.innerHTML = _renderFullStudentDetail(result.data);
-    } catch (err) {
-        console.error('加载学生详情错误:', err);
-        contentEl.innerHTML = '<div style="padding:48px;text-align:center;color:#b91c1c;">网络错误，请稍后重试</div>';
-    }
+    });
 }
 
 function closeStudentModal(e) {
-    if (e.target === document.getElementById('studentModal')) {
-        document.getElementById('studentModal').classList.add('hidden');
-    }
+    var overlay = document.getElementById('studentModal');
+    if (!overlay) return;
+    if (e && e.target !== overlay) return;
+    overlay.classList.remove('visible');
+    setTimeout(function () {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none';
+    }, 220);
 }
 
 function openInviteModal(studentId) {
@@ -622,25 +605,17 @@ async function loadInvitations() {
             invitation_id: 'INV-2025-001',
             anonymous_student_id: 'student_anon_001',
             target_job: '算法工程师',
-            message: '您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。',
+            message: '您好，我们公司正在招聘算法工程师，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。',
             status: 'accepted',
             sent_at: '2025-03-08 14:23'
         },
         {
             invitation_id: 'INV-2025-002',
             anonymous_student_id: 'student_anon_003',
-            target_job: 'AI产品经理',
+            target_job: '算法工程师',
             message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。',
             status: 'pending',
             sent_at: '2025-03-09 10:05'
-        },
-        {
-            invitation_id: 'INV-2025-003',
-            anonymous_student_id: 'student_anon_003',
-            target_job: '后端开发工程师',
-            message: '您好，看到您有Spring Boot和分布式系统经验，与我们岗位高度匹配，希望进一步了解。',
-            status: 'pending',
-            sent_at: '2025-03-10 09:30'
         }
     ];
     renderInvitations(mockData);
@@ -794,7 +769,7 @@ function renderEvaluations(evaluations) {
             <td style="padding:12px 14px;font-size:13px;font-weight:600;color:${imp.color};">${isCompleted ? imp.text : '—'}</td>
             <td style="padding:12px 14px;font-size:13px;font-weight:600;color:${intent.color};">${isCompleted ? intent.text : '—'}</td>
             <td style="padding:12px 14px;">
-                <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};">
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;background:${s.bg};color:${s.color};white-space:nowrap;">
                     <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0;"></span>
                     ${s.text}
                 </span>

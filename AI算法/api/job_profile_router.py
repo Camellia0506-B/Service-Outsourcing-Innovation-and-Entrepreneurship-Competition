@@ -1664,20 +1664,20 @@ def _stream_job_profile_generate(job_name: str, job_description: str):
                 "competition": "蓝桥杯（Java赛道）、中国软件杯、ACM-ICPC程序设计大赛",
                 "internship": "推荐6个月以上Java后端开发实习，优先有Spring Boot完整项目经验者",
                 "description": "负责后端服务开发与维护，基于Spring Boot/Cloud构建微服务接口，对接前端与数据库；参与技术方案评审与代码审查；与产品、测试协作推进需求迭代，保障系统稳定性与性能。",
-                "abilities": [
+  "abilities": [
                     {"icon": "🧠", "name": "学习能力", "level": "高", "level_type": "high", "desc": "Java生态持续演进，Spring版本迭代与云原生技术栈不断更新，需快速掌握新框架与最佳实践，保持技术竞争力。", "keywords": ["框架学习", "技术迭代"]},
                     {"icon": "💡", "name": "创新能力", "level": "中", "level_type": "medium", "desc": "在高并发、缓存击穿等业务场景中需提出创新性解决方案，结合业务特点选取合适的技术架构。", "keywords": ["架构设计", "方案优化"]},
                     {"icon": "🔥", "name": "抗压能力", "level": "高", "level_type": "high", "desc": "版本上线冲刺期开发节奏紧张、Bug修复压力大，需在多任务并行中保持代码质量稳定输出。", "keywords": ["版本冲刺", "多任务"]},
                     {"icon": "💬", "name": "沟通能力", "level": "中", "level_type": "medium", "desc": "需与产品理清需求边界，与前端对齐接口规范，与测试沟通缺陷复现路径，确保开发方向一致。", "keywords": ["需求对齐", "接口协作"]},
                     {"icon": "🤝", "name": "团队协作", "level": "高", "level_type": "high", "desc": "后端团队分模块并行开发，需规范代码提交、共用接口文档，与前端/测试形成顺畅协作链路。", "keywords": ["并行开发", "代码规范"]},
                     {"icon": "🏢", "name": "实习经历", "level": "高", "level_type": "high", "desc": "有Java后端实习经历者起点明显更高，建议在校期间完成至少一段含真实需求交付的后端开发实习。", "keywords": ["后端实习", "项目交付"]},
-                ],
-                "certs": [
+  ],
+  "certs": [
                     {"icon": "🏅", "name": "Oracle Java SE认证(OCP)", "desc": "Java岗位认可度最高的官方认证", "type": "必须", "type_code": "must"},
                     {"icon": "📜", "name": "阿里云/AWS云开发认证", "desc": "微服务与云原生方向加分认证", "type": "加分项", "type_code": "plus"},
                     {"icon": "🌐", "name": "英语四/六级", "desc": "阅读官方技术文档的基础能力", "type": "推荐", "type_code": "opt"},
-                ],
-                "intern_directions": [
+  ],
+  "intern_directions": [
                     {"type": "后端开发实习", "icon": "🏢", "role": "Java后端开发实习生", "companies": ["互联网大厂", "金融科技公司", "软件外包公司"]},
                     {"type": "微服务/云原生实习", "icon": "🔬", "role": "全栈/微服务实习生", "companies": ["中型互联网公司", "创业公司", "电商平台"]},
                 ],
