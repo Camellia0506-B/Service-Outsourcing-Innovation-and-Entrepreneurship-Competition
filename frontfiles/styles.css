@@ -1218,14 +1218,12 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
-    display: flex;
-    height: 100vh;
     min-height: 100vh;
 }
 
-/* 主应用：只保留 .page 的单一滚动条（避免 body + .page 双滚动） */
+/* 主应用：使用 body 单滚动条（避免卡住无法滚动） */
 body:not(.on-login-page) {
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 
 /* 外层布局：navbar + 主内容区 */
@@ -1489,7 +1487,7 @@ body:not(.on-login-page) {
     padding: 36px 40px 60px;
     flex: 1;
     min-width: 0;
-    overflow-y: auto;
+    overflow-y: visible;
 }
 
 /* 登录/注册页面 */
