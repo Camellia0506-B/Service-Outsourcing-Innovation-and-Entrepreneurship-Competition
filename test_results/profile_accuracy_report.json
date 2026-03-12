@@ -1,6 +1,6 @@
 {
   "standard": "B",
-  "generated_at": "2026-03-10 19:56:55",
+  "generated_at": "2026-03-12 22:00:54",
   "ai_base_url": "http://127.0.0.1:5002/api/v1",
   "mysql": {
     "host": "127.0.0.1",
@@ -15,9 +15,9 @@
   "passed": true,
   "per_student": [
     {
-      "user_id": 14,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 35,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "计算机科学与技术",
       "student_certificates": [
@@ -26,17 +26,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -45,14 +45,14 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='计算机科学与技术' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='计算机科学与技术' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 13,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 34,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "信息管理与信息系统",
       "student_certificates": [
@@ -61,17 +61,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -80,14 +80,14 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='信息管理与信息系统' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='信息管理与信息系统' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 12,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 33,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "硕士",
       "student_major": "人工智能",
       "student_certificates": [
@@ -96,17 +96,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -115,14 +115,14 @@
       "qualified": true,
       "reasons": {
         "education": "硕士 >= 专科",
-        "major": "student_major='人工智能' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='人工智能' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 11,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 32,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "计算机科学与技术",
       "student_certificates": [
@@ -131,17 +131,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -150,14 +150,14 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='计算机科学与技术' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='计算机科学与技术' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 10,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 31,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "信息管理与信息系统",
       "student_certificates": [
@@ -166,17 +166,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -185,14 +185,14 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='信息管理与信息系统' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='信息管理与信息系统' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 9,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 30,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "硕士",
       "student_major": "人工智能",
       "student_certificates": [
@@ -201,17 +201,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -220,14 +220,14 @@
       "qualified": true,
       "reasons": {
         "education": "硕士 >= 专科",
-        "major": "student_major='人工智能' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='人工智能' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 8,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 29,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "计算机科学与技术",
       "student_certificates": [
@@ -236,17 +236,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -255,14 +255,14 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='计算机科学与技术' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='计算机科学与技术' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 7,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 28,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "信息管理与信息系统",
       "student_certificates": [
@@ -271,17 +271,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -290,14 +290,14 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='信息管理与信息系统' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='信息管理与信息系统' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 6,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 27,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "硕士",
       "student_major": "人工智能",
       "student_certificates": [
@@ -306,17 +306,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -325,14 +325,14 @@
       "qualified": true,
       "reasons": {
         "education": "硕士 >= 专科",
-        "major": "student_major='人工智能' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='人工智能' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     },
     {
-      "user_id": 5,
-      "job_id": "CC813972620J40907100404",
-      "job_name": "产品专员/助理",
+      "user_id": 26,
+      "job_id": "CCL1492073070J40751423209",
+      "job_name": "内容审核",
       "student_degree": "本科",
       "student_major": "计算机科学与技术",
       "student_certificates": [
@@ -341,17 +341,17 @@
       "required_degree": "专科",
       "preferred_majors": [
         "计算机",
-        "信息管理",
-        "市场营销",
-        "工商管理",
-        "软件",
+        "软件工程",
+        "电子信息",
         "电子",
         "信息",
         "通信",
         "自动化",
+        "网络",
+        "软件",
+        "信息管理",
         "人工智能",
-        "智能",
-        "网络"
+        "智能"
       ],
       "required_certificates": [],
       "education_ok": true,
@@ -360,7 +360,7 @@
       "qualified": true,
       "reasons": {
         "education": "本科 >= 专科",
-        "major": "student_major='计算机科学与技术' preferred=['计算机', '信息管理', '市场营销', '工商管理', '软件', '电子', '信息', '通信', '自动化', '人工智能', '智能', '网络']",
+        "major": "student_major='计算机科学与技术' preferred=['计算机', '软件工程', '电子信息', '电子', '信息', '通信', '自动化', '网络', '软件', '信息管理', '人工智能', '智能']",
         "cert": "岗位未给证书要求"
       }
     }

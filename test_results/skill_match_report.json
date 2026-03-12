@@ -1,6 +1,6 @@
 {
   "standard": "A",
-  "generated_at": "2026-03-10 20:09:42",
+  "generated_at": "2026-03-12 21:26:51",
   "ai_base_url": "http://127.0.0.1:5002/api/v1",
   "mysql": {
     "host": "127.0.0.1",
@@ -12,7 +12,7 @@
   "sample_user_ids": [
     1,
     4,
-    14
+    5
   ],
   "per_student": [
     {
@@ -32,37 +32,33 @@
         "客户服务"
       ],
       "accuracy": 50.0,
-      "elapsed_seconds": 0.211
+      "elapsed_seconds": 0.499
     },
     {
       "user_id": 4,
-      "job_id": "CCL1218931690J40371804703",
-      "job_name": "科研人员",
-      "required_skills_total": 3,
-      "mastered_skills_total": 11,
+      "job_id": "CC145756070J40784006312",
+      "job_name": "电话销售",
+      "required_skills_total": 1,
+      "mastered_skills_total": 9,
       "matched_skills": [],
       "missing_skills": [
-        "实验",
-        "数据分析",
-        "研发"
+        "招聘"
       ],
       "accuracy": 0.0,
-      "elapsed_seconds": 22.539
+      "elapsed_seconds": 23.586
     },
     {
-      "user_id": 14,
-      "job_id": "CCL1218931690J40371804703",
-      "job_name": "科研人员",
-      "required_skills_total": 3,
-      "mastered_skills_total": 6,
+      "user_id": 5,
+      "job_id": "CC145756070J40784006312",
+      "job_name": "电话销售",
+      "required_skills_total": 1,
+      "mastered_skills_total": 7,
       "matched_skills": [],
       "missing_skills": [
-        "实验",
-        "数据分析",
-        "研发"
+        "招聘"
       ],
       "accuracy": 0.0,
-      "elapsed_seconds": 3.568
+      "elapsed_seconds": 27.305
     }
   ],
   "average_accuracy": 16.67,
