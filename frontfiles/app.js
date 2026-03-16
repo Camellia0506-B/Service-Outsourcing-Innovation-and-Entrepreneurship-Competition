@@ -5571,6 +5571,78 @@ class CareerPlanningApp {
         }
     }
 
+    // 根据个人档案数据分析能力得分
+    analyzeAbilitiesFromProfile(profileData) {
+        const MIN_SCORE = 30; // 最低分值
+        const maxScore = function(score) {
+            return Math.min(100, Math.max(MIN_SCORE, score));
+        };
+        
+        const ps = profileData.professional_skills || {};
+        const innovation = profileData.innovation_ability || {};
+        const learning = profileData.learning_ability || {};
+        const pressure = profileData.pressure_resistance || {};
+        const comm = profileData.communication_ability || {};
+        const exp = profileData.practical_experience || {};
+        
+        let professionalSkillsScore = ps.overall_score || ps.score || 0;
+        let innovationScore = innovation.score || 0;
+        let learningScore = learning.score || 0;
+        let pressureScore = pressure.assessment_score || pressure.score || 0;
+        let communicationScore = comm.overall_score || comm.score || 0;
+        let experienceScore = exp.overall_score || exp.score || 0;
+        
+        const skills = profileData.skills || [];
+        const hasSkills = Array.isArray(skills) && skills.length > 0;
+        if (hasSkills && professionalSkillsScore < MIN_SCORE) {
+            professionalSkillsScore = MIN_SCORE + 10;
+        }
+        
+        const basicInfo = profileData.basic_info || {};
+        const hasSummary = basicInfo.summary && basicInfo.summary.length > 20;
+        if (hasSummary && innovationScore < MIN_SCORE) {
+            innovationScore = MIN_SCORE + 5;
+        }
+        
+        const educationInfo = profileData.education_info || {};
+        const hasEducation = educationInfo.school || educationInfo.major;
+        if (hasEducation && learningScore < MIN_SCORE) {
+            learningScore = MIN_SCORE + 15;
+        }
+        
+        const internships = profileData.internships || [];
+        const projects = profileData.projects || [];
+        const hasExperience = (Array.isArray(internships) && internships.length > 0) || 
+                             (Array.isArray(projects) && projects.length > 0);
+        if (hasExperience) {
+            if (experienceScore < MIN_SCORE) {
+                experienceScore = MIN_SCORE + 20;
+            }
+            if (communicationScore < MIN_SCORE) {
+                communicationScore = MIN_SCORE + 10;
+            }
+            if (pressureScore < MIN_SCORE) {
+                pressureScore = MIN_SCORE + 10;
+            }
+        }
+        
+        if (professionalSkillsScore === 0) professionalSkillsScore = MIN_SCORE;
+        if (innovationScore === 0) innovationScore = MIN_SCORE;
+        if (learningScore === 0) learningScore = MIN_SCORE;
+        if (pressureScore === 0) pressureScore = MIN_SCORE;
+        if (communicationScore === 0) communicationScore = MIN_SCORE;
+        if (experienceScore === 0) experienceScore = MIN_SCORE;
+        
+        return {
+            professionalSkills: maxScore(professionalSkillsScore),
+            innovation: maxScore(innovationScore),
+            learning: maxScore(learningScore),
+            pressure: maxScore(pressureScore),
+            communication: maxScore(communicationScore),
+            experience: maxScore(experienceScore)
+        };
+    }
+    
     // 渲染学生能力画像（符合 API 文档 §5）
     renderAbilityProfile(data, container) {
         const bi = data.basic_info || {};
@@ -5582,6 +5654,19 @@ class CareerPlanningApp {
         const comm = data.communication_ability || {};
         const exp = data.practical_experience || {};
         const overall = data.overall_assessment || {};
+        
+        // 根据个人档案数据分析当前能力（带最低值30分）
+        const currentAbilities = this.analyzeAbilitiesFromProfile(data);
+        
+        // 统一的行业平均水平数据
+        const industryAverage = {
+            professionalSkills: 80,
+            innovation: 75,
+            learning: 85,
+            pressure: 70,
+            communication: 80,
+            experience: 75
+        };
 
         let html = `
             <div class="ability-profile-new-layout">
@@ -5637,7 +5722,7 @@ class CareerPlanningApp {
                         <div style="display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; height: 100%;">
                             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
                                 <h3 style="margin: 0;">📊 能力六维雷达图</h3>
-                                <div style="font-size: 14px; color: var(--text-secondary);">vs ${data.target_job_name || '目标岗位'}要求</div>
+                                <div style="font-size: 14px; color: var(--text-secondary);">vs 行业平均水平</div>
                             </div>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%;">
@@ -5683,15 +5768,15 @@ class CareerPlanningApp {
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%;">
                                 <div style="margin-bottom: 16px;">
-                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">目标岗位能力要求</h4>
+                                    <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">行业通用能力要求</h4>
                                     <div style="padding: 16px; background-color: #e6f7ff; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 16px;">
-                                        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px;">算法工程师（中级）</div>
+                                        <div style="font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 12px;">IT行业通用要求</div>
                                         <ul style="list-style-position: inside; padding: 0; margin: 0; font-size: 12px; color: var(--text-secondary);">
-                                            <li>机器学习/深度学习算法设计与实现</li>
-                                            <li>Python/C++编程能力，熟悉数据结构与算法</li>
-                                            <li>具备实际项目经验，有良好的问题解决能力</li>
-                                            <li>熟悉常见的深度学习框架（如TensorFlow、PyTorch等）</li>
-                                            <li>良好的数学基础，包括线性代数、概率统计等</li>
+                                            <li>扎实的专业基础知识和编程能力</li>
+                                            <li>良好的学习能力和问题解决能力</li>
+                                            <li>团队协作和沟通能力</li>
+                                            <li>具备一定的项目实践经验</li>
+                                            <li>持续学习和关注行业技术趋势</li>
                                         </ul>
                                     </div>
                                     <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">相关岗位能力要求</h4>
@@ -5736,8 +5821,8 @@ class CareerPlanningApp {
                             <h3 style="margin: 0 0 12px 0;">📁 实习/项目经历</h3>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%;">
-                                ${this.renderExperienceTimeline(exp.internships, 'internship')}
-                                ${this.renderExperienceTimeline(exp.projects, 'project')}
+                                ${this.renderExperienceTimeline(data.internships, 'internship')}
+                                ${this.renderExperienceTimeline(data.projects, 'project')}
                             </div>
                         </div>
                     </div>
@@ -5826,17 +5911,17 @@ class CareerPlanningApp {
                     <!-- 与目标岗位差距分析 -->
                     <div class="ability-profile-card gap-analysis-card" style="flex: 1 1 100%;">
                         <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
-                            <h3 style="margin: 0 0 12px 0;">🎯 与目标岗位差距分析</h3>
+                            <h3 style="margin: 0 0 12px 0;">🎯 与行业平均水平差距分析</h3>
                             <div style="width: 100%; height: 1px; background-color: #f0f0f0; margin-bottom: 20px;"></div>
                             <div style="width: 100%;">
-                                <div style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">目标岗位: ${data.target_job_name || '算法工程师（中级）'}</div>
+                                <div style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">对比基准: 行业平均水平</div>
                                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-                                    ${this.renderGapAnalysis('专业技能', ps.overall_score || 62, (data.target_job_requirements || {}).professional_skills || 80)}
-                                    ${this.renderGapAnalysis('项目经验', exp.overall_score || 90, (data.target_job_requirements || {}).practical_experience || 75)}
-                                    ${this.renderGapAnalysis('创新能力', innovation.score || 0, (data.target_job_requirements || {}).innovation_ability || 60)}
-                                    ${this.renderGapAnalysis('学习能力', learning.score || 77, (data.target_job_requirements || {}).learning_ability || 70)}
-                                    ${this.renderGapAnalysis('沟通能力', comm.overall_score || 72, (data.target_job_requirements || {}).communication_ability || 75)}
-                                    ${this.renderGapAnalysis('抗压能力', pressure.assessment_score || 72, (data.target_job_requirements || {}).pressure_resistance || 65)}
+                                    ${this.renderGapAnalysis('专业技能', currentAbilities.professionalSkills, industryAverage.professionalSkills)}
+                                    ${this.renderGapAnalysis('实践经验', currentAbilities.experience, industryAverage.experience)}
+                                    ${this.renderGapAnalysis('创新能力', currentAbilities.innovation, industryAverage.innovation)}
+                                    ${this.renderGapAnalysis('学习能力', currentAbilities.learning, industryAverage.learning)}
+                                    ${this.renderGapAnalysis('沟通能力', currentAbilities.communication, industryAverage.communication)}
+                                    ${this.renderGapAnalysis('抗压能力', currentAbilities.pressure, industryAverage.pressure)}
                                 </div>
                             </div>
                         </div>
@@ -5847,7 +5932,7 @@ class CareerPlanningApp {
         container.innerHTML = html;
         
         // 初始化雷达图
-        this.initAbilityRadarChart(data);
+        this.initAbilityRadarChart(currentAbilities, industryAverage);
         
         // 初始化竞争力仪表盘
         this.initCompetitivenessGauge(data);
@@ -6024,19 +6109,11 @@ class CareerPlanningApp {
     }
     
     // 初始化能力雷达图
-    initAbilityRadarChart(data) {
+    initAbilityRadarChart(currentAbilities, industryAverage) {
         const chartDom = document.getElementById('abilityRadarChart');
         if (!chartDom) return;
         
         const myChart = echarts.init(chartDom);
-        
-        // 确保数据结构正确
-        const ps = data.professional_skills || {};
-        const innovation = data.innovation_ability || {};
-        const learning = data.learning_ability || {};
-        const pressure = data.pressure_resistance || {};
-        const comm = data.communication_ability || {};
-        const exp = data.practical_experience || {};
         
         // 准备数据
         const indicators = [
@@ -6048,46 +6125,28 @@ class CareerPlanningApp {
             { name: '实践经验', max: 100 }
         ];
         
-        // 提取各项能力得分，确保不为零
-        const professionalSkillsScore = ps.overall_score || ps.score || 60;
-        const innovationScore = innovation.score || 50;
-        const learningScore = learning.score || 70;
-        const pressureScore = pressure.assessment_score || pressure.score || 65;
-        const communicationScore = comm.overall_score || comm.score || 65;
-        const experienceScore = exp.overall_score || exp.score || 55;
-        
-        // 从API数据中获取目标岗位要求（如果有），否则使用合理默认值
-        const jobRequirements = data.target_job_requirements || {
-            professional_skills: 80,
-            innovation_ability: 75,
-            learning_ability: 85,
-            pressure_resistance: 70,
-            communication_ability: 80,
-            practical_experience: 75
-        };
-        
         const seriesData = [
             {
                 value: [
-                    professionalSkillsScore,
-                    innovationScore,
-                    learningScore,
-                    pressureScore,
-                    communicationScore,
-                    experienceScore
+                    currentAbilities.professionalSkills,
+                    currentAbilities.innovation,
+                    currentAbilities.learning,
+                    currentAbilities.pressure,
+                    currentAbilities.communication,
+                    currentAbilities.experience
                 ],
                 name: '当前能力'
             },
             {
                 value: [
-                    jobRequirements.professional_skills || 80,
-                    jobRequirements.innovation_ability || 75,
-                    jobRequirements.learning_ability || 85,
-                    jobRequirements.pressure_resistance || 70,
-                    jobRequirements.communication_ability || 80,
-                    jobRequirements.practical_experience || 75
+                    industryAverage.professionalSkills,
+                    industryAverage.innovation,
+                    industryAverage.learning,
+                    industryAverage.pressure,
+                    industryAverage.communication,
+                    industryAverage.experience
                 ],
-                name: data.target_job_name ? `岗位要求（${data.target_job_name}）` : '岗位要求（算法工程师）'
+                name: '行业平均水平'
             }
         ];
         
@@ -6096,7 +6155,7 @@ class CareerPlanningApp {
                 trigger: 'item'
             },
             legend: {
-                data: ['当前能力', data.target_job_name ? `岗位要求（${data.target_job_name}）` : '岗位要求（算法工程师）'],
+                data: ['当前能力', '行业平均水平'],
                 bottom: 0,
                 textStyle: {
                     fontSize: 12
