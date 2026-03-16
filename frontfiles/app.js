@@ -7266,15 +7266,9 @@ class CareerPlanningApp {
         container.innerHTML = '';
         const list = data.list || [];
         const stripeGradients = [
-<<<<<<< Updated upstream
-            'linear-gradient(90deg, #2d6a4f, #3d7a5f)',
-            'linear-gradient(90deg, #245a41, #2d6a4f)',
-            'linear-gradient(90deg, #2d6a4f, #1e4d3a)',
-=======
             'linear-gradient(90deg, #5e8c65, #4a7350)',
             'linear-gradient(90deg, #4a7350, #5e8c65)',
             'linear-gradient(90deg, #5e8c65, #4a7350)',
->>>>>>> Stashed changes
         ];
         list.forEach((job, idx) => {
             const jobCard = document.createElement('div');
