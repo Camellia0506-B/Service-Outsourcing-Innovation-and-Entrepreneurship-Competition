@@ -2588,7 +2588,7 @@
 
         <!-- 评估报告详情弹窗（与企业端 hr-dashboard 报告弹窗结构一致） -->
         <div id="hrReportDetailModal" class="hr-report-modal-overlay hidden">
-            <div style="background:#fff; max-width:720px; width:100%; margin:0 auto; border-radius:16px; padding:40px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.12);">
+            <div style="background:#fff; max-width:min(900px,94vw); width:100%; margin:0 auto; border-radius:16px; padding:24px 32px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.12); max-height:90vh; overflow-y:auto;">
                 <button id="hrReportDetailClose" type="button" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#666;">×</button>
 
                 <h2 id="hrReportDetailTitle" style="text-align:center;font-size:22px;margin-bottom:4px;">评估报告详情</h2>
@@ -2611,12 +2611,16 @@
                     </div>
                 </div>
 
-                <div style="margin-bottom:24px;">
-                    <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">能力维度评分</h4>
-                    <canvas id="reportRadarChart" width="400" height="280" style="display:block;margin:0 auto;"></canvas>
+                <div style="display:flex;gap:24px;margin-bottom:24px;align-items:flex-start;flex-wrap:wrap;">
+                    <div style="flex:1 1 260px;min-width:0;">
+                        <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">能力维度评分</h4>
+                        <canvas id="reportRadarChart" width="360" height="260" style="display:block;margin:0;"></canvas>
+                    </div>
+                    <div style="flex:1 1 260px;min-width:0;">
+                        <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">维度得分概览</h4>
+                        <div id="reportScoreBars" style="margin-top:0;"></div>
+                    </div>
                 </div>
-
-                <div id="reportScoreBars" style="margin-bottom:24px;"></div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                     <div style="background:#f0f7f4;border-radius:12px;padding:16px;">

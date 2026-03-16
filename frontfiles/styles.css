@@ -17423,9 +17423,10 @@ body.on-login-page #agentAssistant { display: none !important; }
     background: rgba(0,0,0,0.4);
     z-index: 10000;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 24px;
+    padding: 24px 12px;
+    overflow-y: auto;
 }
 .hr-report-modal-overlay.hidden { display: none !important; }
 .hr-report-modal {
@@ -17433,8 +17434,8 @@ body.on-login-page #agentAssistant { display: none !important; }
     border-radius: 12px;
     max-width: 560px;
     width: 100%;
-    max-height: 85vh;
-    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     box-shadow: 0 8px 32px rgba(0,0,0,0.12);
