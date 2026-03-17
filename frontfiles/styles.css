@@ -1663,7 +1663,7 @@ body.on-login-page {
 }
 #loginPage .login-tab.active {
     background: #fff;
-    color: #3D74E0;
+    color: #2D5A3D;
     font-weight: 500;
     box-shadow: 0 1px 6px rgba(0,0,0,.10);
 }
@@ -21114,11 +21114,22 @@ body.on-login-page::after {
   background: rgba(61,107,79,0.07);
   border: 1px solid rgba(61,107,79,0.18);
   border-radius: 100px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--sage);
   letter-spacing: 0.08em;
   font-weight: 300;
   margin-bottom: 14px;
+}
+
+/* 徽标胶囊只保留外层一圈，去掉内层 span 的圈 */
+#loginPage .login-badge span {
+  border: none;
+  padding: 0;
+  background: transparent;
+  font-size: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
 }
 
 #loginPage .login-title {
