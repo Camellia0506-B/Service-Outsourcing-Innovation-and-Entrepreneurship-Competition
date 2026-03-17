@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星途智探 · 职业规划平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #F4EFE6;   /* warm off-white page bg */
+  --cream-card:  #F8F5F0;   /* card surface, slightly warmer white */
+  --tab-bg:      #ECE8E0;   /* tab pill background */
+  --input-bg:    #EDF0EB;   /* input field background */
+  --green-deep:  #1C3A2A;
+  --green-mid:   #2D5A3D;
+  --green-light: #4A7C5E;
+  --green-pale:  #8BAF96;
+  --green-mist:  #D4E4DA;
+  --gold:        #C9A84C;
+  --text-dark:   #1A1A1A;
+  --text-mid:    #555;
+  --text-soft:   #999;
+  --border-soft: #E4DFD7;
+}
+
+html, body {
+  height: 100%; width: 100%;
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg);
+  color: var(--text-dark);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════
+   TWO-COLUMN LAYOUT
+   Left = decorative, Right = card floating on bg
+══════════════════════════════ */
+.page {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  height: 100vh;
+}
+
+/* ══════════════════════════════
+   LEFT PANEL — no grid, lighter bg
+══════════════════════════════ */
+.left {
+  position: relative;
+  padding: 52px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ── Logo ── */
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  position: relative; z-index: 3;
+  opacity: 0; animation: fadeUp .5s .1s ease forwards;
+}
+.logo-icon {
+  width: 40px; height: 40px;
+  background: var(--green-deep); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #F8F5F0; font-size: 17px; font-weight: 700;
+  font-family: 'Noto Serif SC', serif;
+  flex-shrink: 0;
+}
+.logo-name { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: var(--green-deep); letter-spacing: 2px; }
+.logo-en   { font-size: 8.5px; letter-spacing: 3px; color: var(--green-pale); font-weight: 300; text-transform: uppercase; margin-top: 2px; }
+
+/* ── Hero copy ── */
+.hero { position: relative; z-index: 3; max-width: 460px; }
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 11px; letter-spacing: 1.8px; color: var(--green-light);
+  font-weight: 500; margin-bottom: 20px; padding: 5px 14px;
+  border: 1px solid rgba(139,175,150,0.5); border-radius: 20px;
+  background: rgba(255,255,255,0.55); backdrop-filter: blur(4px);
+  opacity: 0; animation: fadeUp .5s .3s ease forwards;
+}
+.hero-tag-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green-light);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.3;transform:scale(.7);} }
+
+.hero-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 52px; font-weight: 700; line-height: 1.22;
+  color: var(--green-deep); letter-spacing: -1px;
+  margin-bottom: 18px; min-height: 128px;
+}
+.hero-title em {
+  font-style: italic; color: var(--green-mid); position: relative;
+  display: inline-block;
+}
+.hero-title em::after {
+  content: '';
+  position: absolute; bottom: 2px; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+  border-radius: 2px;
+}
+/* per-character animation */
+.char {
+  display: inline-block; opacity: 0;
+  transform: translateY(26px) scale(.9);
+  animation: charIn .4s ease forwards;
+}
+@keyframes charIn { to { opacity:1; transform:translateY(0) scale(1); } }
+
+.hero-desc {
+  font-size: 14px; line-height: 1.9; color: var(--text-mid); font-weight: 300;
+  max-width: 390px;
+  opacity: 0; animation: fadeUp .6s .9s ease forwards;
+}
+.tagline-row {
+  display: flex; align-items: center; gap: 14px; margin-top: 26px;
+  opacity: 0; animation: fadeUp .6s 1s ease forwards;
+}
+.tagline-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-soft); font-weight: 300; }
+.tagline-dot  { width: 4px; height: 4px; border-radius: 50%; background: var(--green-pale); flex-shrink: 0; }
+.tagline-sep  { width: 1px; height: 12px; background: rgba(139,175,150,.45); }
+
+/* ── Stats ── */
+.stats {
+  display: flex; gap: 36px;
+  position: relative; z-index: 3;
+  opacity: 0; animation: fadeUp .6s 1.1s ease forwards;
+}
+.stat-num { font-family: 'Noto Serif SC', serif; font-size: 25px; font-weight: 700; color: var(--green-deep); line-height: 1; margin-bottom: 4px; }
+.stat-num sup { font-size: 11px; color: var(--green-light); }
+.stat-label { font-size: 11px; color: var(--text-soft); font-weight: 300; }
+.stat-div { width: 1px; background: var(--green-mist); align-self: stretch; }
+
+/* ══════════════════════════════
+   ORBIT DECORATION
+══════════════════════════════ */
+.orbit-wrap {
+  position: absolute;
+  /* push most of the rings off-screen to the right */
+  right: -100px; top: 50%;
+  transform: translateY(-50%);
+  width: 500px; height: 500px;
+  pointer-events: none; z-index: 1;
+}
+.ring {
+  position: absolute; border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+}
+.r1 { width:130px; height:130px; border:1px solid rgba(139,175,150,.45); }
+.r2 { width:240px; height:240px; border:1px dashed rgba(139,175,150,.28); animation:rspin 30s linear infinite; }
+.r3 { width:350px; height:350px; border:1px solid rgba(139,175,150,.14); }
+.r4 { width:470px; height:470px; border:1px dashed rgba(139,175,150,.07); animation:rspin 55s linear infinite reverse; }
+@keyframes rspin {
+  from { transform:translate(-50%,-50%) rotate(0deg); }
+  to   { transform:translate(-50%,-50%) rotate(360deg); }
+}
+
+/* center emblem */
+.orbit-center {
+  position: absolute; top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  width:50px; height:50px; background:var(--green-deep); border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Noto Serif SC',serif; font-size:19px; color:#F8F5F0; font-weight:700;
+  box-shadow: 0 0 0 7px rgba(28,58,42,.07), 0 0 0 16px rgba(28,58,42,.04);
+}
+
+/* spinning dots */
+.odot { position:absolute; top:50%; left:50%; border-radius:50%; }
+.od1 { width:7px; height:7px; background:var(--gold);       animation:od1  8s linear infinite; }
+.od2 { width:5px; height:5px; background:var(--green-pale); animation:od2 13s linear infinite; }
+.od3 { width:5px; height:5px; background:var(--green-mid); opacity:.65; animation:od3 20s linear infinite; }
+@keyframes od1 { from{transform:translate(-50%,-50%) rotate(0deg)   translateX(115px);} to{transform:translate(-50%,-50%) rotate(360deg) translateX(115px);} }
+@keyframes od2 { from{transform:translate(-50%,-50%) rotate(70deg)  translateX(175px);} to{transform:translate(-50%,-50%) rotate(430deg) translateX(175px);} }
+@keyframes od3 { from{transform:translate(-50%,-50%) rotate(200deg) translateX(115px);} to{transform:translate(-50%,-50%) rotate(560deg) translateX(115px);} }
+
+/* feature nodes — injected by JS */
+.fnode {
+  position: absolute;
+  display: flex; flex-direction:column; align-items:center; gap:5px;
+  pointer-events: none;
+  opacity:0; animation:fadeUp .5s ease forwards;
+}
+.fnode-icon {
+  width:34px; height:34px; border-radius:9px;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(139,175,150,.3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px;
+  box-shadow:0 3px 10px rgba(28,58,42,.10);
+}
+.fnode-label {
+  font-size:10px; color:var(--green-mid); font-weight:500;
+  letter-spacing:.3px; white-space:nowrap;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(139,175,150,.22);
+  border-radius:10px; padding:2px 8px;
+  box-shadow:0 2px 8px rgba(28,58,42,.06);
+}
+
+/* ══════════════════════════════
+   RIGHT PANEL
+   — same warm bg, card floats on top
+══════════════════════════════ */
+.right {
+  background: var(--bg);          /* same colour as page */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 48px;
+  /* no border, no different bg — seamless */
+}
+
+/* THE CARD — white/cream surface with shadow, true floating appearance */
+.card {
+  width: 100%;
+  max-width: 376px;
+  background: var(--cream-card);
+  border-radius: 22px;
+  padding: 28px 30px 24px;
+  /* layered shadow for depth */
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.04),
+    0 4px 12px rgba(0,0,0,0.05),
+    0 16px 40px rgba(0,0,0,0.09);
+  opacity: 0; animation: fadeUp .6s .2s ease forwards;
+}
+
+/* ── Tab row ──
+   Screenshot: "学生登录" has white pill active with blue text,
+   "HR登录" is plain text, no border */
+.tabs {
+  display: grid; grid-template-columns: 1fr 1fr;
+  background: var(--tab-bg);
+  border-radius: 12px; padding: 4px;
+  margin-bottom: 22px;
+  gap: 0;
+}
+.tab {
+  padding: 9px 0; text-align: center;
+  font-size: 13.5px; font-weight: 400; letter-spacing: .3px;
+  color: var(--text-soft);
+  border-radius: 9px; cursor: pointer;
+  border: none; background: transparent;
+  font-family: 'Noto Sans SC', sans-serif;
+  transition: all .2s;
+}
+/* active tab: white pill, blue-green text */
+.tab.active {
+  background: #FFFFFF;
+  color: #3D74E0;                 /* matches screenshot blue */
+  font-weight: 500;
+  box-shadow: 0 1px 6px rgba(0,0,0,.10);
+}
+
+/* ── Badge pill ── */
+.card-badge { display:flex; justify-content:center; margin-bottom:14px; }
+.badge {
+  font-size:11px; color:var(--green-light); letter-spacing:.5px;
+  padding:4px 14px;
+  border:1px solid rgba(139,175,150,.55);
+  border-radius:20px;
+  background:transparent;    /* just outline, no fill */
+  font-weight:400;
+}
+
+/* ── Title ── */
+.card-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 22px; font-weight: 700; color: var(--text-dark);
+  text-align: center; margin-bottom: 6px; letter-spacing: 1px;
+}
+/* subtitle — screenshot: lighter grey, small, centred */
+.card-sub {
+  font-size: 12.5px; color: var(--text-soft); text-align: center;
+  margin-bottom: 24px; font-weight: 300; line-height: 1.7;
+}
+
+/* ── Field labels ──
+   Screenshot: small, left-aligned, medium weight */
+.field { margin-bottom: 14px; }
+.field-label {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--text-mid); margin-bottom: 7px; letter-spacing: .2px;
+}
+
+/* ── Input rows ──
+   Screenshot: rounded pill shape, light green-grey bg,
+   left icon, grey placeholder text, NO visible border */
+.input-wrap { position: relative; }
+.input-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: #B0C0B5; font-size: 13px; pointer-events: none; line-height: 1;
+  font-style: normal;
+}
+.field input {
+  width: 100%;
+  padding: 12px 14px 12px 38px;
+  border: none;                   /* screenshot has NO border on inputs */
+  border-radius: 12px;
+  background: var(--input-bg);    /* soft sage green-grey */
+  font-size: 13.5px; color: var(--text-dark);
+  font-family: 'Noto Sans SC', sans-serif;
+  outline: none; transition: box-shadow .2s, background .2s;
+  letter-spacing: .2px;
+}
+.field input:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(45,90,61,.18);
+}
+.field input::placeholder { color: #B8C5BC; font-weight: 300; font-size: 13px; }
+
+/* ── Options row: checkbox + 忘记密码 ── */
+.options {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0 18px;
+}
+.remember {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; color: var(--text-soft); cursor: pointer;
+  user-select: none;
+}
+/* Screenshot checkbox: small plain square outline */
+.remember input[type=checkbox] {
+  width: 14px; height: 14px; border-radius: 3px;
+  accent-color: var(--green-mid); cursor: pointer; flex-shrink:0;
+}
+.forgot { font-size: 12.5px; color: var(--text-soft); text-decoration: none; transition: color .2s; }
+.forgot:hover { color: var(--green-mid); }
+
+/* ── Primary button ──
+   Screenshot: near-black (#1C2B1F), full-width, rounded, "登录" centred */
+.btn-primary {
+  display: block; width: 100%; padding: 13.5px;
+  background: #1C2B1F;           /* very dark green-black */
+  color: #fff; border: none; border-radius: 12px;
+  font-size: 15px; font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 500; letter-spacing: 3px; cursor: pointer;
+  transition: background .2s, transform .15s, box-shadow .15s;
+  margin-bottom: 10px; text-align: center;
+}
+.btn-primary:hover {
+  background: #2D4A35;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(28,42,31,.24);
+}
+
+/* ── Secondary button ──
+   Screenshot: white bg, light grey border, "创建新账号" centred */
+.btn-secondary {
+  display: block; width: 100%; padding: 12.5px;
+  background: #fff; color: var(--text-mid);
+  border: 1px solid var(--border-soft); border-radius: 12px;
+  font-size: 14px; font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 400; letter-spacing: .5px; cursor: pointer;
+  transition: all .2s; margin-bottom: 16px; text-align: center;
+}
+.btn-secondary:hover { border-color: var(--green-pale); color: var(--green-deep); background: #f5faf7; }
+
+/* ── Footer ──
+   Screenshot: small grey centred text, "服务条款" and "隐私政策" slightly darker/bold */
+.card-footer { text-align: center; font-size: 11.5px; color: var(--text-soft); line-height: 1.7; font-weight: 300; }
+.card-footer a { color: var(--text-mid); text-decoration: none; font-weight: 500; }
+.card-footer a:hover { color: var(--green-mid); }
+
+/* ── Panel toggle ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ══════════════════════════════
+   SHARED KEYFRAMES
+══════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══════ LEFT ══════ -->
+  <div class="left">
+
+    <!-- orbit rings live behind everything -->
+    <div class="orbit-wrap" id="orbitWrap">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="ring r4"></div>
+      <div class="odot od1"></div>
+      <div class="odot od2"></div>
+      <div class="odot od3"></div>
+      <div class="orbit-center">星</div>
+      <!-- feature nodes injected by JS -->
+    </div>
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-icon">星</div>
+      <div style="display:flex;flex-direction:column;">
+        <span class="logo-name">星途智探</span>
+        <span class="logo-en">Star Path Intelligence</span>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-tag">
+        <span class="hero-tag-dot"></span>
+        AI Agent 职业规划平台
+      </div>
+      <h1 class="hero-title" id="heroTitle"></h1>
+      <p class="hero-desc">
+        以职业星图为主线，串联评估、画像、匹配与规划报告，<br>
+        让每一步选择都心中有数，星途无限。
+      </p>
+      <div class="tagline-row">
+        <div class="tagline-item"><span class="tagline-dot"></span>职业路径深度分析</div>
+        <div class="tagline-sep"></div>
+        <div class="tagline-item"><span class="tagline-dot"></span>求职节奏智能校准</div>
+        <div class="tagline-sep"></div>
+        <div class="tagline-item"><span class="tagline-dot"></span>个性化简历建议</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">10,000<sup>+</sup></div>
+        <div class="stat-label">条岗位数据</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-num">100<sup>+</sup></div>
+        <div class="stat-label">覆盖岗位类型</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-num">90<sup>%+</sup></div>
+        <div class="stat-label">人岗匹配准确率</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════ RIGHT ══════ -->
+  <div class="right">
+    <div class="card">
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('student',this)">学生登录</button>
+        <button class="tab"        onclick="switchTab('hr',this)">HR 登录</button>
+      </div>
+
+      <!-- ── Student panel ── -->
+      <div id="panel-student" class="panel active">
+
+        <div class="card-badge">
+          <span class="badge">星途智探 · AI Agent 职业规划</span>
+        </div>
+
+        <h2 class="card-title">欢迎回来</h2>
+        <p class="card-sub">登录，让 AI 智能体为你探索璀璨星途</p>
+
+        <div class="field">
+          <label class="field-label">账号</label>
+          <div class="input-wrap">
+            <span class="input-icon">◎</span>
+            <input type="text" placeholder="请输入账号">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">密码</label>
+          <div class="input-wrap">
+            <span class="input-icon">⊟</span>
+            <input type="password" placeholder="请输入密码">
+          </div>
+        </div>
+
+        <div class="options">
+          <label class="remember">
+            <input type="checkbox"> 记住我
+          </label>
+          <a class="forgot" href="#">忘记密码？</a>
+        </div>
+
+        <button class="btn-primary">登 录</button>
+        <button class="btn-secondary">创建新账号</button>
+
+        <div class="card-footer">
+          登录即表示同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a>
+        </div>
+
+      </div>
+
+      <!-- ── HR panel ── -->
+      <div id="panel-hr" class="panel">
+
+        <div class="card-badge">
+          <span class="badge">星途智探 · 企业 HR 平台</span>
+        </div>
+
+        <h2 class="card-title">HR 登录</h2>
+        <p class="card-sub">登录以继续评估学生简历</p>
+
+        <div class="field">
+          <label class="field-label">账号</label>
+          <div class="input-wrap">
+            <span class="input-icon">◎</span>
+            <input type="text" placeholder="请输入 HR 账号">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">密码</label>
+          <div class="input-wrap">
+            <span class="input-icon">⊟</span>
+            <input type="password" placeholder="请输入密码">
+          </div>
+        </div>
+
+        <div class="options">
+          <label class="remember">
+            <input type="checkbox"> 记住我
+          </label>
+          <a class="forgot" href="#">忘记密码？</a>
+        </div>
+
+        <button class="btn-primary">登 录</button>
+        <button class="btn-secondary">创建 HR 账号</button>
+
+        <div class="card-footer">
+          登录即表示同意 <a href="#">服务条款</a> 与 <a href="#">隐私政策</a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- .page -->
+
+<script>
+/* Tab switch */
+function switchTab(type, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + type).classList.add('active');
+}
+
+/* Per-character title animation */
+(function(){
+  const el = document.getElementById('heroTitle');
+  let d = 0.32, html = '';
+  for (const ch of '规划你的') {
+    html += `<span class="char" style="animation-delay:${d.toFixed(2)}s">${ch}</span>`;
+    d += 0.08;
+  }
+  html += '<br><em>';
+  for (const ch of '职业未来') {
+    html += `<span class="char" style="animation-delay:${d.toFixed(2)}s">${ch}</span>`;
+    d += 0.08;
+  }
+  html += '</em>';
+  el.innerHTML = html;
+})();
+
+/* Feature nodes — well-distributed across all four rings */
+(function(){
+  const wrap = document.getElementById('orbitWrap');
+  const cx = 250, cy = 250; // centre of 500×500 wrap
+
+  /*  [label, emoji, radius, angleDeg, animDelay]
+      Spread angles so nodes never cluster:
+      Ring r=115 (inner): 3 nodes at 0°, 130°, 255°
+      Ring r=175 (outer): 3 nodes at 55°, 185°, 310°           */
+  const nodes = [
+    ['个人档案', '👤', 115,   0, 1.3],
+    ['能力画像', '🎯', 115, 130, 1.6],
+    ['职业报告', '📄', 115, 255, 1.9],
+    ['职业测评', '📈', 175,  55, 1.4],
+    ['岗位匹配', '🔗', 175, 185, 1.7],
+    ['模拟面试', '💬', 175, 310, 2.0],
+  ];
+
+  nodes.forEach(([label, icon, r, deg, delay]) => {
+    const rad = (deg - 90) * Math.PI / 180;
+    const x = cx + r * Math.cos(rad);
+    const y = cy + r * Math.sin(rad);
+
+    const node = document.createElement('div');
+    node.className = 'fnode';
+    node.style.cssText =
+      `left:${x}px; top:${y}px;` +
+      `transform:translate(-50%,-50%);` +
+      `animation-delay:${delay}s`;
+    node.innerHTML =
+      `<div class="fnode-icon">${icon}</div>` +
+      `<div class="fnode-label">${label}</div>`;
+    wrap.appendChild(node);
+  });
+})();
+</script>
+</body>
+</html>

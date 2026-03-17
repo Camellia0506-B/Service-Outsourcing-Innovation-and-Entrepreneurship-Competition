@@ -1520,6 +1520,303 @@ body.on-login-page #globalBlobs { display: none; }
     justify-content: center;
 }
 
+/* =========================================================
+   登录页（按 根目录 `登录页.html` 视觉稿复刻）
+   仅覆盖 #loginPage 内部样式，不影响其他页面/逻辑
+   ========================================================= */
+body.on-login-page {
+    background: #F4EFE6;
+    overflow: hidden;
+}
+
+#loginPage.page {
+    display: grid;
+    grid-template-columns: 1fr 520px;
+    align-items: stretch;
+    justify-content: stretch;
+    height: 100vh;
+}
+
+/* 隐藏旧分割线（视觉稿无中间线） */
+#loginPage .panel-divider { display: none !important; }
+
+/* 左侧 */
+#loginPage .left-panel {
+    background: #F4EFE6;
+    padding: 52px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+#loginPage .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #1C3A2A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#loginPage .brand-mark svg { display: none; }
+#loginPage .brand-mark::after {
+    content: "星";
+    color: #F8F5F0;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Noto Serif SC', 'Noto Serif', serif;
+    line-height: 1;
+}
+
+#loginPage .brand-cn {
+    font-family: 'Noto Serif SC', 'Noto Serif', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1C3A2A;
+    letter-spacing: 2px;
+}
+#loginPage .brand-en {
+    font-size: 8.5px;
+    letter-spacing: 3px;
+    color: #8BAF96;
+    font-weight: 300;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+#loginPage .hero-title {
+    font-family: 'Noto Serif SC', 'Noto Serif', serif;
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.22;
+    color: #1C3A2A;
+    letter-spacing: -1px;
+}
+#loginPage .hero-title .accent {
+    color: #2D5A3D;
+    font-style: italic;
+    position: relative;
+    display: inline-block;
+}
+#loginPage .hero-title .accent::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #C9A84C 0%, transparent 100%);
+    border-radius: 2px;
+}
+
+#loginPage .hero-sub {
+    font-size: 14px;
+    line-height: 1.9;
+    color: #555;
+    font-weight: 300;
+    max-width: 390px;
+}
+
+/* 右侧 */
+#loginPage .right-panel {
+    background: #F4EFE6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 48px;
+}
+
+#loginPage .login-card {
+    width: 100%;
+    max-width: 376px;
+    background: #F8F5F0;
+    border-radius: 22px;
+    padding: 28px 30px 24px;
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,0.04),
+        0 4px 12px rgba(0,0,0,0.05),
+        0 16px 40px rgba(0,0,0,0.09);
+}
+
+/* Tabs */
+#loginPage .login-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #ECE8E0;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 22px;
+}
+#loginPage .login-tab {
+    padding: 9px 0;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 400;
+    letter-spacing: .3px;
+    color: #999;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all .2s;
+}
+#loginPage .login-tab.active {
+    background: #fff;
+    color: #3D74E0;
+    font-weight: 500;
+    box-shadow: 0 1px 6px rgba(0,0,0,.10);
+}
+
+/* Header */
+#loginPage .login-badge span {
+    font-size: 11px;
+    color: #4A7C5E;
+    letter-spacing: .5px;
+    padding: 4px 14px;
+    border: 1px solid rgba(139,175,150,.55);
+    border-radius: 20px;
+    background: transparent;
+    font-weight: 400;
+    display: inline-block;
+}
+#loginPage .login-title {
+    font-family: 'Noto Serif SC', 'Noto Serif', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1A1A1A;
+    text-align: center;
+    margin: 14px 0 6px;
+    letter-spacing: 1px;
+}
+#loginPage .login-sub {
+    font-size: 12.5px;
+    color: #999;
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 300;
+    line-height: 1.7;
+}
+
+/* Inputs */
+#loginPage .form-group { margin-bottom: 14px; }
+#loginPage .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 7px;
+    letter-spacing: .2px;
+}
+#loginPage .form-input {
+    width: 100%;
+    padding: 12px 14px 12px 38px;
+    border: none;
+    border-radius: 12px;
+    background: #EDF0EB;
+    font-size: 13.5px;
+    color: #1A1A1A;
+    outline: none;
+    transition: box-shadow .2s, background .2s;
+    letter-spacing: .2px;
+}
+#loginPage .form-input:focus {
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(45,90,61,.18);
+}
+#loginPage .form-input::placeholder { color: #B8C5BC; font-weight: 300; font-size: 13px; }
+#loginPage .input-icon { color: #B0C0B5; }
+
+/* Footer row */
+#loginPage .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 4px 0 18px;
+}
+#loginPage .remember-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: #999;
+    cursor: pointer;
+    user-select: none;
+}
+#loginPage .remember-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    accent-color: #2D5A3D;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+#loginPage .forgot-link {
+    font-size: 12.5px;
+    color: #999;
+    text-decoration: none;
+    transition: color .2s;
+}
+#loginPage .forgot-link:hover { color: #2D5A3D; }
+
+/* Buttons */
+#loginPage .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 13.5px;
+    background: #1C2B1F;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .15s;
+    margin-bottom: 10px;
+    text-align: center;
+}
+#loginPage .btn-primary:hover {
+    background: #2D4A35;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(28,42,31,.24);
+}
+#loginPage .btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 12.5px;
+    background: #fff;
+    color: #555;
+    border: 1px solid #E4DFD7;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all .2s;
+    margin-bottom: 16px;
+    text-align: center;
+}
+#loginPage .btn-secondary:hover {
+    border-color: #8BAF96;
+    color: #1C3A2A;
+    background: #f5faf7;
+}
+
+/* TOS */
+#loginPage .login-tos {
+    text-align: center;
+    font-size: 11.5px;
+    color: #999;
+    line-height: 1.7;
+    font-weight: 300;
+}
+#loginPage .login-tos a {
+    color: #555;
+    text-decoration: none;
+    font-weight: 500;
+}
+#loginPage .login-tos a:hover { color: #2D5A3D; }
+
 #loginPage .login-container {
     display: flex;
     flex-direction: row;
@@ -21117,16 +21414,9 @@ body.on-login-page::after {
 }
 
 @media (max-width: 900px) {
-  #loginPage .left-panel {
-    display: none;
-  }
-  #loginPage .panel-divider {
-    display: none;
-  }
-  #loginPage .right-panel {
-    width: 100%;
-    }
-  }
+  #loginPage .left-panel { display: none; }
+  #loginPage .panel-divider { display: none; }
+  #loginPage .right-panel { width: 100%; }
 }
 
 /* ========== 职业规划报告行动计划横向标签页样式 ========== */
