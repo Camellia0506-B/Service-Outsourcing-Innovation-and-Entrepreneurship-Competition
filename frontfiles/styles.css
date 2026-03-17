@@ -2216,7 +2216,8 @@ body.on-login-page #globalBlobs { display: none; }
 .assessment-container {
     max-width: 900px;
     margin: 0 auto;
-    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+    /* 使用与其它模块一致的米白色背景风格 */
+    background: linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%);
     border-radius: 24px;
     padding: 32px;
     min-height: 320px;
@@ -2702,8 +2703,8 @@ body.on-login-page #globalBlobs { display: none; }
 }
 
 .option-item.selected {
-    border-color: var(--primary-color);
-    background: rgba(37, 99, 235, 0.1);
+    border-color: #2C4A3E;
+    background: rgba(44, 74, 62, 0.10);
 }
 
 .assessment-actions {
@@ -2728,9 +2729,9 @@ body.on-login-page #globalBlobs { display: none; }
     transition: all 0.2s;
 }
 .assessment-actions .btn-ghost:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: rgba(45, 91, 227, 0.06);
+    border-color: #2C4A3E;
+    color: #2C4A3E;
+    background: rgba(44, 74, 62, 0.06);
 }
 .assessment-exit-card {
     text-align: center;
@@ -2763,12 +2764,16 @@ body.on-login-page #globalBlobs { display: none; }
     padding: 16px 0 32px;
 }
 .assessment-report-footer .btn-secondary {
-    border: 2px solid #667eea;
-    color: #667eea;
+    border: 2px solid #2C4A3E;
+    color: #2C4A3E;
     background: #fff;
 }
 .assessment-report-footer .btn-secondary:hover {
-    background: #f0f4ff;
+    background: rgba(44, 74, 62, 0.06);
+}
+/* 职业测评页题号圆圈采用墨绿色主题色 */
+#assessmentPage .question-number {
+    background: #2C4A3E;
 }
 
 /* 岗位匹配页面 */
@@ -6443,6 +6448,22 @@ body.on-login-page #globalBlobs { display: none; }
     border-radius: 999px;
     letter-spacing: 0.5px;
     margin-bottom: 12px;
+}
+/* 职业测评页：标题区改为与岗位匹配、能力画像一致的浅绿风格 */
+#assessmentPage .job-profile-tag {
+    background: #eef4ee;
+    color: #5e8c65;
+    border: 1px solid #c9deca;
+}
+#assessmentPage .page-title-bar {
+    background: #5e8c65;
+}
+#assessmentPage .page-title {
+    color: #1c1c18;
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+#assessmentPage .page-subtitle {
+    color: #a0a098;
 }
 
 .job-profile-title-row {
