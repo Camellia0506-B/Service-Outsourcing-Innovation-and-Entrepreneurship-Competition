@@ -16785,6 +16785,7 @@ body.on-login-page {
     height: 0;
     background: linear-gradient(to top, rgba(44, 74, 62, 0.04), transparent);
     transition: height 0.35s ease;
+    pointer-events: none;
 }
 
 #dashboardPage .progress-card:hover {

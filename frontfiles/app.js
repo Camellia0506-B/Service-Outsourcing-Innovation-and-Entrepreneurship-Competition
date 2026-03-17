@@ -1080,6 +1080,20 @@ class CareerPlanningApp {
             });
         });
 
+        // 兜底：使用事件委托，确保首页卡片/按钮始终可跳转
+        const dashboardEl = document.getElementById('dashboardPage');
+        dashboardEl?.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!target || !target.closest) return;
+            const btn = target.closest('.main-card .card-btn');
+            const card = target.closest('.main-card[data-action]');
+            // 仅处理点到按钮或卡片内部的点击
+            if (!btn && !card) return;
+            if (btn && btn.classList.contains('card-btn-disabled')) return;
+            const action = card?.dataset?.action;
+            if (action) this.navigateTo(action);
+        });
+
         // 隐私设置相关
         document.getElementById('savePrivacySettings')?.addEventListener('click', () => {
             this.savePrivacySettings();
@@ -1697,7 +1711,28 @@ class CareerPlanningApp {
             this.updateProfileProgress(profileCompleteness);
         }
         assessmentCompleted = !!(this.currentUser && this.currentUser.assessment_completed)
-            || !!(this.hasHistoryReport() && this.getLastAssessmentReportId());
+            || !!this.hasHistoryReport();
+
+        // 兜底：若本地无缓存但后端已有测评历史（常见于退出/换设备后），则视为已完成
+        if (!assessmentCompleted) {
+            try {
+                const histRes = await getReportHistory(userId);
+                const historyList = histRes.success && histRes.data
+                    ? (histRes.data.list || (Array.isArray(histRes.data) ? histRes.data : []))
+                    : [];
+                if (historyList.length > 0) {
+                    assessmentCompleted = true;
+                    const latestId = historyList[0].report_id || historyList[0].reportId;
+                    if (latestId) this.saveLastAssessmentReportId(latestId);
+                    if (this.currentUser) {
+                        this.currentUser.assessment_completed = true;
+                        saveUserInfo(this.currentUser);
+                    }
+                }
+            } catch (_) {
+                // ignore
+            }
+        }
         // 首页仅取总数（pageSize=1），推荐岗位接口失败时容错，不阻塞仪表盘
         try {
             const matchingResult = await getRecommendedJobs(userId, 1, 1);
@@ -3317,6 +3352,13 @@ class CareerPlanningApp {
             const reportId = result.data.report_id;
             this.currentReportId = reportId;
             this.saveLastAssessmentReportId(reportId);
+
+            // 只要提交成功拿到 report_id，就视为已完成测评（首页/解锁逻辑立即生效）
+            if (this.currentUser) {
+                this.currentUser.assessment_completed = true;
+                saveUserInfo(this.currentUser);
+            }
+            this.loadDashboardData();
             const userIdForSave = getCurrentUserId();
             if (userIdForSave) _storage.setItem('last_assessment_total_questions_' + userIdForSave, String(questions.length));
             this.showToast('测评提交成功，正在生成报告...', 'success');
