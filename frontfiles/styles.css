@@ -14,9 +14,9 @@
     --deep-navy: #1a3fa8;
     --gray-blue: #6b7a99;
     
-    /* 基础变量 */
-    --primary-color: var(--medium-blue);
-    --primary-dark: var(--deep-blue);
+    /* 基础变量：全局主色改为墨绿色系 */
+    --primary-color: #2C4A3E;
+    --primary-dark: #3D6458;
     --secondary-color: var(--cyan-accent);
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
@@ -2447,14 +2447,14 @@ body.on-login-page #globalBlobs { display: none; }
     flex-wrap: wrap;
 }
 
-/* 已有测评报告入口（参考 assessment_status）：浅蓝背景感、白卡、完成题目 20 道、能力得分、三按钮 */
+/* 已有测评报告入口：改为与整体一致的米白/墨绿风格 */
 .assessment-welcome-card-new {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1px solid rgba(37, 99, 235, 0.12);
+    background: #ffffff;
+    border: 1px solid rgba(44, 74, 62, 0.12);
     border-radius: 24px;
     padding: 48px 40px;
     text-align: center;
-    box-shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
+    box-shadow: 0 4px 24px rgba(44, 74, 62, 0.08);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -2536,7 +2536,7 @@ body.on-login-page #globalBlobs { display: none; }
     cursor: pointer;
     transition: background 0.2s;
 }
-.btn-assessment-primary:hover { background: #2563eb; }
+.btn-assessment-primary:hover { background: var(--primary-dark); }
 .btn-assessment-secondary {
     background: transparent;
     color: var(--primary-color);
@@ -2549,7 +2549,7 @@ body.on-login-page #globalBlobs { display: none; }
     transition: all 0.2s;
 }
 .btn-assessment-secondary:hover {
-    background: rgba(37, 99, 235, 0.08);
+    background: rgba(44, 74, 62, 0.08);
 }
 .assessment-welcome-card-new .assessment-welcome-actions {
     gap: 12px;
