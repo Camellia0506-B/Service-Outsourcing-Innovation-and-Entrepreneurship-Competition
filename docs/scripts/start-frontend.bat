@@ -1,10 +1,11 @@
 @echo off
 chcp 65001 >nul
 title 前端服务 - 职业规划智能体
-cd /d "%~dp0"
+rem 本脚本位于 docs/scripts/，先切回项目根目录
+cd /d "%~dp0..\.."
 
-if not exist "frontfiles\index.html" (
-    echo [错误] 未找到 frontfiles\index.html，请确保在项目根目录运行本脚本。
+if not exist "frontend\index.html" (
+    echo [错误] 未找到 frontend\index.html，请确保项目目录结构完整。
     pause
     exit /b 1
 )
@@ -16,7 +17,7 @@ echo.
 echo 正在启动，请稍候...
 echo.
 
-cd frontfiles
+cd frontend
 set PORT=8888
 
 where python >nul 2>&1

@@ -57,6 +57,19 @@ logs/
 *.swo
 *~
 
+# Windows / macOS 常见临时文件
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Python / Test / Lint 缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
 
 data/job_profiles/*.json
 data/profiles/profiles.json
@@ -64,9 +77,16 @@ data/profiles/resume_tasks.json
 data/profiles/resumes/
 AI算法/test_feature1.py
 
+# AI 侧简历上传/生成物（不要入库）
+AI算法/data/profiles/resumes/*.pdf
+
 # 前端依赖
 node_modules/
 frontend/node_modules/
+
+# 前端构建产物（若未来引入构建流程）
+dist/
+build/
 
 # Python
 __pycache__/

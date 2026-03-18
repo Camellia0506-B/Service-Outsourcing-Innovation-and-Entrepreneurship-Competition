@@ -1,7 +1,8 @@
 @echo off
 chcp 65001 >nul
 title AI 服务 - 职业规划智能体
-cd /d "%~dp0"
+rem 本脚本位于 docs/scripts/，先切回项目根目录
+cd /d "%~dp0..\.."
 
 set "AIDIR="
 for /d %%D in (AI*) do (

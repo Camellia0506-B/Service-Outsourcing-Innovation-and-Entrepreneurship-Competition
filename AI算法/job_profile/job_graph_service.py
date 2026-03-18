@@ -17,6 +17,7 @@ import os
 import numpy as np
 from typing import Optional, List, Dict
 from datetime import datetime
+import hashlib
 
 from utils.logger_handler import logger
 from utils.path_tool import get_abs_path
@@ -569,6 +570,194 @@ class JobGraphService:
         if out.get("code") != 200:
             raise ValueError(out.get("msg", "图谱获取失败"))
         return out.get("data") or {}
+
+    # ============================================================
+    # 全量图谱生成（graph.json）——供初始化脚本/全量导出使用
+    # ============================================================
+    def get_full_graph(self, force_regenerate: bool = False) -> dict:
+        """
+        生成并返回全量图谱（与 data/job_profiles/graph.json 结构一致）。
+        - profile_generated: 以 profiles_store 是否存在对应 job_id 为准
+        - transfer_graph.edges: 补充 reason / skills_gap（基于 category 差异 + dimension_weights 差值）
+        - 额外输出 aliases：将用户常见岗位名映射到最近似标准节点，避免中心节点降级
+        """
+        graph_path = get_abs_path(job_profile_conf.get("job_graph_store", "data/job_profiles/graph.json"))
+        os.makedirs(os.path.dirname(graph_path), exist_ok=True)
+        if (not force_regenerate) and os.path.isfile(graph_path):
+            try:
+                with open(graph_path, "r", encoding="utf-8") as f:
+                    return json.load(f) or {}
+            except Exception:
+                pass
+
+        profiles = _load_profiles_store()
+        cfg_by_id = {j.get("job_id"): j for j in (job_profile_conf.get("target_jobs", []) or [])}
+
+        def _profile_generated(jid: str) -> bool:
+            return bool(jid and jid in profiles and isinstance(profiles.get(jid), dict))
+
+        # ---------- vertical_graphs ----------
+        vertical_graphs = []
+        for track in (job_profile_conf.get("career_tracks", []) or []):
+            nodes = []
+            edges = []
+            ids = track.get("job_ids_ordered", []) or []
+            for idx, jid in enumerate(ids):
+                cfg = cfg_by_id.get(jid, {})
+                nodes.append({
+                    "job_id": jid,
+                    "job_name": cfg.get("name", jid),
+                    "category": cfg.get("category", ""),
+                    "career_track": cfg.get("career_track", track.get("name", "")),
+                    "layer_level": cfg.get("layer_level", 0),
+                    "level": cfg.get("layer_level", 0),
+                    "profile_generated": _profile_generated(jid),
+                })
+                if idx < len(ids) - 1:
+                    nxt = ids[idx + 1]
+                    cfg_next = cfg_by_id.get(nxt, {})
+                    edges.append({
+                        "from": jid,
+                        "to": nxt,
+                        "from_name": cfg.get("name", jid),
+                        "to_name": cfg_next.get("name", nxt),
+                        "years": self.builder._estimate_promotion_time(jid, nxt),
+                        "level_gap": (cfg_next.get("layer_level", 0) or 0) - (cfg.get("layer_level", 0) or 0),
+                        "requirements": self.builder._get_promotion_requirements(jid, nxt),
+                    })
+            vertical_graphs.append({
+                "track_id": track.get("track_id", ""),
+                "career_track": track.get("name", ""),
+                "color": track.get("color", ""),
+                "nodes": nodes,
+                "edges": edges,
+            })
+
+        # ---------- transfer_graph ----------
+        nodes_all = []
+        edges_all = []
+        for jid, cfg in cfg_by_id.items():
+            nodes_all.append({
+                "job_id": jid,
+                "job_name": cfg.get("name", jid),
+                "category": cfg.get("category", ""),
+                "career_track": cfg.get("career_track", ""),
+                "layer_level": cfg.get("layer_level", 0),
+                "profile_generated": _profile_generated(jid),
+                "dimension_weights": cfg.get("dimension_weights", {}) or {},
+            })
+        nodes_index = {n["job_id"]: n for n in nodes_all}
+
+        def _dim_gap(from_id: str, to_id: str) -> List[str]:
+            a = (cfg_by_id.get(from_id, {}).get("dimension_weights") or {})
+            b = (cfg_by_id.get(to_id, {}).get("dimension_weights") or {})
+            diffs = []
+            for k in set(list(a.keys()) + list(b.keys())):
+                try:
+                    diffs.append((k, float(b.get(k, 0)) - float(a.get(k, 0))))
+                except Exception:
+                    continue
+            diffs = [(k, d) for (k, d) in diffs if d > 0.02]
+            diffs.sort(key=lambda x: x[1], reverse=True)
+            return [k for (k, _) in diffs[:2]]
+
+        _DIM_HINT = {
+            "基础要求": "补齐基础门槛（学历/证书/经验）",
+            "专业技能": "强化核心技术栈与工程能力",
+            "职业素养": "提升沟通协作与跨团队推进",
+            "发展潜力": "加强学习能力与前沿视野",
+        }
+
+        def _reason(from_id: str, to_id: str) -> str:
+            f = cfg_by_id.get(from_id, {})
+            t = cfg_by_id.get(to_id, {})
+            from_cat = f.get("category", "该方向")
+            to_cat = t.get("category", "目标方向")
+            gaps = _dim_gap(from_id, to_id)
+            gap_txt = "、".join([_DIM_HINT.get(g, g) for g in gaps]) if gaps else "补齐关键能力差距"
+            seed = int(hashlib.md5((from_id + "->" + to_id).encode("utf-8")).hexdigest(), 16)
+            if from_cat == to_cat:
+                templates = [
+                    f"同属「{from_cat}」方向的横向扩展，更偏向：{gap_txt}。",
+                    f"在「{from_cat}」内部做角色升级/细分切换，建议重点：{gap_txt}。",
+                    f"保持「{from_cat}」核心积累不变，补强短板：{gap_txt}。",
+                ]
+            else:
+                templates = [
+                    f"从「{from_cat}」转向「{to_cat}」，需要迁移既有经验并重点：{gap_txt}。",
+                    f"跨方向迁移：{from_cat} → {to_cat}。建议优先补齐：{gap_txt}。",
+                    f"面向「{to_cat}」的能力重心调整（由{from_cat}出发），重点提升：{gap_txt}。",
+                ]
+            return templates[seed % len(templates)]
+
+        for from_id, cfg in cfg_by_id.items():
+            for to_id in (cfg.get("transfer_targets", []) or []):
+                if to_id not in cfg_by_id:
+                    continue
+                edges_all.append({
+                    "from": from_id,
+                    "to": to_id,
+                    "from_name": cfg.get("name", from_id),
+                    "to_name": cfg_by_id.get(to_id, {}).get("name", to_id),
+                    "from_category": cfg.get("category", ""),
+                    "to_category": cfg_by_id.get(to_id, {}).get("category", ""),
+                    "skills_gap": _dim_gap(from_id, to_id),
+                    "reason": _reason(from_id, to_id),
+                })
+
+        # ---------- aliases（优先级3：节点覆盖） ----------
+        # 说明：这些岗位名不是 35 个标准节点之一，但用户真实输入常见；映射到最近似节点避免“随机降级”
+        aliases = {
+            "科研人员": "job_014",           # 数据科学家（科研/分析/建模更接近）
+            "实施工程师": "job_034",         # 技术项目经理（更贴近项目/交付/实施）
+            "硬件工程师": "job_031",         # 嵌入式软件
+            "硬件测试工程师": "job_033",     # FPGA/芯片验证
+            "C/C++开发工程师": "job_031",    # 嵌入式/底层更接近
+        }
+
+        # 生成统计
+        profiles_generated = sum(1 for jid in cfg_by_id.keys() if _profile_generated(jid))
+        graph = {
+            "graph_version": "v3",
+            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "data_strategy": "从job_profile.yml自动构建，节点与画像store直接关联",
+            "summary": {
+                "total_jobs": len(cfg_by_id),
+                "total_vertical_tracks": len(vertical_graphs),
+                "total_transfer_nodes": len(nodes_all),
+                "total_transfer_edges": len(edges_all),
+                "profiles_generated": profiles_generated,
+                "jobs_with_2plus_transfers": len([j for j in cfg_by_id.values() if len(j.get("transfer_targets", []) or []) >= 2]),
+            },
+            "vertical_graphs": vertical_graphs,
+            "transfer_graph": {
+                "nodes": nodes_all,
+                "edges": edges_all,
+            },
+            "aliases": aliases,
+        }
+
+        try:
+            with open(graph_path, "w", encoding="utf-8") as f:
+                json.dump(graph, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning("[JobGraph] 写入 graph.json 失败: %s", e)
+
+        return graph
+
+    def get_all_transfer_paths_summary(self) -> dict:
+        """
+        给 init_job_profiles.verify() 用的摘要：
+        { job_id: { job_name, transfer_count }, ... }
+        """
+        out = {}
+        for j in (job_profile_conf.get("target_jobs", []) or []):
+            jid = j.get("job_id", "")
+            out[jid] = {
+                "job_name": j.get("name", jid),
+                "transfer_count": len(j.get("transfer_targets", []) or []),
+            }
+        return out
     
     def _find_vertical_path(self, job_id: str, vertical_graphs: list) -> dict:
         """找到包含指定岗位的垂直晋升路径"""

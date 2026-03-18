@@ -3699,7 +3699,14 @@ class CareerPlanningApp {
         }
 
         const logList = document.getElementById('accessLogList');
-        logList.innerHTML = '<div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">加载中...</div>';
+        if (logList) {
+            logList.innerHTML = `
+                <div class="privacy-log-item">
+                    <div class="privacy-log-event">加载中…</div>
+                    <div class="privacy-log-time">—</div>
+                </div>
+            `;
+        }
 
         try {
             const result = await api.requestToAI(`/security/access/logs?user_id=${userId}&limit=20`, { method: 'GET' });
@@ -3707,27 +3714,41 @@ class CareerPlanningApp {
             if (result.success && result.data) {
                 const logs = result.data.logs || [];
                 if (logs.length === 0) {
-                    logList.innerHTML = '<div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">暂无访问记录</div>';
-                } else {
-                    logList.innerHTML = logs.map(log => {
-                        const date = new Date(log.timestamp);
-                        const dateStr = date.toLocaleString('zh-CN');
-                        return `
-                            <div class="hr-student-card">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <div>
-                                        <h4 style="margin: 0 0 4px 0; color: #1c1c18; font-size: 14px;">${log.access_type}</h4>
-                                        <p style="margin: 0; color: #666; font-size: 12px;">${dateStr}</p>
-                                    </div>
-                                </div>
+                    if (logList) {
+                        logList.innerHTML = `
+                            <div class="privacy-log-item">
+                                <div class="privacy-log-event">暂无访问记录</div>
+                                <div class="privacy-log-time">—</div>
                             </div>
                         `;
-                    }).join('');
+                    }
+                } else {
+                    if (logList) {
+                        logList.innerHTML = logs.map(log => {
+                            const date = new Date(log.timestamp);
+                            const dateStr = date.toLocaleString('zh-CN');
+                            const eventName = (log.access_type || '').toString().replace(/</g, '&lt;');
+                            const timeText = dateStr.replace(/</g, '&lt;');
+                            return `
+                                <div class="privacy-log-item">
+                                    <div class="privacy-log-event">${eventName}</div>
+                                    <div class="privacy-log-time">${timeText}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
                 }
             }
         } catch (error) {
             console.error('[Privacy] 加载访问日志失败:', error);
-            logList.innerHTML = '<div style="background: white; padding: 24px; border-radius: 8px; text-align: center; color: #a0a098; border: 1px solid #e8e6df;">加载失败</div>';
+            if (logList) {
+                logList.innerHTML = `
+                    <div class="privacy-log-item">
+                        <div class="privacy-log-event">加载失败</div>
+                        <div class="privacy-log-time">—</div>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -8887,7 +8908,11 @@ class CareerPlanningApp {
         let salary = (salaryRange != null && salaryRange !== '') ? String(salaryRange) : '';
         let score = center.demand_score ?? center.demandScore;
         if (score == null || score === '') {
-            const featured = featuredJobs.find(j => j.jobId === center.job_id || (j.jobName || '').trim() === (center.job_name || '').trim());
+            // 兼容旧版本：featuredJobs 可能未初始化。未拿到就直接跳过兜底。
+            const featuredJobs = (this._featuredJobs || window.featuredJobs || []);
+            const featured = Array.isArray(featuredJobs)
+                ? featuredJobs.find(j => j.jobId === center.job_id || (j.jobName || '').trim() === (center.job_name || '').trim())
+                : null;
             if (featured) {
                 if (!salary) salary = featured.salaryRange || '';
                 if (score == null) score = featured.demandScore;

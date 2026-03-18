@@ -229,7 +229,7 @@ public class ProfileServiceImpl implements ProfileService {
                 profile.setUserId(userId);
             }
 
-            // 优先调用 Python AI 全量解析；请求失败再走 Java 本地解析
+            // 100% 只调用 AI算法（Python）全量解析：失败即返回失败（不做 Java 本地兜底）
             Map<String, Object> pythonResult = callPythonParseResume(text);
             if (pythonResult != null && pythonResult.get("parsed_data") instanceof Map) {
                 @SuppressWarnings("unchecked")
@@ -246,88 +246,13 @@ public class ProfileServiceImpl implements ProfileService {
                     return UploadResumeResponse.builder().taskId(taskId).status("processing").build();
                 }
             }
-
-            // Java 兜底：简单抽取邮箱/手机号/姓名/出生日期/性别
-            String email = extractEmail(text);
-            String phone = extractPhone(text);
-            String name = extractName(text);
-            String birthDateStr = extractBirthDate(text);
-            String gender = extractGender(text);
-            if (phone != null && !phone.isBlank()) {
-                profile.setPhone(phone);
-            }
-            if (email != null && !email.isBlank()) {
-                profile.setEmail(email);
-            }
-            if (birthDateStr != null && !birthDateStr.isBlank()) {
-                try {
-                    profile.setBirthDate(LocalDate.parse(birthDateStr));
-                } catch (Exception ignored) {}
-            }
-            if (gender != null && !gender.isBlank()) {
-                profile.setGender(gender);
-            }
-            profile.setUpdatedAt(LocalDateTime.now());
-            if (userProfileMapper.selectById(userId) == null) userProfileMapper.insert(profile);
-            else userProfileMapper.updateById(profile);
-            if (name != null && !name.isBlank()) {
-                user.setNickname(name);
-                userMapper.updateById(user);
-            }
-
-            // Java 兜底：本地正则解析（技能/实习/项目等）
-            String skillsBlock = findSectionBlock(text, "技能|专业技能|技术技能|个人技能|Skills?");
-            String internshipBlock = findSectionBlock(text, "实习(?:经历)?|工作经历|实习经历|Experience");
-            String projectBlock = findSectionBlock(text, "项目(?:经历|经验)?|Projects?");
-
-            applyEducationFromText(text, profile);
-            userProfileMapper.updateById(profile);
-
-            profileSkillMapper.delete(new LambdaQueryWrapper<ProfileSkill>().eq(ProfileSkill::getUserId, userId));
-            for (ProfileSkill ps : extractSkillsFromText(skillsBlock != null ? skillsBlock : text)) {
-                ps.setUserId(userId);
-                profileSkillMapper.insert(ps);
-            }
-            profileInternshipMapper.delete(new LambdaQueryWrapper<ProfileInternship>().eq(ProfileInternship::getUserId, userId));
-            for (ProfileInternship pi : extractInternshipsFromText(internshipBlock != null ? internshipBlock : text)) {
-                pi.setUserId(userId);
-                profileInternshipMapper.insert(pi);
-            }
-            profileProjectMapper.delete(new LambdaQueryWrapper<ProfileProject>().eq(ProfileProject::getUserId, userId));
-            for (ProfileProject pp : extractProjectsFromText(projectBlock != null ? projectBlock : text)) {
-                pp.setUserId(userId);
-                profileProjectMapper.insert(pp);
-            }
-
-            Map<String, Object> parsed = new LinkedHashMap<>();
-            Map<String, Object> basic = new LinkedHashMap<>();
-            basic.put("name", name != null ? name : "");
-            basic.put("nickname", name != null ? name : "");
-            basic.put("phone", phone != null ? phone : "");
-            basic.put("email", email != null ? email : "");
-            basic.put("birth_date", birthDateStr != null ? birthDateStr : "");
-            basic.put("birthday", birthDateStr != null ? birthDateStr : "");
-            basic.put("gender", gender != null ? gender : "");
-            parsed.put("basic_info", basic);
-            parsed.put("education", List.of(toEducationMap(profile)));
-            List<ProfileSkill> parsedSkills = extractSkillsFromText(skillsBlock != null ? skillsBlock : text);
-            List<ProfileInternship> parsedInterns = extractInternshipsFromText(internshipBlock != null ? internshipBlock : text);
-            List<ProfileProject> parsedProjs = extractProjectsFromText(projectBlock != null ? projectBlock : text);
-            parsed.put("skills", parsedSkills.stream().map(s -> Map.<String, Object>of("category", s.getCategory(), "items", parseJsonList(s.getItems()))).collect(Collectors.toList()));
-            parsed.put("internships", parsedInterns.stream().map(i -> Map.of("company", nullToEmpty(i.getCompany()), "position", nullToEmpty(i.getPosition()), "start_date", nullToEmpty(i.getStartDate()), "end_date", nullToEmpty(i.getEndDate()), "description", nullToEmpty(i.getDescription()))).collect(Collectors.toList()));
-            parsed.put("projects", parsedProjs.stream().map(p -> Map.<String, Object>of("name", nullToEmpty(p.getName()), "role", nullToEmpty(p.getRole()), "start_date", nullToEmpty(p.getStartDate()), "end_date", nullToEmpty(p.getEndDate()), "description", nullToEmpty(p.getDescription()), "tech_stack", parseJsonList(p.getTechStack()))).collect(Collectors.toList()));
-            task.setStatus("completed");
-            task.setParsedData(JSON.writeValueAsString(parsed));
-            task.setConfidenceScore(java.math.BigDecimal.valueOf(0.85));
-            List<String> suggestions = new ArrayList<>();
-            if (text == null || text.isBlank()) {
-                suggestions.add("未能从PDF提取文本。若为图片型/扫描版PDF，请安装Tesseract及chi_sim语言包以支持OCR，或使用Word重新导出为纯文本PDF");
-            } else {
-                suggestions.add("建议补充GPA信息");
-                suggestions.add("实习经历描述可以更具体");
-            }
-            task.setSuggestions(JSON.writeValueAsString(suggestions));
+            // AI算法不可用 / 返回异常结果：标记任务失败并直接向上返回失败
+            task.setStatus("failed");
+            task.setConfidenceScore(java.math.BigDecimal.valueOf(0.0));
+            task.setParsedData(null);
+            task.setSuggestions(JSON.writeValueAsString(List.of("AI算法服务不可用或解析失败：请先启动 AI算法 服务（默认端口 5002）")));
             resumeParseTaskMapper.updateById(task);
+            throw new IllegalStateException("AI算法服务不可用或解析失败，请先启动 AI算法 服务（默认端口 5002）");
         } catch (Exception e) {
             task.setStatus("failed");
             try {
@@ -336,6 +261,9 @@ public class ProfileServiceImpl implements ProfileService {
                 task.setSuggestions("[\"解析异常\"]");
             }
             resumeParseTaskMapper.updateById(task);
+            if (e instanceof IllegalStateException) {
+                throw (IllegalStateException) e;
+            }
         }
         return UploadResumeResponse.builder().taskId(taskId).status("processing").build();
     }

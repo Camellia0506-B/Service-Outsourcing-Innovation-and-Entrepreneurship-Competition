@@ -1,10 +1,11 @@
 @echo off
 chcp 65001 >nul
 title Java 后端 - 职业规划智能体
-cd /d "%~dp0"
+rem 本脚本位于 docs/scripts/，先切回项目根目录
+cd /d "%~dp0..\.."
 
 if not exist "backend\pom.xml" (
-    echo [错误] 未找到 backend\pom.xml，请确保在项目根目录运行本脚本。
+    echo [错误] 未找到 backend\pom.xml，请确保项目目录结构完整。
     pause
     exit /b 1
 )

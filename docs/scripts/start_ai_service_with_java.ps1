@@ -1,7 +1,7 @@
 # 启动 AI 服务（5002），并设置 JAVA_BACKEND_URL 以打通学生端与 HR 端
 # 使用方式：先启动 Java 后端 (5000)，再运行本脚本
 $ErrorActionPreference = "Stop"
-$root = $PSScriptRoot
+$root = Resolve-Path (Join-Path $PSScriptRoot "..\\..")
 $aiDir = Join-Path $root "AI算法"
 if (-not (Test-Path $aiDir)) {
     Write-Host "错误: 未找到 AI算法 目录" -ForegroundColor Red

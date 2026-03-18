@@ -63,6 +63,9 @@ public class ProfileController {
             return ApiResponse.success("简历上传成功，正在解析...", data);
         } catch (IllegalArgumentException e) {
             return ApiResponse.badRequest(e.getMessage());
+        } catch (IllegalStateException e) {
+            // AI算法服务不可用/解析失败：明确返回 503，前端可提示“请先启动AI算法服务”
+            return ApiResponse.failure(503, e.getMessage());
         }
     }
 

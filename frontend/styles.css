@@ -1,11 +1,11 @@
 /* 全局变量 */
 :root {
-    /* 蓝白体系细化 */
-    --deep-blue: #1a3fa8;
-    --medium-blue: #2d5be3;
-    --bright-blue: #4f79f6;
-    --light-blue-bg: #eef3ff;
-    --light-blue-border: rgba(45, 91, 227, 0.12);
+    /* 主题：墨绿 + 暖白 */
+    --deep-blue: #1f3a33;
+    --medium-blue: #2C4A3E;
+    --bright-blue: #3D6458;
+    --light-blue-bg: #faf8f5;
+    --light-blue-border: rgba(31, 37, 31, 0.10);
     --cyan-accent: #3dd6c8;
     --page-bg: #faf8f5;
     --primary-blue: #2d5be3;
@@ -23,16 +23,16 @@
     --card-bg: #ffffff;
     --text-primary: #1c1c18;
     --text-secondary: #5a5a52;
-    --border-color: var(--light-blue-border);
-    --shadow: 0 2px 8px rgba(26, 63, 168, 0.06);
-    --shadow-lg: 0 12px 28px rgba(26, 63, 168, 0.12);
+    --border-color: rgba(31, 37, 31, 0.10);
+    --shadow: 0 10px 28px rgba(15, 24, 21, 0.08);
+    --shadow-lg: 0 18px 50px rgba(15, 24, 21, 0.12);
     
     /* 字体：优先外链，失败时回退到系统字体，避免 Google Fonts 连不上时排版错乱 */
     --font-heading: 'Sora', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
     --font-body: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
     --font-sans: 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    --blue: #2d5be3;
-    --sky: #4f79f6;
+    --blue: var(--primary-color);
+    --sky: var(--primary-dark);
     --bg: var(--page-bg);
     /* 换岗路径图谱模板变量 */
     --white: #fff;
@@ -46,6 +46,35 @@
     --muted: #aab4cc;
     --border: rgba(94,140,101,0.12);
     --sidebar-w: 220px;
+
+    /* ==================== Design System (PrivacySettings) ==================== */
+    /* 说明：仅新增变量，不影响既有页面；隐私设置页会优先使用这些变量 */
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f7f6f2;
+    --color-background-danger: #fdf2f2;
+    --color-text-primary: #1c1c18;
+    --color-text-secondary: #5a5a52;
+    --color-text-danger: #b94040;
+    --color-border-secondary: #cfcac0;
+    --color-border-tertiary: #e8e6df;
+    --color-border-danger: #b94040;
+    /* 唯一允许硬编码：toggle 选中色 */
+    --color-toggle-on: #4a7c59;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-background-primary: #111312;
+        --color-background-secondary: #0b0d0c;
+        --color-background-danger: #241214;
+        --color-text-primary: #f3f4f2;
+        --color-text-secondary: #b7bab3;
+        --color-text-danger: #ffb4b4;
+        --color-border-secondary: #2a2e2b;
+        --color-border-tertiary: #343a36;
+        --color-border-danger: #ff6b6b;
+        --color-toggle-on: #4a7c59;
+    }
 }
 
 /* ══════════════════════════════════════
@@ -73,7 +102,7 @@
     height: 52px;
     flex-shrink: 0;
     background: #fff;
-    border-bottom: 1px solid #dde4f5;
+    border-bottom: none;
     display: flex;
     align-items: center;
     padding: 0 24px;
@@ -107,7 +136,7 @@
 #profilePage .sep {
     width: 1px;
     height: 20px;
-    background: #dde4f5;
+    background: transparent;
     margin: 0 6px;
 }
 
@@ -128,7 +157,7 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #5b8aff, #3360e8);
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
     color: #fff;
     font-size: 12px;
     font-weight: 700;
@@ -148,7 +177,7 @@
     width: 176px;
     flex-shrink: 0;
     background: #fff;
-    border-right: 1px solid #dde4f5;
+    border-right: none;
     padding: 18px 10px;
     display: flex;
     flex-direction: column;
@@ -179,12 +208,12 @@
 }
 
 #profilePage .tab:hover {
-    background: #eaf0ff;
+    background: rgba(44, 74, 62, 0.06);
     color: var(--primary-color);
 }
 
 #profilePage .tab.active {
-    background: #eaf0ff;
+    background: rgba(44, 74, 62, 0.10);
     color: var(--primary-color);
     font-weight: 700;
 }
@@ -194,7 +223,7 @@
 }
 
 #profilePage .prog-card {
-    background: linear-gradient(135deg, #3360e8, #5b82f5);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     border-radius: 10px;
     padding: 13px 14px;
     color: #fff;
@@ -2514,8 +2543,8 @@ body.on-login-page {
     max-width: 900px;
     margin: 0 auto;
     /* 使用与其它模块一致的米白色背景风格 */
-    background: linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%);
-    border-radius: 24px;
+    background: var(--page-bg);
+    border-radius: 0;
     padding: 32px;
     min-height: 320px;
 }
@@ -2539,12 +2568,12 @@ body.on-login-page {
     margin-bottom: 20px;
 }
 .assessment-status-bc-tag {
-    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #fff;
     font-size: 12px;
     font-weight: 600;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 0;
 }
 .assessment-status-bc-sep { color: #aab4cc; font-size: 12px; }
 .assessment-status-bc-cur { color: #5a6a8a; font-size: 12px; }
@@ -2564,9 +2593,9 @@ body.on-login-page {
 
 .assessment-welcome-card {
     background: #ffffff;
-    border: 1px solid rgba(79, 124, 255, 0.12);
-    border-radius: 20px;
-    box-shadow: 0 4px 24px rgba(79, 100, 200, 0.08);
+    border: none;
+    border-radius: 0;
+    box-shadow: var(--shadow);
     overflow: hidden;
     animation: assessmentFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2576,7 +2605,7 @@ body.on-login-page {
 }
 .assessment-welcome-card .assessment-card-top-bar {
     height: 4px;
-    background: linear-gradient(90deg, #4f7cff, #7c5cff, #a78bff);
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
 }
 .assessment-welcome-card .assessment-card-body {
     padding: 48px 40px 40px;
@@ -2593,9 +2622,9 @@ body.on-login-page {
 }
 .assessment-welcome-card .assessment-illus-circle {
     width: 120px; height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(79, 124, 255, 0.1), rgba(124, 92, 255, 0.08));
-    border: 2px solid rgba(79, 124, 255, 0.15);
+    border-radius: 0;
+    background: rgba(44, 74, 62, 0.06);
+    border: 2px solid rgba(44, 74, 62, 0.12);
     display: flex; align-items: center; justify-content: center;
     font-size: 48px;
     position: relative;
@@ -2628,9 +2657,9 @@ body.on-login-page {
     display: flex;
     gap: 24px;
     padding: 16px 24px;
-    background: #f0f4ff;
-    border: 1px solid rgba(79, 124, 255, 0.12);
-    border-radius: 12px;
+    background: rgba(250, 248, 245, 0.9);
+    border: none;
+    border-radius: 0;
     margin-bottom: 32px;
     width: 100%;
     max-width: 480px;
@@ -2642,12 +2671,12 @@ body.on-login-page {
     flex: 1;
 }
 .assessment-welcome-card .assessment-meta-item + .assessment-meta-item {
-    border-left: 1px solid rgba(79, 124, 255, 0.12);
+    border-left: none;
 }
 .assessment-welcome-card .assessment-meta-label { font-size: 11px; color: #aab4cc; margin-bottom: 4px; }
 .assessment-welcome-card .assessment-meta-val { font-size: 14px; font-weight: 600; color: #1a2340; }
 .assessment-welcome-card .assessment-meta-val.green { color: #00b894; }
-.assessment-welcome-card .assessment-meta-val.accent { color: #4f7cff; }
+.assessment-welcome-card .assessment-meta-val.accent { color: var(--primary-color); }
 .assessment-welcome-card .assessment-btn-group {
     display: flex;
     gap: 12px;
@@ -2657,13 +2686,13 @@ body.on-login-page {
 .assessment-welcome-card .assessment-btn-group .btn-primary {
     flex: 1;
     padding: 13px 20px;
-    border-radius: 12px;
+    border-radius: 0;
     font-size: 14px;
     font-weight: 600;
-    background: linear-gradient(135deg, #4f7cff, #7c5cff);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: #fff;
     border: none;
-    box-shadow: 0 4px 16px rgba(79, 124, 255, 0.3);
+    box-shadow: 0 10px 24px rgba(15, 24, 21, 0.12);
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s;
@@ -2674,17 +2703,17 @@ body.on-login-page {
 }
 .assessment-welcome-card .assessment-btn-group .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(79, 124, 255, 0.38);
+    box-shadow: 0 14px 34px rgba(15, 24, 21, 0.16);
 }
 .assessment-welcome-card .assessment-btn-group .btn-ghost {
     flex: 1;
     padding: 13px 20px;
-    border-radius: 12px;
+    border-radius: 0;
     font-size: 14px;
     font-weight: 600;
-    background: rgba(79, 124, 255, 0.06);
-    color: #4f7cff;
-    border: 1.5px solid rgba(79, 124, 255, 0.15);
+    background: rgba(44, 74, 62, 0.06);
+    color: var(--primary-color);
+    border: none;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s;
@@ -2694,18 +2723,17 @@ body.on-login-page {
     gap: 6px;
 }
 .assessment-welcome-card .assessment-btn-group .btn-ghost:hover {
-    background: rgba(79, 124, 255, 0.1);
-    border-color: rgba(79, 124, 255, 0.3);
+    background: rgba(44, 74, 62, 0.10);
 }
 .assessment-welcome-card .assessment-btn-group .btn-secondary {
     flex: 1;
     padding: 13px 20px;
-    border-radius: 12px;
+    border-radius: 0;
     font-size: 14px;
     font-weight: 600;
     background: #fff;
     color: #5a6a8a;
-    border: 1.5px solid rgba(79, 124, 255, 0.12);
+    border: none;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s;
@@ -2715,14 +2743,13 @@ body.on-login-page {
     gap: 6px;
 }
 .assessment-welcome-card .assessment-btn-group .btn-secondary:hover {
-    border-color: rgba(79, 124, 255, 0.3);
-    color: #4f7cff;
-    background: rgba(79, 124, 255, 0.04);
+    color: var(--primary-color);
+    background: rgba(44, 74, 62, 0.06);
 }
 .assessment-welcome-card .assessment-card-footer {
     padding: 14px 40px;
-    border-top: 1px solid rgba(79, 124, 255, 0.07);
-    background: rgba(242, 245, 255, 0.5);
+    border-top: none;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2730,7 +2757,7 @@ body.on-login-page {
 }
 .assessment-welcome-card .assessment-footer-icon { font-size: 13px; }
 .assessment-welcome-card .assessment-footer-text { font-size: 12px; color: #aab4cc; }
-.assessment-welcome-card .assessment-footer-text span { color: #4f7cff; font-weight: 500; }
+.assessment-welcome-card .assessment-footer-text span { color: var(--primary-color); font-weight: 500; }
 
 .assessment-welcome-text {
     color: var(--text-secondary);
@@ -6352,13 +6379,13 @@ body.on-login-page {
     width: 100%;
     height: 8px;
     background-color: #f0f0f0;
-    border-radius: 4px;
+    border-radius: 0;
     overflow: hidden;
 }
 
 .skill-progress-fill {
     height: 100%;
-    border-radius: 4px;
+    border-radius: 0;
     transition: width 0.3s ease;
 }
 
@@ -6414,14 +6441,14 @@ body.on-login-page {
     width: 100%;
     height: 8px;
     background-color: #f0f0f0;
-    border-radius: 4px;
+    border-radius: 0;
     overflow: hidden;
 }
 
 .dimension-progress-fill {
     height: 100%;
     background-color: var(--primary-color);
-    border-radius: 4px;
+    border-radius: 0;
     transition: width 0.3s ease;
 }
 
@@ -6697,7 +6724,7 @@ body.on-login-page {
     width: 4px;
     height: 36px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #2563eb, #0ea5e9);
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
     flex-shrink: 0;
 }
 
@@ -6741,7 +6768,7 @@ body.on-login-page {
     font-size: 11px;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     border-radius: 999px;
     letter-spacing: 0.5px;
     margin-bottom: 12px;
@@ -6773,7 +6800,7 @@ body.on-login-page {
     width: 4px;
     height: 36px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #2563eb, #0ea5e9);
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
     flex-shrink: 0;
 }
 
@@ -7365,7 +7392,7 @@ body.on-login-page {
 
 .real-data-detail-box {
     background: #f7fafc;
-    border-radius: 12px;
+    border-radius: 0;
     padding: 20px;
 }
 
@@ -7395,9 +7422,9 @@ body.on-login-page {
 
 .real-data-source-link {
     background: #fff8f0;
-    border-left: 4px solid #f59e0b;
+    border-left: none;
     padding: 16px 20px;
-    border-radius: 8px;
+    border-radius: 0;
 }
 
 .real-data-source-title {
@@ -7438,7 +7465,7 @@ body.on-login-page {
     height: 34px;
     background: rgba(255,255,255,0.95);
     border: none;
-    border-radius: 50%;
+    border-radius: 0;
     font-size: 18px;
     color: #4361ee;
     cursor: pointer;
@@ -7566,7 +7593,7 @@ body.on-login-page {
 .job-profile-detail {
     margin-top: 24px;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: 0;
     padding: 24px 28px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow);
@@ -7603,7 +7630,7 @@ body.on-login-page {
     top: 3px;
     width: 3px;
     height: 16px;
-    border-radius: 2px;
+    border-radius: 0;
     background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
 }
 
@@ -7618,7 +7645,7 @@ body.on-login-page {
     border-collapse: collapse;
     font-size: 14px;
     background: #f8fafc;
-    border-radius: 8px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -8240,10 +8267,10 @@ body.on-login-page {
 /* ========== 转岗路径图谱（完全遵照 graph_template.html）：容器+图例+graph-svg-wrap+g-node ========== */
 #jobProfileGraph .graph-panel-transfer .transfer-container-gt {
     background: var(--white, #fff);
-    border: 1px solid rgba(79, 124, 255, 0.12);
-    border-radius: 16px;
+    border: none;
+    border-radius: 0;
     padding: 16px;
-    box-shadow: 0 2px 16px rgba(79, 100, 200, 0.06);
+    box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
 }
@@ -8251,8 +8278,7 @@ body.on-login-page {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle, rgba(79, 124, 255, 0.045) 1px, transparent 1px);
-    background-size: 30px 30px;
+    background: none;
     pointer-events: none;
 }
 #jobProfileGraph .graph-panel-transfer .legend-row {
@@ -8279,10 +8305,10 @@ body.on-login-page {
     height: 2px;
 }
 #jobProfileGraph .graph-panel-transfer .leg-high {
-    background: linear-gradient(90deg, #4f7cff, #00b894);
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
 }
 #jobProfileGraph .graph-panel-transfer .leg-mid {
-    background: linear-gradient(90deg, #4f7cff, #f5a623);
+    background: linear-gradient(90deg, var(--primary-color), var(--warning-color));
 }
 #jobProfileGraph .graph-panel-transfer .leg-low {
     background: none;
@@ -8295,13 +8321,13 @@ body.on-login-page {
     margin-left: auto;
     font-size: 11px;
     color: var(--muted, #aab4cc);
-    border-left: 1px solid rgba(79, 124, 255, 0.2);
+    border-left: none;
     padding-left: 12px;
 }
 #jobProfileGraph .graph-panel-transfer .legend-row {
-    background: linear-gradient(135deg, rgba(94, 140, 101, 0.04), rgba(74, 115, 80, 0.02));
-    border: 1px solid rgba(94, 140, 101, 0.12);
-    border-radius: 10px;
+    background: rgba(250, 248, 245, 0.9);
+    border: none;
+    border-radius: 0;
     padding: 8px 14px;
 }
 
@@ -8313,7 +8339,7 @@ body.on-login-page {
     min-height: 720px;
     margin: 0;
     background: #fff;
-    border-radius: 16px;
+    border-radius: 0;
     overflow: hidden;
 }
 #jobProfileGraph .graph-panel-transfer .graph-svg-wrap::before {
@@ -10730,7 +10756,7 @@ body.on-login-page {
     padding: 28px 32px;
     box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
     border: 1px solid rgba(37, 99, 235, 0.06);
-    border-left: 4px solid var(--blue);
+    border-left: none;
 }
 .ai-gen-form-head { margin-bottom: 24px; }
 .ai-gen-form-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
@@ -10742,9 +10768,7 @@ body.on-login-page {
     padding: 18px 22px 18px 22px;
     margin: 0 0 18px 0;
     border-radius: 20px;
-    background: radial-gradient(circle at top left, rgba(58, 107, 255, 0.06), transparent 55%),
-                radial-gradient(circle at bottom right, rgba(58, 107, 255, 0.04), transparent 55%),
-                #f7f9ff;
+    background: #ffffff;
     box-shadow: 0 14px 32px rgba(16, 42, 112, 0.12);
     border: 1px solid rgba(58, 107, 255, 0.12);
     overflow: hidden;
@@ -10761,16 +10785,14 @@ body.on-login-page {
     right: -60px;
     width: 160px;
     height: 160px;
-    background: radial-gradient(circle at center, rgba(58, 107, 255, 0.30), transparent 70%);
-    opacity: 0.6;
+    display: none;
 }
 .ai-agent-card::after {
     bottom: -50px;
     left: -40px;
     width: 140px;
     height: 140px;
-    background: radial-gradient(circle at center, rgba(37, 187, 255, 0.25), transparent 70%);
-    opacity: 0.5;
+    display: none;
 }
 .ai-agent-card-header {
     position: relative;
@@ -12171,7 +12193,7 @@ body.on-login-page {
 /* 可折叠五大模块 */
 .career-module {
     margin-bottom: 24px;
-    border-radius: 20px;
+    border-radius: 0;
     overflow: hidden;
     box-shadow: 0 6px 24px rgba(37, 99, 235, 0.1);
     border: 1px solid rgba(37, 99, 235, 0.1);
@@ -12186,37 +12208,37 @@ body.on-login-page {
 
 .career-module-summary {
     background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-    border-left: 6px solid var(--primary-color);
+    border-left: none;
 }
 
 .career-module-explore {
     background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-    border-left: 6px solid #2e7d32;
+    border-left: none;
 }
 
 .career-module-goal {
     background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
-    border-left: 6px solid #1565c0;
+    border-left: none;
 }
 
 .career-module-action {
     background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
-    border-left: 6px solid #f5a623;
+    border-left: none;
 }
 
 .career-module-eval {
     background: linear-gradient(135deg, #fdf2f8 0%, #ffffff 100%);
-    border-left: 6px solid #7b1fa2;
+    border-left: none;
 }
 
 .career-module-painpoints {
     background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
-    border-left: 6px solid #f5a623;
+    border-left: none;
 }
 
 .career-module-job-requirements {
     background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
-    border-left: 6px solid #1565c0;
+    border-left: none;
 }
 
 .career-module-header {
@@ -12269,7 +12291,7 @@ body.on-login-page {
     margin-bottom: 20px;
     padding: 20px;
     background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
-    border-radius: 10px;
+    border-radius: 0;
     border: 1px solid #c8e6c9;
 }
 
@@ -18104,26 +18126,246 @@ body.on-login-page #agentAssistant { display: none !important; }
 
 /* 隐私设置页面整体样式（和模拟面试一致） */
 #privacyPage {
-    --mock-ink: #1c1c18;
-    --mock-ink-2: #5a5a52;
-    --mock-ink-3: #a0a098;
-    --mock-line: #e8e6df;
-    --mock-line-2: #f0ede6;
-    --mock-bg: #f7f6f2;
-    --mock-white: #ffffff;
-    background: #f7f6f2 !important;
-    --mock-sage: #5e8c65;
-    --mock-sage-soft: #eef4ee;
-    --mock-sage-mid: #c9deca;
-    --mock-amber: #b8862a;
-    --mock-amber-soft: #fdf5e4;
-    --mock-red: #b94040;
-    --mock-red-soft: #fdf2f2;
-    --mock-radius: 8px;
-    --mock-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    font-family: 'Noto Sans SC', sans-serif;
-    background: var(--mock-bg);
-    color: var(--mock-ink);
+    background: var(--color-background-secondary) !important;
+    color: var(--color-text-primary);
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* ==================== PrivacySettings (统一设计系统) ==================== */
+#privacyPage .privacy-container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+#privacyPage .privacy-header { margin-bottom: 2rem; }
+
+#privacyPage .privacy-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+#privacyPage .privacy-subtitle {
+    margin: 8px 0 0 0;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+}
+
+#privacyPage .section-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: 0;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+#privacyPage .section-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+
+#privacyPage .section-header h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+#privacyPage .section-header p {
+    margin: 2px 0 0 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+}
+
+#privacyPage .privacy-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 1rem 1.25rem;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+
+#privacyPage .privacy-row:last-child { border-bottom: none; }
+
+#privacyPage .privacy-row-text { min-width: 0; }
+
+#privacyPage .privacy-row-text h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-primary);
+}
+
+#privacyPage .privacy-row-text p {
+    margin: 2px 0 0 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    max-width: 420px;
+}
+
+/* Toggle：统一尺寸；仅隐私页覆盖（不影响其它开关） */
+#privacyPage .toggle-switch { width: 40px; height: 22px; }
+#privacyPage .toggle-slider {
+    background-color: var(--color-border-secondary);
+    border-radius: 11px; /* 例外允许圆角 */
+    transition: background 0.2s;
+    box-shadow: none;
+}
+#privacyPage .toggle-slider:before {
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    bottom: auto;
+    border-radius: 50%; /* 例外允许圆形 */
+    background: var(--color-background-primary);
+    transition: transform 0.2s;
+}
+#privacyPage .toggle-switch input:checked + .toggle-slider { background: var(--color-toggle-on); }
+#privacyPage .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+#privacyPage .toggle-switch:hover .toggle-slider { box-shadow: none; }
+
+/* Select：统一样式 + 自定义箭头（伪元素） */
+#privacyPage .privacy-select { position: relative; }
+#privacyPage .privacy-select select {
+    font-size: 13px;
+    padding: 6px 28px 6px 10px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: 0;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+#privacyPage .privacy-select::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-right: 0.5px solid var(--color-text-secondary);
+    border-bottom: 0.5px solid var(--color-text-secondary);
+    transform: translateY(-60%) rotate(45deg);
+    pointer-events: none;
+}
+
+/* 保存按钮 */
+#privacyPage .privacy-save-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: var(--color-text-primary);
+    color: var(--color-background-primary);
+    border: none;
+    border-radius: 0;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+}
+#privacyPage .privacy-save-btn:hover { opacity: 0.85; }
+
+/* 区块标题 */
+#privacyPage .privacy-block-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin: 0 0 0.75rem 0;
+}
+
+/* 我的数据：metric */
+#privacyPage .privacy-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+#privacyPage .privacy-metric-card {
+    background: var(--color-background-secondary);
+    border-radius: 0;
+    padding: 0.875rem 1rem;
+    border: 0.5px solid var(--color-border-tertiary);
+}
+#privacyPage .privacy-metric-num {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+#privacyPage .privacy-metric-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+/* 数据管理按钮组 */
+#privacyPage .privacy-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+#privacyPage .privacy-btn {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 9px;
+    cursor: pointer;
+    border-radius: 0;
+}
+#privacyPage .privacy-btn-secondary {
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    border: 0.5px solid var(--color-border-secondary);
+}
+#privacyPage .privacy-btn-secondary:hover { background: var(--color-background-secondary); }
+#privacyPage .privacy-btn-danger {
+    background: var(--color-background-danger);
+    color: var(--color-text-danger);
+    border: 0.5px solid var(--color-border-danger);
+}
+
+/* 数据访问日志 */
+#privacyPage .privacy-log-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+#privacyPage .privacy-refresh {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+#privacyPage .privacy-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#privacyPage .privacy-log-item {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+}
+#privacyPage .privacy-log-event {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+#privacyPage .privacy-log-time {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
 }
 
 /* 简历生成页面整体样式（和模拟面试一致） */
@@ -19247,7 +19489,7 @@ body.on-login-page #agentAssistant { display: none !important; }
 }
 
 .toggle-switch input:checked + .toggle-slider {
-    background: linear-gradient(135deg, #4f7cff 0%, #5a9fff 100%);
+    background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -19255,7 +19497,7 @@ body.on-login-page #agentAssistant { display: none !important; }
 }
 
 .toggle-switch:hover .toggle-slider {
-    box-shadow: 0 2px 8px rgba(79, 124, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(94, 140, 101, 0.3);
     }
     .interview-message {
         max-width: 95%;
@@ -22284,6 +22526,46 @@ body.on-login-page::after {
     border-color: var(--mock-sage);
 }
 
+/* ==================== 全局视觉调整：暖白背景 + 墨绿主题 ==================== */
+/* 目标：
+   1) 去掉“明显分割线”（以 border 线为主）
+   2) 卡片悬浮在暖白背景上（用 shadow 分层）
+   3) 蓝色系统一偏向墨绿色（覆盖少量硬编码蓝色） */
+
+body {
+    background: var(--page-bg);
+}
+
+/* 常见分割线弱化（仍保留布局，但视觉上不抢眼） */
+#profilePage .topbar,
+#profilePage .sidebar {
+    box-shadow: none;
+}
+
+/* 岗位画像/测评等页面里，标题色条统一墨绿 */
+.page-title-bar,
+.job-profile-title-bar {
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-dark)) !important;
+}
+
+/* 统计/强调色中残留的蓝色：统一改成墨绿系 */
+.job-profile-stat-value-1,
+.job-profile-stat-value-2,
+.result-card-new .result-entry-timeline,
+.result-card-new .result-project-chip,
+.ai-gen-result-title,
+#assessmentPage .question-number {
+    color: var(--primary-color) !important;
+}
+
+/* “theme-blue” 视觉改为墨绿 */
+.report-ability-detail .theme-blue .ab-card::before {
+    background: var(--primary-color) !important;
+}
+.report-ability-detail .theme-blue .bar-fill {
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-dark)) !important;
+}
+
 /* 岗位画像页面覆盖所有剩余的蓝色样式 */
 #jobProfilePage .welcome-section h2 {
     background: linear-gradient(135deg, #5e8c65 0%, #4a7350 100%);
@@ -22345,7 +22627,7 @@ body.on-login-page::after {
 }
 
 #jobProfilePage .card-stripe {
-    background: linear-gradient(90deg, var(--mock-sage), #4a7350);
+    display: none;
 }
 
 /* 岗位画像页面覆盖全局的蓝色样式 */
@@ -22366,11 +22648,18 @@ body.on-login-page::after {
 
 #jobProfilePage .btn-profile {
     background: linear-gradient(135deg, var(--mock-sage), #4a7350);
+    border-radius: 0;
 }
 
 #jobProfilePage .btn-realdata {
     color: var(--mock-sage);
     border-color: var(--mock-sage-mid);
+    border-radius: 0;
+}
+
+/* 岗位画像页：卡片方角（去圆角） */
+#jobProfilePage .job-card {
+    border-radius: 0;
 }
 
 #jobProfilePage .btn-realdata:hover {
