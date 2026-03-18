@@ -18039,10 +18039,10 @@ body.on-login-page #agentAssistant { display: none !important; }
 #privacyPage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
 
 /* 简历生成页面标题样式（和模拟面试一致） */
-#resumePage .page-title-bar { background: #5e8c65; }
-#resumePage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
-#resumePage .page-subtitle { color: #a0a098; }
-#resumePage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
+#hrInvitePage .page-title-bar { background: #5e8c65; }
+#hrInvitePage .page-title { color: #1c1c18; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; }
+#hrInvitePage .page-subtitle { color: #a0a098; }
+#hrInvitePage .job-profile-tag { background: #eef4ee; color: #5e8c65; border: 1px solid #c9deca; }
 
 /* HR邀约页 Tab：墨绿选中态，细线分隔，无圆角 */
 .hr-invite-tabs {
@@ -18369,7 +18369,7 @@ body.on-login-page #agentAssistant { display: none !important; }
 }
 
 /* 简历生成页面整体样式（和模拟面试一致） */
-#resumePage {
+#hrInvitePage {
     --mock-ink: #1c1c18;
     --mock-ink-2: #5a5a52;
     --mock-ink-3: #a0a098;

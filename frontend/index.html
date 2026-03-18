@@ -49,7 +49,7 @@
                         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a0a098;padding:10px 9px 5px;">扩展功能</div>
                         <a href="#" class="nav-link" data-page="tracking"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1.5" y="2.5" width="11" height="9" rx="1.4" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 2v2M9.5 2v2M1.5 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>求职跟踪</a>
                         <a href="#" class="nav-link" data-page="mockInterview"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M2 2.5h10a.5.5 0 01.5.5v6a.5.5 0 01-.5.5H8L5.5 12V9.5H2a.5.5 0 01-.5-.5V3a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.4"/></svg>模拟面试</a>
-                        <a href="#" class="nav-link" data-page="resume"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>HR邀约</a>
+                        <a href="#" class="nav-link" data-page="hrInvite"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>HR邀约</a>
                         <a href="#" class="nav-link" data-page="privacy"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1L2 3v4c0 3.5 2.5 6.5 5 7 2.5-.5 5-3.5 5-7V3L7 1z" stroke="currentColor" stroke-width="1.4"/><path d="M7 4.5v3M5.5 6.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>隐私设置</a>
                     </div>
                 </div>
@@ -987,9 +987,9 @@
                 </header>
 
                 <div class="job-profile-tabs">
-                    <button class="tab-btn active" data-tab="list"><span class="tab-btn-icon">📋</span><span>岗位列表</span></button>
-                    <button class="tab-btn" data-tab="graph"><span class="tab-btn-icon">🔗</span><span>关联图谱</span></button>
-                    <button class="tab-btn" data-tab="ai"><span class="tab-btn-icon">✨</span><span>智能体生成</span></button>
+                    <button class="tab-btn active" data-tab="list"><span>岗位列表</span></button>
+                    <button class="tab-btn" data-tab="graph"><span>关联图谱</span></button>
+                    <button class="tab-btn" data-tab="ai"><span>智能体生成</span></button>
                 </div>
 
                 <!-- 岗位列表 Tab -->
@@ -2490,7 +2490,7 @@
         </div>
 
         <!-- HR邀约页面（原简历生成入口，改为查看与响应HR评估邀请） -->
-        <div id="resumePage" class="page hidden">
+        <div id="hrInvitePage" class="page hidden">
             <div class="matching-container">
                 <div class="page-header">
                     <span class="job-profile-tag">职业规划智能体</span>
@@ -2600,7 +2600,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="mock/mockStore.js"></script>
+    <!-- <script src="mock/mockStore.js"></script> 资源不存在，已由 HR/hrStore.js 提供 MockStore -->
     <script src="HR/hrStore.js"></script>
     <script src="api.js?v=18&t=20260307"></script>
     <script src="app.js?v=18&t=20260307"></script>

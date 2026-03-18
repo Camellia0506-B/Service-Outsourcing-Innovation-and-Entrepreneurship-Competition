@@ -484,5 +484,40 @@
       ]
     },
     "total_score": 90
+  },
+  "6a7f7c28-0ad9-44fb-97a1-50b0da0f8822": {
+    "interview_id": "6a7f7c28-0ad9-44fb-97a1-50b0da0f8822",
+    "user_id": 1,
+    "target_job_title": "Java",
+    "interview_type": "comprehensive",
+    "difficulty": "medium",
+    "duration_minutes": 30,
+    "started_at": "2026-03-18T22:50:45.567146",
+    "status": "in_progress",
+    "current_question_index": 0,
+    "messages": [
+      {
+        "role": "interviewer",
+        "content": "你好！我是AI面试官，今天将负责你Java岗位的面试。\n\n我们将进行大约30分钟的面试，主要考察你的专业能力、项目经验和综合素质。\n\n准备好了吗？请先简单介绍一下你自己。",
+        "timestamp": "2026-03-18T22:50:45.567146"
+      }
+    ],
+    "interviewer_persona": {
+      "name": "AI面试官",
+      "title": "Java面试官",
+      "style": "专业、严谨、注重细节",
+      "background": "10年以上相关行业经验，曾任职于多家知名企业"
+    },
+    "interview_plan": {
+      "total_questions": 5,
+      "duration_minutes": 30,
+      "question_types": [
+        "自我介绍",
+        "岗位认知",
+        "项目经验",
+        "技术能力",
+        "职业规划"
+      ]
+    }
   }
 }

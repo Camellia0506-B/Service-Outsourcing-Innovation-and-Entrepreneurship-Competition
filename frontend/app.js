@@ -1228,7 +1228,10 @@ class CareerPlanningApp {
         });
 
         // 显示对应页面
-        const pageId = page + 'Page';
+        let pageId = page + 'Page';
+        if (page === 'hrInvite') {
+            pageId = 'hrInvitePage';
+        }
         console.log('[navigateTo] 显示页面元素:', pageId);
         this.showPage(pageId);
         this.currentPage = page;
@@ -1272,6 +1275,9 @@ class CareerPlanningApp {
                 await this.loadAccessLogs();
                 break;
             case 'resume':
+                await this.loadStudentInvitations();
+                break;
+            case 'hrInvite':
                 await this.loadStudentInvitations();
                 break;
         }
@@ -3761,8 +3767,12 @@ class CareerPlanningApp {
         let list = [];
         const storeApi = window.HRMockStore || window.MockStore;
         if (storeApi && typeof storeApi.getMockStore === 'function') {
-            const store = storeApi.getMockStore();
-            list = (store.myInvitations || []).slice();
+            try {
+                const store = storeApi.getMockStore();
+                list = (store.myInvitations || []).slice();
+            } catch (e) {
+                console.warn('[HR邀约] 读取 MockStore 失败，使用兜底列表', e);
+            }
         }
         if (!list.length) {
             list = [
@@ -3780,9 +3790,11 @@ class CareerPlanningApp {
             status: inv.status === 'declined' ? 'rejected' : (inv.status || 'pending')
         }));
 
-        const countEl = document.getElementById('hrInviteCount');
+        // 必须在 #hrInvitePage（或 #resumePage）内查找：历史上存在重复的 id=hrInviteList，getElementById 会命中隐藏块导致主页面空白
+        const hrPage = document.getElementById('hrInvitePage') || document.getElementById('resumePage');
+        const countEl = hrPage ? hrPage.querySelector('#hrInviteCount') : document.getElementById('hrInviteCount');
         const totalEl = document.getElementById('hrInviteTotal');
-        const listEl = document.getElementById('hrInviteList');
+        const listEl = hrPage ? hrPage.querySelector('#hrInviteList') : document.getElementById('hrInviteList');
         if (countEl) countEl.textContent = `共 ${list.length} 条邀请`;
         if (totalEl) totalEl.textContent = `共 ${list.length} 条记录`;
         if (!listEl) return;
@@ -3814,8 +3826,9 @@ class CareerPlanningApp {
 
     // 加载 HR 评估报告列表（接口不可用时用 mock）
     async loadStudentEvaluationReports() {
-        const countEl = document.getElementById('hrReportCount');
-        const listEl = document.getElementById('hrReportList');
+        const hrPage = document.getElementById('hrInvitePage') || document.getElementById('resumePage');
+        const countEl = hrPage ? hrPage.querySelector('#hrReportCount') : document.getElementById('hrReportCount');
+        const listEl = hrPage ? hrPage.querySelector('#hrReportList') : document.getElementById('hrReportList');
         if (!listEl) return;
         const userId = getCurrentUserId();
         if (!userId) {
