@@ -3759,8 +3759,9 @@ class CareerPlanningApp {
     async loadStudentInvitations() {
         this._hrInvitationStates = this._hrInvitationStates || {};
         let list = [];
-        if (window.MockStore) {
-            const store = window.MockStore.getMockStore();
+        const storeApi = window.HRMockStore || window.MockStore;
+        if (storeApi && typeof storeApi.getMockStore === 'function') {
+            const store = storeApi.getMockStore();
             list = (store.myInvitations || []).slice();
         }
         if (!list.length) {
@@ -3804,19 +3805,11 @@ class CareerPlanningApp {
             this.showToast('请先登录', 'error');
             return;
         }
-        if (window.MockStore && (action === 'accept' || action === 'decline')) {
-            if (action === 'accept') acceptInvitation(invitationId);
-            else rejectInvitation(invitationId);
-            this.showToast(action === 'accept' ? '已接受邀请' : '已拒绝邀请', 'success');
-            return;
-        }
-        const result = await respondToInvitation(invitationId, userId, action);
-        if (result.success) {
-            this.showToast(result.msg || '操作成功', 'success');
-            this.loadStudentInvitations();
-        } else {
-            this.showToast(result.msg || '操作失败', 'error');
-        }
+        // 学生端 HR模块：纯 Mock 演示，不走后端
+        if (action === 'accept') acceptInvitation(invitationId);
+        else if (action === 'decline') rejectInvitation(invitationId);
+        this.showToast(action === 'accept' ? '已接受邀请' : '已拒绝邀请', 'success');
+        this.loadStudentInvitations();
     }
 
     // 加载 HR 评估报告列表（接口不可用时用 mock）
@@ -3830,31 +3823,20 @@ class CareerPlanningApp {
             if (countEl) countEl.textContent = '共 0 条报告';
             return;
         }
-        let list = [];
-        const result = typeof getStudentEvaluationReports === 'function' ? await getStudentEvaluationReports(userId) : { success: false };
-        if (result.success && Array.isArray(result.list) && result.list.length > 0) {
-            list = result.list;
-        } else {
-            if (window.MockStore) {
-                const store = window.MockStore.getMockStore();
-                list = (store.myReports || []).slice();
-            }
-            if (!list.length) {
-                list = [
-                    { evaluation_id: 'EVAL-2025-001', target_job: '算法工程师', company_name: '星途智探科技有限公司', hr_name: '孙于婷', submitted_at: '2025-03-09 16:40', status: 'completed' }
-                ];
-            }
-            list = list.map(function (r) {
-                return {
-                    evaluation_id: r.evaluation_id || r.evaluationId,
-                    target_job: r.target_job || r.targetJob || '',
-                    company_name: r.company_name || r.companyName || '',
-                    hr_name: r.hr_name || r.hrName || '',
-                    submitted_at: r.submitted_at || r.submittedAt || '',
-                    status: r.status || 'completed'
-                };
-            });
-        }
+        // 学生端 HR模块：纯 Mock 演示，不走后端
+        const storeApi = window.HRMockStore || window.MockStore;
+        const store = (storeApi && typeof storeApi.getMockStore === 'function') ? storeApi.getMockStore() : { myReports: [] };
+        let list = (store.myReports || []).slice();
+        list = list.map(function (r) {
+            return {
+                evaluation_id: r.evaluation_id || r.evaluationId,
+                target_job: r.target_job || r.targetJob || '',
+                company_name: r.company_name || r.companyName || '',
+                hr_name: r.hr_name || r.hrName || '',
+                submitted_at: r.submitted_at || r.submittedAt || '',
+                status: r.status || 'completed'
+            };
+        });
         if (countEl) countEl.textContent = '共 ' + list.length + ' 条报告';
         if (list.length === 0) {
             listEl.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#a0a098;font-size:14px;">暂无评估报告，接受邀请后 HR 填写评估即可在此查看</div>';
@@ -3902,13 +3884,11 @@ class CareerPlanningApp {
             setEl('reportInsight', '请先登录');
             return;
         }
+        // 学生端 HR模块：纯 Mock 演示，不走后端
         let data = null;
-        if (typeof getStudentEvaluationReportDetail === 'function') {
-            const res = await getStudentEvaluationReportDetail(userId, evaluationId);
-            if (res.success && res.data) data = res.data;
-        }
-        if (!data && window.MockStore) {
-            const store = window.MockStore.getMockStore();
+        const storeApi = window.HRMockStore || window.MockStore;
+        if (storeApi && typeof storeApi.getMockStore === 'function') {
+            const store = storeApi.getMockStore();
             const report = (store.myReports || []).find(function (r) {
                 return (r.evaluationId || r.evaluation_id) === evaluationId;
             });

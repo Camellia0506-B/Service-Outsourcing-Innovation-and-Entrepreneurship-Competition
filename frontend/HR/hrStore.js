@@ -166,10 +166,16 @@
     }
   }
 
-  window.MockStore = {
+  // 避免与其他模块的 mock/mockStore.js 冲突：
+  // - 始终挂载到 HRMockStore（学生端 HR 演示专用）
+  // - 仅当全局未定义 MockStore 时才兜底赋值，避免覆盖其它模块的 MockStore
+  window.HRMockStore = {
     getMockStore: getMockStore,
     saveMockStore: saveMockStore,
     resetMockStore: resetMockStore,
     defaultStore: defaultStore
   };
+  if (!window.MockStore) {
+    window.MockStore = window.HRMockStore;
+  }
 })(typeof window !== 'undefined' ? window : {});

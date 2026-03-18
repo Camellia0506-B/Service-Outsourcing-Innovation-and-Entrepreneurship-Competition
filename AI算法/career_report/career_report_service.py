@@ -70,11 +70,6 @@ def _build_career_chain():
    - evaluation: 包含evaluation_system和adjustment_scenarios
    - pain_points: 包含identified_risks和contingency_plans
 
-特别注意行动计划的格式：
-- short_term_plan应该包含period, goal, monthly_plans
-- monthly_plans是一个数组，每个元素包含month, focus, tasks, milestone
-- tasks是一个数组，每个元素包含task, 具体行动, 时间投入, 预期成果
-
 JSON输出：
 """
     template = PromptTemplate.from_template(prompt_text)
@@ -116,7 +111,7 @@ def generate_personalized_content(report_id: str, user_id: int, assessment_repor
                 result = json.loads(json_match.group(0))
             else:
                 result = {}
-        
+
         # 结构校验与兜底：避免前端出现“行动计划为空/很单调”
         if not isinstance(result, dict):
             result = {}
@@ -226,11 +221,6 @@ def generate_personalized_content(report_id: str, user_id: int, assessment_repor
     except Exception as e:
         logger.error(f"生成个性化内容失败: {e}")
         # 异常时也返回兜底结构，保证前端不空
-        try:
-            # 复用上方兜底逻辑
-            careers = (assessment_report.get("comprehensive_recommendation", {}) or {}).get("recommended_careers") or []
-        except Exception:
-            careers = []
         return {
             "action_plan": {
                 "short_term_plan": {
@@ -527,26 +517,20 @@ def list_reports_for_career_history(assessment_service, user_id: int) -> List[di
         if not (report.get("section_1_job_matching") or report.get("section_2_career_path") or report.get("section_3_action_plan")):
             # 跳过测评报告，只保留职业规划报告
             continue
-        
+
+        # 从兴趣中提取主职业类型
+        interest = report.get("interest_analysis") or {}
+        primary = interest.get("primary_interest") or {}
+        primary_career = primary.get("type") or "综合"
+
         # 计算完整度（如果报告中没有完整度字段）
         completeness = report.get("completeness", 85)
-        
-        # 生成有区分度的规划报告名称
-        created_date = r.get("created_at", "")
-        if created_date:
-            # 从创建时间中提取日期部分作为区分
-            date_part = created_date.split(' ')[0]
-            report_name = f"职业规划报告 - {date_part}"
-        else:
-            # 如果没有创建时间，使用报告ID的最后几位作为区分
-            report_id_suffix = r["report_id"][-4:] if len(r["report_id"]) >= 4 else r["report_id"]
-            report_name = f"职业规划报告 - {report_id_suffix}"
-        
+
         out.append({
             "report_id": r["report_id"],
             "created_at": r["created_at"],
             "status": "completed",
-            "primary_career": report_name,
+            "primary_career": primary_career,
             "completeness": completeness,
             "last_viewed": r.get("last_viewed") or r.get("created_at") or r["created_at"],
         })
