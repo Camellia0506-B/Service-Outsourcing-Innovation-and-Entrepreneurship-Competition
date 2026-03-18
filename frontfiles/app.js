@@ -13217,7 +13217,7 @@ class CareerPlanningApp {
                             const levelText = pct >= 60 ? '偏强' : pct >= 40 ? '中等' : '偏低';
                             return `<div class="report-trait-item">
                                 <span class="report-trait-name">${t.trait_name}</span>
-                                <div class="report-trait-bar-bg"><div class="report-trait-bar" style="width:${pct}%; background:linear-gradient(90deg,#667eea,#764ba2)"></div></div>
+                                <div class="report-trait-bar-bg"><div class="report-trait-bar" style="width:${pct}%"></div></div>
                                 <span class="report-trait-score">${scoreNum}分 <span class="report-level-tag ${levelClass}">${t.level || levelText}</span></span>
                             </div>`;
                         }).join('')}

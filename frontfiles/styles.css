@@ -13091,11 +13091,324 @@ body.on-login-page {
     color: var(--text-primary);
 }
 
-/* ========== 报告美化：对齐右图参考 ========== */
+/* ========== 测评报告视觉：贴合全站暖米白 + 墨绿主题 ========== */
 .report-content {
-    background: linear-gradient(135deg, #e8ecf1 0%, #f0f4f8 50%, #e6eaf0 100%) !important;
+    background: linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%) !important;
     min-height: 100%;
     padding: 24px 16px 48px !important;
+}
+
+/* =========================================================
+   职业测评报告（assessmentReportWrap）主题化：按用户示例稿
+   仅作用于测评报告区域，避免影响其它报告/页面
+   ========================================================= */
+#assessmentPage #assessmentReportWrap {
+    --ink-green:   #2D4A3E;
+    --mid-green:   #4A7C68;
+    --light-green: #7AAE9A;
+    --warm-white:  #F7F5F0;
+    --cream:       #EDE8DF;
+    --cream-dark:  #DDD6CA;
+    --ink-black:   #1A1A18;
+    --ink-gray:    #5C5C58;
+    --ink-light:   #8C8C88;
+    --white:       #FFFFFF;
+    --radius-sm:   6px;
+    --radius-md:   12px;
+    --radius-lg:   18px;
+}
+
+#assessmentPage #assessmentReportWrap .assessment-report-content {
+    max-width: 720px;
+}
+
+#assessmentPage #assessmentReportWrap .report-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+/* 顶部导出按钮（不再红色霓虹） */
+#assessmentPage #assessmentReportWrap .report-export-bar .btn-export-pdf {
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    background: var(--ink-green);
+    box-shadow: none;
+}
+#assessmentPage #assessmentReportWrap .report-export-bar .btn-export-pdf:hover {
+    background: var(--mid-green);
+    transform: none;
+    box-shadow: none;
+}
+
+/* 顶部 Hero 卡片：纯墨绿、克制装饰圆 */
+#assessmentPage #assessmentReportWrap .report-header-card {
+    background: var(--ink-green);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px 32px;
+    margin-bottom: 16px;
+    color: var(--white);
+    border: none;
+    box-shadow: none;
+}
+#assessmentPage #assessmentReportWrap .report-header-card::before {
+    right: -40px;
+    top: -60px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255,255,255,0.04);
+}
+#assessmentPage #assessmentReportWrap .report-header-card::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    bottom: -80px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+}
+#assessmentPage #assessmentReportWrap .report-header-card .header-tag {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    padding: 0;
+    margin-bottom: 10px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+}
+#assessmentPage #assessmentReportWrap .report-header-card h3 {
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+}
+#assessmentPage #assessmentReportWrap .report-header-card .header-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 24px;
+}
+#assessmentPage #assessmentReportWrap .report-header-card .header-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.10);
+    padding-top: 20px;
+}
+#assessmentPage #assessmentReportWrap .report-header-card .meta-label {
+    color: rgba(255,255,255,0.40);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+#assessmentPage #assessmentReportWrap .report-header-card .meta-value {
+    font-size: 15px;
+    letter-spacing: 0.03em;
+}
+
+/* Summary 三卡：去彩虹，统一暖白卡片 */
+#assessmentPage #assessmentReportWrap .report-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--cream-dark);
+    box-shadow: none;
+    padding: 18px 16px;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card.c1,
+#assessmentPage #assessmentReportWrap .report-summary-card.c2,
+#assessmentPage #assessmentReportWrap .report-summary-card.c3 {
+    border-top: 1px solid var(--cream-dark);
+}
+#assessmentPage #assessmentReportWrap .report-summary-card .card-icon {
+    display: none;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card .card-label {
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    text-transform: none;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card .card-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink-black);
+    margin-bottom: 4px;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card .card-sub {
+    font-size: 11px;
+    color: var(--ink-light);
+}
+#assessmentPage #assessmentReportWrap .report-summary-card .card-sub-bar {
+    height: 3px;
+    background: var(--cream);
+    border-radius: 2px;
+}
+#assessmentPage #assessmentReportWrap .report-summary-card .card-sub-bar-inner {
+    background: var(--ink-green);
+    border-radius: 2px;
+}
+
+/* 图表两卡 */
+#assessmentPage #assessmentReportWrap .report-charts-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+#assessmentPage #assessmentReportWrap .report-chart-card,
+#assessmentPage #assessmentReportWrap .report-section-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--cream-dark);
+    box-shadow: none;
+}
+#assessmentPage #assessmentReportWrap .report-chart-card {
+    padding: 20px;
+}
+#assessmentPage #assessmentReportWrap .report-chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-green);
+    letter-spacing: 0.04em;
+    text-transform: none;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#assessmentPage #assessmentReportWrap .report-chart-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--ink-green);
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* section 标题同款 */
+#assessmentPage #assessmentReportWrap .report-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-green);
+    letter-spacing: 0.04em;
+}
+#assessmentPage #assessmentReportWrap .report-section-title .dot {
+    display: none;
+}
+
+/* 性格条：去蓝紫渐变 */
+#assessmentPage #assessmentReportWrap .report-trait-name {
+    color: var(--ink-black);
+    font-size: 13px;
+    font-weight: 500;
+}
+#assessmentPage #assessmentReportWrap .report-trait-bar-bg {
+    height: 4px;
+    background: var(--cream);
+    border-radius: 2px;
+}
+#assessmentPage #assessmentReportWrap .report-trait-bar {
+    background: var(--ink-green);
+    border-radius: 2px;
+}
+#assessmentPage #assessmentReportWrap .report-trait-score {
+    color: var(--ink-green);
+}
+#assessmentPage #assessmentReportWrap .report-level-tag {
+    border: 1px solid var(--cream-dark);
+    background: transparent;
+    color: var(--ink-light);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* 职业 chip：改成暖白小标签 */
+#assessmentPage #assessmentReportWrap .report-career-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+#assessmentPage #assessmentReportWrap .report-career-chip {
+    background: var(--warm-white);
+    border: 1px solid var(--cream-dark);
+    box-shadow: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 10px;
+    font-size: 13px;
+    color: var(--ink-black);
+    font-weight: 500;
+}
+#assessmentPage #assessmentReportWrap .report-career-chip:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--ink-green);
+    background: var(--white);
+}
+#assessmentPage #assessmentReportWrap .report-career-chip .num {
+    color: var(--ink-light);
+    font-size: 10px;
+    font-weight: 400;
+}
+
+/* 能力详细分析：去蓝底，改为暖白/墨绿 */
+#assessmentPage #assessmentReportWrap .report-ability-detail {
+    --ab-border: rgba(45,74,62,0.12);
+    --ab-text: var(--ink-black);
+    --ab-text-dim: var(--ink-gray);
+    --ab-text-muted: var(--ink-light);
+}
+#assessmentPage #assessmentReportWrap .report-ability-detail .ab-card {
+    border: 1px solid var(--ab-border);
+    box-shadow: none;
+}
+#assessmentPage #assessmentReportWrap .report-ability-detail .ab-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+#assessmentPage #assessmentReportWrap .report-ability-detail .bar-bg {
+    background: rgba(45,74,62,0.10);
+}
+/* theme-blue/theme-orange/theme-red 仍保留区分，但颜色更克制、贴合主题 */
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .ab-card::before { background: var(--ink-green); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .card-icon { background: rgba(45,74,62,0.10); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .score-num { color: var(--ink-green); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .bar-fill { background: linear-gradient(90deg, var(--ink-green), var(--mid-green)); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .level-badge { background: rgba(45,74,62,0.08); color: var(--ink-green); border: 1px solid rgba(45,74,62,0.18); }
+
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .ab-card::before { background: var(--mid-green); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .card-icon { background: rgba(74,124,104,0.10); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .score-num { color: var(--mid-green); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .bar-fill { background: linear-gradient(90deg, var(--mid-green), var(--light-green)); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .level-badge { background: rgba(74,124,104,0.08); color: var(--mid-green); border: 1px solid rgba(74,124,104,0.18); }
+
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .ab-card::before { background: #B8862A; }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .card-icon { background: rgba(184,134,42,0.10); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .score-num { color: #B8862A; }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .bar-fill { background: linear-gradient(90deg, #B8862A, #D1A94D); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .level-badge { background: rgba(184,134,42,0.10); color: #B8862A; border: 1px solid rgba(184,134,42,0.20); }
+
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .ab-card::before { background: #B94040; }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .card-icon { background: rgba(185,64,64,0.10); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .score-num { color: #B94040; }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .bar-fill { background: linear-gradient(90deg, #B94040, #D36A6A); }
+#assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .level-badge { background: rgba(185,64,64,0.10); color: #B94040; border: 1px solid rgba(185,64,64,0.18); }
+
+/* 底部文字 */
+#assessmentPage #assessmentReportWrap .report-footer-text {
+    color: var(--ink-light);
+    font-size: 11px;
+    text-align: center;
+    margin: 24px 0 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--cream-dark);
 }
 .report-export-bar {
     position: sticky;
@@ -13288,20 +13601,20 @@ body.on-login-page {
     align-items: center;
     gap: 10px;
     padding: 14px 28px;
-    background: linear-gradient(135deg, #e94560, #c0392b);
+    background: linear-gradient(145deg, #2C4A3E 0%, #3D6458 55%, #2C4A3E 100%);
     color: #fff;
     border: none;
     border-radius: 50px;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 6px 24px rgba(233,69,96,0.4);
+    box-shadow: 0 10px 24px rgba(44, 74, 62, 0.22);
     transition: transform 0.2s, box-shadow 0.2s;
     letter-spacing: 0.5px;
 }
 .report-export-bar .btn-export-pdf:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(233,69,96,0.5);
+    box-shadow: 0 14px 32px rgba(44, 74, 62, 0.26);
 }
 /* 查看测评报告按钮：生成中禁用态 */
 #viewReportBtn.view-report-generating {
@@ -13322,45 +13635,46 @@ body.on-login-page {
     padding: 0;
 }
 .report-header-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    border-radius: 24px;
-    padding: 44px 48px 40px;
+    background: linear-gradient(145deg, #2C4A3E 0%, #3D6458 55%, #2C4A3E 100%);
+    border-radius: 22px;
+    padding: 40px 44px 34px;
     color: #fff;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 40px rgba(15,52,96,0.25);
+    box-shadow: 0 14px 40px rgba(28, 47, 40, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.10);
 }
 .report-header-card::before {
     content: '';
     position: absolute;
     top: -80px; right: -80px;
     width: 240px; height: 240px;
-    background: rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.08);
     border-radius: 50%;
 }
 .report-header-card .header-tag {
     display: inline-block;
-    background: rgba(233,69,96,0.35);
-    color: #ff8fa3;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
     font-size: 10px;
     letter-spacing: 3px;
     padding: 6px 16px;
     border-radius: 24px;
     margin-bottom: 14px;
-    border: 1px solid rgba(233,69,96,0.45);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     font-weight: 600;
 }
 .report-header-card h3 {
-    font-size: 32px;
+    font-size: 30px;
     font-weight: 700;
     margin-bottom: 8px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     position: relative;
     z-index: 1;
 }
 .report-header-card .header-sub {
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.80);
     font-size: 14px;
     margin-bottom: 22px;
     letter-spacing: 0.5px;
@@ -13381,7 +13695,7 @@ body.on-login-page {
 }
 .report-header-card .meta-label {
     font-size: 10px;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.68);
     letter-spacing: 2px;
     text-transform: uppercase;
     font-weight: 600;
@@ -13402,17 +13716,17 @@ body.on-login-page {
     background: #fff;
     border-radius: 20px;
     padding: 28px 24px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 6px 22px rgba(28, 47, 40, 0.06);
+    border: 1px solid rgba(28, 47, 40, 0.08);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .report-summary-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+    box-shadow: 0 14px 34px rgba(28, 47, 40, 0.10);
 }
-.report-summary-card.c1 { border-top: 4px solid #e94560; }
-.report-summary-card.c2 { border-top: 4px solid #f5a623; }
-.report-summary-card.c3 { border-top: 4px solid #48bb78; }
+.report-summary-card.c1 { border-top: 4px solid #2C4A3E; }
+.report-summary-card.c2 { border-top: 4px solid #B8862A; }
+.report-summary-card.c3 { border-top: 4px solid #3D6458; }
 .report-summary-card .card-icon { font-size: 32px; margin-bottom: 12px; line-height: 1; }
 .report-summary-card .card-label {
     font-size: 12px;
@@ -13424,7 +13738,7 @@ body.on-login-page {
 .report-summary-card .card-value {
     font-size: 22px;
     font-weight: 700;
-    color: #1a1a2e;
+    color: #1c1c18;
     line-height: 1.3;
     margin-bottom: 4px;
 }
