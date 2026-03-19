@@ -514,6 +514,41 @@ class JobGraphService:
         
         返回：符合API文档4.3格式的图谱数据
         """
+        # ── 优先读预计算缓存 ──
+        try:
+            _cache_path = get_abs_path("data/job_profiles/transfer_cache.json")
+            if os.path.isfile(_cache_path):
+                with open(_cache_path, "r", encoding="utf-8") as _cf:
+                    _tc = json.load(_cf)
+                _hit = _tc.get(job_id) or next(
+                    (v for k, v in _tc.items() if k in job_id or job_id in k), None
+                )
+                _paths = _hit.get("transferPaths") or _hit.get("transfer_paths")
+                if _hit and _paths:
+                    _cj = _hit["center_job"]
+                    return {
+                        "code": 200,
+                        "msg": "success",
+                        "data": {
+                            "center_job": {
+                                "job_id":       job_id,
+                                "job_name":     _cj.get("job_name", job_id),
+                                "salary_range": _cj.get("salary_range", ""),
+                                "avg_salary":   _cj.get("salary_range", ""),
+                                "demand_score": 95,
+                            },
+                            "transfer_graph": {
+                                "nodes": [],
+                                "edges": [],
+                                "transferPaths": _paths,
+                            },
+                            "vertical_graph": {"nodes": [], "edges": [], "track_name": ""},
+                            "career_path":    {"promotion_path": []},
+                        }
+                    }
+        except Exception:
+            pass
+        # ── 缓存未命中，继续原有逻辑 ──
         profiles = _load_profiles_store()
         
         if job_id not in profiles:

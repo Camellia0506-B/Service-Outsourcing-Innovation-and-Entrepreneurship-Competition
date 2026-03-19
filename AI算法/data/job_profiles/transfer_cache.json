@@ -1,0 +1,3725 @@
+{
+  "前端开发": {
+    "center_job": {
+      "job_name": "前端开发",
+      "company": "东莞市恒亚罗斯计算机科技有限公司",
+      "salary_range": "3000-4000元",
+      "location": "东莞-虎门镇",
+      "industry": "计算机软件,互联网,IT服务",
+      "avg_salary": 3500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "Java",
+        "match": 78,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "济南北海软件工程有限公司",
+        "salary_range": "1.2-2万",
+        "location": "济南-历下区",
+        "industry": "计算机软件,IT服务,计算机软件,互联网"
+      },
+      {
+        "job_name": "C/C++",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "实施工程师",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "广东南方数码科技股份有限公司",
+        "salary_range": "120-150元/天",
+        "location": "广州-天河区",
+        "industry": "计算机软件,计算机软件"
+      },
+      {
+        "job_name": "软件测试",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "源创客成都科技有限公司",
+        "salary_range": "7000-13000元",
+        "location": "成都-锦江区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "技术支持工程师",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "昆山华海环保科技有限公司",
+        "salary_range": "7000-12000元",
+        "location": "苏州-昆山市",
+        "industry": "石油/石化,化学原料/化学制品"
+      },
+      {
+        "job_name": "科研人员",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      }
+    ],
+    "skill_count": 43
+  },
+  "实施工程师": {
+    "center_job": {
+      "job_name": "实施工程师",
+      "company": "广东南方数码科技股份有限公司",
+      "salary_range": "120-150元/天",
+      "location": "广州-天河区",
+      "industry": "计算机软件,计算机软件",
+      "avg_salary": 135.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "技术支持工程师",
+        "match": 76,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "昆山华海环保科技有限公司",
+        "salary_range": "7000-12000元",
+        "location": "苏州-昆山市",
+        "industry": "石油/石化,化学原料/化学制品"
+      },
+      {
+        "job_name": "前端开发",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "东莞市恒亚罗斯计算机科技有限公司",
+        "salary_range": "3000-4000元",
+        "location": "东莞-虎门镇",
+        "industry": "计算机软件,互联网,IT服务"
+      },
+      {
+        "job_name": "Java",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "济南北海软件工程有限公司",
+        "salary_range": "1.2-2万",
+        "location": "济南-历下区",
+        "industry": "计算机软件,IT服务,计算机软件,互联网"
+      },
+      {
+        "job_name": "C/C++",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "科研人员",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      },
+      {
+        "job_name": "测试工程师",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "宜宾丰川动力科技有限公司",
+        "salary_range": "4000-8000元",
+        "location": "宜宾-叙州区",
+        "industry": "汽车研发/制造"
+      }
+    ],
+    "skill_count": 47
+  },
+  "科研人员": {
+    "center_job": {
+      "job_name": "科研人员",
+      "company": "河南二建集团",
+      "salary_range": "1-1.3万",
+      "location": "郑州-None",
+      "industry": "建筑设备安装,建筑设备安装",
+      "avg_salary": 11500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "技术支持工程师",
+        "match": 79,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "昆山华海环保科技有限公司",
+        "salary_range": "7000-12000元",
+        "location": "苏州-昆山市",
+        "industry": "石油/石化,化学原料/化学制品"
+      },
+      {
+        "job_name": "C/C++",
+        "match": 65,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "实施工程师",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "广东南方数码科技股份有限公司",
+        "salary_range": "120-150元/天",
+        "location": "广州-天河区",
+        "industry": "计算机软件,计算机软件"
+      },
+      {
+        "job_name": "前端开发",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "东莞市恒亚罗斯计算机科技有限公司",
+        "salary_range": "3000-4000元",
+        "location": "东莞-虎门镇",
+        "industry": "计算机软件,互联网,IT服务"
+      },
+      {
+        "job_name": "测试工程师",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "宜宾丰川动力科技有限公司",
+        "salary_range": "4000-8000元",
+        "location": "宜宾-叙州区",
+        "industry": "汽车研发/制造"
+      },
+      {
+        "job_name": "软件测试",
+        "match": 45,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "源创客成都科技有限公司",
+        "salary_range": "7000-13000元",
+        "location": "成都-锦江区",
+        "industry": "计算机软件"
+      }
+    ],
+    "skill_count": 45
+  },
+  "技术支持工程师": {
+    "center_job": {
+      "job_name": "技术支持工程师",
+      "company": "昆山华海环保科技有限公司",
+      "salary_range": "7000-12000元",
+      "location": "苏州-昆山市",
+      "industry": "石油/石化,化学原料/化学制品",
+      "avg_salary": 9500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "科研人员",
+        "match": 79,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      },
+      {
+        "job_name": "实施工程师",
+        "match": 76,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "广东南方数码科技股份有限公司",
+        "salary_range": "120-150元/天",
+        "location": "广州-天河区",
+        "industry": "计算机软件,计算机软件"
+      },
+      {
+        "job_name": "前端开发",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "东莞市恒亚罗斯计算机科技有限公司",
+        "salary_range": "3000-4000元",
+        "location": "东莞-虎门镇",
+        "industry": "计算机软件,互联网,IT服务"
+      },
+      {
+        "job_name": "测试工程师",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "宜宾丰川动力科技有限公司",
+        "salary_range": "4000-8000元",
+        "location": "宜宾-叙州区",
+        "industry": "汽车研发/制造"
+      },
+      {
+        "job_name": "C/C++",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "软件测试",
+        "match": 46,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "源创客成都科技有限公司",
+        "salary_range": "7000-13000元",
+        "location": "成都-锦江区",
+        "industry": "计算机软件"
+      }
+    ],
+    "skill_count": 41
+  },
+  "Java": {
+    "center_job": {
+      "job_name": "Java",
+      "company": "济南北海软件工程有限公司",
+      "salary_range": "1.2-2万",
+      "location": "济南-历下区",
+      "industry": "计算机软件,IT服务,计算机软件,互联网",
+      "avg_salary": 16000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "C/C++",
+        "match": 84,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "前端开发",
+        "match": 78,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "东莞市恒亚罗斯计算机科技有限公司",
+        "salary_range": "3000-4000元",
+        "location": "东莞-虎门镇",
+        "industry": "计算机软件,互联网,IT服务"
+      },
+      {
+        "job_name": "软件测试",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "源创客成都科技有限公司",
+        "salary_range": "7000-13000元",
+        "location": "成都-锦江区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "实施工程师",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "广东南方数码科技股份有限公司",
+        "salary_range": "120-150元/天",
+        "location": "广州-天河区",
+        "industry": "计算机软件,计算机软件"
+      },
+      {
+        "job_name": "测试工程师",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "宜宾丰川动力科技有限公司",
+        "salary_range": "4000-8000元",
+        "location": "宜宾-叙州区",
+        "industry": "汽车研发/制造"
+      },
+      {
+        "job_name": "科研人员",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      }
+    ],
+    "skill_count": 46
+  },
+  "软件测试": {
+    "center_job": {
+      "job_name": "软件测试",
+      "company": "源创客成都科技有限公司",
+      "salary_range": "7000-13000元",
+      "location": "成都-锦江区",
+      "industry": "计算机软件",
+      "avg_salary": 10000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "Java",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "济南北海软件工程有限公司",
+        "salary_range": "1.2-2万",
+        "location": "济南-历下区",
+        "industry": "计算机软件,IT服务,计算机软件,互联网"
+      },
+      {
+        "job_name": "测试工程师",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "宜宾丰川动力科技有限公司",
+        "salary_range": "4000-8000元",
+        "location": "宜宾-叙州区",
+        "industry": "汽车研发/制造"
+      },
+      {
+        "job_name": "前端开发",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "东莞市恒亚罗斯计算机科技有限公司",
+        "salary_range": "3000-4000元",
+        "location": "东莞-虎门镇",
+        "industry": "计算机软件,互联网,IT服务"
+      },
+      {
+        "job_name": "C/C++",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "技术支持工程师",
+        "match": 46,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "昆山华海环保科技有限公司",
+        "salary_range": "7000-12000元",
+        "location": "苏州-昆山市",
+        "industry": "石油/石化,化学原料/化学制品"
+      },
+      {
+        "job_name": "科研人员",
+        "match": 45,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      }
+    ],
+    "skill_count": 32
+  },
+  "C/C++": {
+    "center_job": {
+      "job_name": "C/C++",
+      "company": "联合汽车电子有限公司（UAES）",
+      "salary_range": "1.2-1.5万·17薪",
+      "location": "重庆-渝北区",
+      "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路",
+      "avg_salary": 13500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "Java",
+        "match": 84,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "济南北海软件工程有限公司",
+        "salary_range": "1.2-2万",
+        "location": "济南-历下区",
+        "industry": "计算机软件,IT服务,计算机软件,互联网"
+      },
+      {
+        "job_name": "前端开发",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "东莞市恒亚罗斯计算机科技有限公司",
+        "salary_range": "3000-4000元",
+        "location": "东莞-虎门镇",
+        "industry": "计算机软件,互联网,IT服务"
+      },
+      {
+        "job_name": "测试工程师",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "宜宾丰川动力科技有限公司",
+        "salary_range": "4000-8000元",
+        "location": "宜宾-叙州区",
+        "industry": "汽车研发/制造"
+      },
+      {
+        "job_name": "科研人员",
+        "match": 65,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      },
+      {
+        "job_name": "软件测试",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "源创客成都科技有限公司",
+        "salary_range": "7000-13000元",
+        "location": "成都-锦江区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "技术支持工程师",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "昆山华海环保科技有限公司",
+        "salary_range": "7000-12000元",
+        "location": "苏州-昆山市",
+        "industry": "石油/石化,化学原料/化学制品"
+      }
+    ],
+    "skill_count": 46
+  },
+  "硬件测试": {
+    "center_job": {
+      "job_name": "硬件测试",
+      "company": "山东中天宇信信息技术有限公司",
+      "salary_range": "4000-6000元",
+      "location": "威海-环翠区",
+      "industry": "计算机软件",
+      "avg_salary": 5000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "游戏运营",
+        "match": 68,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "项目专员/助理",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "上海外服江苏人力资源服务有限公司",
+        "salary_range": "6000-7000元·13薪",
+        "location": "南京-建邺区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "储备经理人",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      },
+      {
+        "job_name": "培训师",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      }
+    ],
+    "skill_count": 15
+  },
+  "测试工程师": {
+    "center_job": {
+      "job_name": "测试工程师",
+      "company": "宜宾丰川动力科技有限公司",
+      "salary_range": "4000-8000元",
+      "location": "宜宾-叙州区",
+      "industry": "汽车研发/制造",
+      "avg_salary": 6000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "Java",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "济南北海软件工程有限公司",
+        "salary_range": "1.2-2万",
+        "location": "济南-历下区",
+        "industry": "计算机软件,IT服务,计算机软件,互联网"
+      },
+      {
+        "job_name": "C/C++",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "联合汽车电子有限公司（UAES）",
+        "salary_range": "1.2-1.5万·17薪",
+        "location": "重庆-渝北区",
+        "industry": "金属制品业,汽车研发/制造,电子/半导体/集成电路"
+      },
+      {
+        "job_name": "软件测试",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "源创客成都科技有限公司",
+        "salary_range": "7000-13000元",
+        "location": "成都-锦江区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "技术支持工程师",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "昆山华海环保科技有限公司",
+        "salary_range": "7000-12000元",
+        "location": "苏州-昆山市",
+        "industry": "石油/石化,化学原料/化学制品"
+      },
+      {
+        "job_name": "实施工程师",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "广东南方数码科技股份有限公司",
+        "salary_range": "120-150元/天",
+        "location": "广州-天河区",
+        "industry": "计算机软件,计算机软件"
+      },
+      {
+        "job_name": "科研人员",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南二建集团",
+        "salary_range": "1-1.3万",
+        "location": "郑州-None",
+        "industry": "建筑设备安装,建筑设备安装"
+      }
+    ],
+    "skill_count": 37
+  },
+  "销售运营": {
+    "center_job": {
+      "job_name": "销售运营",
+      "company": "河南青碧信息科技有限公司",
+      "salary_range": "6000-12000元",
+      "location": "郑州-管城回族区",
+      "industry": "零售/批发,零售/批发",
+      "avg_salary": 9000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "游戏运营",
+        "match": 85,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "统计员",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "项目专员/助理",
+        "match": 70,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "上海外服江苏人力资源服务有限公司",
+        "salary_range": "6000-7000元·13薪",
+        "location": "南京-建邺区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      }
+    ],
+    "skill_count": 14
+  },
+  "质量管理/测试": {
+    "center_job": {
+      "job_name": "质量管理/测试",
+      "company": "湖南力通恒裕电缆科技有限公司",
+      "salary_range": "4000-7000元",
+      "location": "怀化-中方县",
+      "industry": "电气机械/电力设备,通用设备制造",
+      "avg_salary": 5500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "游戏运营",
+        "match": 75,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "产品专员/助理",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "云钞金融服务(北京)有限公司",
+        "salary_range": "7000-14000元",
+        "location": "北京-西城区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "培训师",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "储备经理人",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      }
+    ],
+    "skill_count": 9
+  },
+  "总助/CEO助理/董事长助理": {
+    "center_job": {
+      "job_name": "总助/CEO助理/董事长助理",
+      "company": "郑州百壹源信息科技有限公司",
+      "salary_range": "6000-12000元",
+      "location": "郑州-金水区",
+      "industry": "快速消费品,零售/批发",
+      "avg_salary": 9000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "统计员",
+        "match": 72,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "培训师",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "销售助理",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南湘楚情食品有限责任公司",
+        "salary_range": "5000-8000元",
+        "location": "长沙-雨花区",
+        "industry": "农副产品加工制造,快速消费品"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      }
+    ],
+    "skill_count": 9
+  },
+  "质检员": {
+    "center_job": {
+      "job_name": "质检员",
+      "company": "湖南雪帝食品科技有限公司",
+      "salary_range": "3000-5000元",
+      "location": "湘潭-雨湖区",
+      "industry": "快速消费品,快速消费品",
+      "avg_salary": 4000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "英语翻译",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中软国际",
+        "salary_range": "面议",
+        "location": "北京-海淀区",
+        "industry": "计算机软件,运营商/增值服务"
+      },
+      {
+        "job_name": "培训师",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "知识产权/专利代理",
+        "match": 56,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "北京汇思诚业知识产权代理有限公司",
+        "salary_range": "8000-12000元·13薪",
+        "location": "天津-南开区",
+        "industry": "咨询服务,咨询服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 56,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "销售工程师",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "江苏亚电科技股份有限公司",
+        "salary_range": "9000-18000元",
+        "location": "泰州-姜堰区",
+        "industry": "专用设备制造,电气机械/电力设备,电子设备制造"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      }
+    ],
+    "skill_count": 13
+  },
+  "运营助理/专员": {
+    "center_job": {
+      "job_name": "运营助理/专员",
+      "company": "深圳市博诚项目管理有限公司",
+      "salary_range": "7000-10000元",
+      "location": "东莞-None",
+      "industry": "建筑设计",
+      "avg_salary": 8500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "资料管理",
+        "match": 80,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "项目经理/主管",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "江苏久高电子科技有限公司",
+        "salary_range": "6000-12000元·13薪",
+        "location": "南京-玄武区",
+        "industry": "计算机软件,通信/网络设备"
+      },
+      {
+        "job_name": "项目专员/助理",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "上海外服江苏人力资源服务有限公司",
+        "salary_range": "6000-7000元·13薪",
+        "location": "南京-建邺区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "销售工程师",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "江苏亚电科技股份有限公司",
+        "salary_range": "9000-18000元",
+        "location": "泰州-姜堰区",
+        "industry": "专用设备制造,电气机械/电力设备,电子设备制造"
+      }
+    ],
+    "skill_count": 15
+  },
+  "律师助理": {
+    "center_job": {
+      "job_name": "律师助理",
+      "company": "成都初阳知识产权代理事务所(特殊普通合伙)深圳分所",
+      "salary_range": "4000-6000元",
+      "location": "深圳-龙岗区",
+      "industry": "专利/商标/知识产权",
+      "avg_salary": 5000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "网络销售",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      },
+      {
+        "job_name": "APP推广",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "福州朴朴电子商务有限公司",
+        "salary_range": "8000-16000元",
+        "location": "福州-台江区",
+        "industry": "互联网,新零售"
+      },
+      {
+        "job_name": "猎头顾问",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "天津联礼人力资源有限公司",
+        "salary_range": "7000-12000元",
+        "location": "天津-西青区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "电话客服",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "北京五八信息技术有限公司",
+        "salary_range": "4000-7000元",
+        "location": "天津-滨海新区",
+        "industry": "互联网,计算机软件"
+      },
+      {
+        "job_name": "游戏推广",
+        "match": 33,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "菏泽仙女文化传媒有限公司",
+        "salary_range": "5000-10000元",
+        "location": "荆州-荆州区",
+        "industry": "文化艺术/娱乐,新媒体"
+      },
+      {
+        "job_name": "知识产权/专利代理",
+        "match": 33,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "北京汇思诚业知识产权代理有限公司",
+        "salary_range": "8000-12000元·13薪",
+        "location": "天津-南开区",
+        "industry": "咨询服务,咨询服务"
+      }
+    ],
+    "skill_count": 4
+  },
+  "网络销售": {
+    "center_job": {
+      "job_name": "网络销售",
+      "company": "深圳市乐有家控股集团有限公司",
+      "salary_range": "8000-10000元",
+      "location": "深圳-龙华区",
+      "industry": "房地产中介,房地产中介,咨询服务",
+      "avg_salary": 9000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "知识产权/专利代理",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "北京汇思诚业知识产权代理有限公司",
+        "salary_range": "8000-12000元·13薪",
+        "location": "天津-南开区",
+        "industry": "咨询服务,咨询服务"
+      },
+      {
+        "job_name": "律师助理",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "成都初阳知识产权代理事务所(特殊普通合伙)深圳分所",
+        "salary_range": "4000-6000元",
+        "location": "深圳-龙岗区",
+        "industry": "专利/商标/知识产权"
+      },
+      {
+        "job_name": "猎头顾问",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "天津联礼人力资源有限公司",
+        "salary_range": "7000-12000元",
+        "location": "天津-西青区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "咨询顾问",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "成都鼎合创赢信息技术咨询有限公司",
+        "salary_range": "5000-9000元",
+        "location": "成都-武侯区",
+        "industry": "企业服务"
+      },
+      {
+        "job_name": "律师",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "广东良马律师事务所",
+        "salary_range": "8000-13000元",
+        "location": "深圳-南山区",
+        "industry": "法律服务,法律服务"
+      },
+      {
+        "job_name": "售后客服",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      }
+    ],
+    "skill_count": 7
+  },
+  "BD经理": {
+    "center_job": {
+      "job_name": "BD经理",
+      "company": "湖南金浦电子科技有限公司",
+      "salary_range": "8000-15000元",
+      "location": "长沙-芙蓉区",
+      "industry": "电子/半导体/集成电路,零售/批发",
+      "avg_salary": 11500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "储备经理人",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      },
+      {
+        "job_name": "培训师",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "统计员",
+        "match": 46,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      }
+    ],
+    "skill_count": 9
+  },
+  "APP推广": {
+    "center_job": {
+      "job_name": "APP推广",
+      "company": "福州朴朴电子商务有限公司",
+      "salary_range": "8000-16000元",
+      "location": "福州-台江区",
+      "industry": "互联网,新零售",
+      "avg_salary": 12000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "电话客服",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "北京五八信息技术有限公司",
+        "salary_range": "4000-7000元",
+        "location": "天津-滨海新区",
+        "industry": "互联网,计算机软件"
+      },
+      {
+        "job_name": "律师助理",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "成都初阳知识产权代理事务所(特殊普通合伙)深圳分所",
+        "salary_range": "4000-6000元",
+        "location": "深圳-龙岗区",
+        "industry": "专利/商标/知识产权"
+      },
+      {
+        "job_name": "游戏推广",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "菏泽仙女文化传媒有限公司",
+        "salary_range": "5000-10000元",
+        "location": "荆州-荆州区",
+        "industry": "文化艺术/娱乐,新媒体"
+      },
+      {
+        "job_name": "律师",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "广东良马律师事务所",
+        "salary_range": "8000-13000元",
+        "location": "深圳-南山区",
+        "industry": "法律服务,法律服务"
+      },
+      {
+        "job_name": "售后客服",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 33,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      }
+    ],
+    "skill_count": 2
+  },
+  "资料管理": {
+    "center_job": {
+      "job_name": "资料管理",
+      "company": "四川金掌柜人力资源有限公司",
+      "salary_range": "8000-10000元",
+      "location": "上海-长宁区",
+      "industry": "人力资源服务",
+      "avg_salary": 9000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "运营助理/专员",
+        "match": 80,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "深圳市博诚项目管理有限公司",
+        "salary_range": "7000-10000元",
+        "location": "东莞-None",
+        "industry": "建筑设计"
+      },
+      {
+        "job_name": "统计员",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      },
+      {
+        "job_name": "项目经理/主管",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "江苏久高电子科技有限公司",
+        "salary_range": "6000-12000元·13薪",
+        "location": "南京-玄武区",
+        "industry": "计算机软件,通信/网络设备"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      }
+    ],
+    "skill_count": 12
+  },
+  "猎头顾问": {
+    "center_job": {
+      "job_name": "猎头顾问",
+      "company": "天津联礼人力资源有限公司",
+      "salary_range": "7000-12000元",
+      "location": "天津-西青区",
+      "industry": "人力资源服务,人力资源服务",
+      "avg_salary": 9500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "咨询顾问",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "成都鼎合创赢信息技术咨询有限公司",
+        "salary_range": "5000-9000元",
+        "location": "成都-武侯区",
+        "industry": "企业服务"
+      },
+      {
+        "job_name": "培训师",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      }
+    ],
+    "skill_count": 10
+  },
+  "档案管理": {
+    "center_job": {
+      "job_name": "档案管理",
+      "company": "山西三友和",
+      "salary_range": "3000-6000元",
+      "location": "太原-杏花岭区",
+      "industry": "计算机硬件,计算机软件,印刷/包装/造纸",
+      "avg_salary": 4500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "项目经理/主管",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "江苏久高电子科技有限公司",
+        "salary_range": "6000-12000元·13薪",
+        "location": "南京-玄武区",
+        "industry": "计算机软件,通信/网络设备"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 56,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 56,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "统计员",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 52,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      }
+    ],
+    "skill_count": 13
+  },
+  "律师": {
+    "center_job": {
+      "job_name": "律师",
+      "company": "广东良马律师事务所",
+      "salary_range": "8000-13000元",
+      "location": "深圳-南山区",
+      "industry": "法律服务,法律服务",
+      "avg_salary": 10500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "网络销售",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      },
+      {
+        "job_name": "售后客服",
+        "match": 42,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      },
+      {
+        "job_name": "知识产权/专利代理",
+        "match": 41,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "北京汇思诚业知识产权代理有限公司",
+        "salary_range": "8000-12000元·13薪",
+        "location": "天津-南开区",
+        "industry": "咨询服务,咨询服务"
+      },
+      {
+        "job_name": "BD经理",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "湖南金浦电子科技有限公司",
+        "salary_range": "8000-15000元",
+        "location": "长沙-芙蓉区",
+        "industry": "电子/半导体/集成电路,零售/批发"
+      },
+      {
+        "job_name": "APP推广",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "福州朴朴电子商务有限公司",
+        "salary_range": "8000-16000元",
+        "location": "福州-台江区",
+        "industry": "互联网,新零售"
+      },
+      {
+        "job_name": "培训师",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      }
+    ],
+    "skill_count": 5
+  },
+  "招聘专员/助理": {
+    "center_job": {
+      "job_name": "招聘专员/助理",
+      "company": "上海太屋网络科技有限公司",
+      "salary_range": "6000-12000元·13薪",
+      "location": "上海-徐汇区",
+      "industry": "房地产开发",
+      "avg_salary": 9000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "日语翻译",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "培训师",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      }
+    ],
+    "skill_count": 7
+  },
+  "储备经理人": {
+    "center_job": {
+      "job_name": "储备经理人",
+      "company": "安徽大海家政集团有限公司",
+      "salary_range": "5000-10000元",
+      "location": "合肥-蜀山区",
+      "industry": "家政服务,物业管理,工程施工,居民服务",
+      "avg_salary": 7500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "储备干部",
+        "match": 83,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "博宇金属股份有限公司",
+        "salary_range": "5000-8000元",
+        "location": "沈阳-铁西区",
+        "industry": "贸易/进出口,零售/批发"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      }
+    ],
+    "skill_count": 12
+  },
+  "培训师": {
+    "center_job": {
+      "job_name": "培训师",
+      "company": "河南储汇企业管理咨询有限公司",
+      "salary_range": "1-2万",
+      "location": "郑州-中牟县",
+      "industry": "银行,银行",
+      "avg_salary": 15000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "社区运营",
+        "match": 90,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 70,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      }
+    ],
+    "skill_count": 9
+  },
+  "咨询顾问": {
+    "center_job": {
+      "job_name": "咨询顾问",
+      "company": "成都鼎合创赢信息技术咨询有限公司",
+      "salary_range": "5000-9000元",
+      "location": "成都-武侯区",
+      "industry": "企业服务",
+      "avg_salary": 7000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "猎头顾问",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "天津联礼人力资源有限公司",
+        "salary_range": "7000-12000元",
+        "location": "天津-西青区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "培训师",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      }
+    ],
+    "skill_count": 10
+  },
+  "统计员": {
+    "center_job": {
+      "job_name": "统计员",
+      "company": "呼伦贝尔查干矿业有限公司",
+      "salary_range": "8000-9000元",
+      "location": "呼伦贝尔-新巴尔虎右旗",
+      "industry": "矿产/采掘",
+      "avg_salary": 8500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 72,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 72,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      }
+    ],
+    "skill_count": 10
+  },
+  "销售工程师": {
+    "center_job": {
+      "job_name": "销售工程师",
+      "company": "江苏亚电科技股份有限公司",
+      "salary_range": "9000-18000元",
+      "location": "泰州-姜堰区",
+      "industry": "专用设备制造,电气机械/电力设备,电子设备制造",
+      "avg_salary": 13500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "产品专员/助理",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "云钞金融服务(北京)有限公司",
+        "salary_range": "7000-14000元",
+        "location": "北京-西城区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "培训师",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "运营助理/专员",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市博诚项目管理有限公司",
+        "salary_range": "7000-10000元",
+        "location": "东莞-None",
+        "industry": "建筑设计"
+      }
+    ],
+    "skill_count": 15
+  },
+  "售后客服": {
+    "center_job": {
+      "job_name": "售后客服",
+      "company": "太平人寿保险有限公司黄石中心支公司",
+      "salary_range": "3000-5000元·13薪",
+      "location": "黄石-西塞山区",
+      "industry": "保险",
+      "avg_salary": 4000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "内容审核",
+        "match": 83,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      },
+      {
+        "job_name": "电话客服",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "北京五八信息技术有限公司",
+        "salary_range": "4000-7000元",
+        "location": "天津-滨海新区",
+        "industry": "互联网,计算机软件"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "培训师",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      }
+    ],
+    "skill_count": 5
+  },
+  "广告销售": {
+    "center_job": {
+      "job_name": "广告销售",
+      "company": "诚和致远科技集团有限公司",
+      "salary_range": "4000-8000元",
+      "location": "上海-宝山区",
+      "industry": "印刷/包装/造纸,零售/批发",
+      "avg_salary": 6000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "商务专员",
+        "match": 85,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "搏世因(北京)高压电气有限公司",
+        "salary_range": "8000-12000元",
+        "location": "北京-密云区",
+        "industry": "电气机械/电力设备,工业自动化"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "统计员",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "法务专员/助理",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "焦作友商共联网络科技有限公司",
+        "salary_range": "3000-6000元",
+        "location": "焦作-武陟县",
+        "industry": "电子商务"
+      }
+    ],
+    "skill_count": 13
+  },
+  "项目专员/助理": {
+    "center_job": {
+      "job_name": "项目专员/助理",
+      "company": "上海外服江苏人力资源服务有限公司",
+      "salary_range": "6000-7000元·13薪",
+      "location": "南京-建邺区",
+      "industry": "人力资源服务,人力资源服务",
+      "avg_salary": 6500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "销售运营",
+        "match": 70,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "硬件测试",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "山东中天宇信信息技术有限公司",
+        "salary_range": "4000-6000元",
+        "location": "威海-环翠区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "运营助理/专员",
+        "match": 59,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市博诚项目管理有限公司",
+        "salary_range": "7000-10000元",
+        "location": "东莞-None",
+        "industry": "建筑设计"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      }
+    ],
+    "skill_count": 20
+  },
+  "风电工程师": {
+    "center_job": {
+      "job_name": "风电工程师",
+      "company": "内蒙古自治区企华风电有限公司",
+      "salary_range": "9000-12000元",
+      "location": "赤峰-松山区",
+      "industry": "工业自动化",
+      "avg_salary": 10500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "电话销售",
+        "match": 70,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "统计员",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "项目招投标",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "中屹泰祥工程咨询有限公司",
+        "salary_range": "6000-8000元",
+        "location": "长春-朝阳区",
+        "industry": "房地产开发,互联网"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      }
+    ],
+    "skill_count": 8
+  },
+  "英语翻译": {
+    "center_job": {
+      "job_name": "英语翻译",
+      "company": "中软国际",
+      "salary_range": "面议",
+      "location": "北京-海淀区",
+      "industry": "计算机软件,运营商/增值服务",
+      "avg_salary": null
+    },
+    "transferPaths": [
+      {
+        "job_name": "质检员",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南雪帝食品科技有限公司",
+        "salary_range": "3000-5000元",
+        "location": "湘潭-雨湖区",
+        "industry": "快速消费品,快速消费品"
+      },
+      {
+        "job_name": "销售助理",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南湘楚情食品有限责任公司",
+        "salary_range": "5000-8000元",
+        "location": "长沙-雨花区",
+        "industry": "农副产品加工制造,快速消费品"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 52,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "硬件测试",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "山东中天宇信信息技术有限公司",
+        "salary_range": "4000-6000元",
+        "location": "威海-环翠区",
+        "industry": "计算机软件"
+      }
+    ],
+    "skill_count": 12
+  },
+  "游戏推广": {
+    "center_job": {
+      "job_name": "游戏推广",
+      "company": "菏泽仙女文化传媒有限公司",
+      "salary_range": "5000-10000元",
+      "location": "荆州-荆州区",
+      "industry": "文化艺术/娱乐,新媒体",
+      "avg_salary": 7500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "电话客服",
+        "match": 75,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "北京五八信息技术有限公司",
+        "salary_range": "4000-7000元",
+        "location": "天津-滨海新区",
+        "industry": "互联网,计算机软件"
+      },
+      {
+        "job_name": "APP推广",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "福州朴朴电子商务有限公司",
+        "salary_range": "8000-16000元",
+        "location": "福州-台江区",
+        "industry": "互联网,新零售"
+      },
+      {
+        "job_name": "售后客服",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 42,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      },
+      {
+        "job_name": "猎头顾问",
+        "match": 40,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "天津联礼人力资源有限公司",
+        "salary_range": "7000-12000元",
+        "location": "天津-西青区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 37,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      }
+    ],
+    "skill_count": 4
+  },
+  "项目招投标": {
+    "center_job": {
+      "job_name": "项目招投标",
+      "company": "中屹泰祥工程咨询有限公司",
+      "salary_range": "6000-8000元",
+      "location": "长春-朝阳区",
+      "industry": "房地产开发,互联网",
+      "avg_salary": 7000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "电话销售",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "统计员",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "风电工程师",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "内蒙古自治区企华风电有限公司",
+        "salary_range": "9000-12000元",
+        "location": "赤峰-松山区",
+        "industry": "工业自动化"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      }
+    ],
+    "skill_count": 9
+  },
+  "电话客服": {
+    "center_job": {
+      "job_name": "电话客服",
+      "company": "北京五八信息技术有限公司",
+      "salary_range": "4000-7000元",
+      "location": "天津-滨海新区",
+      "industry": "互联网,计算机软件",
+      "avg_salary": 5500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "游戏推广",
+        "match": 75,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "菏泽仙女文化传媒有限公司",
+        "salary_range": "5000-10000元",
+        "location": "荆州-荆州区",
+        "industry": "文化艺术/娱乐,新媒体"
+      },
+      {
+        "job_name": "APP推广",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "福州朴朴电子商务有限公司",
+        "salary_range": "8000-16000元",
+        "location": "福州-台江区",
+        "industry": "互联网,新零售"
+      },
+      {
+        "job_name": "售后客服",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 42,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      },
+      {
+        "job_name": "招聘专员/助理",
+        "match": 42,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "上海太屋网络科技有限公司",
+        "salary_range": "6000-12000元·13薪",
+        "location": "上海-徐汇区",
+        "industry": "房地产开发"
+      }
+    ],
+    "skill_count": 3
+  },
+  "网络客服": {
+    "center_job": {
+      "job_name": "网络客服",
+      "company": "京东集团",
+      "salary_range": "4000-7000元·14薪",
+      "location": "宿迁-宿城区",
+      "industry": "互联网,电子商务",
+      "avg_salary": 5500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "游戏推广",
+        "match": 36,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "菏泽仙女文化传媒有限公司",
+        "salary_range": "5000-10000元",
+        "location": "荆州-荆州区",
+        "industry": "文化艺术/娱乐,新媒体"
+      },
+      {
+        "job_name": "售后客服",
+        "match": 33,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      },
+      {
+        "job_name": "猎头顾问",
+        "match": 31,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "天津联礼人力资源有限公司",
+        "salary_range": "7000-12000元",
+        "location": "天津-西青区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "咨询顾问",
+        "match": 31,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "成都鼎合创赢信息技术咨询有限公司",
+        "salary_range": "5000-9000元",
+        "location": "成都-武侯区",
+        "industry": "企业服务"
+      },
+      {
+        "job_name": "运营助理/专员",
+        "match": 30,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "深圳市博诚项目管理有限公司",
+        "salary_range": "7000-10000元",
+        "location": "东莞-None",
+        "industry": "建筑设计"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 30,
+        "difficulty": "高",
+        "time": "12-18个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      }
+    ],
+    "skill_count": 11
+  },
+  "大客户代表": {
+    "center_job": {
+      "job_name": "大客户代表",
+      "company": "贝壳找房(南京)科技有限公司",
+      "salary_range": "1.2-1.5万",
+      "location": "南京-雨花台区",
+      "industry": "互联网,房地产开发",
+      "avg_salary": 13500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "猎头顾问",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "天津联礼人力资源有限公司",
+        "salary_range": "7000-12000元",
+        "location": "天津-西青区",
+        "industry": "人力资源服务,人力资源服务"
+      },
+      {
+        "job_name": "档案管理",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "山西三友和",
+        "salary_range": "3000-6000元",
+        "location": "太原-杏花岭区",
+        "industry": "计算机硬件,计算机软件,印刷/包装/造纸"
+      },
+      {
+        "job_name": "咨询顾问",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "成都鼎合创赢信息技术咨询有限公司",
+        "salary_range": "5000-9000元",
+        "location": "成都-武侯区",
+        "industry": "企业服务"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      },
+      {
+        "job_name": "商务专员",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "搏世因(北京)高压电气有限公司",
+        "salary_range": "8000-12000元",
+        "location": "北京-密云区",
+        "industry": "电气机械/电力设备,工业自动化"
+      },
+      {
+        "job_name": "运营助理/专员",
+        "match": 45,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市博诚项目管理有限公司",
+        "salary_range": "7000-10000元",
+        "location": "东莞-None",
+        "industry": "建筑设计"
+      }
+    ],
+    "skill_count": 17
+  },
+  "内容审核": {
+    "center_job": {
+      "job_name": "内容审核",
+      "company": "首聘(北京)科技有限公司",
+      "salary_range": "4000-6000元",
+      "location": "大连-甘井子区",
+      "industry": "企业服务,电子商务",
+      "avg_salary": 5000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "售后客服",
+        "match": 83,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "太平人寿保险有限公司黄石中心支公司",
+        "salary_range": "3000-5000元·13薪",
+        "location": "黄石-西塞山区",
+        "industry": "保险"
+      },
+      {
+        "job_name": "培训师",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "招聘专员/助理",
+        "match": 62,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "上海太屋网络科技有限公司",
+        "salary_range": "6000-12000元·13薪",
+        "location": "上海-徐汇区",
+        "industry": "房地产开发"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      }
+    ],
+    "skill_count": 6
+  },
+  "项目经理/主管": {
+    "center_job": {
+      "job_name": "项目经理/主管",
+      "company": "江苏久高电子科技有限公司",
+      "salary_range": "6000-12000元·13薪",
+      "location": "南京-玄武区",
+      "industry": "计算机软件,通信/网络设备",
+      "avg_salary": 9000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "资料管理",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "运营助理/专员",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "深圳市博诚项目管理有限公司",
+        "salary_range": "7000-10000元",
+        "location": "东莞-None",
+        "industry": "建筑设计"
+      },
+      {
+        "job_name": "档案管理",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "山西三友和",
+        "salary_range": "3000-6000元",
+        "location": "太原-杏花岭区",
+        "industry": "计算机硬件,计算机软件,印刷/包装/造纸"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "销售工程师",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "江苏亚电科技股份有限公司",
+        "salary_range": "9000-18000元",
+        "location": "泰州-姜堰区",
+        "industry": "专用设备制造,电气机械/电力设备,电子设备制造"
+      }
+    ],
+    "skill_count": 19
+  },
+  "知识产权/专利代理": {
+    "center_job": {
+      "job_name": "知识产权/专利代理",
+      "company": "北京汇思诚业知识产权代理有限公司",
+      "salary_range": "8000-12000元·13薪",
+      "location": "天津-南开区",
+      "industry": "咨询服务,咨询服务",
+      "avg_salary": 10000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "管培生/储备干部",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      },
+      {
+        "job_name": "储备干部",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "博宇金属股份有限公司",
+        "salary_range": "5000-8000元",
+        "location": "沈阳-铁西区",
+        "industry": "贸易/进出口,零售/批发"
+      },
+      {
+        "job_name": "质检员",
+        "match": 56,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "湖南雪帝食品科技有限公司",
+        "salary_range": "3000-5000元",
+        "location": "湘潭-雨湖区",
+        "industry": "快速消费品,快速消费品"
+      },
+      {
+        "job_name": "法务专员/助理",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "焦作友商共联网络科技有限公司",
+        "salary_range": "3000-6000元",
+        "location": "焦作-武陟县",
+        "industry": "电子商务"
+      },
+      {
+        "job_name": "项目专员/助理",
+        "match": 52,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "上海外服江苏人力资源服务有限公司",
+        "salary_range": "6000-7000元·13薪",
+        "location": "南京-建邺区",
+        "industry": "人力资源服务,人力资源服务"
+      }
+    ],
+    "skill_count": 12
+  },
+  "管培生/储备干部": {
+    "center_job": {
+      "job_name": "管培生/储备干部",
+      "company": "沈阳东管电力科技集团股份有限公司",
+      "salary_range": "6000-10000元",
+      "location": "北京-朝阳区",
+      "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备",
+      "avg_salary": 8000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "电话销售",
+        "match": 75,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "储备经理人",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      },
+      {
+        "job_name": "统计员",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      },
+      {
+        "job_name": "风电工程师",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "内蒙古自治区企华风电有限公司",
+        "salary_range": "9000-12000元",
+        "location": "赤峰-松山区",
+        "industry": "工业自动化"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      }
+    ],
+    "skill_count": 12
+  },
+  "社区运营": {
+    "center_job": {
+      "job_name": "社区运营",
+      "company": "八宇健康科技集团有限公司",
+      "salary_range": "5000-10000元",
+      "location": "德州-德城区",
+      "industry": "互联网,计算机软件,物联网,居民服务",
+      "avg_salary": 7500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "培训师",
+        "match": 90,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "储备经理人",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      },
+      {
+        "job_name": "储备干部",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "博宇金属股份有限公司",
+        "salary_range": "5000-8000元",
+        "location": "沈阳-铁西区",
+        "industry": "贸易/进出口,零售/批发"
+      },
+      {
+        "job_name": "日语翻译",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "科聚智科(大连)科技有限公司",
+        "salary_range": "7000-9000元",
+        "location": "成都-武侯区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      }
+    ],
+    "skill_count": 10
+  },
+  "销售助理": {
+    "center_job": {
+      "job_name": "销售助理",
+      "company": "湖南湘楚情食品有限责任公司",
+      "salary_range": "5000-8000元",
+      "location": "长沙-雨花区",
+      "industry": "农副产品加工制造,快速消费品",
+      "avg_salary": 6500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "英语翻译",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中软国际",
+        "salary_range": "面议",
+        "location": "北京-海淀区",
+        "industry": "计算机软件,运营商/增值服务"
+      },
+      {
+        "job_name": "统计员",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      }
+    ],
+    "skill_count": 9
+  },
+  "储备干部": {
+    "center_job": {
+      "job_name": "储备干部",
+      "company": "博宇金属股份有限公司",
+      "salary_range": "5000-8000元",
+      "location": "沈阳-铁西区",
+      "industry": "贸易/进出口,零售/批发",
+      "avg_salary": 6500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "储备经理人",
+        "match": 83,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "培训师",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "知识产权/专利代理",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "北京汇思诚业知识产权代理有限公司",
+        "salary_range": "8000-12000元·13薪",
+        "location": "天津-南开区",
+        "industry": "咨询服务,咨询服务"
+      }
+    ],
+    "skill_count": 10
+  },
+  "电话销售": {
+    "center_job": {
+      "job_name": "电话销售",
+      "company": "中企动力科技集团股份有限公司石家庄分公司",
+      "salary_range": "8000-16000元",
+      "location": "石家庄-新华区",
+      "industry": "IT服务",
+      "avg_salary": 12000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "管培生/储备干部",
+        "match": 75,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "统计员",
+        "match": 72,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "风电工程师",
+        "match": 70,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "内蒙古自治区企华风电有限公司",
+        "salary_range": "9000-12000元",
+        "location": "赤峰-松山区",
+        "industry": "工业自动化"
+      },
+      {
+        "job_name": "广告销售",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      },
+      {
+        "job_name": "商务专员",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "搏世因(北京)高压电气有限公司",
+        "salary_range": "8000-12000元",
+        "location": "北京-密云区",
+        "industry": "电气机械/电力设备,工业自动化"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      }
+    ],
+    "skill_count": 9
+  },
+  "游戏运营": {
+    "center_job": {
+      "job_name": "游戏运营",
+      "company": "喔租(石家庄)商业管理有限公司",
+      "salary_range": "3000-6000元",
+      "location": "石家庄-新华区",
+      "industry": "景区/商业/市场等综合管理",
+      "avg_salary": 4500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "销售运营",
+        "match": 85,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "质量管理/测试",
+        "match": 75,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "储备经理人",
+        "match": 71,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "安徽大海家政集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "合肥-蜀山区",
+        "industry": "家政服务,物业管理,工程施工,居民服务"
+      },
+      {
+        "job_name": "统计员",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "硬件测试",
+        "match": 68,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "山东中天宇信信息技术有限公司",
+        "salary_range": "4000-6000元",
+        "location": "威海-环翠区",
+        "industry": "计算机软件"
+      },
+      {
+        "job_name": "产品专员/助理",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "云钞金融服务(北京)有限公司",
+        "salary_range": "7000-14000元",
+        "location": "北京-西城区",
+        "industry": "计算机软件"
+      }
+    ],
+    "skill_count": 12
+  },
+  "产品专员/助理": {
+    "center_job": {
+      "job_name": "产品专员/助理",
+      "company": "云钞金融服务(北京)有限公司",
+      "salary_range": "7000-14000元",
+      "location": "北京-西城区",
+      "industry": "计算机软件",
+      "avg_salary": 10500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "质量管理/测试",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "湖南力通恒裕电缆科技有限公司",
+        "salary_range": "4000-7000元",
+        "location": "怀化-中方县",
+        "industry": "电气机械/电力设备,通用设备制造"
+      },
+      {
+        "job_name": "游戏运营",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "喔租(石家庄)商业管理有限公司",
+        "salary_range": "3000-6000元",
+        "location": "石家庄-新华区",
+        "industry": "景区/商业/市场等综合管理"
+      },
+      {
+        "job_name": "销售工程师",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "江苏亚电科技股份有限公司",
+        "salary_range": "9000-18000元",
+        "location": "泰州-姜堰区",
+        "industry": "专用设备制造,电气机械/电力设备,电子设备制造"
+      },
+      {
+        "job_name": "销售运营",
+        "match": 58,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南青碧信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-管城回族区",
+        "industry": "零售/批发,零售/批发"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "培训师",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      }
+    ],
+    "skill_count": 13
+  },
+  "法务专员/助理": {
+    "center_job": {
+      "job_name": "法务专员/助理",
+      "company": "焦作友商共联网络科技有限公司",
+      "salary_range": "3000-6000元",
+      "location": "焦作-武陟县",
+      "industry": "电子商务",
+      "avg_salary": 4500.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "广告销售",
+        "match": 61,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 54,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      },
+      {
+        "job_name": "知识产权/专利代理",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "北京汇思诚业知识产权代理有限公司",
+        "salary_range": "8000-12000元·13薪",
+        "location": "天津-南开区",
+        "industry": "咨询服务,咨询服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 53,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "网络销售",
+        "match": 50,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "深圳市乐有家控股集团有限公司",
+        "salary_range": "8000-10000元",
+        "location": "深圳-龙华区",
+        "industry": "房地产中介,房地产中介,咨询服务"
+      }
+    ],
+    "skill_count": 8
+  },
+  "日语翻译": {
+    "center_job": {
+      "job_name": "日语翻译",
+      "company": "科聚智科(大连)科技有限公司",
+      "salary_range": "7000-9000元",
+      "location": "成都-武侯区",
+      "industry": "IT服务",
+      "avg_salary": 8000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "培训师",
+        "match": 70,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "河南储汇企业管理咨询有限公司",
+        "salary_range": "1-2万",
+        "location": "郑州-中牟县",
+        "industry": "银行,银行"
+      },
+      {
+        "job_name": "招聘专员/助理",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "上海太屋网络科技有限公司",
+        "salary_range": "6000-12000元·13薪",
+        "location": "上海-徐汇区",
+        "industry": "房地产开发"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "社区运营",
+        "match": 63,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "八宇健康科技集团有限公司",
+        "salary_range": "5000-10000元",
+        "location": "德州-德城区",
+        "industry": "互联网,计算机软件,物联网,居民服务"
+      },
+      {
+        "job_name": "风电工程师",
+        "match": 60,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "内蒙古自治区企华风电有限公司",
+        "salary_range": "9000-12000元",
+        "location": "赤峰-松山区",
+        "industry": "工业自动化"
+      },
+      {
+        "job_name": "内容审核",
+        "match": 55,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "首聘(北京)科技有限公司",
+        "salary_range": "4000-6000元",
+        "location": "大连-甘井子区",
+        "industry": "企业服务,电子商务"
+      }
+    ],
+    "skill_count": 8
+  },
+  "商务专员": {
+    "center_job": {
+      "job_name": "商务专员",
+      "company": "搏世因(北京)高压电气有限公司",
+      "salary_range": "8000-12000元",
+      "location": "北京-密云区",
+      "industry": "电气机械/电力设备,工业自动化",
+      "avg_salary": 10000.0
+    },
+    "transferPaths": [
+      {
+        "job_name": "广告销售",
+        "match": 85,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "诚和致远科技集团有限公司",
+        "salary_range": "4000-8000元",
+        "location": "上海-宝山区",
+        "industry": "印刷/包装/造纸,零售/批发"
+      },
+      {
+        "job_name": "电话销售",
+        "match": 69,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "中企动力科技集团股份有限公司石家庄分公司",
+        "salary_range": "8000-16000元",
+        "location": "石家庄-新华区",
+        "industry": "IT服务"
+      },
+      {
+        "job_name": "管培生/储备干部",
+        "match": 66,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "沈阳东管电力科技集团股份有限公司",
+        "salary_range": "6000-10000元",
+        "location": "北京-朝阳区",
+        "industry": "专用设备制造,石油/石化,金属制品业,电气机械/电力设备"
+      },
+      {
+        "job_name": "统计员",
+        "match": 64,
+        "difficulty": "低",
+        "time": "3-6个月",
+        "company": "呼伦贝尔查干矿业有限公司",
+        "salary_range": "8000-9000元",
+        "location": "呼伦贝尔-新巴尔虎右旗",
+        "industry": "矿产/采掘"
+      },
+      {
+        "job_name": "总助/CEO助理/董事长助理",
+        "match": 57,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "郑州百壹源信息科技有限公司",
+        "salary_range": "6000-12000元",
+        "location": "郑州-金水区",
+        "industry": "快速消费品,零售/批发"
+      },
+      {
+        "job_name": "资料管理",
+        "match": 56,
+        "difficulty": "中",
+        "time": "6-12个月",
+        "company": "四川金掌柜人力资源有限公司",
+        "salary_range": "8000-10000元",
+        "location": "上海-长宁区",
+        "industry": "人力资源服务"
+      }
+    ],
+    "skill_count": 13
+  }
+}
