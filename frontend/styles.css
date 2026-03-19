@@ -2990,6 +2990,8 @@ body.on-login-page {
     justify-content: center;
     font-weight: 700;
     flex-shrink: 0;
+    font-size: 14px;
+    line-height: 1;
 }
 
 .question-text {
@@ -22555,7 +22557,7 @@ body {
 .result-card-new .result-project-chip,
 .ai-gen-result-title,
 #assessmentPage .question-number {
-    color: var(--primary-color) !important;
+    color: #fff !important;
 }
 
 /* “theme-blue” 视觉改为墨绿 */

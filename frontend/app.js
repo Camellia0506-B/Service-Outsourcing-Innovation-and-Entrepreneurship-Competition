@@ -3276,6 +3276,8 @@ class CareerPlanningApp {
             totalHint.className = 'assessment-total-hint';
             totalHint.textContent = '本问卷共 ' + totalQuestions + ' 题';
             container.appendChild(totalHint);
+            // 题号需要全局连续（跨维度），避免每个维度从 1 重新开始
+            let globalQNo = 1;
             dimensionsList.forEach((dimension, dimIndex) => {
                 if (!dimension || typeof dimension !== 'object') return;
                 const dimensionDiv = document.createElement('div');
@@ -3310,12 +3312,13 @@ class CareerPlanningApp {
                     questionsHtml += `
                         <div class="question-card" data-question-id="${q.question_id || ''}" data-question-type="${q.question_type || 'single_choice'}">
                             <div class="question-header">
-                                <div class="question-number">${qIndex + 1}</div>
+                                <div class="question-number">${globalQNo}</div>
                                 <div class="question-text">${q.question_text != null ? q.question_text : ''}</div>
                             </div>
                             <div class="options">${optionsHtml}</div>
                         </div>
                     `;
+                    globalQNo++;
                 });
 
                 const dimName = (dimension.dimension_name != null) ? dimension.dimension_name : '未命名维度';
