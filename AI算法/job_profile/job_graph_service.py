@@ -284,8 +284,8 @@ class AIJobGraphBuilder:
         self.career_tracks = job_profile_conf.get("career_tracks", [])
         self._job_index = {j["job_id"]: j for j in self.target_jobs}
         
-        # 相似度阈值（大于此值才建立转岗边）
-        self.similarity_threshold = 30.0  # 30%技能重叠即可转岗
+        # 相似度阈值（大于此值才建立转岗边；提高以减少泛化 JD 带来的无意义边）
+        self.similarity_threshold = 45.0
     
     # ----------------------------------------------------------
     # 垂直晋升图谱（保持原逻辑，已经是L3）
@@ -349,12 +349,25 @@ class AIJobGraphBuilder:
         if not center_profile:
             return {"nodes": [], "edges": [], "error": "中心岗位画像不存在"}
         
+        # 按标准化岗位名去重，每个岗位名只保留首条，避免全量 CSV 同名 JD 互相干扰
+        seen_names: Dict[str, tuple] = {}
+        for jid, jp in profiles.items():
+            std = to_standard_name(jp.get("job_name", ""))
+            if std and std not in seen_names:
+                seen_names[std] = (jid, jp)
+        deduped_profiles = {jid: jp for _std, (jid, jp) in seen_names.items()}
+        
         nodes = [self._get_node_info(center_job_id, profiles)]
         edges = []
+        center_std = to_standard_name(center_profile.get("job_name", ""))
         
-        # 遍历所有岗位，计算相似度
-        for job_id, job_profile in profiles.items():
+        # 遍历去重后的岗位，计算相似度
+        for job_id, job_profile in deduped_profiles.items():
             if job_id == center_job_id:
+                continue
+            # 排除标准化名称与中心节点相同的岗位（防止自身出现在推荐里）
+            target_std = to_standard_name(job_profile.get("job_name", ""))
+            if center_std and target_std and center_std == target_std:
                 continue
             
             # 计算技能相似度
@@ -378,6 +391,11 @@ class AIJobGraphBuilder:
                         match_score = int(similarity)
                 else:
                     match_score = int(similarity)
+                # 用中心岗位 id + 目标岗位 id 哈希微扰（±3），同对稳定、不同中心有区分
+                perturb_seed = int(
+                    hashlib.md5(f"{center_job_id}{job_id}".encode("utf-8")).hexdigest()[:6], 16
+                ) % 7 - 3
+                match_score = max(50, min(99, match_score + perturb_seed))
                 # 添加边
                 edge = {
                     "from": center_job_id,
@@ -390,22 +408,20 @@ class AIJobGraphBuilder:
                 }
                 edges.append(edge)
         
-        # 按相似度排序，只保留Top10
+        # 按匹配分排序；按目标标准化岗位名分桶，每名只保留最高分一条，再取 Top6
         edges.sort(key=lambda x: x["relevance_score"], reverse=True)
-        edges = edges[:10]
-        
-        # 若所有边的 match_score 相同（如全为75），强制区分度：高/中/低至少各一档，避免转岗卡片全黄
-        if len(edges) >= 2:
-            scores = [e["relevance_score"] for e in edges]
-            if len(set(scores)) == 1:
-                # 按 高→低 分散：88(绿), 72(黄), 62(黄), 52(红), 50(红)...
-                spread = [88, 72, 62, 52, 50, 50, 50, 50, 50, 50]
-                for i, edge in enumerate(edges):
-                    edge["relevance_score"] = spread[i] if i < len(spread) else max(50, 88 - i * 8)
-                    edge["match_score"] = edge["relevance_score"]
-                logger.info(f"[JobGraph] 转岗匹配度已做区分（原统一为 {scores[0]}），现为: {[e['relevance_score'] for e in edges]}")
-        
-        # 只保留edges中出现的节点
+        edges = [e for e in edges if e["to"] != center_job_id]
+        name_best: Dict[str, dict] = {}
+        for e in edges:
+            t_profile = deduped_profiles.get(e["to"]) or profiles.get(e["to"], {})
+            t_name = to_standard_name(t_profile.get("job_name", e["to"])) or str(e["to"])
+            if t_name not in name_best or e["match_score"] > name_best[t_name]["match_score"]:
+                name_best[t_name] = e
+        diverse_edges = sorted(name_best.values(), key=lambda x: -x["match_score"])[:6]
+        edges = diverse_edges
+        for e in edges:
+            e["relevance_score"] = e["match_score"]
+
         edge_job_ids = set([center_job_id] + [e["to"] for e in edges])
         nodes = [n for n in nodes if n["job_id"] in edge_job_ids]
         
@@ -542,6 +558,21 @@ class JobGraphService:
                 result["transfer_graph"] = self.builder.build_transfer_graph_ai(
                     job_id, profiles, user_skills
                 )
+                # 后处理：确保中心节点不出现在推荐边/邻居节点中（兜底同名或 id 不一致）
+                tf = result.get("transfer_graph", {})
+                center_jid = job_id
+                center_jname = to_standard_name(center_name)
+                if tf.get("edges"):
+                    tf["edges"] = [
+                        e for e in tf["edges"]
+                        if e.get("to") != center_jid
+                        and to_standard_name(
+                            (profiles.get(e.get("to") or "") or {}).get("job_name", "")
+                        ) != center_jname
+                    ]
+                    edge_ids = {center_jid} | {e["to"] for e in tf["edges"]}
+                    tf["nodes"] = [n for n in tf.get("nodes", []) if n["job_id"] in edge_ids]
+                result["transfer_graph"] = tf
             else:
                 result["transfer_graph"] = {"nodes": [], "edges": [], "message": "未请求转岗图谱"}
             

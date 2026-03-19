@@ -484,25 +484,45 @@ def _row_val(df_row, *keys):
 
 
 def _search_csv(job_name, size):
-    """从缓存的 DataFrame 按岗位名模糊匹配，最多返回 size 条；含岗位编码、来源地址。"""
+    """从缓存的 DataFrame 按岗位名检索，返回 {list, total}。
+
+    匹配策略：
+    1) 优先岗位名精确匹配；
+    2) 再使用完整岗位名包含匹配；
+    3) 最后才退化到短关键词匹配（避免所有岗位命中同一批数据）。
+    """
     if not job_name or not job_name.strip():
-        return []
-    keyword = (job_name[:4] if len(job_name) >= 4 else job_name).strip()
-    if not keyword:
-        return []
+        return {"list": [], "total": 0}
+    full_name = str(job_name).strip()
+    if not full_name:
+        return {"list": [], "total": 0}
     df = get_cached_data()
     if df.empty:
-        return []
+        return {"list": [], "total": 0}
     # 列名兼容：a13 为 岗位名称/地址/公司名称/岗位详情/公司详情/岗位编码/岗位来源地址 等
     name_col = "岗位名称" if "岗位名称" in df.columns else "职位名称"
     if name_col not in df.columns:
-        return []
+        return {"list": [], "total": 0}
     try:
-        mask = df[name_col].astype(str).str.contains(keyword, na=False, regex=False)
-        filtered = df.loc[mask].head(size)
+        name_series = df[name_col].astype(str).str.strip()
+
+        # 1) 精确匹配
+        mask = name_series == full_name
+        if not bool(mask.any()):
+            # 2) 使用完整岗位名匹配
+            mask = name_series.str.contains(full_name, na=False, regex=False)
+        if not bool(mask.any()):
+            # 3) 兜底：较短关键词匹配（尽量避免误命中）
+            keyword = (full_name[:4] if len(full_name) >= 4 else full_name).strip()
+            if keyword:
+                mask = name_series.str.contains(keyword, na=False, regex=False)
+
+        matched = df.loc[mask]
+        total = int(len(matched))
+        filtered = matched.head(size)
     except Exception as e:
         logger.warning(f"[real-data] 筛选异常: {e}", exc_info=True)
-        return []
+        return {"list": [], "total": 0}
     results = []
     for idx, row in filtered.iterrows():
         title = _row_val(row, "岗位名称", "职位名称")
@@ -535,7 +555,7 @@ def _search_csv(job_name, size):
             "companyIntro": (intro[:150] + "…") if len(intro) > 150 else intro,
             "sourceUrl": source_url,
         })
-    return results
+    return {"list": results, "total": total}
 
 
 @job_bp.route("/real-data", methods=["GET"])
@@ -543,12 +563,14 @@ def get_real_data():
     job_name = (request.args.get("jobName") or "").strip()
     try:
         size = int(request.args.get("size", 30))
-        # 放宽上限，最多 200 条，便于「真实数据」弹窗展示更多样本
-        size = max(1, min(size, 200))
+        # 允许更大上限，避免前端始终卡在 200 条
+        size = max(1, min(size, 5000))
     except (TypeError, ValueError):
         size = 30
 
-    results = _search_csv(job_name, size)
+    search_res = _search_csv(job_name, size)
+    results = search_res.get("list", [])
+    total = int(search_res.get("total", 0) or 0)
 
     if not results:
         try:
@@ -579,6 +601,7 @@ def get_real_data():
             data = json.loads(content)
             jobs = data.get("jobs", [])[:size]
             results = []
+            total = len(results)
             for i, j in enumerate(jobs, start=1):
                 title = str(j.get("jobTitle") or job_name or "").strip()
                 company = str(j.get("company") or "").strip()
@@ -611,8 +634,12 @@ def get_real_data():
         except Exception as e:
             logger.error(f"[API] real-data AI 生成失败: {e}", exc_info=True)
             results = []
+            total = 0
 
-    return success_response(results)
+    return success_response({
+        "list": results,
+        "total": total if total > 0 else len(results)
+    })
 
 
 # ============================================================

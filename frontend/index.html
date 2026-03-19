@@ -1161,9 +1161,8 @@
                 <div class="real-data-slide-wrap">
                     <div id="realDataModalBody" class="real-data-modal-body real-data-slide-body"></div>
                     <div class="real-data-slide-nav">
-                        <button type="button" class="real-data-nav-btn" id="realDataPrevBtn" aria-label="上一页">‹</button>
-                        <span class="real-data-page-indicator"><span id="realDataCurrentPage">1</span> / <span id="realDataTotalPages">1</span></span>
-                        <button type="button" class="real-data-nav-btn" id="realDataNextBtn" aria-label="下一页">›</button>
+                        <button type="button" class="real-data-nav-btn" id="realDataPrevBtn" aria-label="上一条">‹</button>
+                        <button type="button" class="real-data-nav-btn" id="realDataNextBtn" aria-label="下一条">›</button>
                     </div>
                 </div>
             </div>
@@ -2380,15 +2379,15 @@
         <div id="privacyPage" class="page hidden">
             <div class="privacy-container">
                 <header class="privacy-header">
-                    <h1 class="privacy-title">隐私设置</h1>
-                    <p class="privacy-subtitle">管理您的数据隐私和授权设置，控制哪些信息可以被 HR 查看。</p>
+                    <span class="job-profile-tag">职业规划智能体</span>
+                    <div class="page-title-row">
+                        <div class="page-title-bar"></div>
+                        <h1 class="page-title">隐私设置</h1>
+                    </div>
+                    <p class="page-subtitle">管理您的数据隐私和授权设置，控制哪些信息可以被 HR 查看。</p>
                 </header>
 
                 <section class="section-card" aria-label="数据隐私设置">
-                    <div class="section-header">
-                        <h2>数据隐私设置</h2>
-                        <p>您的数据安全和隐私对我们至关重要，请根据您的意愿设置。</p>
-                    </div>
 
                     <div class="privacy-row">
                         <div class="privacy-row-text">
@@ -2493,12 +2492,16 @@
         <!-- HR邀约页面（原简历生成入口，改为查看与响应HR评估邀请） -->
         <div id="hrInvitePage" class="page hidden">
             <div class="page-content">
-                <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+                <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;">
                     <div>
-                        <h2 class="page-title">HR邀约</h2>
+                        <span class="job-profile-tag">职业规划智能体</span>
+                        <div class="page-title-row">
+                            <div class="page-title-bar"></div>
+                            <h2 class="page-title">HR邀约</h2>
+                        </div>
                         <p class="page-subtitle">查看企业HR发来的面试邀请与评估报告</p>
                     </div>
-                    <button id="hrInviteRefreshBtn" class="btn-secondary" style="font-size:13px;padding:8px 16px;">刷新</button>
+                    <button id="hrInviteRefreshBtn" class="btn-secondary" style="font-size:13px;padding:8px 16px;flex-shrink:0;">刷新</button>
                 </div>
 
                 <!-- Tab切换 -->

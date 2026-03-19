@@ -7331,6 +7331,8 @@ class CareerPlanningApp {
 
     // 加载岗位画像页面数据（行业下拉 + 从后端加载第一页岗位列表）
     async loadJobProfileData() {
+        const tipEl = document.getElementById('jobProfileListTip');
+        if (tipEl) tipEl.classList.add('hidden');
         await this.loadJobIndustries();
         this.updateJobProfileClearButton();
         await this.loadJobProfileList(1);
@@ -7385,7 +7387,10 @@ class CareerPlanningApp {
         const size = 12;
 
         container.innerHTML = '<div class="loading-message">加载岗位列表中...</div>';
-        if (tipEl) tipEl.textContent = '';
+        if (tipEl) {
+            tipEl.classList.add('hidden');
+            tipEl.textContent = '';
+        }
         if (footerEl) footerEl.innerHTML = '';
 
         // 有搜索条件：走关键词搜索接口 /job/profiles
@@ -7401,7 +7406,10 @@ class CareerPlanningApp {
             }
             if (!result.success || !result.data || !result.data.list || result.data.list.length === 0) {
                 container.innerHTML = '<div class="hint-text">暂无相关岗位，试试其他关键词</div>';
-                if (tipEl) tipEl.innerHTML = `暂无结果 <a href="#" onclick="app.clearJobProfileSearch(); return false;">返回全部岗位</a>`;
+                if (tipEl) {
+                    tipEl.classList.remove('hidden');
+                    tipEl.innerHTML = `暂无结果 <a href="#" onclick="app.clearJobProfileSearch(); return false;">返回全部岗位</a>`;
+                }
                 if (footerEl) footerEl.innerHTML = '';
                 return;
             }
@@ -7411,6 +7419,7 @@ class CareerPlanningApp {
             const totalPages = data.pages ?? Math.max(1, Math.ceil(total / size));
 
             if (tipEl) {
+                tipEl.classList.remove('hidden');
                 tipEl.innerHTML = `找到 ${total} 个相关岗位 <a href="#" class="job-profile-back-featured" onclick="app.clearJobProfileSearch(); return false;">返回全部</a>`;
             }
 
@@ -7431,6 +7440,7 @@ class CareerPlanningApp {
             if (json.code !== 200 || !json.data) {
                 container.innerHTML = '<div class="hint-text">后端服务未启动，请确认 5002 端口已运行</div>';
                 if (footerEl) footerEl.innerHTML = '';
+                if (tipEl) tipEl.classList.add('hidden');
                 return;
             }
             const d = json.data;
@@ -7450,6 +7460,7 @@ class CareerPlanningApp {
             const totalPages = d.pages || Math.ceil(total / size);
             if (tipEl) {
                 tipEl.textContent = '';
+                tipEl.classList.add('hidden');
             }
             this.renderJobProfileList({ list, total, page, size }, container);
             if (footerEl) this.renderJobProfilePagination(total, page, size, footerEl, totalPages);
@@ -7458,6 +7469,7 @@ class CareerPlanningApp {
             container.innerHTML =
                 '<div class="hint-text">无法连接后端服务（5002），请先启动 AI 服务：在项目根目录运行 <code>start_ai_service.ps1</code> 或 <code>cd AI算法 && python app.py</code></div>';
             if (footerEl) footerEl.innerHTML = '';
+            if (tipEl) tipEl.classList.add('hidden');
         }
     }
 
@@ -7519,7 +7531,7 @@ class CareerPlanningApp {
                 e.stopPropagation();
                 const csvName2 = job.csv_name || job.job_id || (job.job_name || jobName);
                 const queryName = typeof getCsvJobName === 'function' ? getCsvJobName(csvName2) : csvName2;
-                this.showRealDataModal(queryName, 600);
+                this.showRealDataModal(queryName, 5000);
             });
             container.appendChild(jobCard);
         });
@@ -7609,7 +7621,6 @@ class CareerPlanningApp {
             card.classList.remove('real-data-slide-out-left', 'real-data-slide-out-right');
             card.innerHTML = self._renderRealDataSlide(card, self._realDataList[self._realDataIndex]);
             card.classList.add(direction > 0 ? 'real-data-slide-in-right' : 'real-data-slide-in-left');
-            document.getElementById('realDataCurrentPage').textContent = self._realDataIndex + 1;
             document.getElementById('realDataPrevBtn').disabled = self._realDataIndex === 0;
             document.getElementById('realDataNextBtn').disabled = self._realDataIndex === self._realDataList.length - 1;
             setTimeout(function () {
@@ -7619,7 +7630,7 @@ class CareerPlanningApp {
         }, 400);
     }
 
-    async showRealDataModal(jobName, size = 600) {
+    async showRealDataModal(jobName, size = 5000) {
         const modal = document.getElementById('realDataModal');
         const bodyEl = document.getElementById('realDataModalBody');
         const titleEl = document.getElementById('realDataModalTitle');
@@ -7632,18 +7643,15 @@ class CareerPlanningApp {
         const res = await getJobRealData(jobName, size);
         if (!res.success || !res.data || res.data.length === 0) {
             bodyEl.innerHTML = '<div class="hint-text">暂无该岗位的真实招聘数据</div>';
-            document.getElementById('realDataTotalPages').textContent = '0';
             if (prevBtn) prevBtn.disabled = true;
             if (nextBtn) nextBtn.disabled = true;
         } else {
             this._realDataList = res.data;
             this._realDataJobName = jobName;
             this._realDataIndex = 0;
-            titleEl.textContent = '📂 ' + (jobName || '') + ' - 真实招聘数据 · 共 ' + this._realDataList.length + ' 条';
-            document.getElementById('realDataTotalPages').textContent = this._realDataList.length;
+            titleEl.textContent = '📂 ' + (jobName || '') + ' - 真实招聘数据';
             bodyEl.innerHTML = this._renderRealDataSlide(bodyEl, this._realDataList[0]);
             bodyEl.classList.remove('real-data-slide-out-left', 'real-data-slide-out-right', 'real-data-slide-in-left', 'real-data-slide-in-right');
-            document.getElementById('realDataCurrentPage').textContent = '1';
             if (prevBtn) { prevBtn.disabled = true; prevBtn.onclick = () => this._realDataNavigate(-1); }
             if (nextBtn) { nextBtn.disabled = this._realDataList.length <= 1; nextBtn.onclick = () => this._realDataNavigate(1); }
             this._realDataKeyHandler = (e) => {
@@ -8575,7 +8583,6 @@ class CareerPlanningApp {
         list.forEach((rel, i) => {
             const job = (rel.job || '').trim() || ('岗位' + (i + 1));
             const match = Number(rel.match) || 0;
-            const sal = rel.salary || '面议';
             const skills = Array.isArray(rel.skills) ? rel.skills : [];
             const skillsText = skills.length ? skills.slice(0, 5).join(' · ') : '—';
             const diffText = match >= 80 ? '高' : match >= 60 ? '中' : '低';
@@ -8593,7 +8600,7 @@ class CareerPlanningApp {
             card.style.animationDelay = (i * 0.07) + 's';
             const barStyle = '--bar-pct:' + match + '%;background:' + color + ';animation-delay:' + (0.25 + i * 0.06) + 's';
             card.innerHTML = '<div class="jn" style="width:160px;background:#fff;border:1.5px solid ' + color + '50;border-radius:12px;padding:12px 14px;box-shadow:0 2px 12px rgba(79,100,200,0.08)">' +
-                '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><div style="width:32px;height:32px;border-radius:10px;background:' + color + '18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📌</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:#1a2340;line-height:1.35">' + esc(job) + '</div><div style="font-size:10px;color:#aab4cc;margin-top:2px">' + esc(sal) + '</div></div></div>' +
+                '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px"><div style="width:32px;height:32px;border-radius:10px;background:' + color + '18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📌</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:#1a2340;line-height:1.35">' + esc(job) + '</div></div></div>' +
                 '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;color:#aab4cc">匹配度</span><span style="font-size:11px;font-weight:700;color:' + color + '">' + match + '%</span></div>' +
                 '<div class="graph-job-bar-bg"><div class="graph-job-bar-fill" style="' + barStyle + '"></div></div>' +
                 '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">' +
@@ -9214,7 +9221,7 @@ class CareerPlanningApp {
             const db    = score >= 90 ? 'rgba(0,184,148,0.1)' : score >= 80 ? 'rgba(245,166,35,0.1)' : 'rgba(255,77,109,0.08)';
             const dbd   = score >= 90 ? 'rgba(0,184,148,0.2)' : score >= 80 ? 'rgba(245,166,35,0.2)' : 'rgba(255,77,109,0.18)';
             const jna   = (tn.job_name || '').replace(/"/g, '&quot;');
-            const NW = 158, NH = 182;
+            const NW = 158, NH = 190; /* 与卡片内「推荐岗位」按钮下移后的可视高度一致，连线落点更准确 */
             const el = document.createElement('div');
             el.className = 'g-node'; el.dataset.index = i;
             el.style.cssText = `left:${p.x - NW / 2}px;top:${p.y - NH / 2}px;animation-delay:${(i + 1) * 0.07}s;opacity:0`;

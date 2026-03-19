@@ -10,6 +10,7 @@
 
 import os
 import json
+import glob
 from datetime import datetime
 
 from flask import Blueprint, request, jsonify
@@ -388,21 +389,43 @@ def get_data_summary():
             "data_created_at": None
         }
         
-        # 检查简历
-        resume_path = get_abs_path(f"data/resumes/resume_{user_id}.json")
-        if os.path.exists(resume_path):
+        # 检查简历（兼容当前/历史两套存储）
+        resume_json_path = get_abs_path(f"data/resumes/resume_{user_id}.json")
+        resume_upload_dir = get_abs_path("data/profiles/resumes")
+        resume_upload_glob = os.path.join(
+            resume_upload_dir,
+            f"{user_id}_*.*",
+        )
+        uploaded_resume_files = glob.glob(resume_upload_glob) if os.path.isdir(resume_upload_dir) else []
+
+        if os.path.exists(resume_json_path):
             summary["has_resume"] = True
             try:
-                with open(resume_path, "r", encoding="utf-8") as f:
+                with open(resume_json_path, "r", encoding="utf-8") as f:
                     resume_data = json.load(f)
                     if "generated_at" in resume_data:
                         summary["data_created_at"] = resume_data["generated_at"]
-            except:
+            except Exception:
                 pass
-        
-        # 检查能力画像
-        ability_path = get_abs_path(f"data/student_abilities/student_{user_id}.json")
-        summary["has_ability_profile"] = os.path.exists(ability_path)
+        elif uploaded_resume_files:
+            # 若仅存在上传简历文件（pdf/docx 等），也视为有简历数据
+            summary["has_resume"] = True
+
+        # 检查能力画像（兼容当前 data/student_profiles/ability_profiles.json 与历史路径）
+        ability_store_path = get_abs_path("data/student_profiles/ability_profiles.json")
+        legacy_ability_path = get_abs_path(f"data/student_abilities/student_{user_id}.json")
+        has_ability = False
+        if os.path.exists(ability_store_path):
+            try:
+                with open(ability_store_path, "r", encoding="utf-8") as f:
+                    ability_store = json.load(f)
+                if isinstance(ability_store, dict):
+                    has_ability = (f"profile_{user_id}" in ability_store)
+            except Exception:
+                has_ability = False
+        if not has_ability and os.path.exists(legacy_ability_path):
+            has_ability = True
+        summary["has_ability_profile"] = has_ability
         
         # 统计访问日志
         log_file_path = os.path.join(PRIVACY_DATA_PATH, f"access_logs_{user_id}.json")
