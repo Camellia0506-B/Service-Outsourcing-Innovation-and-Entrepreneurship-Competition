@@ -11,10 +11,28 @@ if os.getcwd() != _script_dir:
     os.chdir(_script_dir)
     sys.path.insert(0, _script_dir)
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from utils.logger_handler import logger
 
 app = Flask(__name__)
+
+# 项目根目录下的 frontend（与 AI算法 同级），供本机直接打开 http://127.0.0.1:5002/ 使用，避免在仓库根目录起 http.server 导致 404 File not found
+_project_root = os.path.dirname(_script_dir)
+_frontend_dir = os.path.join(_project_root, "frontend")
+
+
+def _safe_frontend_file(rel_path: str):
+    """若文件存在于 frontend 目录内则返回绝对路径，否则返回 None（防目录穿越）。"""
+    if not rel_path:
+        return None
+    rel_path = rel_path.replace("\\", "/").lstrip("/")
+    if ".." in rel_path.split("/"):
+        return None
+    base = os.path.normpath(os.path.abspath(_frontend_dir))
+    full = os.path.normpath(os.path.join(base, rel_path))
+    if not full.startswith(base + os.sep) and full != base:
+        return None
+    return full if os.path.isfile(full) else None
 
 # ========== CORS：允许前端 (localhost:8080) 跨域访问 ==========
 def _cors_headers():
@@ -109,6 +127,12 @@ import threading
 _thread = threading.Thread(target=_preload_job_data, daemon=True)
 _thread.start()
 
+logger.info(
+    "[App] 前端托管目录: %s （存在=%s，可直接打开 http://127.0.0.1:<端口>/ 访问页面）",
+    _frontend_dir,
+    os.path.isdir(_frontend_dir),
+)
+
 # ========== 调试：列出所有已注册路由（排查 404 时用）==========
 @app.route("/api/v1/routes", methods=["GET"])
 def list_routes():
@@ -132,6 +156,32 @@ def health_check():
             ]
         }
     })
+
+
+# ========== 托管前端静态资源（仅 GET；/api/* 仍走上方蓝图）==========
+@app.route("/", methods=["GET"])
+def _serve_frontend_index():
+    if not os.path.isdir(_frontend_dir):
+        logger.warning("[App] frontend 目录不存在: %s", _frontend_dir)
+        return jsonify({"code": 503, "msg": "frontend 目录未找到", "data": {"path": _frontend_dir}}), 503
+    return send_from_directory(_frontend_dir, "index.html")
+
+
+@app.route("/<path:subpath>", methods=["GET"])
+def _serve_frontend_static(subpath: str):
+    # 未匹配到更具体的 /api/... 路由时才会进入；若路径以 api/ 开头则视为错误 API 路径
+    if subpath.startswith("api/"):
+        return jsonify({"code": 404, "msg": "接口不存在", "data": None}), 404
+    fp = _safe_frontend_file(subpath)
+    if fp:
+        directory, basename = os.path.split(fp)
+        return send_from_directory(directory, basename)
+    # 无后缀路径当作前端路由，回退 index.html（SPA）
+    if "." not in os.path.basename(subpath):
+        index_html = os.path.join(_frontend_dir, "index.html")
+        if os.path.isfile(index_html):
+            return send_from_directory(_frontend_dir, "index.html")
+    return jsonify({"code": 404, "msg": "文件不存在", "data": None}), 404
 
 
 # ========== 404 处理 ==========
