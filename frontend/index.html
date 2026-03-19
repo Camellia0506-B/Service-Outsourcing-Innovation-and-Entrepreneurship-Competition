@@ -2487,52 +2487,41 @@
                         </div>
                     </div>
                 </section>
+            </div>
         </div>
 
         <!-- HR邀约页面（原简历生成入口，改为查看与响应HR评估邀请） -->
         <div id="hrInvitePage" class="page hidden">
-            <div class="matching-container">
-                <div class="page-header">
-                    <span class="job-profile-tag">职业规划智能体</span>
-                    <div class="page-title-row">
-                        <div class="page-title-bar"></div>
-                        <span class="page-title">HR邀约</span>
+            <div class="page-content">
+                <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+                    <div>
+                        <h2 class="page-title">HR邀约</h2>
+                        <p class="page-subtitle">查看企业HR发来的面试邀请与评估报告</p>
                     </div>
-                    <p class="page-subtitle">查看并响应HR发来的评估邀请，接受后HR将可为您填写评估报告</p>
+                    <button id="hrInviteRefreshBtn" class="btn-secondary" style="font-size:13px;padding:8px 16px;">刷新</button>
                 </div>
 
-                <!-- Tab：邀约列表 | 评估报告 -->
-                <div class="hr-invite-tabs" style="max-width: 900px; margin: 0 auto 0;">
-                    <button type="button" class="hr-invite-tab active" data-tab="invitations" id="hrInviteTabInvitations">邀约列表</button>
-                    <button type="button" class="hr-invite-tab" data-tab="reports" id="hrInviteTabReports">评估报告</button>
+                <!-- Tab切换 -->
+                <div style="display:flex;gap:0;border-bottom:2px solid #e2dfd7;margin-bottom:24px;">
+                    <button id="hrInviteTabInvitations" class="active" style="padding:10px 24px;font-size:14px;font-weight:600;background:none;border:none;border-bottom:2px solid #2d6a4f;margin-bottom:-2px;color:#2d6a4f;cursor:pointer;">收到的邀请</button>
+                    <button id="hrInviteTabReports" style="padding:10px 24px;font-size:14px;font-weight:600;background:none;border:none;color:#a0a098;cursor:pointer;">评估报告</button>
                 </div>
 
-                <div style="max-width: 900px; margin: 0 auto;">
-                    <!-- 邀约列表 Tab 内容（默认显示） -->
-                    <div id="hrInvitePanelInvitations" class="hr-invite-panel">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                            <span id="hrInviteCount" style="font-size: 13px; color: #a0a098;">共 0 条邀请</span>
-                            <button type="button" id="hrInviteRefreshBtn" class="hr-view-btn" style="height: 34px; padding: 0 14px;">刷新</button>
-                        </div>
-                        <div id="hrInviteList" style="display: flex; flex-direction: column; gap: 14px;">
-                            <div style="text-align: center; padding: 60px 20px; color: #a0a098; font-size: 14px;">
-                                暂无HR评估邀请，请先完善个人档案并允许HR联系
-                            </div>
-                        </div>
+                <!-- 邀约列表面板 -->
+                <div id="hrInvitePanelInvitations">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <span id="hrInviteCount" style="font-size:13px;color:#a0a098;"></span>
                     </div>
+                    <div id="hrInviteList" style="display:flex;flex-direction:column;gap:14px;"></div>
+                    <div id="hrInviteTotal" style="font-size:12px;color:#a0a098;padding:8px 0;margin-top:8px;"></div>
+                </div>
 
-                    <!-- 评估报告 Tab 内容 -->
-                    <div id="hrInvitePanelReports" class="hr-invite-panel hidden">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                            <span id="hrReportCount" style="font-size: 13px; color: #a0a098;">共 0 条报告</span>
-                            <button type="button" id="hrReportRefreshBtn" class="hr-view-btn" style="height: 34px; padding: 0 14px;">刷新</button>
-                        </div>
-                        <div id="hrReportList" style="display: flex; flex-direction: column; gap: 14px;">
-                            <div style="text-align: center; padding: 60px 20px; color: #a0a098; font-size: 14px;">
-                                暂无评估报告，接受邀请后 HR 填写评估即可在此查看
-                            </div>
-                        </div>
+                <!-- 评估报告面板 -->
+                <div id="hrInvitePanelReports" class="hidden">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <span id="hrReportCount" style="font-size:13px;color:#a0a098;"></span>
                     </div>
+                    <div id="hrReportList" style="display:flex;flex-direction:column;gap:14px;"></div>
                 </div>
             </div>
         </div>

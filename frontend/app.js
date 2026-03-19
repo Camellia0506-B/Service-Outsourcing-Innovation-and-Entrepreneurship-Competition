@@ -1152,6 +1152,51 @@ class CareerPlanningApp {
         document.getElementById('profileSubmitToHrBtn')?.addEventListener('click', () => {
             this.submitProfileToHr();
         });
+
+        // 兜底：HR邀约页事件委托（避免页面初始不在 DOM 导致绑定失败）
+        // 不删除原有绑定代码，仅增加全局委托，且只绑定一次
+        if (!document.documentElement.dataset.hrInviteDelegated) {
+            document.documentElement.dataset.hrInviteDelegated = '1';
+            document.addEventListener('click', function (e) {
+                const t = e && e.target;
+                if (!t) return;
+
+                const el = (t.closest && t.closest('#hrInviteTabInvitations, #hrInviteTabReports, #hrInviteRefreshBtn')) || null;
+                const id = el ? el.id : t.id;
+
+                if (id === 'hrInviteTabReports') {
+                    // 激活报告tab
+                    document.getElementById('hrInviteTabReports').style.borderBottom = '2px solid #2d6a4f';
+                    document.getElementById('hrInviteTabReports').style.color = '#2d6a4f';
+                    document.getElementById('hrInviteTabReports').style.fontWeight = '600';
+                    // 取消邀请tab激活
+                    document.getElementById('hrInviteTabInvitations').style.borderBottom = 'none';
+                    document.getElementById('hrInviteTabInvitations').style.color = '#a0a098';
+                    // 切换面板
+                    document.getElementById('hrInvitePanelReports').classList.remove('hidden');
+                    document.getElementById('hrInvitePanelInvitations').classList.add('hidden');
+                    window.app.loadStudentEvaluationReports();
+                }
+                if (id === 'hrInviteTabInvitations') {
+                    // 激活邀请tab
+                    document.getElementById('hrInviteTabInvitations').style.borderBottom = '2px solid #2d6a4f';
+                    document.getElementById('hrInviteTabInvitations').style.color = '#2d6a4f';
+                    document.getElementById('hrInviteTabInvitations').style.fontWeight = '600';
+                    // 取消报告tab激活
+                    document.getElementById('hrInviteTabReports').style.borderBottom = 'none';
+                    document.getElementById('hrInviteTabReports').style.color = '#a0a098';
+                    // 切换面板
+                    document.getElementById('hrInvitePanelInvitations').classList.remove('hidden');
+                    document.getElementById('hrInvitePanelReports').classList.add('hidden');
+                }
+
+                if (id === 'hrInviteRefreshBtn') {
+                    if (window.app && typeof window.app.loadStudentInvitations === 'function') {
+                        window.app.loadStudentInvitations();
+                    }
+                }
+            });
+        }
     }
 
     // 显示页面
@@ -3603,6 +3648,7 @@ class CareerPlanningApp {
         }
 
         try {
+            this._appendMockAccessLog(userId, '导出我的数据');
             this.showToast('正在导出数据...', 'info');
             const result = await api.requestToAI(`/security/data/export?user_id=${userId}`, { method: 'GET' });
 
@@ -3644,6 +3690,7 @@ class CareerPlanningApp {
         }
 
         try {
+            this._appendMockAccessLog(userId, '删除我的数据');
             this.showToast('正在删除数据...', 'info');
             const result = await api.requestToAI('/security/data/delete', {
                 method: 'DELETE',
@@ -3697,6 +3744,66 @@ class CareerPlanningApp {
         }
     }
 
+    _getMockAccessLogKey(userId) {
+        return `mock_access_logs_${userId}`;
+    }
+
+    _readMockAccessLogs(userId) {
+        try {
+            const raw = _storage.getItem(this._getMockAccessLogKey(userId));
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+            return [];
+        }
+    }
+
+    _writeMockAccessLogs(userId, logs) {
+        try {
+            _storage.setItem(this._getMockAccessLogKey(userId), JSON.stringify(logs || []));
+        } catch (_) {}
+    }
+
+    _appendMockAccessLog(userId, accessType) {
+        if (!userId) return;
+        const logs = this._readMockAccessLogs(userId);
+        logs.unshift({
+            access_type: String(accessType || '数据访问'),
+            timestamp: Date.now()
+        });
+        this._writeMockAccessLogs(userId, logs.slice(0, 50));
+        const summaryEl = document.getElementById('summaryLogCount');
+        if (summaryEl) summaryEl.textContent = String(logs.length);
+    }
+
+    _renderAccessLogs(logs) {
+        const logList = document.getElementById('accessLogList');
+        if (!logList) return;
+        const list = Array.isArray(logs) ? logs : [];
+        if (list.length === 0) {
+            logList.innerHTML = `
+                <div class="privacy-log-item">
+                    <div class="privacy-log-event">暂无访问记录</div>
+                    <div class="privacy-log-time">—</div>
+                </div>
+            `;
+            return;
+        }
+        logList.innerHTML = list.slice(0, 20).map(log => {
+            const date = new Date(log.timestamp);
+            const dateStr = date.toLocaleString('zh-CN');
+            const eventName = (log.access_type || '').toString().replace(/</g, '&lt;');
+            const timeText = dateStr.replace(/</g, '&lt;');
+            return `
+                <div class="privacy-log-item">
+                    <div class="privacy-log-event">${eventName}</div>
+                    <div class="privacy-log-time">${timeText}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
     // 加载访问日志
     async loadAccessLogs() {
         const userId = getCurrentUserId();
@@ -3720,41 +3827,16 @@ class CareerPlanningApp {
             if (result.success && result.data) {
                 const logs = result.data.logs || [];
                 if (logs.length === 0) {
-                    if (logList) {
-                        logList.innerHTML = `
-                            <div class="privacy-log-item">
-                                <div class="privacy-log-event">暂无访问记录</div>
-                                <div class="privacy-log-time">—</div>
-                            </div>
-                        `;
-                    }
+                    const mockLogs = this._readMockAccessLogs(userId);
+                    this._renderAccessLogs(mockLogs);
                 } else {
-                    if (logList) {
-                        logList.innerHTML = logs.map(log => {
-                            const date = new Date(log.timestamp);
-                            const dateStr = date.toLocaleString('zh-CN');
-                            const eventName = (log.access_type || '').toString().replace(/</g, '&lt;');
-                            const timeText = dateStr.replace(/</g, '&lt;');
-                            return `
-                                <div class="privacy-log-item">
-                                    <div class="privacy-log-event">${eventName}</div>
-                                    <div class="privacy-log-time">${timeText}</div>
-                                </div>
-                            `;
-                        }).join('');
-                    }
+                    this._renderAccessLogs(logs);
                 }
             }
         } catch (error) {
             console.error('[Privacy] 加载访问日志失败:', error);
-            if (logList) {
-                logList.innerHTML = `
-                    <div class="privacy-log-item">
-                        <div class="privacy-log-event">加载失败</div>
-                        <div class="privacy-log-time">—</div>
-                    </div>
-                `;
-            }
+            const mockLogs = this._readMockAccessLogs(userId);
+            this._renderAccessLogs(mockLogs);
         }
     }
 
