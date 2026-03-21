@@ -1784,11 +1784,17 @@ class CareerPlanningApp {
                 // ignore
             }
         }
-        // 首页仅取总数（pageSize=1），推荐岗位接口失败时容错，不阻塞仪表盘
+        // 首页与「岗位匹配」页统一口径：显示当前推荐列表数量（默认取前 36 条）
+        // 避免首页显示 total_count（如 80）而岗位匹配页展示 36 条时产生不一致。
         try {
-            const matchingResult = await getRecommendedJobs(userId, 1, 1);
-        if (matchingResult.success && matchingResult.data) {
-                matchedCount = matchingResult.data.total_count ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? matchingResult.data.recommendations?.length ?? 0;
+            const matchingResult = await getRecommendedJobs(userId, 1, 36);
+            if (matchingResult.success && matchingResult.data) {
+                const list = matchingResult.data.jobs ?? matchingResult.data.recommendations;
+                if (Array.isArray(list)) {
+                    matchedCount = list.length;
+                } else {
+                    matchedCount = matchingResult.data.total_count ?? matchingResult.data.total_matched ?? 0;
+                }
             }
         } catch (_) {
             matchedCount = 0;
@@ -1829,9 +1835,12 @@ class CareerPlanningApp {
                 badge.classList.toggle('status-done', assessmentCompleted);
                 badge.classList.toggle('status-pending', !assessmentCompleted);
             }
+            cards[2].classList.toggle('progress-card-locked', !assessmentCompleted);
             const btn = cards[2].querySelector('.card-btn');
             if (btn) {
                 btn.classList.toggle('card-btn-disabled', !assessmentCompleted);
+                // 该按钮在 HTML 初始态带有 disabled，需要在解锁时显式移除
+                btn.disabled = !assessmentCompleted;
                 if (assessmentCompleted) btn.innerHTML = '查看匹配<span class="btn-arrow">→</span>';
             }
         }

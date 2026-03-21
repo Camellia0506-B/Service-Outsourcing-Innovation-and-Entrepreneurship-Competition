@@ -12,7 +12,7 @@ if not exist "backend\pom.xml" (
 
 where mvn >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [错误] 未找到 Maven (mvn)。请先安装 Maven 并加入 PATH，或用 IntelliJ IDEA 运行后端。
+    echo [错误] 未找到 Maven ^(mvn^)。请先安装 Maven 并加入 PATH，或用 IntelliJ IDEA 运行后端。
     echo 参考: https://maven.apache.org/download.cgi
     pause
     exit /b 1

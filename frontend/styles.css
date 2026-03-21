@@ -16615,6 +16615,39 @@ body.on-login-page {
     cursor: not-allowed;
 }
 
+/* 首页三张流程卡按钮统一为黑色 */
+#dashboardPage .main-card .card-btn,
+#dashboardPage .main-card .card-btn-primary,
+#dashboardPage .main-card .card-btn-secondary,
+#dashboardPage .main-card .card-btn-outline {
+    background: #111111 !important;
+    color: #ffffff !important;
+    border: 1px solid #111111 !important;
+    box-shadow: none !important;
+}
+
+#dashboardPage .main-card .card-btn:hover:not(:disabled):not(.card-btn-disabled),
+#dashboardPage .main-card .card-btn-primary:hover:not(:disabled):not(.card-btn-disabled),
+#dashboardPage .main-card .card-btn-secondary:hover:not(:disabled):not(.card-btn-disabled),
+#dashboardPage .main-card .card-btn-outline:hover:not(:disabled):not(.card-btn-disabled) {
+    background: #000000 !important;
+    border-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+#dashboardPage .main-card .card-btn .btn-arrow {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+}
+
+#dashboardPage .main-card .card-btn.card-btn-disabled,
+#dashboardPage .main-card .card-btn:disabled {
+    background: #111111 !important;
+    color: #ffffff !important;
+    border-color: #111111 !important;
+    opacity: 0.42;
+}
+
 /* 粒子Canvas - 已关闭背景悬浮粒子效果 */
 #particles {
     display: none !important;
