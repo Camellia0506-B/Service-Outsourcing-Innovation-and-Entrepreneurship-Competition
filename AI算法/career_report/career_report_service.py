@@ -405,34 +405,105 @@ def transform_assessment_to_career(assessment_report: dict, report_id: str, user
     s1["career_choice_advice"]["primary_recommendation"] = (s1["recommended_careers"][0].get("career") if s1["recommended_careers"] else "") or "技术岗位"
     s1["career_choice_advice"]["reasons"] = comp.get("reasons") or s1["career_choice_advice"]["reasons"]
 
-    # 生成个性化内容：行动计划、评估调整、痛点解决方案
-    personalized_content = generate_personalized_content(report_id, user_id, assessment_report)
+    # 生成个性化内容：行动计划、评估调整、痛点解决方案（暂时使用假实现）
+    # personalized_content = generate_personalized_content(report_id, user_id, assessment_report)
     
-    # section_3: 行动计划与成果展示
+    # 假实现：使用硬编码的目标规划和行动计划
+    s2 = base["section_2_career_path"]
+    s2["short_term_goal"] = {
+        "timeline": "1年内",
+        "primary_goal": "成功入职目标岗位",
+        "specific_targets": [
+            {"target": "完成核心技能学习", "metrics": "掌握3门核心技术", "deadline": "3个月内"},
+            {"target": "完成1-2个实战项目", "metrics": "项目可展示", "deadline": "6个月内"},
+            {"target": "获得面试机会", "metrics": "10次以上面试", "deadline": "9个月内"},
+            {"target": "拿到正式offer", "metrics": "2个以上offer", "deadline": "12个月内"}
+        ]
+    }
+    s2["mid_term_goal"] = {
+        "timeline": "3-5年",
+        "primary_goal": "成长为中级工程师",
+        "specific_targets": [
+            {"target": "独立负责核心模块开发", "metrics": "2个以上核心模块", "deadline": "2年内"},
+            {"target": "带团队做项目", "metrics": "带领3-5人团队", "deadline": "3年内"},
+            {"target": "成为技术骨干", "metrics": "在公司有一定影响力", "deadline": "5年内"}
+        ]
+    }
+    
+    # section_3: 行动计划与成果展示（假实现）
     s3 = base["section_3_action_plan"]
-    if "action_plan" in personalized_content:
-        action_plan = personalized_content["action_plan"]
-        if "short_term_plan" in action_plan:
-            s3["short_term_plan"] = action_plan["short_term_plan"]
-        if "mid_term_plan" in action_plan:
-            s3["mid_term_plan"] = action_plan["mid_term_plan"]
+    s3["short_term_plan"] = {
+        "period": "6个月",
+        "goal": "补齐短板冲刺offer",
+        "monthly_plans": [
+            {
+                "month": "第1个月",
+                "focus": "基础能力提升",
+                "tasks": [
+                    {"task": "学习Python基础", "具体行动": ["完成Python入门课程", "每天刷题", "写学习笔记"], "时间投入": "每天2小时", "预期成果": "掌握Python基础语法"},
+                    {"task": "了解算法基础", "具体行动": ["学习数据结构", "做简单算法题", "每周复盘"], "时间投入": "每天1小时", "预期成果": "掌握常见数据结构"}
+                ],
+                "milestone": "完成基础能力搭建"
+            },
+            {
+                "month": "第2个月",
+                "focus": "核心技能深化",
+                "tasks": [
+                    {"task": "学习Web开发框架", "具体行动": ["学习Django/Flask", "跟着教程做项目", "记录问题与解决"], "时间投入": "每天3小时", "预期成果": "能够独立开发简单网站"},
+                    {"task": "学习数据库", "具体行动": ["学习MySQL基础", "练习SQL语句", "设计简单数据库"], "时间投入": "每天1小时", "预期成果": "掌握数据库基本操作"}
+                ],
+                "milestone": "具备项目开发能力"
+            },
+            {
+                "month": "第3个月",
+                "focus": "项目实战",
+                "tasks": [
+                    {"task": "做一个完整项目", "具体行动": ["确定项目需求", "进行技术选型", "独立完成开发"], "时间投入": "每周20小时", "预期成果": "一个可展示的完整项目"},
+                    {"task": "完善简历", "具体行动": ["整理项目经验", "准备简历内容", "请人帮忙修改"], "时间投入": "每周5小时", "预期成果": "一份优秀的简历"}
+                ],
+                "milestone": "项目和简历准备就绪"
+            },
+            {
+                "month": "第4-6个月",
+                "focus": "求职面试",
+                "tasks": [
+                    {"task": "投递简历", "具体行动": ["每周投递10-20个岗位", "记录投递情况", "跟进面试进度"], "时间投入": "每周5小时", "预期成果": "获得面试机会"},
+                    {"task": "面试准备", "具体行动": ["刷面试题", "准备自我介绍", "模拟面试"], "时间投入": "每天2小时", "预期成果": "通过面试"},
+                    {"task": "面试复盘", "具体行动": ["记录面试问题", "总结经验教训", "针对薄弱点提升"], "时间投入": "每次面试后1小时", "预期成果": "面试表现越来越好"}
+                ],
+                "milestone": "成功拿到offer"
+            }
+        ]
+    }
     
-    # section_4: 评估周期与动态调整
+    # section_4: 评估周期与动态调整（假实现）
     s4 = base["section_4_evaluation"]
-    if "evaluation" in personalized_content:
-        evaluation = personalized_content["evaluation"]
-        if "evaluation_system" in evaluation:
-            s4["evaluation_system"] = evaluation["evaluation_system"]
-        if "adjustment_scenarios" in evaluation:
-            s4["adjustment_scenarios"] = evaluation["adjustment_scenarios"]
-    
-    # 添加痛点解决方案
-    if "pain_points" in personalized_content:
-        pain_points = personalized_content["pain_points"]
-        if "identified_risks" in pain_points:
-            s4["risk_management"]["identified_risks"] = pain_points["identified_risks"]
-        if "contingency_plans" in pain_points:
-            s4["risk_management"]["contingency_plans"] = pain_points["contingency_plans"]
+    s4["evaluation_system"] = {
+        "monthly_review": {
+            "frequency": "每月1次",
+            "review_items": ["学习计划完成情况", "项目进展", "技能掌握程度"],
+            "adjustment_triggers": ["连续2周没完成计划", "学习效率低下", "发现更感兴趣的方向"]
+        },
+        "quarterly_review": {
+            "frequency": "每季度1次",
+            "review_items": ["整体目标达成情况", "能力提升效果", "是否需要调整方向"],
+            "key_questions": ["当前学习方法是否有效", "下一步重点是什么", "职业目标是否需要调整"]
+        },
+        "annual_review": {
+            "frequency": "每年1次",
+            "review_items": ["职业发展回顾", "能力结构", "长期规划"]
+        }
+    }
+    s4["risk_management"]["identified_risks"] = [
+        {"risk": "学习计划执行不下去", "mitigation": "将大目标拆解成小任务，每天完成一点点"},
+        {"risk": "面试总是失败", "mitigation": "每次面试后认真复盘，找出原因并针对性提升"},
+        {"risk": "发现自己不适合这个方向", "mitigation": "及时调整方向，不要在不适合的路上浪费太多时间"}
+    ]
+    s4["risk_management"]["contingency_plans"] = [
+        "如果3个月内还没确定方向，可以先尝试几个不同的技术领域",
+        "如果求职不顺利，可以先找一份实习积累经验",
+        "如果发现对技术没兴趣，可以考虑产品、运营等其他方向"
+    ]
 
     base["metadata"]["confidence_score"] = assessment_report.get("confidence_score") or 0.88
     base["metadata"]["completeness"] = min(95, 70 + (len(s1["self_assessment"]["strengths"]) + len(s1["recommended_careers"])) * 5)

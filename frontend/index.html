@@ -1222,8 +1222,8 @@
                     <p class="page-subtitle">查看你的就业能力画像与多维度评分，为岗位匹配提供依据</p>
                     
                     <div class="ability-profile-actions" style="margin-bottom: 24px;">
-                        <button id="generateAbilityProfileBtn" class="btn-primary">🤖 生成能力画像</button>
-                        <button id="refreshAbilityProfileBtn" class="btn-secondary">🔄 刷新画像</button>
+                        <button id="generateAbilityProfileBtn" class="btn-primary">生成能力画像</button>
+                        <button id="refreshAbilityProfileBtn" class="btn-secondary">刷新画像</button>
                     </div>
                 </div>
                 
@@ -1752,37 +1752,86 @@
 
                 <!-- 报告内容展示区 -->
                 <div id="reportContentArea" class="report-content-area hidden">
-                    <div class="report-toolbar">
-                        <button id="reportCheckCompletenessBtn" class="btn-toolbar">
-                            <span class="toolbar-icon">✅</span>
-                            完整性检查
-                        </button>
-                        <button id="reportEditBtn" class="btn-toolbar">
-                            <span class="toolbar-icon">✏️</span>
-                            编辑报告
-                        </button>
-                        <button id="reportPolishBtn" class="btn-toolbar">
-                            <span class="toolbar-icon">✨</span>
-                            AI 润色
-                        </button>
-                        <button id="reportAgentBtn" class="btn-toolbar">
-                            <span class="toolbar-icon">🤖</span>
-                            智能体
-                        </button>
-                        <button id="reportExportBtn" class="btn-toolbar btn-export">
-                            <span class="toolbar-icon">📤</span>
-                            导出 PDF
-                        </button>
-                        <button id="reportBackBtn" class="btn-toolbar">
-                            <span class="toolbar-icon">⬅️</span>
-                            返回
-                        </button>
+                    <!-- 顶部导航栏 -->
+                    <div class="report-top-nav">
+                        <div class="report-top-nav-left">
+                            <span class="report-green-dot"></span>
+                            <span class="report-nav-title">职业规划智能体</span>
+                            <span class="report-nav-separator"></span>
+                            <span class="report-nav-subtitle">职业规划报告</span>
+                        </div>
+                        <div class="report-top-nav-right">
+                            <button id="reportExportPdfBtn" class="report-export-pdf-btn">导出PDF</button>
+                            <div class="report-user-avatar"></div>
+                        </div>
                     </div>
-                    <div class="report-content-with-toc">
-                        <nav id="reportToc" class="report-toc"></nav>
-                        <div id="reportContent" class="report-content"></div>
+                    
+                    <!-- 操作栏 -->
+                    <div class="report-action-bar">
+                        <div class="report-action-bar-left">
+                            <button id="reportCheckCompletenessBtn" class="report-action-btn">完整性检查</button>
+                            <button id="reportEditBtn" class="report-action-btn">编辑报告</button>
+                            <button id="reportPolishBtn" class="report-action-btn">AI润色</button>
+                            <button id="reportAgentBtn" class="report-action-btn">智能体</button>
+                            <button id="reportExportBtn" class="report-action-btn report-action-btn-primary">导出PDF</button>
+                        </div>
+                        <div class="report-action-bar-right">
+                            <button id="reportBackBtn" class="report-action-btn">返回</button>
+                        </div>
                     </div>
-                    <button id="reportBackToTop" class="btn-back-to-top hidden" title="回到顶部">↑ 回到顶部</button>
+                    
+                    <!-- 主体布局 -->
+                    <div class="report-main-layout">
+                        <!-- 左侧边栏 -->
+                        <nav id="reportToc" class="report-sidebar">
+                            <div class="report-sidebar-title">目录</div>
+                            <div class="report-sidebar-nav">
+                                <div class="report-nav-item active" data-section="overview">
+                                    <span class="report-nav-dot"></span>
+                                    <span>报告概览</span>
+                                </div>
+                                <div class="report-nav-item" data-section="summary">
+                                    <span class="report-nav-dot"></span>
+                                    <span>核心摘要</span>
+                                </div>
+                                <div class="report-nav-item" data-section="exploration">
+                                    <span class="report-nav-dot"></span>
+                                    <span>职业探索</span>
+                                </div>
+                                <div class="report-nav-item" data-section="requirements">
+                                    <span class="report-nav-dot"></span>
+                                    <span>岗位能力要求拆解</span>
+                                </div>
+                                <div class="report-nav-item" data-section="goals">
+                                    <span class="report-nav-dot"></span>
+                                    <span>目标规划</span>
+                                </div>
+                                <div class="report-nav-item" data-section="action">
+                                    <span class="report-nav-dot"></span>
+                                    <span>行动计划</span>
+                                </div>
+                                <div class="report-nav-item" data-section="solutions">
+                                    <span class="report-nav-dot"></span>
+                                    <span>痛点解决方案</span>
+                                </div>
+                            </div>
+                        </nav>
+                        
+                        <!-- 右侧内容区 -->
+                        <div id="reportContent" class="report-content-area-main"></div>
+                    </div>
+                    
+                    <!-- 底部状态栏 -->
+                    <div class="report-bottom-status">
+                        <div class="report-status-left">
+                            <span class="report-status-dot"></span>
+                            <span>所有更改已自动保存</span>
+                        </div>
+                        <div class="report-status-right">
+                            <button class="report-status-btn report-status-btn-ghost">查看完整报告</button>
+                            <button class="report-status-btn report-status-btn-solid">保存报告</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 智能体交互弹窗 -->

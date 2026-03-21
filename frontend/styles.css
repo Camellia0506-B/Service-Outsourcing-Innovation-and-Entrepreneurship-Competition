@@ -12659,62 +12659,64 @@ body.on-login-page {
 .career-report-wrap {
     padding: 0;
     font-size: 14px;
-    line-height: 1.7;
+    line-height: 1.6;
     color: var(--text-primary);
-    font-family: 'Noto Sans SC', sans-serif;
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 .career-report-header {
     text-align: left;
-    padding: 28px;
+    padding: 24px;
     background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
-    border-radius: 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.15);
     border: none;
     transition: all 0.3s ease;
     color: #ffffff;
 }
 
 .career-report-header:hover {
-    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
     transform: translateY(-2px);
 }
 
 .career-report-header h3 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
     color: #ffffff;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-family: 'Noto Sans SC', sans-serif;
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 .career-report-sub {
-    font-size: 16px;
+    font-size: 15px;
     color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    line-height: 1.5;
 }
 
 .career-report-tag {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.1em;
     color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     text-transform: uppercase;
 }
 
 .career-report-meta {
     display: flex;
     justify-content: flex-start;
-    gap: 24px;
-    font-size: 14px;
+    gap: 20px;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
 }
 
 .career-report-tag {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.1em;
     color: var(--primary-color);
@@ -12722,7 +12724,7 @@ body.on-login-page {
 }
 
 .career-report-header h3 {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 8px;
@@ -12731,30 +12733,32 @@ body.on-login-page {
 .career-report-sub {
     font-size: 14px;
     color: var(--text-secondary);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    line-height: 1.5;
 }
 
 .career-report-meta {
     display: flex;
     justify-content: flex-start;
-    gap: 24px;
-    font-size: 13px;
+    gap: 20px;
+    font-size: 12px;
     color: var(--text-secondary);
+    line-height: 1.4;
 }
 
 /* 大模块：标题左侧蓝色竖线，卡片白底圆角阴影，间距16px */
 .career-section {
     margin-bottom: 20px;
-    padding: 24px;
+    padding: 20px;
     background: #ffffff;
-    border-radius: 18px;
-    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 3px 16px rgba(37, 99, 235, 0.06);
     transition: all 0.25s ease;
     border: 1px solid rgba(37, 99, 235, 0.06);
 }
 
 .career-section:hover {
-    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.1);
     transform: translateY(-2px);
 }
 
@@ -12762,12 +12766,12 @@ body.on-login-page {
     font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 16px;
-    padding-left: 12px;
-    border-left: 4px solid var(--primary-color);
+    margin-bottom: 14px;
+    padding-left: 0;
+    line-height: 1.3;
 }
 
-.sec-icon { font-size: 18px; margin-right: 4px; }
+.sec-icon { font-size: 16px; margin-right: 6px; }
 
 .career-self-assessment h5,
 .career-recommended h5,
@@ -12786,14 +12790,15 @@ body.on-login-page {
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    line-height: 1.4;
 }
 
 .career-self-assessment .self-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 14px;
+    margin-bottom: 18px;
 }
 
 .self-card {
@@ -12806,19 +12811,19 @@ body.on-login-page {
 }
 
 .self-card:hover {
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
     transform: translateY(-1px);
 }
 
-.self-card h6 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
+.self-card h6 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); line-height: 1.4; }
 .self-card ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--text-primary); line-height: 1.6; }
 
 /* 推荐职业卡片 - 评分右上角绿色粗体 */
 .rec-career-card {
     position: relative;
-    padding: 20px;
-    padding-top: 36px;
-    margin-bottom: 16px;
+    padding: 18px;
+    padding-top: 32px;
+    margin-bottom: 14px;
     background: #ffffff;
     border-radius: 12px;
     border: 1px solid rgba(37, 99, 235, 0.06);
@@ -12828,25 +12833,25 @@ body.on-login-page {
 
 .rec-career-card:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
     transform: translateY(-1px);
 }
 
 .rec-career-card .rec-score {
     position: absolute;
-    top: 16px;
-    right: 20px;
-    font-size: 18px;
+    top: 14px;
+    right: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #2e7d32;
 }
 
 .rec-career-header { margin-bottom: 10px; }
-.rec-name { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+.rec-name { font-weight: 600; font-size: 15px; color: var(--text-primary); line-height: 1.4; }
 .rec-why, .rec-market, .rec-gaps, .rec-capability-match {
     font-size: 14px;
     color: var(--text-secondary);
-    margin-top: 8px;
+    margin-top: 10px;
     line-height: 1.6;
 }
 
@@ -12854,23 +12859,21 @@ body.on-login-page {
 
 .rec-capability-match {
     background-color: #f8f9fa;
-    padding: 12px;
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-color);
+    padding: 14px;
+    border-radius: 10px;
 }
 
 .capability-item {
-    margin-top: 6px;
+    margin-top: 8px;
     margin-left: 12px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .goal-card {
-    padding: 18px;
-    margin-bottom: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
     background: #f8f9fb;
-    border-radius: 12px;
-    border-left: 4px solid var(--primary-color);
+    border-radius: 10px;
     transition: box-shadow 0.2s;
     border: 1px solid var(--border-color);
 }
@@ -12879,17 +12882,17 @@ body.on-login-page {
     box-shadow: var(--shadow);
 }
 
-.goal-timeline { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
-.goal-primary { font-weight: 600; font-size: 14px; margin-bottom: 10px; color: var(--text-primary); }
-.goal-card ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: var(--text-primary); }
+.goal-timeline { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.4; }
+.goal-primary { font-weight: 600; font-size: 15px; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4; }
+.goal-card ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.5; color: var(--text-primary); }
 
 .roadmap-stage {
     display: flex;
-    gap: 14px;
-    padding: 14px;
-    margin-bottom: 12px;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
     background: #f8f9fb;
-    border-radius: 12px;
+    border-radius: 10px;
     transition: box-shadow 0.2s;
     border: 1px solid var(--border-color);
 }
@@ -12913,10 +12916,10 @@ body.on-login-page {
 }
 
 .monthly-plan {
-    padding: 16px;
-    margin-bottom: 16px;
+    padding: 14px;
+    margin-bottom: 14px;
     background: #f8f9fb;
-    border-radius: 12px;
+    border-radius: 10px;
     transition: box-shadow 0.2s;
     border: 1px solid var(--border-color);
 }
@@ -12925,10 +12928,10 @@ body.on-login-page {
     box-shadow: var(--shadow);
 }
 
-.plan-header { margin-bottom: 10px; }
-.plan-month { font-weight: 600; color: var(--text-primary); }
-.plan-focus { margin-left: 10px; font-size: 13px; color: var(--primary-color); }
-.plan-milestone { font-size: 13px; color: #2e7d32; margin-top: 10px; }
+.plan-header { margin-bottom: 8px; }
+.plan-month { font-weight: 600; color: var(--text-primary); font-size: 15px; line-height: 1.3; }
+.plan-focus { margin-left: 8px; font-size: 13px; color: var(--primary-color); line-height: 1.3; }
+.plan-milestone { font-size: 13px; color: #2e7d32; margin-top: 8px; line-height: 1.4; }
 
 /* 底部高亮区 - 浅黄背景 */
 .motivational-msg {
@@ -12943,9 +12946,10 @@ body.on-login-page {
 
 .career-report-footer {
     text-align: center;
-    padding: 20px;
+    padding: 18px;
     font-size: 13px;
     color: var(--text-secondary);
+    line-height: 1.4;
 }
 
 /* 其他列表样式 */
@@ -12968,6 +12972,8 @@ body.on-login-page {
 .report-page .next-steps ul {
     margin: 0;
     padding-left: 20px;
+    font-size: 14px;
+    line-height: 1.6;
 }
 
 .report-page .adj-card,
@@ -13130,7 +13136,6 @@ body.on-login-page {
     padding: 24px;
     background: rgba(74, 144, 226, 0.03);
     border-radius: 12px;
-    border-left: 4px solid var(--primary-color);
 }
 
 .report-section h4 {
@@ -13572,7 +13577,6 @@ body.on-login-page {
 
 .career-module-painpoints {
     background: #ffffff;
-    border-left: 4px solid #f5a623;
 }
 
 /* 岗位能力要求拆解样式 */
@@ -13650,7 +13654,6 @@ body.on-login-page {
 
 .career-module-job-requirements {
     background: #ffffff;
-    border-left: 4px solid #1565c0;
 }
 .report-export-bar .btn-export-pdf {
     display: inline-flex;
@@ -18805,6 +18808,10 @@ body.on-login-page #agentAssistant { display: none !important; }
     box-shadow: 0 12px 40px rgba(0,0,0,0.12);
 }
 
+#reportPage.report-history-open {
+    overflow-y: hidden;
+}
+
 #reportPage .report-history-header {
     border-bottom: 1px solid var(--mock-line);
 }
@@ -22681,4 +22688,556 @@ body {
 #jobProfilePage .btn-realdata:hover {
     background: var(--mock-sage-soft);
     border-color: var(--mock-sage);
+}
+
+
+/* ==================== ְҵ�滮����ҳ������ʽ ==================== */
+.report-content-area {
+    background-color: #FAF8F5;
+    font-family: 'Noto Sans SC', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ���������� */
+.report-top-nav {
+    height: 52px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.report-top-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-green-dot {
+    width: 10px;
+    height: 10px;
+    background: #2D5A3D;
+    border-radius: 50%;
+}
+
+.report-nav-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1c1c18;
+}
+
+.report-nav-separator {
+    width: 1px;
+    height: 20px;
+    background: #e5e5e5;
+}
+
+.report-nav-subtitle {
+    font-size: 14px;
+    color: #8a8a8a;
+}
+
+.report-top-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.report-export-pdf-btn {
+    background: #2D5A3D;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.report-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e5e5e5;
+}
+
+/* ������ */
+.report-action-bar {
+    height: 46px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.report-action-bar-left,
+.report-action-bar-right {
+    display: flex;
+    gap: 8px;
+}
+
+.report-action-btn {
+    background: white;
+    color: #1c1c18;
+    border: 1px solid #e5e5e5;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.report-action-btn:hover {
+    background: #f5f5f5;
+}
+
+.report-action-btn-primary {
+    background: #2D5A3D;
+    color: white;
+    border-color: #2D5A3D;
+}
+
+/* ���岼�� */
+.report-main-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ������ */
+.report-sidebar {
+    width: 210px;
+    background: #FAF8F5;
+    border-right: 1px solid #e5e5e5;
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.report-sidebar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a8a8a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 20px 16px;
+}
+
+.report-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+}
+
+.report-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    cursor: pointer;
+    color: #5a5a52;
+    font-size: 14px;
+    position: relative;
+}
+
+.report-nav-item:hover {
+    background: rgba(45, 90, 61, 0.05);
+}
+
+.report-nav-item.active {
+    color: #2D5A3D;
+    background: rgba(45, 90, 61, 0.08);
+}
+
+.report-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #2D5A3D;
+}
+
+.report-nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c5c5c5;
+}
+
+.report-nav-item.active .report-nav-dot {
+    background: #2D5A3D;
+}
+
+/* �Ҳ������� */
+.report-content-area-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: #FAF8F5;
+}
+
+/* ��ɫ��Ƭ��ʽ */
+.report-card {
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e5e5e5;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+/* ǳ��ɫ inset �� */
+.report-inset-block {
+    background: #F4F1EC;
+    padding: 16px;
+    border-radius: 6px;
+    margin: 12px 0;
+}
+
+/* 报告卡片标题样式 */
+.report-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.report-card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.report-card h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.report-card h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.report-inset-block h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.report-inset-block h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+/* 列表样式 */
+.report-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.report-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: #5a5a52;
+}
+
+.report-list li::before {
+    content: '';
+    color: #8a8a8a;
+    flex-shrink: 0;
+}
+
+/* ��ɫϵ���� */
+.report-text-green {
+    color: #2D5A3D;
+}
+
+/* ����ɫ������ */
+.report-progress-bar {
+    height: 8px;
+    background: #e5e5e5;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.report-progress-fill {
+    height: 100%;
+    background: #2D5A3D;
+    border-radius: 4px;
+}
+
+/* ʱ������ʽ */
+.report-timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.report-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #e5e5e5;
+}
+
+.report-timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.report-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: #2D5A3D;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* ��ڿ�Ƭ���� */
+.report-entry-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.report-entry-card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.report-entry-card:hover {
+    border-color: #2D5A3D;
+    box-shadow: 0 4px 12px rgba(45, 90, 61, 0.1);
+}
+
+/* �ײ�״̬�� */
+.report-bottom-status {
+    height: 48px;
+    background: white;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.report-status-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #5a5a52;
+}
+
+.report-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #2D5A3D;
+    border-radius: 50%;
+}
+
+.report-status-right {
+    display: flex;
+    gap: 12px;
+}
+
+.report-status-btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.report-status-btn-ghost {
+    background: white;
+    color: #2D5A3D;
+    border: 1px solid #2D5A3D;
+}
+
+.report-status-btn-solid {
+    background: #1c1c18;
+    color: white;
+    border: none;
+}
+
+/* 职业规划报告章节切换样式 */
+.report-section {
+    display: block;
+}
+
+.report-section.hidden {
+    display: none;
+}
+
+.report-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e5e5;
+    margin-bottom: 20px;
+}
+
+.report-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.report-card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.report-card h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.report-card h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.report-inset-block {
+    background: #f9f9f7;
+    border-radius: 8px;
+    padding: 16px 20px;
+}
+
+.report-inset-block h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.report-inset-block h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.report-entry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.report-entry-card {
+    background: white;
+    border: 2px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.report-entry-card:hover {
+    border-color: #2D5A3D;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45, 90, 61, 0.1);
+}
+
+.report-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.report-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 8px;
+    color: #5a5a52;
+    line-height: 1.6;
+}
+
+.report-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #2D5A3D;
+}
+
+.report-sidebar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1c1c18;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.report-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.report-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #5a5a52;
+    font-size: 14px;
+}
+
+.report-nav-item:hover {
+    background: #f9f9f7;
+    color: #2D5A3D;
+}
+
+.report-nav-item.active {
+    background: #2D5A3D;
+    color: white;
+}
+
+.report-nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c5c5c5;
+}
+
+.report-nav-item.active .report-nav-dot {
+    background: white;
 }

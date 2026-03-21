@@ -281,13 +281,24 @@
                 btnPrint.disabled = true;
                 btnPrint.textContent = '导出中...';
                 var canvas = await html2canvas(el, { scale: 2, useCORS: true });
-                var imgData = canvas.toDataURL('image/jpeg', 0.95);
                 var jsPDF = window.jspdf && window.jspdf.jsPDF;
                 if (!jsPDF) { throw new Error('jsPDF 未加载'); }
                 var pdf = new jsPDF('p', 'mm', 'a4');
                 var pdfW = pdf.internal.pageSize.getWidth();
-                var pdfH = (canvas.height * pdfW) / canvas.width;
-                pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+                var pageH = pdf.internal.pageSize.getHeight();
+                var imgW = pdfW;
+                var imgH = (canvas.height * imgW) / canvas.width;
+                var imgData = canvas.toDataURL('image/jpeg', 0.95);
+                var left = imgH;
+                var y = 0;
+                pdf.addImage(imgData, 'JPEG', 0, y, imgW, imgH);
+                left -= pageH;
+                while (left > 0) {
+                    y -= pageH;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, y, imgW, imgH);
+                    left -= pageH;
+                }
                 pdf.save('职业测评报告.pdf');
             } catch (e) {
                 console.error(e);

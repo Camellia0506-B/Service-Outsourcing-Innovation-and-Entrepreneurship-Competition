@@ -450,13 +450,28 @@ class AIAbilityProfileGenerator:
   "practical_experience": {
     "internships": [{ "company": "公司", "position": "职位", "duration": "X个月", "achievements": ["成就"] }],
     "projects": [{ "name": "项目", "role": "角色", "complexity": "高/中/低" }]
+  },
+  "career_plan": {
+    "employment_analysis": {
+      "strengths": ["优势1", "优势2"],
+      "weaknesses": ["劣势1", "劣势2"],
+      "opportunities": ["机会1", "机会2"],
+      "threats": ["威胁1", "威胁2"]
+    },
+    "action_plan": {
+      "short_term": ["短期行动1", "短期行动2"],
+      "medium_term": ["中期行动1", "中期行动2"],
+      "long_term": ["长期行动1", "长期行动2"],
+      "continuous": ["持续行动1", "持续行动2"]
+    },
+    "job_seeking_advice": ["求职建议1", "求职建议2", "求职建议3", "求职建议4"]
   }
 }"""
     
     def _build_generation_prompt(self, profile_data: dict) -> str:
         """构造生成Prompt"""
         schema = self._ability_profile_output_schema()
-        return f"""你是一位资深的HR和职业规划顾问。请根据以下学生档案，生成**学生就业能力画像**。
+        return f"""你是一位资深的HR和职业规划顾问。请根据以下学生档案，生成**学生就业能力画像**，特别要包括详细的职业规划建议。
         
 【学生档案数据】
 基本信息：
@@ -486,6 +501,10 @@ class AIAbilityProfileGenerator:
 2. 证据必须来自档案中的真实信息
 3. 技能等级要客观评估（有项目 = 熟悉，多次使用 = 熟练，深度应用 = 精通）
 4. 创新点要具体，不要泛泛而谈
+5. 职业规划建议（career_plan）部分要根据学生的实际情况生成：
+   - employment_analysis：就业能力分析，包括优势、劣势、机会、威胁（SWOT分析）
+   - action_plan：行动计划，包括短期（3-6个月）、中期（6-12个月）、长期（1-2年）、持续行动
+   - job_seeking_advice：求职建议，至少4条具体建议
 """
 
     def _build_rule_based_profile(self, user_id: int, profile_data: dict) -> dict:
@@ -567,7 +586,6 @@ class AIAbilityProfileGenerator:
                 "indicators": learning_indicators,
             },
             "pressure_resistance": {
-                # 默认一个中等偏上的抗压能力，由 _score_profile 进一步标注
                 "evidence": [],
             },
             "communication_ability": {
@@ -577,6 +595,21 @@ class AIAbilityProfileGenerator:
             "practical_experience": {
                 "internships": [],
                 "projects": [],
+            },
+            "career_plan": {
+                "employment_analysis": {
+                    "strengths": ["技能基础扎实，学习能力强", "有一定的项目实践经验"],
+                    "weaknesses": ["缺乏实习经历", "专业技能深度有待提升"],
+                    "opportunities": ["数字化转型人才需求大", "技术+行业知识复合型人才受欢迎"],
+                    "threats": ["就业竞争激烈", "行业技术迭代快"]
+                },
+                "action_plan": {
+                    "short_term": ["提升专业技能，考取相关证书", "参与开源项目或校内项目"],
+                    "medium_term": ["寻找实习机会，积累工作经验", "深入学习目标领域的专业知识"],
+                    "long_term": ["明确职业定位，持续学习前沿技术", "建立专业人脉网络"],
+                    "continuous": ["关注行业动态，保持学习习惯", "定期评估和调整职业目标"]
+                },
+                "job_seeking_advice": ["突出项目经验和学习能力", "针对目标岗位定制简历", "提前准备技术面试", "利用校园招聘和内推机会"]
             },
         }
 
