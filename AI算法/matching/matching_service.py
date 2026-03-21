@@ -1851,6 +1851,19 @@ class JobMatchingService:
                         name = it.get("skill") or it.get("name") or it.get("item") or ""
                         if isinstance(name, str) and name.strip():
                             out.append(name.strip())
+            # 兼容能力画像中的 professional_skills 结构
+            pro = (student_profile or {}).get("professional_skills") or {}
+            if isinstance(pro, dict):
+                for _, arr in pro.items():
+                    if not isinstance(arr, list):
+                        continue
+                    for it in arr[:80]:
+                        if isinstance(it, str) and it.strip():
+                            out.append(it.strip())
+                        elif isinstance(it, dict):
+                            name = it.get("skill") or it.get("name") or it.get("item") or ""
+                            if isinstance(name, str) and name.strip():
+                                out.append(name.strip())
             # 去重
             uniq: List[str] = []
             seen = set()
@@ -1918,13 +1931,29 @@ class JobMatchingService:
                     if sim > best_sim:
                         best_sim = sim
                         best = ss
-                # 展示分：不要 0；最低给 55，避免 UI 一片红/空
-                match_score = int(max(55, min(95, round(best_sim * 100)))) if best else 55
+                # 若技能清单匹配不到，则用简历/经历文本做弱匹配估分（避免全部 0）
+                if not best:
+                    try:
+                        text = _build_student_query_text(student_profile).lower()
+                    except Exception:
+                        text = ""
+                    req = str(req_skill or "").lower().strip()
+                    if req and text:
+                        if req in text:
+                            best_sim = max(best_sim, 0.72)
+                        else:
+                            import re as _re2
+                            words = [w for w in _re2.split(r"[^a-z0-9#+.一-龥]+", req) if w]
+                            if words:
+                                hit = sum(1 for w in words if w in text)
+                                if hit > 0:
+                                    best_sim = max(best_sim, min(0.68, 0.45 + hit * 0.12))
+                match_score = int(max(0, min(100, round(best_sim * 100)))) if best_sim > 0 else 0
                 matched_list.append({
                     "skill": req_skill,
                     "student_skill": best or (student_skill_names[0] if student_skill_names else "（请补充技能画像）"),
                     "match_score": match_score,
-                    "similarity": float(max(0.55, best_sim)) if best else 0.55,
+                    "similarity": float(max(0.0, min(1.0, best_sim))) if best else 0.0,
                     "confidence": 0.6,
                 })
             skills_details["matched_skills"] = matched_list
