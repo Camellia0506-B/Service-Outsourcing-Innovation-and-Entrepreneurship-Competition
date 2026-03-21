@@ -217,11 +217,10 @@ class API {
         return this.requestToAI(endpoint, { method: 'POST', body: data });
     }
 
-    // 通用请求方法（测评、职业规划报告、人岗匹配、求职跟踪走 AI 服务 5002，其余走 Java 5000）
+    // 通用请求方法（匹配相关统一走 Java 5000，由 Java 再代理 AI，避免前端直连造成口径不一致）
     async request(endpoint, options = {}) {
         const useAI = endpoint.startsWith('/assessment/')
             || endpoint.startsWith('/career/')
-            || endpoint.startsWith('/matching/')
             || endpoint.startsWith('/job/')
             || endpoint.startsWith('/system/')
             || endpoint.startsWith('/tracking/')
@@ -2259,7 +2258,7 @@ async function updateAbilityProfile(userId, updates) {
 // ==================== 人岗匹配模块 ====================
 
 // 获取推荐岗位（支持 filters: cities, salary_min, industries；分页）
-// 优先请求 AI 服务 5002，失败时自动回退到 Java 5000，始终返回 { success, data?, msg?, code? }
+// 统一优先走 Java 5000（由 Java 聚合能力画像并调用 AI），失败再尝试 AI 5002
 async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = {}) {
     const body = { user_id: userId, pageNum, pageSize, top_n: pageSize };
     if (filters && Object.keys(filters).length) body.filters = filters;
@@ -2269,24 +2268,23 @@ async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = 
         return m.includes('无法连接') || m.includes('failed to fetch') || m.includes('connection refused') || m.includes('网络');
     };
     try {
-        let result = await api.requestToAI('/matching/recommend-jobs', {
-            method: 'POST',
-            body,
-            timeout: 90000
-        });
-        const aiConnectionFailed = !result.success && connectionError(result);
-        // AI 服务不可用（未启动、连接重置、超时、404）时回退到 Java 后端
+        let result = await api.postToJava('/matching/recommend-jobs', body);
+        const javaConnectionFailed = !result.success && connectionError(result);
+        // Java 不可用时回退到 AI
         if (!result.success) {
-            const javaResult = await api.postToJava('/matching/recommend-jobs', body);
-            // 若先连 5002 失败，Java 又返回“能力画像”类错误，优先提示启动 AI 服务（根因多为 5002 未启动）
-            if (aiConnectionFailed && !javaResult.success && String(javaResult.msg || '').includes('能力画像')) {
+            const aiResult = await api.requestToAI('/matching/recommend-jobs', {
+                method: 'POST',
+                body,
+                timeout: 90000
+            });
+            if (javaConnectionFailed && !aiResult.success && String(aiResult.msg || '').includes('能力画像')) {
                 return {
                     success: false,
                     msg: AI_SERVICE_START_HINT + '若已启动仍无推荐，请完善能力画像。',
-                    code: javaResult.code
+                    code: aiResult.code
                 };
             }
-            result = javaResult;
+            result = aiResult;
         }
         // 要求真实数据：AI/Java 均不可用时返回失败，不再用演示数据
         if (!result.success) {
@@ -2300,19 +2298,19 @@ async function getRecommendedJobs(userId, pageNum = 1, pageSize = 10, filters = 
     } catch (e) {
         const throwIsConnection = (err) => (err && (String(err.message || '').includes('Failed to fetch') || String(err.message || '').includes('Load failed')));
         try {
-            const javaResult = await api.postToJava('/matching/recommend-jobs', body);
-            if (!javaResult.success && throwIsConnection(e) && String(javaResult.msg || '').includes('能力画像')) {
+            const aiResult = await api.requestToAI('/matching/recommend-jobs', { method: 'POST', body, timeout: 90000 });
+            if (!aiResult.success && throwIsConnection(e) && String(aiResult.msg || '').includes('能力画像')) {
                 return {
                     success: false,
                     msg: AI_SERVICE_START_HINT + '若已启动仍无推荐，请完善能力画像。',
-                    code: javaResult.code
+                    code: aiResult.code
                 };
             }
-            if (javaResult.success) return javaResult;
+            if (aiResult.success) return aiResult;
             return {
                 success: false,
-                msg: javaResult.msg || (AI_SERVICE_START_HINT + '启动后刷新可获取基于能力画像的真实推荐。'),
-                code: javaResult.code
+                msg: aiResult.msg || (AI_SERVICE_START_HINT + '启动后刷新可获取基于能力画像的真实推荐。'),
+                code: aiResult.code
             };
         } catch (e2) {
             console.error('[getRecommendedJobs] 请求异常:', e2);
@@ -2338,18 +2336,29 @@ function getRecommendedJobsDemoData() {
 
 // 人岗匹配分析（API 使用 job_id）
 async function analyzeJobMatch(userId, jobId) {
-    return await api.post('/matching/analyze', {
+    // 与推荐岗位保持同一口径：优先 Java，失败再回退 AI
+    const body = {
         user_id: userId,
         job_id: jobId
-    });
+    };
+    let result = await api.postToJava('/matching/analyze', body);
+    if (!result.success) {
+        result = await api.requestToAI('/matching/analyze', { method: 'POST', body, timeout: 30000 });
+    }
+    return result;
 }
 
 // 批量匹配分析
 async function batchAnalyze(userId, jobIds) {
-    return await api.post('/matching/batch-analyze', {
+    const body = {
         user_id: userId,
         job_ids: jobIds
-    });
+    };
+    let result = await api.postToJava('/matching/batch-analyze', body);
+    if (!result.success) {
+        result = await api.requestToAI('/matching/batch-analyze', { method: 'POST', body, timeout: 90000 });
+    }
+    return result;
 }
 
 // ==================== 职业规划报告模块 (API 7.x) ====================

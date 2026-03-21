@@ -15,6 +15,7 @@ import www.gradquest.com.service.MatchingService;
 import www.gradquest.com.service.StudentAbilityService;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,7 +99,16 @@ public class MatchingServiceImpl implements MatchingService {
                     .timeout(Duration.ofSeconds(30))
                     .block();
 
-            return extractDataOrThrow(response, "岗位匹配分析");
+            Map<String, Object> data = extractDataOrThrow(response, "岗位匹配分析");
+            // 口径统一：分析页综合分优先对齐推荐接口同岗位分数，避免“高匹配但综合分偏低”
+            Integer recScore = fetchRecommendedScore(request.getUserId(), request.getJobId(), abilityProfile);
+            if (recScore != null) {
+                Integer oldScore = toInt(data.get("match_score"));
+                data.put("match_score", recScore);
+                data.put("match_level", scoreToLevel(recScore));
+                alignDimensionScores(data, oldScore, recScore);
+            }
+            return data;
         } catch (WebClientResponseException e) {
             String detail = handleMatchingError(e, "岗位匹配分析");
             throw new RuntimeException(detail);
@@ -175,6 +185,83 @@ public class MatchingServiceImpl implements MatchingService {
             }
         } catch (Exception ignored) { }
         return "调用AI服务失败: " + e.getStatusCode() + " " + (body != null && body.length() > 200 ? body.substring(0, 200) + "..." : body);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Integer fetchRecommendedScore(Long userId, String jobId, Map<String, Object> abilityProfile) {
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("user_id", userId);
+            requestBody.put("top_n", 200);
+            requestBody.put("ability_profile", abilityProfile);
+
+            Map<String, Object> response = getWebClient()
+                    .post()
+                    .uri("/matching/recommend-jobs")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(Duration.ofSeconds(45))
+                    .block();
+            Map<String, Object> data = extractDataOrThrow(response, "推荐岗位分数对齐");
+            Object recObj = data.get("recommendations");
+            if (!(recObj instanceof List<?> recList)) return null;
+            String target = String.valueOf(jobId).trim();
+            for (Object item : recList) {
+                if (!(item instanceof Map<?, ?> m)) continue;
+                String[] candidateKeys = new String[] { "job_id", "jobId", "id", "post_id", "job_name", "title" };
+                boolean matched = false;
+                for (String k : candidateKeys) {
+                    Object v = m.get(k);
+                    if (v != null && target.equals(String.valueOf(v).trim())) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) continue;
+                Object scoreObj = m.get("match_score");
+                if (scoreObj instanceof Number n) return n.intValue();
+                try {
+                    return Integer.parseInt(String.valueOf(scoreObj));
+                } catch (Exception ignore) {
+                    return null;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Matching] 对齐推荐分失败: userId={}, jobId={}, err={}", userId, jobId, e.getMessage());
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void alignDimensionScores(Map<String, Object> data, Integer oldScore, int newScore) {
+        Object dimObj = data.get("dimension_scores");
+        if (!(dimObj instanceof Map<?, ?> rawDimMap)) return;
+        if (oldScore == null || oldScore <= 0) return;
+        double factor = (double) newScore / (double) oldScore;
+        Map<String, Object> dimMap = (Map<String, Object>) rawDimMap;
+        for (Map.Entry<String, Object> entry : dimMap.entrySet()) {
+            Object v = entry.getValue();
+            if (!(v instanceof Map<?, ?> oneDimRaw)) continue;
+            Map<String, Object> oneDim = (Map<String, Object>) oneDimRaw;
+            Integer s = toInt(oneDim.get("score"));
+            if (s == null) continue;
+            int ns = (int) Math.round(s * factor);
+            ns = Math.max(0, Math.min(100, ns));
+            oneDim.put("score", ns);
+        }
+    }
+
+    private Integer toInt(Object v) {
+        if (v instanceof Number n) return n.intValue();
+        if (v == null) return null;
+        try { return Integer.parseInt(String.valueOf(v)); } catch (Exception ignore) { return null; }
+    }
+
+    private String scoreToLevel(int score) {
+        if (score >= 90) return "高度匹配";
+        if (score >= 80) return "较为匹配";
+        return "一般匹配";
     }
 
     private Map<String, Object> fetchAbilityProfile(Long userId) {
