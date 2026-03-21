@@ -6864,7 +6864,7 @@ class CareerPlanningApp {
         });
     }
 
-    // 根据岗位名称关键词映射图标与背景色（优先匹配更具体关键词）
+    // 根据岗位名称关键词映射 job-ui 同款线性 SVG 图标
     getJobGroupIconStyle(jobName) {
         const raw = (jobName || '').toString().trim();
         const lower = raw.toLowerCase();
@@ -6876,37 +6876,52 @@ class CareerPlanningApp {
             return raw.includes(k);
         };
 
+        const ICONS = {
+            code: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>',
+            chart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M9 15V9M14 15V7M19 15v-4"/></svg>',
+            search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+            palette: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 100 18h2a2 2 0 002-2 2 2 0 00-2-2h-1a3 3 0 010-6h1a4 4 0 004-4 4 4 0 00-4-4h-2z"/></svg>',
+            coin: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6.5" rx="6.5" ry="2.5"/><path d="M5.5 6.5v7c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-7"/></svg>',
+            shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 7.7-7 10-4-2.3-7-5.6-7-10V6l7-3z"/></svg>',
+            users: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c1.2-3.4 10.8-3.4 12 0M14.5 19c.6-1.8 2.1-2.8 4.5-2.8"/></svg>',
+            flask: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4M10 3v4l-5 9a3 3 0 002.6 4.5h8.8A3 3 0 0019 16L14 7V3"/></svg>',
+            briefcase: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M9 7V5h6v2M3 12h18"/></svg>',
+            megaphone: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11v2l11 4V7L3 11zM14 10h4a2 2 0 010 4h-4M6 14l1.5 4"/></svg>',
+            wrench: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 7a4 4 0 005 5l-7 7-3-3 7-7a4 4 0 01-2-2z"/></svg>',
+            sprout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20v-8M12 12c-4 0-6-2.5-6-6 4 0 6 2.5 6 6zM12 14c0-3.5 2-6 6-6 0 3.5-2 6-6 6z"/></svg>',
+            list: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg>'
+        };
         const rules = [
             // 更具体：语言/技术栈
-            { keys: ['JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Go', 'PHP', 'Rust', 'Node', 'React', 'Vue'], emoji: '💻', bg: '#f0fdf4' },
+            { keys: ['JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'Go', 'PHP', 'Rust', 'Node', 'React', 'Vue'], icon: ICONS.code },
             // 数据/算法/AI
-            { keys: ['算法', '数据', 'AI', '机器学习', '深度学习', '大模型', 'NLP', 'CV', 'LLM'], emoji: '📊', bg: '#d1fae5' },
+            { keys: ['算法', '数据', 'AI', '机器学习', '深度学习', '大模型', 'NLP', 'CV', 'LLM'], icon: ICONS.chart },
             // 测试/质检
-            { keys: ['质检', '测试', 'QA'], emoji: '🔍', bg: '#ede9fe' },
+            { keys: ['质检', '测试', 'QA'], icon: ICONS.search },
             // 设计/UI/产品
-            { keys: ['UI', 'UX', '交互', '视觉', '设计', '产品'], emoji: '🎨', bg: '#ffedd5' },
+            { keys: ['UI', 'UX', '交互', '视觉', '设计', '产品'], icon: ICONS.palette },
             // 财务/会计/审计
-            { keys: ['财务', '会计', '审计'], emoji: '💰', bg: '#ecfdf5' },
+            { keys: ['财务', '会计', '审计'], icon: ICONS.coin },
             // 法务/律师
-            { keys: ['法务', '律师'], emoji: '⚖️', bg: '#f0fdf4' },
+            { keys: ['法务', '律师'], icon: ICONS.shield },
             // 行政/HR/招聘
-            { keys: ['行政', 'HR', '人事', '招聘'], emoji: '👥', bg: '#fdf4ff' },
+            { keys: ['行政', 'HR', '人事', '招聘'], icon: ICONS.users },
             // 科研/研究/学术
-            { keys: ['科研', '研究', '学术', '博士后'], emoji: '🔬', bg: '#eff6ff' },
+            { keys: ['科研', '研究', '学术', '博士后'], icon: ICONS.flask },
             // 销售/客户/商务
-            { keys: ['销售', '客户', '商务', 'BD'], emoji: '💼', bg: '#fce7f3' },
+            { keys: ['销售', '客户', '商务', 'BD'], icon: ICONS.briefcase },
             // 运营/策划/市场
-            { keys: ['运营', '策划', '市场', '营销', '增长'], emoji: '📣', bg: '#fef3c7' },
+            { keys: ['运营', '策划', '市场', '营销', '增长'], icon: ICONS.megaphone },
             // 工程师/技术/开发
-            { keys: ['工程师', '技术', '开发'], emoji: '🔧', bg: '#dbeafe' },
+            { keys: ['工程师', '技术', '开发'], icon: ICONS.wrench },
             // 管培生/助理/实习
-            { keys: ['管培生', '助理', '实习', '管培'], emoji: '🌱', bg: '#fefce8' },
+            { keys: ['管培生', '助理', '实习', '管培'], icon: ICONS.sprout },
         ];
 
         for (const r of rules) {
-            if (r.keys && r.keys.some(includes)) return { emoji: r.emoji, bg: r.bg };
+            if (r.keys && r.keys.some(includes)) return { icon: r.icon, bg: '#f0ede8' };
         }
-        return { emoji: '📋', bg: '#f1f5f9' };
+        return { icon: ICONS.list, bg: '#f0ede8' };
     }
 
     // 渲染岗位归类视图（按岗位名称聚合 + 展开公司列表）
@@ -6967,7 +6982,7 @@ class CareerPlanningApp {
             return `<div class="job-group-card" data-group-index="${gi}">
                 <div class="jg-head">
                     <div class="jg-left">
-                        <div class="jg-icon" style="background:${iconStyle.bg};color:#111827">${iconStyle.emoji}</div>
+                        <div class="jg-icon" style="background:${iconStyle.bg};color:#6b6560">${iconStyle.icon}</div>
                         <div style="min-width:0">
                             <div class="jg-title">${name.replace(/</g, '&lt;')}</div>
                             <div class="jg-tags">${tags}</div>
@@ -10485,7 +10500,7 @@ class CareerPlanningApp {
         set('anaCoType', jobInfo.location ? jobInfo.location + ' · 月薪范围' : '月薪范围');
         set('anaJobSalary', jobInfo.salary || '—');
         const locEl = document.getElementById('anaJobLoc');
-        if (locEl) locEl.textContent = jobInfo.location ? '📍 ' + jobInfo.location : '—';
+        if (locEl) locEl.textContent = jobInfo.location ? jobInfo.location : '—';
 
         // 环形分
         const scoreText = document.getElementById('anaScoreText');
@@ -10495,6 +10510,13 @@ class CareerPlanningApp {
 
         // 维度图例
         const dimLabels = { basic_requirements: '基础要求', professional_skills: '专业技能', soft_skills: '职业素养', development_potential: '发展潜力' };
+        const ICON_TARGET = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/></svg>';
+        const ICON_DOC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l3 3v15H7V3z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>';
+        const ICON_USER = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c1.6-4.6 12.4-4.6 14 0"/></svg>';
+        const ICON_GROWTH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7"/><path d="M10 7h7v7"/></svg>';
+        const ICON_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+        const ICON_WARN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+        const DIM_TAB_ICONS = [ICON_TARGET, ICON_DOC, ICON_USER, ICON_GROWTH];
         const dimKeys = ['basic_requirements', 'professional_skills', 'soft_skills', 'development_potential'];
         const legendEl = document.getElementById('anaRingLegend');
         if (legendEl) {
@@ -10531,10 +10553,10 @@ class CareerPlanningApp {
             const req = reqValues[i];
             const color = dimColors[i];
             const cls = s >= req ? 'g' : s >= 60 ? 'o' : 'b';
-            const gapText = s >= req ? `✓ 已达标，超出 +${s - req} 分` : `⚠ 差距 ${req - s} 分，需重点提升`;
+            const gapText = s >= req ? `已达标，超出 +${s - req} 分` : `差距 ${req - s} 分，需重点提升`;
             const gapCls = s >= req ? 'gap-ok' : 'gap-warn';
             return `<div class="dim-block ${i === 0 ? 'active' : ''}" data-dim="${key}" data-dim-index="${i}" style="border-left: 3px solid ${color};">
-                <div class="dim-block-name">${['📐', '💡', '🌟', '🚀'][i]} ${dimLabels[key]}</div>
+                <div class="dim-block-name">${dimLabels[key]}</div>
                 <div class="dim-block-scores"><span class="dim-score ${cls}" style="color: ${color};">${s}</span><span class="dim-vs">/ ${req} 要求</span></div>
                 <div class="dim-gap ${gapCls}">${gapText}</div>
             </div>`;
@@ -10542,7 +10564,7 @@ class CareerPlanningApp {
 
         // 逐项能力对比：按维度 tab，内容用亮点+差距简化
         const dimTabsHtml = dimKeys.map((key, i) =>
-            `<button type="button" class="dim-tab ${i === 0 ? 'active' : ''}" data-dim-tab="${key}">${['📐', '💡', '🌟', '🚀'][i]} ${dimLabels[key]}</button>`
+            `<button type="button" class="dim-tab ${i === 0 ? 'active' : ''}" data-dim-tab="${key}">${dimLabels[key]}</button>`
         ).join('');
         const youItems = highlights.slice(0, 4).map(h => `<div class="cmp-item"><span class="cmp-ico">✅</span><div><div class="cmp-name">${h}</div></div><span class="lvl lvl-have">✓ 符合</span></div>`).join('');
         const gapSource = (skillGaps && skillGaps.length) ? skillGaps : gaps;
@@ -10590,16 +10612,16 @@ class CareerPlanningApp {
             };
             const gapRowsHtml = buildGapRows();
             const gapBoxHtml = gapRowsHtml ? `<div class="gap-box">
-                    <div class="ai-hint-label">🤖 智能体通过能力差距分析识别影响匹配度的关键短板，并生成个性化提升建议。</div>
-                    <div class="gap-box-title">⚠ 关键差距与建议</div>${gapRowsHtml}
+                    <div class="ai-hint-label">通过能力差距分析识别影响匹配度的关键短板，并生成个性化提升建议。</div>
+                    <div class="gap-box-title">关键差距与建议</div>${gapRowsHtml}
                 </div>` : '';
             return `<div class="dim-content ${i === 0 ? 'show' : ''}" id="dim-content-${key}">
                 <div class="cmp-grid">
-                    <div class="cmp-col job-col"><div class="cmp-head">🏢 岗位要求</div>
-                        <div class="cmp-item"><span class="cmp-ico">📋</span><div><div class="cmp-name">${dimLabels[key]} 基线</div><div class="cmp-note">要求约 ${req} 分</div></div><span class="lvl lvl-must">必要</span></div>
+                    <div class="cmp-col job-col"><div class="cmp-head">岗位要求</div>
+                        <div class="cmp-item"><div><div class="cmp-name">${dimLabels[key]} 基线</div><div class="cmp-note">要求约 ${req} 分</div></div><span class="lvl lvl-must">必要</span></div>
                     </div>
-                    <div class="cmp-col you-col"><div class="cmp-head">👤 你的情况</div>
-                        <div class="cmp-item"><span class="cmp-ico">${s >= req ? '✅' : '⚡'}</span><div><div class="cmp-name">当前 ${s} 分</div><div class="cmp-note">${s >= req ? '已达标' : '需提升'}</div></div><span class="lvl ${s >= req ? 'lvl-have' : 'lvl-part'}">${s >= req ? '✓ 符合' : '需提升'}</span></div>
+                    <div class="cmp-col you-col"><div class="cmp-head">你的情况</div>
+                        <div class="cmp-item"><div><div class="cmp-name">当前 ${s} 分</div><div class="cmp-note">${s >= req ? '已达标' : '需提升'}</div></div><span class="lvl ${s >= req ? 'lvl-have' : 'lvl-part'}">${s >= req ? '符合' : '需提升'}</span></div>
                     </div>
                 </div>
                 ${gapBoxHtml}
@@ -10636,7 +10658,7 @@ class CareerPlanningApp {
                 parts.push(`<ul class="plan-steps">${p.steps.map(s => `<li>${s}</li>`).join('')}</ul>`);
             }
             if (p.timeframe || p.output) {
-                parts.push(`<div class="plan-meta">${p.timeframe ? `<span class="pm">⏱ ${p.timeframe}</span>` : ''}${p.output ? `<span class="pm">📦 ${p.output}</span>` : ''}</div>`);
+                parts.push(`<div class="plan-meta">${p.timeframe ? `<span class="pm">${p.timeframe}</span>` : ''}${p.output ? `<span class="pm">${p.output}</span>` : ''}</div>`);
             }
             return parts.join('');
         };
@@ -10645,24 +10667,24 @@ class CareerPlanningApp {
             planItems = [
                 ...shortPlan.map((t, i) => {
                     const p = normalizePlanItem(t) || { title: String(t || ''), desc: '', steps: [], timeframe: '', output: '' };
-                    return { period: 'short', ico: ['🎯', '🔥', '📚'][i] || '🎯', title: p.title, descHtml: renderPlanDesc(p), tag: 't-urgent' };
+                    return { period: 'short', ico: [ICON_TARGET, ICON_WARN, ICON_DOC][i] || ICON_TARGET, title: p.title, descHtml: renderPlanDesc(p), tag: 't-urgent' };
                 }),
                 ...midPlan.map((t, i) => {
                     const p = normalizePlanItem(t) || { title: String(t || ''), desc: '', steps: [], timeframe: '', output: '' };
-                    return { period: 'mid', ico: ['☁️', '📝', '📈'][i] || '☁️', title: p.title, descHtml: renderPlanDesc(p), tag: 't-mid' };
+                    return { period: 'mid', ico: [ICON_GROWTH, ICON_DOC, ICON_TARGET][i] || ICON_GROWTH, title: p.title, descHtml: renderPlanDesc(p), tag: 't-mid' };
                 })
             ];
         } else if (gapSource.length > 0) {
             planItems = [
-                ...gapSource.slice(0, 3).map((g, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: g.gap || '提升该项能力', descHtml: g.suggestion ? `<div class="plan-desc">${g.suggestion}</div>` : '', tag: 't-urgent' })),
-                ...gapSource.slice(3, 6).map((g, i) => ({ period: 'mid', ico: ['☁️', '📝', '📈'][i], title: g.gap || '持续提升', descHtml: g.suggestion ? `<div class="plan-desc">${g.suggestion}</div>` : '', tag: 't-mid' }))
+                ...gapSource.slice(0, 3).map((g, i) => ({ period: 'short', ico: [ICON_TARGET, ICON_WARN, ICON_DOC][i], title: g.gap || '提升该项能力', descHtml: g.suggestion ? `<div class="plan-desc">${g.suggestion}</div>` : '', tag: 't-urgent' })),
+                ...gapSource.slice(3, 6).map((g, i) => ({ period: 'mid', ico: [ICON_GROWTH, ICON_DOC, ICON_TARGET][i], title: g.gap || '持续提升', descHtml: g.suggestion ? `<div class="plan-desc">${g.suggestion}</div>` : '', tag: 't-mid' }))
             ];
         } else {
             const lowDims = dimKeys.filter(k => safeScore(k) < 70).slice(0, 3);
-            planItems = lowDims.map((k, i) => ({ period: 'short', ico: ['🎯', '🔥', '📚'][i], title: `提升${dimLabels[k]}`, descHtml: `<div class="plan-desc">${dimSuggestions[k] || '根据岗位要求针对性提升'}</div>`, tag: 't-urgent' }));
+            planItems = lowDims.map((k, i) => ({ period: 'short', ico: [ICON_TARGET, ICON_WARN, ICON_DOC][i], title: `提升${dimLabels[k]}`, descHtml: `<div class="plan-desc">${dimSuggestions[k] || '根据岗位要求针对性提升'}</div>`, tag: 't-urgent' }));
         }
-        if (planItems.length === 0) planItems.push({ period: 'short', ico: '🎯', title: '根据分析结果制定计划', descHtml: '<div class="plan-desc">完善能力画像后可获得更具体的行动计划。</div>', tag: 't-mid' });
-        const planItemsHtml = planItems.map(p => `<div class="plan-item" data-period="${p.period}"><span class="plan-ico">${p.ico}</span><div class="plan-body"><div class="plan-title">${p.title}</div>${p.descHtml || ''}</div><span class="plan-tag ${p.tag}">${p.period === 'short' ? '短期' : '中期'}</span></div>`).join('');
+        if (planItems.length === 0) planItems.push({ period: 'short', ico: ICON_TARGET, title: '根据分析结果制定计划', descHtml: '<div class="plan-desc">完善能力画像后可获得更具体的行动计划。</div>', tag: 't-mid' });
+        const planItemsHtml = planItems.map(p => `<div class="plan-item" data-period="${p.period}"><span class="plan-dot" aria-hidden="true"></span><div class="plan-body"><div class="plan-title">${p.title}</div>${p.descHtml || ''}</div><span class="plan-tag ${p.tag}">${p.period === 'short' ? '短期' : '中期'}</span></div>`).join('');
 
         // 已匹配核心技能：兜底生成占位行，避免空表格
         const matchedSkillsDisplay = (Array.isArray(matchedSkills) && matchedSkills.length)
@@ -10701,7 +10723,7 @@ class CareerPlanningApp {
 
         container.innerHTML = `
             <div class="sec">
-                <div class="sec-title">四维度匹配概览</div>
+                <div class="sec-title"><span class="sec-ico">${ICON_TARGET}</span>四维度匹配概览</div>
                 <div class="sec-sub">蓝色多边形为你的能力，灰色虚线为岗位要求基线，彩色边表示各维度匹配情况（绿色≥85分，橙色65-84分，红色&lt;65分），面积差即提升空间</div>
                 <div class="radar-row">
                     <div id="radarWrap" class="radar-wrap">
@@ -10726,18 +10748,18 @@ class CareerPlanningApp {
                 </div>
             </div>
             <div class="sec">
-                <div class="sec-title">逐项能力对比</div>
+                <div class="sec-title"><span class="sec-ico">${ICON_DOC}</span>逐项能力对比</div>
                 <div class="sec-sub">岗位要求 vs 你目前能力水平，精准定位差距所在</div>
                 <div class="dim-tabs">${dimTabsHtml}</div>
                 ${dimContentHtml}
             </div>
             <div class="sec">
-                <div class="sec-title" style="margin-bottom:10px">✅ 已匹配核心技能</div>
+                <div class="sec-title" style="margin-bottom:10px"><span class="sec-ico">${ICON_OK}</span>已匹配核心技能</div>
                 ${matchedSkillsTableHtml}
             </div>
             <div class="sec">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                    <div class="sec-title" style="margin-bottom:0">个性化提升行动计划</div>
+                    <div class="sec-title" style="margin-bottom:0"><span class="sec-ico">${ICON_WARN}</span>个性化提升行动计划</div>
                     <div class="plan-tabs">
                         <button type="button" class="plan-tab active" data-plan="short">短期（3个月内）</button>
                         <button type="button" class="plan-tab" data-plan="mid">中期（3–6个月）</button>
@@ -10746,9 +10768,9 @@ class CareerPlanningApp {
                 <div class="plan-items" id="planList">${planItemsHtml}</div>
             </div>
             <div class="sec">
-                <div class="sec-title" style="margin-bottom:16px">📈 职业发展路径</div>
+                <div class="sec-title" style="margin-bottom:16px"><span class="sec-ico">${ICON_GROWTH}</span>职业发展路径</div>
                 <div class="ai-hint ai-hint-purple">
-                    🤖 智能体决策说明：系统基于技能相似度、行业发展趋势与薪资成长潜力进行综合评估，优先推荐最具长期发展价值的职业路径。
+                    智能体决策说明：系统基于技能相似度、行业发展趋势与薪资成长潜力进行综合评估，优先推荐最具长期发展价值的职业路径。
                 </div>
                 <div class="sec-sub" style="margin-top:4px;margin-bottom:12px">结合岗位画像与个人擅长方向，构建本职业清晰的发展路径</div>
                 <div id="reportCareerPathContainer"></div>
