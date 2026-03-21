@@ -13391,50 +13391,32 @@ class CareerPlanningApp {
     // 导出为PDF（最简单直接的实现方式）
     async exportToPDF(reportId) {
         const { jsPDF } = window.jspdf;
-        const data = this.currentCareerReportData;
-        
-        if (!data) {
-            this.showToast('没有报告数据可导出', 'error');
-            return;
+        const reportContent = document.getElementById('reportContent');
+
+        // 1) 优先从当前报告数据渲染“完整导出节点”（最稳妥，不依赖当前页面显示）
+        let contentClone = this.buildCareerReportFullExportCloneFromData();
+        // 2) 回退到页面现有 DOM 的六模块拼接
+        if (!contentClone) contentClone = this.buildCareerReportFullExportClone(reportContent);
+        if (!contentClone) {
+            // 回退：克隆当前内容并强制展开所有章节
+            contentClone = reportContent.cloneNode(true);
+            this.prepareCareerReportCloneForExport(contentClone);
         }
 
-        // 创建临时容器
-        const host = document.createElement('div');
-        host.style.position = 'fixed';
-        host.style.left = '-99999px';
-        host.style.top = '0';
-        host.style.width = '1000px';
-        host.style.zIndex = '-1';
-        document.body.appendChild(host);
-
+        // 设置克隆内容的样式
+        contentClone.style.width = '1000px';
+        contentClone.style.maxWidth = '1000px';
+        contentClone.style.padding = '20px';
+        contentClone.style.backgroundColor = '#fff';
+        contentClone.style.color = '#000';
+        contentClone.style.height = 'auto';
+        contentClone.style.maxHeight = 'none';
+        contentClone.style.overflow = 'visible';
+        
+        // 将克隆内容添加到页面
+        document.body.appendChild(contentClone);
+        
         try {
-            // 先渲染报告内容到临时容器
-            this.renderCareerReportContent(data, host);
-            
-            // 找到生成的内容
-            const generated = host.querySelector('.career-report-wrap');
-            if (!generated) {
-                this.showToast('无法生成报告内容', 'error');
-                return;
-            }
-
-            // 关键步骤：去掉所有 hidden 类，强制显示所有模块
-            generated.querySelectorAll('.report-section').forEach(sec => {
-                sec.classList.remove('hidden');
-                sec.style.display = 'block';
-                sec.style.visibility = 'visible';
-            });
-
-            // 设置样式
-            generated.style.width = '1000px';
-            generated.style.maxWidth = '1000px';
-            generated.style.padding = '20px';
-            generated.style.backgroundColor = '#fff';
-            generated.style.color = '#000';
-            generated.style.height = 'auto';
-            generated.style.maxHeight = 'none';
-            generated.style.overflow = 'visible';
-
             // 使用html2canvas将内容转换为图片
             const canvas = await html2canvas(generated, {
                 scale: 2,
@@ -13443,7 +13425,7 @@ class CareerPlanningApp {
                 letterRendering: true
             });
             
-            // 创建PDF文档
+            // 创建PDF文档（按内容高度自动分页，避免只导出当前可见区域）
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
@@ -13849,11 +13831,9 @@ class CareerPlanningApp {
     // 导出职业规划报告时，展开所有模块并去掉滚动容器限制
     prepareCareerReportCloneForExport(cloneRoot) {
         if (!cloneRoot) return;
-        cloneRoot.querySelectorAll('.report-section').forEach(sec => {
+        cloneRoot.querySelectorAll('.report-section.hidden').forEach(sec => {
             sec.classList.remove('hidden');
-            sec.style.setProperty('display', 'block', 'important');
-            sec.style.setProperty('visibility', 'visible', 'important');
-            sec.style.setProperty('opacity', '1', 'important');
+            sec.style.display = 'block';
         });
         cloneRoot.querySelectorAll('.report-content-area-main, .career-report-wrap').forEach(el => {
             el.style.height = 'auto';
@@ -13862,11 +13842,10 @@ class CareerPlanningApp {
         });
     }
 
-    // 按七大模块拼接专用导出 DOM，确保不受“当前页面/当前章节”影响
+    // 按六大模块拼接专用导出 DOM，确保不受“当前页面/当前章节”影响
     buildCareerReportFullExportClone(reportContentEl) {
         if (!reportContentEl) return null;
         const sectionIds = [
-            'section-overview',
             'section-module-summary',
             'section-module-explore',
             'section-module-job-requirements',
@@ -13894,281 +13873,28 @@ class CareerPlanningApp {
         return wrap;
     }
 
-    // 直接基于 currentCareerReportData 生成完整七模块导出节点（不隐藏任何模块）
+    // 直接基于 currentCareerReportData 生成完整六模块导出节点
     buildCareerReportFullExportCloneFromData() {
         const data = this.currentCareerReportData;
         if (!data) return null;
-        
-        const san = (t) => this.sanitizeCareerText(t || '');
-        const s1 = data.section_1_job_matching || {};
-        const s2 = data.section_2_career_path || {};
-        const s3 = data.section_3_action_plan || {};
-        const summary = data.summary || {};
-        const nextSteps = summary.next_steps || [];
-        const keyTakeaways = summary.key_takeaways || [];
-        const motivationalMsg = summary.motivational_message || '';
-        const hasSummary = nextSteps.length || keyTakeaways.length || motivationalMsg;
-
-        let html = `<div class="career-report-wrap">`;
-
-        // 报告概览页面（不隐藏）
-        html += `<div id="section-overview" class="report-section">
-            <div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">报告概览</h3>
-                <div class="report-inset-block">
-                    <p style="color: #5a5a52; margin: 0;">基于能力画像与人岗匹配的个性化发展规划</p>
-                </div>
-                <div class="report-entry-grid">
-                    <div class="report-entry-card" data-section="module-summary">
-                        <h4 style="color: #2D5A3D; margin-bottom: 8px;">核心摘要</h4>
-                        <p style="color: #8a8a8a; font-size: 13px; margin: 0;">查看报告的关键要点和下一步行动</p>
-                    </div>
-                    <div class="report-entry-card" data-section="module-explore">
-                        <h4 style="color: #2D5A3D; margin-bottom: 8px;">职业探索</h4>
-                        <p style="color: #8a8a8a; font-size: 13px; margin: 0;">了解推荐的职业方向和自我认知</p>
-                    </div>
-                    <div class="report-entry-card" data-section="module-job-requirements">
-                        <h4 style="color: #2D5A3D; margin-bottom: 8px;">岗位能力要求拆解</h4>
-                        <p style="color: #8a8a8a; font-size: 13px; margin: 0;">查看目标岗位的详细能力要求</p>
-                    </div>
-                    <div class="report-entry-card" data-section="module-goal">
-                        <h4 style="color: #2D5A3D; margin-bottom: 8px;">目标规划</h4>
-                        <p style="color: #8a8a8a; font-size: 13px; margin: 0;">查看短期和中期职业目标</p>
-                    </div>
-                    <div class="report-entry-card" data-section="module-action">
-                        <h4 style="color: #2D5A3D; margin-bottom: 8px;">行动计划</h4>
-                        <p style="color: #8a8a8a; font-size: 13px; margin: 0;">查看具体的执行计划和学习路径</p>
-                    </div>
-                    <div class="report-entry-card" data-section="module-painpoints">
-                        <h4 style="color: #2D5A3D; margin-bottom: 8px;">痛点解决方案</h4>
-                        <p style="color: #8a8a8a; font-size: 13px; margin: 0;">了解常见问题的解决方法</p>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-
-        // 核心摘要章节（不隐藏）
-        html += `<div id="section-module-summary" class="report-section">`;
-        if (hasSummary) {
-            html += `<div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">核心摘要</h3>
-                ${nextSteps.length ? `
-                <div class="report-inset-block">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">下一步行动</h5>
-                    <ul class="report-list">
-                        ${nextSteps.map(n => `<li>${san(n)}</li>`).join('')}
-                    </ul>
-                </div>` : ''}
-                ${keyTakeaways.length ? `
-                <div style="margin-top: 16px;">
-                    <h5 style="margin-bottom: 12px;">核心要点</h5>
-                    <ul class="report-list">
-                        ${keyTakeaways.map(k => `<li>${san(k)}</li>`).join('')}
-                    </ul>
-                </div>` : ''}
-                ${motivationalMsg ? `
-                <div class="report-inset-block" style="margin-top: 16px;">
-                    <p style="margin: 0;">${san(motivationalMsg)}</p>
-                </div>` : ''}
-            </div>`;
+        const host = document.createElement('div');
+        host.style.position = 'fixed';
+        host.style.left = '-99999px';
+        host.style.top = '0';
+        host.style.width = '1000px';
+        host.style.zIndex = '-1';
+        document.body.appendChild(host);
+        try {
+            // 复用现有渲染逻辑到临时容器
+            this.renderCareerReportContent(data, host);
+            const generated = host.querySelector('.career-report-wrap');
+            if (!generated) return null;
+            const cloned = generated.cloneNode(true);
+            this.prepareCareerReportCloneForExport(cloned);
+            return cloned;
+        } finally {
+            document.body.removeChild(host);
         }
-        html += `</div>`;
-
-        // 职业探索章节（不隐藏）
-        html += `<div id="section-module-explore" class="report-section">`;
-        if (s1.title) {
-            const selfA = s1.self_assessment || {};
-            const recs = s1.recommended_careers || [];
-            const advice = s1.career_choice_advice || {};
-            html += `<div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">职业探索</h3>`;
-            if (selfA.strengths || selfA.interests || selfA.values) {
-                html += `<div class="report-inset-block">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">自我认知总结</h5>
-                    ${selfA.strengths?.length ? `
-                    <div style="margin-bottom: 12px;">
-                        <strong style="color: #2D5A3D;">优势</strong>
-                        <ul class="report-list" style="margin-top: 8px;">
-                            ${selfA.strengths.map(s => `<li>${san(s)}</li>`).join('')}
-                        </ul>
-                    </div>` : ''}
-                    ${selfA.interests?.length ? `
-                    <div style="margin-bottom: 12px;">
-                        <strong style="color: #2D5A3D;">兴趣</strong>
-                        <ul class="report-list" style="margin-top: 8px;">
-                            ${selfA.interests.map(i => `<li>${san(i)}</li>`).join('')}
-                        </ul>
-                    </div>` : ''}
-                    ${selfA.values?.length ? `
-                    <div>
-                        <strong style="color: #2D5A3D;">价值观</strong>
-                        <ul class="report-list" style="margin-top: 8px;">
-                            ${selfA.values.map(v => `<li>${san(v)}</li>`).join('')}
-                        </ul>
-                    </div>` : ''}
-                </div>`;
-            }
-            if (recs.length) {
-                html += `<div style="margin-top: 16px;">
-                    <h5 style="margin-bottom: 12px;">推荐职业方向</h5>
-                    ${recs.map(rc => {
-                        const ma = rc.match_analysis || {};
-                        const mo = rc.market_outlook || {};
-                        const gaps = ma.gaps_and_solutions || [];
-                        return `<div class="report-inset-block" style="margin-bottom: 12px;">
-                            <h6 style="margin-top: 0; margin-bottom: 8px; color: #2D5A3D;">${rc.career}</h6>
-                            ${(ma.why_suitable || []).length ? `<p><strong>适合原因：</strong>${san(ma.why_suitable.join('；'))}</p>` : ''}
-                            ${gaps.length ? `<ul class="report-list">${gaps.map(g => `<li>${san(g.gap)} → ${san(g.solution)}</li>`).join('')}</ul>` : ''}
-                        </div>`;
-                    }).join('')}
-                </div>`;
-            }
-            if (advice.primary_recommendation) {
-                html += `<div class="report-inset-block" style="margin-top: 16px;">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">职业选择建议</h5>
-                    <p><strong>首选：</strong>${san(advice.primary_recommendation)}</p>
-                    ${advice.reasons?.length ? `<ul class="report-list">${advice.reasons.map(r => `<li>${san(r)}</li>`).join('')}</ul>` : ''}
-                    ${advice.alternative_option ? `<p><strong>备选：</strong>${san(advice.alternative_option)}</p>` : ''}
-                </div>`;
-            }
-            html += `</div>`;
-        }
-        html += `</div>`;
-
-        // 岗位能力要求拆解章节（不隐藏）
-        html += `<div id="section-module-job-requirements" class="report-section">
-            <div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">岗位能力要求拆解</h3>
-                <div class="report-inset-block">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">核心岗位能力要求</h5>
-                    <p style="color: #5a5a52; margin-bottom: 16px;">以下是当前就业市场对于应届生招聘岗位的主要能力要求拆解：</p>
-                    
-                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">算法工程师</h6>
-                    <div style="margin-bottom: 16px;">
-                        <strong style="color: #2D5A3D;">专业技能：</strong>
-                        <ul class="report-list" style="margin-top: 8px;">
-                            <li>编程语言：Python（精通）、C++（熟悉）</li>
-                            <li>机器学习：熟悉常见算法原理和应用场景</li>
-                            <li>深度学习：了解主流框架（TensorFlow/PyTorch）</li>
-                            <li>数据结构与算法：扎实的基础，熟悉常见算法</li>
-                            <li>数学基础：概率论、线性代数、微积分</li>
-                        </ul>
-                    </div>
-                    
-                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">后端开发工程师</h6>
-                    <div style="margin-bottom: 16px;">
-                        <strong style="color: #2D5A3D;">专业技能：</strong>
-                        <ul class="report-list" style="margin-top: 8px;">
-                            <li>编程语言：Java、Golang、Python等</li>
-                            <li>框架：Spring Boot、Django、Flask等</li>
-                            <li>数据库：MySQL、PostgreSQL、Redis等</li>
-                            <li>系统设计：熟悉分布式系统、微服务架构</li>
-                            <li>网络协议：HTTP、TCP/IP等</li>
-                        </ul>
-                    </div>
-                    
-                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">前端开发工程师</h6>
-                    <div>
-                        <strong style="color: #2D5A3D;">专业技能：</strong>
-                        <ul class="report-list" style="margin-top: 8px;">
-                            <li>基础：HTML5、CSS3、JavaScript（ES6+）</li>
-                            <li>框架：React、Vue、Angular等</li>
-                            <li>工具：Webpack、Vite、npm/yarn等</li>
-                            <li>响应式设计：能够适配不同设备</li>
-                            <li>性能优化：页面加载速度和用户体验</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-
-        // 目标规划章节（不隐藏）
-        html += `<div id="section-module-goal" class="report-section">`;
-        if (s2.title) {
-            const st = s2.short_term_goal || {};
-            const mt = s2.mid_term_goal || {};
-            html += `<div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">目标规划</h3>
-                ${st.primary_goal ? `
-                <div class="report-inset-block">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">短期目标（1年内）</h5>
-                    ${st.timeline ? `<p style="color: #8a8a8a; margin-bottom: 8px;">${st.timeline}</p>` : ''}
-                    <p style="margin-bottom: 8px;"><strong style="color: #2D5A3D;">${san(st.primary_goal)}</strong></p>
-                    ${st.specific_targets?.length ? `<ul class="report-list">${st.specific_targets.map(t => `<li>${san(t.target)}${t.deadline ? ' - ' + t.deadline : ''}</li>`).join('')}</ul>` : ''}
-                </div>` : ''}
-                ${mt.primary_goal ? `
-                <div class="report-inset-block" style="margin-top: 16px;">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">中期目标（3-5年）</h5>
-                    ${mt.timeline ? `<p style="color: #8a8a8a; margin-bottom: 8px;">${mt.timeline}</p>` : ''}
-                    <p style="margin-bottom: 8px;"><strong style="color: #2D5A3D;">${san(mt.primary_goal)}</strong></p>
-                    ${mt.specific_targets?.length ? `<ul class="report-list">${mt.specific_targets.map(t => `<li>${san(t.target)}</li>`).join('')}</ul>` : ''}
-                </div>` : ''}
-            </div>`;
-        }
-        html += `</div>`;
-
-        // 行动计划章节（不隐藏）
-        html += `<div id="section-module-action" class="report-section">`;
-        if (s3.title) {
-            const stp = s3.short_term_plan || {};
-            const mp = stp.monthly_plans || [];
-            html += `<div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">行动计划</h3>
-                ${stp.goal ? `
-                <div class="report-inset-block">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">短期行动计划${stp.period ? '：' + stp.period : ''}</h5>
-                    <p style="margin-bottom: 12px;"><strong style="color: #2D5A3D;">${san(stp.goal)}</strong></p>
-                    ${mp.map(m => `
-                    <div style="margin-bottom: 12px;">
-                        <h6 style="color: #2D5A3D; margin-bottom: 8px;">${m.month || ''}${m.focus ? ' - ' + m.focus : ''}</h6>
-                        ${m.tasks?.length ? `<ul class="report-list">${m.tasks.map(t => `<li>${san(t.task)}${t['预期成果'] ? ' - ' + san(t['预期成果']) : ''}</li>`).join('')}</ul>` : ''}
-                        ${m.milestone ? `<p style="color: #8a8a8a; margin-top: 8px;">✓ ${san(m.milestone)}</p>` : ''}
-                    </div>
-                    `).join('')}
-                </div>` : ''}
-            </div>`;
-        }
-        html += `</div>`;
-
-        // 痛点解决方案章节（不隐藏）
-        html += `<div id="section-module-painpoints" class="report-section">
-            <div class="report-card">
-                <h3 style="color: #2D5A3D; margin-bottom: 16px;">痛点解决方案</h3>
-                <div class="report-inset-block">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">自我认知与定位</h5>
-                    <p style="color: #5a5a52; margin-bottom: 8px;">避免从众规划误区，建立个性化职业定位：</p>
-                    <ul class="report-list">
-                        <li>定期进行自我评估，关注自身兴趣、能力和价值观的变化</li>
-                        <li>参考但不盲目追随他人的职业选择，分析自身特质与职业的匹配度</li>
-                        <li>寻求专业职业测评和咨询，获取客观的自我认知</li>
-                    </ul>
-                </div>
-                <div class="report-inset-block" style="margin-top: 16px;">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">职业信息获取</h5>
-                    <p style="color: #5a5a52; margin-bottom: 8px;">建立系统的职业信息渠道，避免认知片面：</p>
-                    <ul class="report-list">
-                        <li>通过行业报告、官方网站等权威渠道了解行业和岗位信息</li>
-                        <li>与行业专业人士建立联系，获取第一手的职业洞察</li>
-                        <li>参与实习、项目等实践活动，深入了解职业真实面貌</li>
-                    </ul>
-                </div>
-                <div class="report-inset-block" style="margin-top: 16px;">
-                    <h5 style="margin-top: 0; margin-bottom: 12px;">规划落地与实践</h5>
-                    <p style="color: #5a5a52; margin-bottom: 8px;">通过实践验证和动态调整，确保规划的可行性：</p>
-                    <ul class="report-list">
-                        <li>制定分阶段的行动计划，通过实习、项目等方式验证规划</li>
-                        <li>建立定期评估机制，根据实际情况调整规划</li>
-                        <li>培养适应变化的能力，面对挫折时保持积极心态</li>
-                    </ul>
-                </div>
-            </div>
-        </div>`;
-
-        html += `</div>`;
-
-        const wrap = document.createElement('div');
-        wrap.innerHTML = html;
-        return wrap.firstElementChild;
     }
 
     // 添加职业规划报告历史记录
