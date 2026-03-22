@@ -145,17 +145,17 @@
 #loginPage.login-v2 .lp-logo-name { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #1C3A2A; letter-spacing: 2px; }
 #loginPage.login-v2 .lp-logo-en { font-size: 8.5px; letter-spacing: 3px; color: #8BAF96; font-weight: 300; text-transform: uppercase; margin-top: 2px; }
 
-#loginPage.login-v2 .lp-hero { position: relative; z-index: 3; max-width: 460px; }
+#loginPage.login-v2 .lp-hero { position: relative; z-index: 3; max-width: 560px; }
 #loginPage.login-v2 .lp-hero-tag {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 11px;
+  gap: 9px;
+  font-size: 15px;
   letter-spacing: 1.8px;
   color: #4A7C5E;
   font-weight: 500;
-  margin-bottom: 20px;
-  padding: 5px 14px;
+  margin-bottom: 24px;
+  padding: 7px 18px;
   border: 1px solid rgba(139,175,150,0.5);
   border-radius: 20px;
   background: rgba(255,255,255,0.55);
@@ -164,8 +164,8 @@
   animation: lp-fadeUp .5s .3s ease forwards;
 }
 #loginPage.login-v2 .lp-hero-tag-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #4A7C5E;
   animation: lp-pulse 2s ease-in-out infinite;
@@ -175,13 +175,13 @@
 
 #loginPage.login-v2 .lp-hero-title {
   font-family: 'Noto Serif SC', serif;
-  font-size: 52px;
+  font-size: 70px;
   font-weight: 700;
-  line-height: 1.22;
+  line-height: 1.18;
   color: #1C3A2A;
   letter-spacing: -1px;
-  margin-bottom: 18px;
-  min-height: 128px;
+  margin-bottom: 22px;
+  min-height: 172px;
 }
 #loginPage.login-v2 .lp-hero-title em {
   font-style: italic;
@@ -192,27 +192,27 @@
 #loginPage.login-v2 .lp-hero-title em::after {
   content: '';
   position: absolute;
-  bottom: 2px;
+  bottom: 4px;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 5px;
   background: linear-gradient(90deg, #C9A84C 0%, transparent 100%);
   border-radius: 2px;
 }
 #loginPage.login-v2 .lp-hero-title .char {
   display: inline-block;
   opacity: 0;
-  transform: translateY(26px) scale(.9);
+  transform: translateY(30px) scale(.9);
   animation: lp-charIn .4s ease forwards;
 }
 @keyframes lp-charIn { to { opacity: 1; transform: translateY(0) scale(1); } }
 
 #loginPage.login-v2 .lp-hero-desc {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.9;
   color: #555;
   font-weight: 300;
-  max-width: 390px;
+  max-width: 420px;
   opacity: 0;
   animation: lp-fadeUp .6s .9s ease forwards;
 }
@@ -469,4 +469,8 @@
   }
   #loginPage.login-v2 .lp-left { min-height: auto; padding-bottom: 32px; }
   #loginPage.login-v2 .lp-orbit-wrap { opacity: 0.35; }
+  #loginPage.login-v2 .lp-hero-title {
+    font-size: clamp(40px, 9vw, 70px);
+    min-height: 0;
+  }
 }
