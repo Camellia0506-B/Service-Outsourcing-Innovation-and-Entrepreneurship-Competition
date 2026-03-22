@@ -29,9 +29,10 @@
   overflow: hidden;
 }
 
+/* 略向左收：避免 right:-100px 伸出左栏 + overflow:hidden 把右侧节点（如能力评估）裁成一条竖线 */
 #loginPage.login-v2 .lp-orbit-wrap {
   position: absolute;
-  right: -100px;
+  right: 36px;
   top: 50%;
   transform: translateY(-50%);
   width: 500px;
