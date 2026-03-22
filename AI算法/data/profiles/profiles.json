@@ -208,36 +208,41 @@
       {
         "category": "专业技能",
         "items": [
+          "机器学习",
+          "深度学习",
           "数据结构",
           "算法",
-          "系统设计",
-          "架构设计",
-          "人工智能/机器学习",
-          "数据库原理"
+          "RAG架构",
+          "图像识别",
+          "模型部署",
+          "多轮对话系统"
         ]
       },
       {
         "category": "编程语言",
         "items": [
           "Python",
-          "Java"
+          "Java",
+          "JavaScript"
         ]
       },
       {
         "category": "工具与框架",
         "items": [
-          "MySQL",
+          "CNN",
           "Vue.js",
           "Spring Boot",
-          "Linux",
+          "MySQL",
           "ChromaDB",
-          "LangChain"
+          "LangChain",
+          "Linux"
         ]
       },
       {
         "category": "语言能力",
         "items": [
-          "英语CET6"
+          "英语CET-6",
+          "普通话二级甲等"
         ]
       }
     ],
@@ -267,27 +272,31 @@
     "projects": [
       {
         "name": "基于深度学习的图像识别系统",
-        "role": null,
+        "role": "独立完成",
         "start_date": "2024-03",
         "end_date": "2024-06",
         "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
         "tech_stack": [
           "CNN",
-          "CIFAR-10",
-          "前端展示页面"
+          "Python",
+          "深度学习",
+          "图像分类",
+          "Vue.js"
         ]
       },
       {
         "name": "校园智能问答系统",
-        "role": null,
+        "role": "主要开发者",
         "start_date": "2024-09",
         "end_date": "2024-12",
         "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库，集成 LangChain 框架实现多轮对话，日均查询响应时间小于 2 秒。",
         "tech_stack": [
-          "RAG 架构",
-          "大语言模型",
+          "RAG",
+          "LangChain",
           "ChromaDB",
-          "LangChain"
+          "大语言模型",
+          "Python",
+          "多轮对话"
         ]
       }
     ],
@@ -308,7 +317,7 @@
         "date": "2024-01"
       }
     ],
-    "updated_at": "2026-03-21 21:28:21",
+    "updated_at": "2026-03-22 18:19:47",
     "profile_completeness": 100
   },
   "15": {
