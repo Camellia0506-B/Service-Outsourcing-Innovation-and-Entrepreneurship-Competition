@@ -228,7 +228,7 @@ def agent_parse_job_profile_requirement():
             # 若未配置 Key，直接跳过大模型，走本地规则解析，避免卡住导致前端超时
             if not os.environ.get("DASHSCOPE_API_KEY"):
                 raise RuntimeError("DASHSCOPE_API_KEY 未配置")
-            model_name = (rag_conf or {}).get("chat_model_name", "qwen-max")
+            model_name = (rag_conf or {}).get("chat_model_name", "qwen-plus")
             model = ChatTongyi(model=model_name)
             template = PromptTemplate.from_template(
                 _JOB_AGENT_SYSTEM_PROMPT
@@ -592,7 +592,7 @@ def get_real_data():
 ]}}
 请按上述格式生成{size}条，每条字段完整。"""
             response = Generation.call(
-                model="qwen-max",
+                model="qwen-plus",
                 messages=[{"role": "user", "content": prompt}],
                 result_format="message",
             )
@@ -1127,9 +1127,9 @@ def _generate_career_path_ai_with_qwen(job_name):
         from dashscope import Generation
     except ImportError:
         return None
-    model = (rag_conf or {}).get("chat_model_name", "qwen-max")
+    model = (rag_conf or {}).get("chat_model_name", "qwen-plus")
     if model in (None, ""):
-        model = "qwen-max"
+        model = "qwen-plus"
     prompt = _CAREER_PATH_AI_PROMPT.format(job_name=job_name)
     try:
         response = Generation.call(

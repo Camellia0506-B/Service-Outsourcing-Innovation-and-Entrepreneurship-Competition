@@ -1,6 +1,6 @@
 """
 AI 生成个性化晋升路径内容
-- 使用千问 API（qwen-max / qwen3-max）
+- 使用千问 API（qwen-plus）
 - 输入：岗位名称（如 测试工程师、前端工程师）
 - 输出：4 个级别的完整发展路径 JSON
 - 批量生成 5-10 个常见岗位，保存到 data/career_paths_ai_generated.json
@@ -92,7 +92,7 @@ def _ensure_api_key():
         pass
 
 
-def _call_qwen(job_name: str, model: str = "qwen-max") -> dict | None:
+def _call_qwen(job_name: str, model: str = "qwen-plus") -> dict | None:
     """调用千问 API 生成单个岗位的晋升路径 JSON。"""
     try:
         from dashscope import Generation
@@ -161,7 +161,7 @@ def _normalize_level(level: dict, index: int) -> dict:
     return out
 
 
-def generate_one(job_name: str, model: str = "qwen-max") -> dict | None:
+def generate_one(job_name: str, model: str = "qwen-plus") -> dict | None:
     """为单个岗位生成晋升路径，返回 { "levels": [...] } 或 None。"""
     data = _call_qwen(job_name, model=model)
     if not data or not data.get("levels"):
@@ -177,7 +177,7 @@ def generate_one(job_name: str, model: str = "qwen-max") -> dict | None:
 
 def main():
     # 可从配置文件读取模型名
-    model = "qwen-max"
+    model = "qwen-plus"
     try:
         from utils.path_tool import get_abs_path
         import yaml

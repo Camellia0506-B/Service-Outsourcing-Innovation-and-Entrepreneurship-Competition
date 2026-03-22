@@ -353,7 +353,7 @@
         "role": null,
         "start_date": null,
         "end_date": null,
-        "description": "Developed an intelligent career planning system using AI agents and RAG architecture. Implemented resume parsing with Qwen-max model and vector database integration. Built a three-tier architecture: Python AI service, Spring Boot backend, React frontend. Designed asynchronous task processing for improved system performance.",
+        "description": "Developed an intelligent career planning system using AI agents and RAG architecture. Implemented resume parsing with Qwen-plus model and vector database integration. Built a three-tier architecture: Python AI service, Spring Boot backend, React frontend. Designed asynchronous task processing for improved system performance.",
         "tech_stack": [
           "Python",
           "Java",
@@ -361,7 +361,7 @@
           "React",
           "Spring Boot",
           "Docker",
-          "Qwen-max",
+          "Qwen-plus",
           "vector database",
           "asynchronous task processing"
         ]

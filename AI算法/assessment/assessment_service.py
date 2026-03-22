@@ -718,7 +718,7 @@ class AssessmentService:
 
     def _generate_report_with_ai(self, user_id: int, assessment_id: str, answers: List[dict], scores: dict) -> dict:
         """
-        AI核心算法：调用通义大模型（qwen-max）生成综合测评报告。
+        AI核心算法：调用通义大模型（qwen-plus）生成综合测评报告。
         输入：用户档案 + 答题数据 + 计分结果
         输出：霍兰德分析 + MBTI分析 + 能力分析 + 价值观分析 + 职业建议
         """

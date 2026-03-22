@@ -411,7 +411,7 @@ class ProfileService:
 
     def _do_parse_resume(self, resume_text: str) -> dict:
         """
-        调用通义大模型（qwen-max）解析简历文本，读取 config/rag.yml。
+        调用通义大模型（qwen-plus）解析简历文本，读取 config/rag.yml。
         返回：parsed_data + confidence_score + suggestions（对应API文档2.4）
         """
         from langchain_core.output_parsers import StrOutputParser

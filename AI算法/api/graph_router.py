@@ -123,11 +123,11 @@ def job_search():
 
 
 def _stream_llm(prompt: str):
-    """流式调用 qwen-max，yield SSE data: {text: content}"""
+    """流式调用 qwen-plus，yield SSE data: {text: content}"""
     try:
         from dashscope import Generation
         response = Generation.call(
-            model="qwen-max",
+            model="qwen-plus",
             messages=[{"role": "user", "content": prompt}],
             result_format="message",
             stream=True,

@@ -28,7 +28,7 @@ rag_conf = config.get("rag", {})
 # ===================================================
 def get_chat_model():
     """获取通义大模型实例"""
-    model_name = rag_conf.get("chat_model_name", "qwen-max")
+    model_name = rag_conf.get("chat_model_name", "qwen-plus")
     return ChatTongyi(model=model_name)
 
 # 缓存模型实例

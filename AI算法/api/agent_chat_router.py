@@ -185,7 +185,7 @@ def agent_chat():
             from utils.config_handler import rag_conf
 
             # qwen3.5-plus 等为多模态模型，走多模态端点；ChatTongyi 纯文本接口会报 url error，智能体改用纯文本模型
-            model_name = (rag_conf or {}).get("chat_model_name", "qwen-max")
+            model_name = (rag_conf or {}).get("chat_model_name", "qwen-plus")
             if any(model_name.startswith(m) for m in ("qwen3.5-plus", "qwen3.5-plus-")) or "vl" in (model_name or "").lower():
                 agent_llm = ChatTongyi(model="qwen-plus")
             else:
