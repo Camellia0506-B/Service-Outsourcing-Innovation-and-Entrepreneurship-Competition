@@ -1784,11 +1784,12 @@ class CareerPlanningApp {
                 // ignore
             }
         }
-        // 首页仅取总数（pageSize=1），推荐岗位接口失败时容错，不阻塞仪表盘
+        // 与「岗位匹配」页 loadRecommendedJobs 一致：同参数 + 用返回列表长度（不用 total_count，避免与列表条数不一致）
         try {
-            const matchingResult = await getRecommendedJobs(userId, 1, 1);
-        if (matchingResult.success && matchingResult.data) {
-                matchedCount = matchingResult.data.total_count ?? matchingResult.data.total_matched ?? matchingResult.data.jobs?.length ?? matchingResult.data.recommendations?.length ?? 0;
+            const matchingResult = await getRecommendedJobs(userId, 1, 36);
+            if (matchingResult.success && matchingResult.data) {
+                const list = (matchingResult.data.jobs ?? matchingResult.data.recommendations) || [];
+                matchedCount = Array.isArray(list) ? list.length : 0;
             }
         } catch (_) {
             matchedCount = 0;
