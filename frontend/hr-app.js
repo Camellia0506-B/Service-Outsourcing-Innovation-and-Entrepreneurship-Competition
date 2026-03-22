@@ -37,8 +37,194 @@ function checkHrAuth() {
     return true;
 }
 
+function _ensureResumeModalS1Cache() {
+    if (window._hrResumeModalS1HTML) return;
+    var el = document.querySelector('#studentModal .resume-detail-modal');
+    if (el) window._hrResumeModalS1HTML = el.outerHTML;
+}
+
+function getResumeModalHTML_Student004() {
+    var t = document.getElementById('tplResumeStudent004');
+    return t && t.innerHTML ? t.innerHTML.trim() : '';
+}
+
+function getResumeModalHTML_ChenYutong() {
+    var t = document.getElementById('tplResumeStudent005');
+    return t && t.innerHTML ? t.innerHTML.trim() : '';
+}
+
+function getResumeModalHTML_Student003Anonymous() {
+    var t = document.getElementById('tplResumeStudent003Anonymous');
+    return t && t.innerHTML ? t.innerHTML.trim() : '';
+}
+
+function getResumeModalHTML_Student002() {
+    var t = document.getElementById('tplResumeStudent002');
+    return t && t.innerHTML ? t.innerHTML.trim() : '';
+}
+
+/** student_006 ~ student_011：资料未完善，独立弹窗数据（顺延编号后 S6~S11） */
+var HR_INCOMPLETE_RESUME_BY_ID = {
+    student_006: { displayCode: 'S6', gender: '男', deliveredAt: '2026-03-15' },
+    student_007: { displayCode: 'S7', gender: '女', deliveredAt: '2026-03-16' },
+    student_008: { displayCode: 'S8', gender: '男', deliveredAt: '2026-03-17' },
+    student_009: { displayCode: 'S9', gender: '女', deliveredAt: '2026-03-18' },
+    student_010: { displayCode: 'S10', gender: '男', deliveredAt: '2026-03-19' },
+    student_011: { displayCode: 'S11', gender: '女', deliveredAt: '2026-03-20' }
+};
+
+function getResumeModalHTML_IncompleteStudent(studentId) {
+    var cfg = HR_INCOMPLETE_RESUME_BY_ID[studentId];
+    if (!cfg) return '';
+    var code = cfg.displayCode;
+    var gender = cfg.gender;
+    var delivered = cfg.deliveredAt;
+    var ph = '暂无完整信息，等待学生补充';
+    return (
+        '<div class="resume-detail-modal" onclick="event.stopPropagation()">' +
+        '<div class="resume-modal-bar">' +
+        '<span class="breadcrumb">学生简历库 / <span>' +
+        studentId +
+        '</span></span>' +
+        '<button type="button" class="resume-modal-close" onclick="closeStudentModal()" aria-label="关闭">✕</button>' +
+        '</div>' +
+        '<div class="resume-modal-body">' +
+        '<div class="resume-col-left">' +
+        '<div>' +
+        '<div class="resume-candidate-id">' +
+        code +
+        ' · ' +
+        delivered +
+        '</div>' +
+        '<div class="resume-candidate-name">' +
+        studentId +
+        '</div>' +
+        '<div class="resume-candidate-sub">学历：待补充 · 专业方向：待补充<br>成绩：待补充</div>' +
+        '</div>' +
+        '<div class="resume-score-display resume-score-display--pending">' +
+        '<div class="resume-score-num">--</div>' +
+        '<div class="resume-score-label">资料待完善</div>' +
+        '</div>' +
+        '<div class="resume-divider"></div>' +
+        '<div class="resume-meta-block">' +
+        '<div class="resume-meta-row"><span class="resume-meta-label">学号/编号</span><span class="resume-meta-value">' +
+        code +
+        '</span></div>' +
+        '<div class="resume-meta-row"><span class="resume-meta-label">学历</span><span class="resume-meta-value">待补充</span></div>' +
+        '<div class="resume-meta-row"><span class="resume-meta-label">成绩</span><span class="resume-meta-value">待补充</span></div>' +
+        '<div class="resume-meta-row"><span class="resume-meta-label">匹配分</span><span class="resume-meta-value">待评估</span></div>' +
+        '<div class="resume-meta-row"><span class="resume-meta-label">性别</span><span class="resume-meta-value">' +
+        gender +
+        '</span></div>' +
+        '</div>' +
+        '<div class="resume-divider"></div>' +
+        '<div class="resume-skill-section">' +
+        '<div class="resume-section-title">核心技能</div>' +
+        '<div class="resume-skill-grid">' +
+        '<span class="resume-skill-chip highlight">学习能力</span>' +
+        '<span class="resume-skill-chip highlight">职业规划中</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="resume-col-right">' +
+        '<div class="resume-section-block">' +
+        '<div class="resume-sec-head"><h3>教育背景</h3></div>' +
+        '<div class="resume-edu-grid" style="border:1px solid var(--rule)">' +
+        '<div class="resume-edu-cell">' +
+        '<div class="resume-edu-cell-label">学校</div>' +
+        '<div class="resume-edu-cell-value">待补充</div>' +
+        '<div class="resume-edu-cell-sub">信息待完善</div>' +
+        '</div>' +
+        '<div class="resume-edu-cell">' +
+        '<div class="resume-edu-cell-label">专业 · 方向</div>' +
+        '<div class="resume-edu-cell-value">待补充</div>' +
+        '<div class="resume-edu-cell-sub">学历 · 待补充</div>' +
+        '</div>' +
+        '<div class="resume-edu-cell">' +
+        '<div class="resume-edu-cell-label">成绩 · 毕业</div>' +
+        '<div class="resume-edu-cell-value">待补充</div>' +
+        '<div class="resume-edu-cell-sub">预计毕业 · 待补充</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="resume-section-block">' +
+        '<div class="resume-sec-head"><h3>实习经历</h3></div>' +
+        '<p class="resume-incomplete-placeholder">' +
+        ph +
+        '</p>' +
+        '</div>' +
+        '<div class="resume-section-block">' +
+        '<div class="resume-sec-head"><h3>项目经历</h3></div>' +
+        '<p class="resume-incomplete-placeholder">' +
+        ph +
+        '</p>' +
+        '</div>' +
+        '<div class="resume-section-block">' +
+        '<div class="resume-sec-head"><h3>证书资质</h3></div>' +
+        '<p class="resume-incomplete-placeholder">' +
+        ph +
+        '</p>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="resume-modal-footer">' +
+        '<span class="resume-footer-status">候选人 ' +
+        code +
+        ' · 待处理</span>' +
+        '<button type="button" class="resume-btn-secondary" onclick="closeStudentModal()">关闭</button>' +
+        '<button type="button" class="resume-btn-primary" disabled title="学生资料未完善，暂无法邀请">发起评估邀请</button>' +
+        '</div>' +
+        '</div>'
+    );
+}
+
+function _setStudentResumeModalContent(studentId) {
+    var overlay = document.getElementById('studentModal');
+    if (!overlay) return;
+    _ensureResumeModalS1Cache();
+    var cur = overlay.querySelector('.resume-detail-modal');
+    if (!cur) return;
+    var html;
+    if (studentId === 'student_002') {
+        html = getResumeModalHTML_Student002();
+        if (!html) {
+            console.warn('[HR] 未找到 #tplResumeStudent002，无法展示 student_002 简历');
+            return;
+        }
+    } else if (studentId === 'student_003') {
+        html = getResumeModalHTML_Student003Anonymous();
+        if (!html) {
+            console.warn('[HR] 未找到 #tplResumeStudent003Anonymous，无法展示匿名简历');
+            return;
+        }
+    } else if (studentId === 'student_004') {
+        html = getResumeModalHTML_Student004();
+        if (!html) {
+            console.warn('[HR] 未找到 #tplResumeStudent004，无法展示 student_004 简历');
+            return;
+        }
+    } else if (studentId === 'student_005') {
+        html = getResumeModalHTML_ChenYutong();
+        if (!html) {
+            console.warn('[HR] 未找到 #tplResumeStudent005，无法展示陈雨桐简历');
+            return;
+        }
+    } else if (HR_INCOMPLETE_RESUME_BY_ID[studentId]) {
+        html = getResumeModalHTML_IncompleteStudent(studentId);
+        if (!html) {
+            console.warn('[HR] 无法生成未完善简历弹窗: ' + studentId);
+            return;
+        }
+    } else {
+        html = window._hrResumeModalS1HTML;
+        if (!html) return;
+    }
+    cur.outerHTML = html;
+}
+
 function initHrDashboard() {
     if (!checkHrAuth()) return;
+    _ensureResumeModalS1Cache();
 
     var displayRealName = (currentHrData && (currentHrData.real_name || currentHrData.realName)) || 'HR';
     var displayCompanyName = (currentHrData && (currentHrData.company_name || currentHrData.companyName)) || '请完善企业信息';
@@ -157,17 +343,29 @@ function bindHrDashboardEvents() {
 
     const evalReportModalClose = document.getElementById('evalReportModalClose');
     if (evalReportModalClose) {
-        evalReportModalClose.addEventListener('click', () => {
-            const m = document.getElementById('evalReportModal');
-            if (m) m.style.display = 'none';
+        evalReportModalClose.addEventListener('click', closeEvalReportModal);
+    }
+    const evalReportModalCloseFooter = document.getElementById('evalReportModalCloseFooter');
+    if (evalReportModalCloseFooter) {
+        evalReportModalCloseFooter.addEventListener('click', closeEvalReportModal);
+    }
+    const evalReportExportPdf = document.getElementById('evalReportExportPdf');
+    if (evalReportExportPdf) {
+        evalReportExportPdf.addEventListener('click', function () {
+            window.print();
         });
     }
     const evalReportModal = document.getElementById('evalReportModal');
     if (evalReportModal) {
         evalReportModal.addEventListener('click', (e) => {
-            if (e.target === evalReportModal) evalReportModal.style.display = 'none';
+            if (e.target === evalReportModal) closeEvalReportModal();
         });
     }
+}
+
+function closeEvalReportModal() {
+    const m = document.getElementById('evalReportModal');
+    if (m) m.style.display = 'none';
 }
 
 async function loadJobOptions() {
@@ -273,9 +471,9 @@ function renderStudents(students) {
             var text = typeof t === 'string' ? t : (t && (t.skill || t.name)) || '';
             return text ? '<span style="font-size:10px;font-weight:600;padding:2px 8px;background:#e8f0eb;color:#2d6a4f;border-radius:100px;white-space:nowrap;">' + String(text).replace(/</g, '&lt;') + '</span>' : '';
         }).join('');
-        var score = student.systemMatchScore != null ? student.systemMatchScore : (student.system_match_score != null ? student.system_match_score : 0);
-        var scoreColor = score >= 80 ? '#2d6a4f' : '#7a6f3e';
         var sid = student.anonymousId || student.anonymous_id || '';
+        var score = student.systemMatchScore != null ? student.systemMatchScore : (student.system_match_score != null ? student.system_match_score : 0);
+        var scoreColor = sid === 'student_002' ? '#d97706' : (score >= 80 ? '#2d6a4f' : '#7a6f3e');
         var eduLevel = (student.educationLevel || student.education_level || '').trim();
         var majorCat = (student.majorCategory || student.major_category || '').trim();
         var gpaRaw = (student.gpaLevel || student.gpa_level || '').trim();
@@ -283,32 +481,56 @@ function renderStudents(students) {
         if (eduLevel === '') eduLevel = '待补充';
         if (majorCat === '') majorCat = '待补充';
         var sidEsc = String(sid).replace(/'/g, "\\'");
+        var displayNameRow = (student.realName || student.real_name || '').trim() || sid;
+        var rowLabelBySid = {
+            student_002: 'S2',
+            student_003: 'S3',
+            student_004: 'S4',
+            student_005: 'S5',
+            student_006: 'S6',
+            student_007: 'S7',
+            student_008: 'S8',
+            student_009: 'S9',
+            student_010: 'S10',
+            student_011: 'S11'
+        };
+        var rowLabel = rowLabelBySid[sid] || 'S' + (index + 1);
+        var isIncompleteProfile = !!HR_INCOMPLETE_RESUME_BY_ID[sid];
+        var gradeTd = isIncompleteProfile
+            ? '<td style="padding:11px 10px;font-size:13px;color:#6b6860;">待补充</td>'
+            : '<td style="padding:11px 10px;font-size:13px;color:#6b6860;">' + gpaDisplay + '</td>';
+        var matchTd = isIncompleteProfile
+            ? '<td style="padding:11px 10px;font-size:13px;color:#6b6860;font-weight:400;">待评估</td>'
+            : '<td style="padding:11px 10px;font-size:14px;font-weight:700;color:' + scoreColor + ';">' + score + '分</td>';
+        var inviteBtn = isIncompleteProfile
+            ? '<button type="button" disabled title="学生资料未完善，暂无法邀请" style="height:28px;padding:0 8px;font-size:12px;font-weight:600;border-radius:5px;border:1px solid #e8e6e1;background:#f3f1ed;color:#a8a5a0;cursor:not-allowed;white-space:nowrap;">发起邀请</button>'
+            : '<button type="button" style="height:28px;padding:0 8px;font-size:12px;font-weight:600;border-radius:5px;border:none;background:#0f0f0d;color:#fff;cursor:pointer;white-space:nowrap;"' +
+              ' onmouseover="this.style.background=\'#2d6a4f\'"' +
+              ' onmouseout="this.style.background=\'#0f0f0d\'"' +
+              ' onclick="event.stopPropagation();openInviteModal(\'' + sidEsc + '\')">发起邀请</button>';
         return `
         <tr style="border-bottom:1px solid #e2dfd7;cursor:pointer;transition:background 0.1s;"
             onmouseover="this.style.background='#faf9f6'"
             onmouseout="this.style.background=''"
             onclick="openStudentModal('${sidEsc}')">
             <td style="padding:11px 10px 11px 16px;">
-                <div style="width:28px;height:28px;background:#f6f4ef;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#6b6860;">S${index+1}</div>
+                <div style="width:28px;height:28px;background:#f6f4ef;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#6b6860;">${rowLabel}</div>
             </td>
             <td style="padding:11px 10px;font-size:13px;color:#6b6860;max-width:140px;overflow:hidden;text-overflow:ellipsis;">
-                <div style="font-size:13px;font-weight:600;color:#0f0f0d;margin-bottom:4px;">${sid}</div>
+                <div style="font-size:13px;font-weight:600;color:#0f0f0d;margin-bottom:4px;">${displayNameRow}</div>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;">${tags}</div>
             </td>
             <td style="padding:11px 10px;font-size:13px;color:#6b6860;">${eduLevel}</td>
             <td style="padding:11px 10px;font-size:13px;color:#6b6860;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${majorCat}</td>
-            <td style="padding:11px 10px;font-size:13px;color:#6b6860;">${gpaDisplay}</td>
-            <td style="padding:11px 10px;font-size:14px;font-weight:700;color:${scoreColor};">${score}分</td>
+            ${gradeTd}
+            ${matchTd}
             <td style="padding:11px 12px 11px 10px;white-space:nowrap;">
                 <div style="display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end;align-items:center;" onclick="event.stopPropagation()">
                     <button style="height:28px;padding:0 8px;font-size:12px;font-weight:600;border-radius:5px;border:1px solid #e2dfd7;background:#fff;color:#0f0f0d;cursor:pointer;white-space:nowrap;"
                         onmouseover="this.style.borderColor='#2d6a4f';this.style.color='#2d6a4f'"
                         onmouseout="this.style.borderColor='#e2dfd7';this.style.color='#0f0f0d'"
                         onclick="openStudentModal('${sidEsc}')">查看详情</button>
-                    <button style="height:28px;padding:0 8px;font-size:12px;font-weight:600;border-radius:5px;border:none;background:#0f0f0d;color:#fff;cursor:pointer;white-space:nowrap;"
-                        onmouseover="this.style.background='#2d6a4f'"
-                        onmouseout="this.style.background='#0f0f0d'"
-                        onclick="event.stopPropagation();openInviteModal('${sidEsc}')">发起邀请</button>
+                    ${inviteBtn}
                 </div>
             </td>
         </tr>`;
@@ -335,7 +557,7 @@ function _renderFullStudentDetail(data) {
     var targetJob = basic.target_job || abBasic.target_job || '待定';
     var letter = (anonymousId.slice(-1) || 'S').toUpperCase();
     var realName = data.realName != null ? data.realName : (basic.name != null && String(basic.name).trim() !== '' ? basic.name : null);
-    var displayName = realName ? realName : '匿名求职者';
+    var displayName = realName ? realName : 'student';
     var displayPhone = realName ? (basic.phone || '未填写') : '*** 隐私保护';
     var displayEmail = realName ? (basic.email || '未填写') : '*** 隐私保护';
     var displayGender = basic.gender || data.gender || '未填写';
@@ -509,96 +731,8 @@ function _mockStudentToDetailData(student) {
     };
 }
 
-/** S3 (student_anon_003) 简历详情弹窗 HTML（与 resume-s3-anon.html 一致，隐私保护模式） */
-function getS3ResumeModalHTML() {
-    return '<div class="modal" onclick="event.stopPropagation()">' +
-        '<div class="modal-bar">' +
-        '<span class="breadcrumb">学生简历库 / <span>student_anon_003</span></span>' +
-        '<span class="privacy-badge">&#9895; 隐私保护模式</span>' +
-        '<button type="button" class="modal-close" onclick="closeS3ResumeModal()">&#10005;</button>' +
-        '</div>' +
-        '<div class="modal-body">' +
-        '<div class="col-left">' +
-        '<div><div class="candidate-id">S3 &#183; 2026-03-12</div><div class="candidate-name"><span class="masked">***</span></div>' +
-        '<div class="candidate-sub"><span class="masked">***</span> &#183; 计算机科学与技术<br>2022&#32423; &#183; 预计毕业 2026.06</div></div>' +
-        '<div class="score-display"><div class="score-num">75</div><div class="score-label">综合匹配分</div></div>' +
-        '<div class="divider"></div>' +
-        '<div class="meta-block">' +
-        '<div class="meta-row"><span class="meta-label">学历</span><span class="meta-value">本科</span></div>' +
-        '<div class="meta-row"><span class="meta-label">GPA</span><span class="meta-value">3.4 / 4.0</span></div>' +
-        '<div class="meta-row"><span class="meta-label">成绩等级</span><span class="meta-value">良好</span></div>' +
-        '<div class="meta-row"><span class="meta-label">年级</span><span class="meta-value">2022 &#32423;</span></div>' +
-        '</div><div class="divider"></div>' +
-        '<div><div class="section-title">核心技能</div><div class="skill-grid">' +
-        '<span class="skill-chip highlight">数据结构</span><span class="skill-chip highlight">算法</span><span class="skill-chip highlight">机器学习</span><span class="skill-chip highlight">C++</span>' +
-        '<span class="skill-chip">Python</span><span class="skill-chip">Linux</span><span class="skill-chip">Git</span><span class="skill-chip">LeetCode 200+</span>' +
-        '</div></div><div class="divider"></div>' +
-        '<div class="contact-block"><span class="masked-soft">182****3947</span><span class="masked-soft">z****g@stu.edu.cn</span></div>' +
-        '</div>' +
-        '<div class="col-right">' +
-        '<div class="section-block"><div class="sec-head"><h3>教育背景</h3></div><div class="edu-grid">' +
-        '<div class="edu-cell"><div class="edu-cell-label">学校</div><div class="edu-cell-value"><span class="masked">***</span></div><div class="edu-cell-sub">211 &#37325;&#28857;&#39640;&#26657;</div></div>' +
-        '<div class="edu-cell"><div class="edu-cell-label">专业 &#183; 学历</div><div class="edu-cell-value">计算机科学与技术</div><div class="edu-cell-sub">本科 &#183; 2022&#32423;</div></div>' +
-        '<div class="edu-cell"><div class="edu-cell-label">绩点 &#183; 毕业</div><div class="edu-cell-value">GPA 3.4 / 4.0</div><div class="edu-cell-sub">预计 2026.06 &#27605;&#19994;</div></div>' +
-        '</div></div>' +
-        '<div class="section-block"><div class="sec-head"><h3>AI &#21305;&#37197;&#35780;&#27880;</h3></div>' +
-        '<div class="remark-box">&#20505;&#36873;&#20154;&#20855;&#22791;&#25166;&#23454;&#30340;<strong>&#31639;&#27861;&#19982;&#25968;&#25454;&#32467;&#26500;</strong>&#22522;&#30784;&#65292;LeetCode &#21047;&#39064;&#37327;&#36229; 200 &#39064;&#65292;&#36866;&#21512;&#23545;&#20195;&#30721;&#33021;&#21147;&#35201;&#27714;&#36739;&#39640;&#30340;&#23703;&#20301;&#12290;<strong>&#26426;&#22120;&#23398;&#20064;</strong>&#25216;&#33021;&#19982;&#30446;&#26631;&#23703;&#20301;&#26377;&#19968;&#23450;&#21305;&#37197;&#65292;&#20294;&#32570;&#20047;&#23436;&#25972;&#30340;&#24037;&#31243;&#39033;&#30446;&#33853;&#22320;&#32463;&#39564;&#65292;&#24314;&#35758;&#38754;&#35797;&#29615;&#33410;&#37325;&#28857;&#32771;&#23519;&#23454;&#38469;&#24314;&#27169;&#33021;&#21147;&#12290;&#32508;&#21512;&#35780;&#20998; <strong>75 &#20998;</strong>&#65292;&#23646;&#28508;&#21147;&#22411;&#20505;&#36873;&#20154;&#65292;&#21487;&#32435;&#20837;&#20505;&#36873;&#27744;&#36827;&#19968;&#27493;&#35780;&#20272;&#12290;</div>' +
-        '</div>' +
-        '<div class="section-block"><div class="sec-head"><h3>&#39033;&#30446;&#32463;&#21382;</h3></div>' +
-        '<div class="exp-item"><div class="exp-meta"><div class="exp-date">2024.09 &#8212; 2024.12</div><div class="exp-org">&#35838;&#31243;&#39033;&#30446;</div><div class="exp-role">&#29420;&#31435;&#24320;&#21457;</div></div>' +
-        '<div class="exp-content"><div class="exp-title">&#39640;&#24615;&#33021;&#22270;&#31639;&#27861;&#24211;</div><div class="exp-desc">&#20351;&#29992; C++ &#23454;&#29616;&#21253;&#21547; Dijkstra&#12289;Bellman-Ford&#12289;Floyd&#12289;&#25299;&#23618;&#25490;&#24207;&#31561;&#32463;&#20856;&#22270;&#31639;&#27861;&#30340;&#36890;&#29992;&#24211;&#65292;&#25903;&#25345;&#30828;&#31354;&#22270;&#19982;&#27987;&#23494;&#22270;&#33258;&#36866;&#24212;&#23384;&#20648;&#65292;&#30334;&#19975;&#32423;&#33410;&#28857;&#26368;&#30701;&#36335;&#24452;&#26597;&#35810;&#32791;&#26102;&#25511;&#21046;&#22312; 200ms &#20197;&#20869;&#12290;</div>' +
-        '<div class="exp-tech"><span class="tech-tag">C++</span><span class="tech-tag">&#22270;&#31639;&#27861;</span><span class="tech-tag">&#25968;&#25454;&#32467;&#26500;</span></div></div></div>' +
-        '<div class="exp-item"><div class="exp-meta"><div class="exp-date">2025.03 &#8212; 2025.05</div><div class="exp-org">&#31454;&#36187;&#39033;&#30446;</div><div class="exp-role">&#26680;&#24515;&#24320;&#21457;</div></div>' +
-        '<div class="exp-content"><div class="exp-title">&#36731;&#37327;&#32423;&#26426;&#22120;&#23398;&#20064;&#25512;&#29702;&#24341;&#25806;</div><div class="exp-desc">&#20174;&#38646;&#23454;&#29616;&#25903;&#25345;&#20840;&#36830;&#25509;&#23618;&#12289;&#21367;&#31215;&#23618;&#12289;BatchNorm &#30340;&#36731;&#37327;&#25512;&#29702;&#26694;&#26550;&#65292;&#19981;&#20381;&#36182;&#31532;&#19977;&#26041;&#24211;&#65292;&#22312; MNIST &#25968;&#25454;&#38598;&#19978;&#36798;&#21040; 98.7% &#20934;&#30830;&#29575;&#65292;&#25512;&#29702;&#24310;&#36831;&#36739;&#21516;&#31867; Python &#23454;&#29616;&#38477;&#20302;&#32422; 40%&#12290;</div>' +
-        '<div class="exp-tech"><span class="tech-tag">C++</span><span class="tech-tag">&#26426;&#22120;&#23398;&#20064;</span><span class="tech-tag">&#30697;&#38453;&#36816;&#31639;</span><span class="tech-tag">SIMD</span></div></div></div>' +
-        '</div>' +
-        '<div class="section-block"><div class="sec-head"><h3>&#33635;&#35465;&#22870;&#39033;</h3></div><div class="award-list">' +
-        '<div class="award-item top"><div class="award-year">2025</div><div class="award-name">ACM-ICPC &#21306;&#22495;&#36187;</div><div class="award-level amber">&#38108;&#29260;</div></div>' +
-        '<div class="award-item top"><div class="award-year">2024</div><div class="award-name">&#20840;&#22269;&#22823;&#23398;&#29983;&#31639;&#27861;&#35774;&#35745;&#19982;&#32534;&#31243;&#25361;&#25112;&#36187;</div><div class="award-level amber">&#19977;&#31561;&#22870;</div></div>' +
-        '<div class="award-item"><div class="award-year">2023</div><div class="award-name">&#26657;&#32423;&#31243;&#24207;&#35774;&#35745;&#31454;&#36187;</div><div class="award-level">&#19968;&#31561;&#22870;</div></div>' +
-        '<div class="award-item"><div class="award-year">2024</div><div class="award-name">&#38498;&#32423;&#20248;&#31168;&#23398;&#29983;&#22870;&#23398;&#37329;</div><div class="award-level">&#20108;&#31561;&#22870;</div></div>' +
-        '</div></div>' +
-        '<div class="section-block"><div class="sec-head"><h3>&#35777;&#20070;&#36164;&#36136;</h3></div><div class="cert-row">' +
-        '<div class="cert-chip">&#33521;&#35821;&#22235;&#32423; CET-4</div><div class="cert-chip">&#35745;&#31639;&#26426;&#20108;&#32423; &#183; C&#35821;&#35328;</div>' +
-        '<div class="cert-chip">LeetCode 200+ &#39064;</div><div class="cert-chip">&#26222;&#36890;&#35821;&#20108;&#32423;&#20057;&#31561;</div>' +
-        '</div></div>' +
-        '</div></div>' +
-        '<div class="modal-footer"><span class="footer-status">&#20505;&#36873;&#20154; S3 &#183; &#31192;&#31169;&#20445;&#25252; &#183; &#24453;&#22788;&#29702;</span>' +
-        '<button type="button" class="btn-secondary" onclick="closeS3ResumeModal()">&#20851;&#38381;</button><button type="button" class="btn-primary">&#21457;&#36215;&#35780;&#20272;&#36992;&#35831;</button></div>' +
-        '</div>';
-}
-
-function openS3ResumeModal() {
-    var overlay = document.getElementById('s3ResumeModalOverlay');
-    if (!overlay) return;
-    if (!overlay.querySelector('.modal')) {
-        overlay.innerHTML = getS3ResumeModalHTML();
-    }
-    overlay.style.display = 'flex';
-    overlay.classList.add('active');
-    requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-            overlay.classList.add('visible');
-        });
-    });
-}
-
-function closeS3ResumeModal(e) {
-    var overlay = document.getElementById('s3ResumeModalOverlay');
-    if (!overlay) return;
-    if (e && e.target !== overlay) return;
-    overlay.classList.remove('visible');
-    setTimeout(function () {
-        overlay.classList.remove('active');
-        overlay.style.display = 'none';
-    }, 220);
-}
-
 function openStudentModal(studentId) {
-    if (studentId === 'student_anon_003') {
-        openS3ResumeModal();
-        return;
-    }
+    _setStudentResumeModalContent(studentId || '');
     var overlay = document.getElementById('studentModal');
     if (!overlay) return;
     overlay.style.display = 'flex';
@@ -692,7 +826,7 @@ async function loadInvitations() {
     const mockData = [
         {
             invitation_id: 'INV-2025-001',
-            anonymous_student_id: 'student_anon_001',
+            anonymous_student_id: 'student_001',
             target_job: '算法工程师',
             message: '您好，我们公司正在招聘算法工程师，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。',
             status: 'accepted',
@@ -700,7 +834,7 @@ async function loadInvitations() {
         },
         {
             invitation_id: 'INV-2025-002',
-            anonymous_student_id: 'student_anon_003',
+            anonymous_student_id: 'student_003',
             target_job: '算法工程师',
             message: '您好，我们AI团队正在扩招，您的机器学习背景非常符合我们的需求，诚邀参与面试评估。',
             status: 'pending',
@@ -785,7 +919,7 @@ async function loadEvaluations() {
         renderEvaluations(list);
     } else {
         list = [
-            { evaluation_id: 'EVAL-2025-001', invitation_id: 'INV-2025-001', anonymous_student_id: 'student_anon_001', target_job: '算法工程师', overall_impression: 'excellent', hiring_intent: 'strong', status: 'completed', submitted_at: '2025-03-09 16:40' }
+            { evaluation_id: 'EVAL-2025-001', invitation_id: 'INV-2025-001', anonymous_student_id: 'student_001', target_job: '算法工程师', overall_impression: 'excellent', hiring_intent: 'strong', status: 'completed', submitted_at: '2025-03-09 16:40' }
         ];
         renderEvaluations(list);
     }
@@ -934,105 +1068,199 @@ function openEvalReportModal(evalRecord) {
     var overallText = impressionToText[overallRaw] || overallRaw;
     var hiringText = intentToText[hiringRaw] || hiringRaw;
 
+    var evaluatorName = evalRecord.evaluatorName || evalRecord.evaluator_name
+        || (typeof currentHrData !== 'undefined' && currentHrData && (currentHrData.real_name || currentHrData.realName))
+        || 'HR 管理员';
+
     document.getElementById('reportStudentId').textContent = evalRecord.anonymousStudentId || evalRecord.anonymous_student_id || '—';
     document.getElementById('reportTargetJob').textContent = evalRecord.targetJob || evalRecord.target_job || '—';
     document.getElementById('reportSubmittedAt').textContent = evalRecord.submittedAt || evalRecord.submitted_at || '—';
+    var evEl = document.getElementById('reportEvaluator');
+    if (evEl) evEl.textContent = evaluatorName;
     document.getElementById('reportOverall').textContent = overallText;
     document.getElementById('reportHiring').textContent = hiringText;
-    document.getElementById('reportStrengths').textContent = evalRecord.strengthsNoted || evalRecord.strengths_noted || '掌握技术种类多样，学习能力与抗压能力较强，具有较高的培养潜力，在开发项目中有极好的发挥优势';
-    document.getElementById('reportWeaknesses').textContent = evalRecord.weaknessesNoted || evalRecord.weaknesses_noted || '沟通能力弱，团队协作意愿弱';
+    document.getElementById('reportStrengths').textContent = evalRecord.strengthsNoted || evalRecord.strengths_noted
+        || '技术种类多样，学习与抗压能力强，培养潜力高，项目实战表现突出';
+    document.getElementById('reportWeaknesses').textContent = evalRecord.weaknessesNoted || evalRecord.weaknesses_noted
+        || '沟通表达与团队协作意愿偏弱，建议面试中重点考察';
 
-    var positions = evalRecord.recommendedPositions || evalRecord.recommended_positions || ['开发员'];
+    var positions = evalRecord.recommendedPositions || evalRecord.recommended_positions || ['算法工程师', '后端研发', '开发工程师'];
     var posEl = document.getElementById('reportPositions');
     if (Array.isArray(positions) && positions.length) {
         posEl.innerHTML = positions.map(function (p) {
-            return '<span style="background:#e8f4ee;color:#2d6a4f;padding:4px 12px;border-radius:20px;font-size:13px;">' + String(p).replace(/</g, '&lt;') + '</span>';
+            return '<span class="erp-job-tag">' + String(p).replace(/</g, '&lt;') + '</span>';
         }).join('');
     } else {
-        posEl.innerHTML = '<span style="color:#999;font-size:13px;">暂无推荐岗位</span>';
+        posEl.innerHTML = '<span style="color:#8a8a8a;font-size:12px;">暂无推荐岗位</span>';
     }
 
     var barsHtml = dimensions.map(function (dim) {
         var val = scores[dim] !== undefined ? scores[dim] : 0;
-        var color = val >= 85 ? '#2d6a4f' : val >= 70 ? '#b56a00' : '#888';
-        return '<div style="margin-bottom:12px;">' +
-            '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">' +
-            '<span>' + dim + '</span><span style="font-weight:600;color:' + color + '">' + val + '</span></div>' +
-            '<div style="background:#eee;border-radius:4px;height:6px;">' +
-            '<div style="width:' + Math.min(100, val) + '%;background:' + color + ';height:6px;border-radius:4px;transition:width 0.6s;"></div></div></div>';
+        var w = Math.min(100, Math.max(0, val));
+        var isGold = dim === '沟通表达';
+        return '<div class="erp-bar-row">' +
+            '<div class="erp-bar-header">' +
+            '<span class="erp-bar-name">' + dim + '</span>' +
+            '<span class="erp-bar-score' + (isGold ? ' erp-gold' : '') + '">' + val + '</span></div>' +
+            '<div class="erp-bar-track"><div class="erp-bar-fill' + (isGold ? ' erp-gold' : '') + '" style="width:' + w + '%;"></div></div></div>';
     }).join('');
     document.getElementById('reportScoreBars').innerHTML = barsHtml;
 
     var dimValues = dimensions.map(function (d) { return Number(scores[d]) || 0; });
-    console.log('各维度值：', dimValues);
     var avgScore = dimValues.reduce(function (a, b) { return a + b; }, 0) / dimValues.length;
-    var topDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) > (scores[b] || 0) ? a : b; });
-    var lowDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) < (scores[b] || 0) ? a : b; });
-    var insightText = '综合6项维度评分，该候选人平均得分为 ' + avgScore.toFixed(1) + ' 分，整体表现' + (avgScore >= 85 ? '优秀' : avgScore >= 75 ? '良好' : '中等') + '。' +
-        '其中「' + topDim + '」维度表现最为突出（' + (scores[topDim] || 0) + '分），显示出较强的核心竞争力；' +
-        '「' + lowDim + '」维度（' + (scores[lowDim] || 0) + '分）仍有提升空间，建议候选人在后续发展中重点关注。' +
-        'HR录用意向为「' + hiringText + '」，综合建议优先考虑 ' + (positions[0] || '相关') + ' 方向岗位。';
-    document.getElementById('reportInsight').textContent = insightText;
+    var avgEl = document.getElementById('reportAvgScore');
+    if (avgEl) avgEl.textContent = avgScore.toFixed(1);
 
-    var canvas = document.getElementById('reportRadarChart');
-    if (canvas) drawRadar(canvas, dimensions, dimValues);
-
-    var modal = document.getElementById('evalReportModal');
-    if (modal) modal.style.display = 'block';
-}
-
-function drawRadar(canvas, labels, values) {
-    if (!canvas || !canvas.getContext) return;
-    var ctx = canvas.getContext('2d');
-    var cx = canvas.width / 2, cy = canvas.height / 2;
-    var r = Math.min(cx, cy) - 40;
-    var n = labels.length;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (var ring = 1; ring <= 4; ring++) {
-        ctx.beginPath();
-        for (var i = 0; i < n; i++) {
-            var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
-            var x = cx + (r * ring / 4) * Math.cos(angle);
-            var y = cy + (r * ring / 4) * Math.sin(angle);
-            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-        ctx.strokeStyle = '#e0ddd6';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+    var miniOrder = [
+        { key: '专业技能匹配度', short: '专业技能' },
+        { key: '学习能力', short: '学习能力' },
+        { key: '沟通表达', short: '沟通表达' },
+        { key: '团队协作意愿', short: '团队协作' },
+        { key: '抗压能力', short: '抗压能力' },
+        { key: '职业成熟度', short: '职业成熟度' }
+    ];
+    var miniEl = document.getElementById('reportMiniScores');
+    if (miniEl) {
+        miniEl.innerHTML = miniOrder.map(function (m) {
+            var val = scores[m.key] !== undefined ? scores[m.key] : 0;
+            var gold = m.key === '沟通表达';
+            return '<div class="erp-mini-score">' +
+                '<div class="erp-mini-score-val' + (gold ? ' erp-gold' : '') + '">' + val + '</div>' +
+                '<div class="erp-mini-score-label">' + m.short + '</div></div>';
+        }).join('');
     }
 
-    for (var i = 0; i < n; i++) {
-        var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+    var topDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) > (scores[b] || 0) ? a : b; });
+    var lowDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) < (scores[b] || 0) ? a : b; });
+    var perfWord = avgScore >= 85 ? '优秀' : avgScore >= 75 ? '良好' : '中等';
+    var insightText = '综合6项维度评分，该候选人平均得分' + avgScore.toFixed(1) + '分，整体表现' + perfWord + '。\n' +
+        '「' + topDim + '」维度最为突出（' + (scores[topDim] || 0) + '分），显示出较强核心竞争力；\n' +
+        '「' + lowDim + '」（' + (scores[lowDim] || 0) + '分）仍有提升空间，建议面试环节加入团队协作\n场景题以进一步验证。综合建议优先考虑' + (positions[0] || '算法工程师') + '方向岗位。';
+    document.getElementById('reportInsight').textContent = insightText;
+
+    var genTime = evalRecord.submittedAt || evalRecord.submitted_at || '—';
+    var fm = document.getElementById('reportFooterMeta');
+    if (fm) fm.textContent = '报告生成时间 ' + genTime + ' · 星途智探HR系统';
+
+    var radarLabels = dimensions.map(function (d) {
+        if (d === '专业技能匹配度') return '专业技能\n匹配度';
+        if (d === '团队协作意愿') return '团队协作\n意愿';
+        if (d === '职业成熟度') return '职业\n成熟度';
+        return d;
+    });
+    var canvas = document.getElementById('reportRadarChart');
+    if (canvas) drawRadar(canvas, radarLabels, dimValues);
+
+    var modal = document.getElementById('evalReportModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+    }
+}
+
+/** HR 评估报告雷达图：逻辑尺寸 220×170，devicePixelRatio×2 超采样 */
+function drawHrEvalRadarChart(canvas, radarLabels, values) {
+    if (!canvas || !canvas.getContext) return;
+    var w = 220;
+    var h = 170;
+    var scale = (window.devicePixelRatio || 1) * 2;
+    canvas.width = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    var cx = w / 2;
+    var cy = h / 2 + 4;
+    var R = 63;
+    var n = radarLabels.length;
+
+    function angle(i) {
+        return (Math.PI * 2 / n) * i - Math.PI / 2;
+    }
+    function pt(i, rLen) {
+        return [cx + rLen * Math.cos(angle(i)), cy + rLen * Math.sin(angle(i))];
+    }
+
+    var lv;
+    for (lv = 1; lv <= 5; lv++) {
+        var rr = R * lv / 5;
+        ctx.beginPath();
+        for (var i = 0; i < n; i++) {
+            var p = pt(i, rr);
+            if (i === 0) ctx.moveTo(p[0], p[1]);
+            else ctx.lineTo(p[0], p[1]);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = lv === 5 ? '#b8d4a8' : '#dfe8d8';
+        ctx.lineWidth = lv === 5 ? 1 : 0.8;
+        ctx.stroke();
+        if (lv === 5) {
+            ctx.fillStyle = '#aaaaaa';
+            ctx.font = '9px "Noto Sans SC", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('100', cx + 2, cy - R + 5);
+        }
+    }
+
+    for (var a = 0; a < n; a++) {
+        var edge = pt(a, R);
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
-        ctx.strokeStyle = '#d0cdc6';
+        ctx.lineTo(edge[0], edge[1]);
+        ctx.strokeStyle = '#d4e8c4';
+        ctx.lineWidth = 0.8;
         ctx.stroke();
-        var lx = cx + (r + 20) * Math.cos(angle);
-        var ly = cy + (r + 20) * Math.sin(angle);
-        ctx.fillStyle = '#555';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(labels[i], lx, ly);
     }
 
     ctx.beginPath();
-    for (var i = 0; i < n; i++) {
-        var angle = (Math.PI * 2 * i) / n - Math.PI / 2;
-        var ratio = (values[i] || 0) / 100;
-        var x = cx + r * ratio * Math.cos(angle);
-        var y = cy + r * ratio * Math.sin(angle);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    for (var j = 0; j < n; j++) {
+        var rData = R * (values[j] || 0) / 100;
+        var q = pt(j, rData);
+        if (j === 0) ctx.moveTo(q[0], q[1]);
+        else ctx.lineTo(q[0], q[1]);
     }
     ctx.closePath();
-    ctx.fillStyle = 'rgba(45,106,79,0.2)';
+    ctx.fillStyle = 'rgba(74, 103, 65, 0.15)';
     ctx.fill();
-    ctx.strokeStyle = '#2d6a4f';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#4a6741';
+    ctx.lineWidth = 1.8;
     ctx.stroke();
+
+    for (var k = 0; k < n; k++) {
+        var rDot = R * (values[k] || 0) / 100;
+        var dpt = pt(k, rDot);
+        ctx.beginPath();
+        ctx.arc(dpt[0], dpt[1], 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#4a6741';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    ctx.font = '9px "Noto Sans SC", sans-serif';
+    ctx.fillStyle = '#555555';
+    for (var t = 0; t < n; t++) {
+        var lp = pt(t, R + 18);
+        var lines = String(radarLabels[t]).split('\n');
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (lines.length === 1) {
+            ctx.fillText(lines[0], lp[0], lp[1]);
+        } else {
+            ctx.fillText(lines[0], lp[0], lp[1] - 4);
+            ctx.fillText(lines[1], lp[0], lp[1] + 4);
+        }
+    }
+}
+
+function drawRadar(canvas, labels, values) {
+    drawHrEvalRadarChart(canvas, labels, values);
 }
 
 window.openEvalReportModalById = openEvalReportModalById;

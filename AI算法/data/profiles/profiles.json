@@ -25,35 +25,44 @@
           "机器学习",
           "深度学习",
           "数据结构",
-          "算法"
+          "算法",
+          "RAG架构",
+          "语义匹配",
+          "特征工程",
+          "模型训练",
+          "多轮对话",
+          "知识检索"
         ]
       },
       {
         "category": "编程语言",
         "items": [
           "Python",
-          "Java"
+          "Java",
+          "JavaScript"
         ]
       },
       {
         "category": "工具与框架",
         "items": [
-          "MySQL",
-          "Vue.js",
-          "Spring Boot",
-          "Linux",
+          "CNN",
           "PyTorch",
+          "Vue.js",
           "Flask",
-          "LangChain",
+          "Spring Boot",
+          "MySQL",
           "ChromaDB",
-          "FastAPI"
+          "LangChain",
+          "FastAPI",
+          "Linux"
         ]
       },
       {
         "category": "语言能力",
         "items": [
           "英语CET-6",
-          "普通话二级甲等"
+          "普通话二级甲等",
+          "计算机二级（Python）"
         ]
       }
     ],
@@ -93,7 +102,7 @@
         "role": "独立开发",
         "start_date": "2024-03",
         "end_date": "2024-06",
-        "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署的全流程。",
+        "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
         "tech_stack": [
           "Python",
           "PyTorch",
@@ -146,7 +155,7 @@
         "date": "2024-01"
       }
     ],
-    "updated_at": "2026-03-18 16:34:56",
+    "updated_at": "2026-03-22 18:29:00",
     "profile_completeness": 100
   },
   "5": {

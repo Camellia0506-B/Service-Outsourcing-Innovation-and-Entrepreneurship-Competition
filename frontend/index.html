@@ -10,9 +10,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,600&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=22">
+    <!-- 评估报告弹窗关键布局兜底（完整样式在 styles.css #hrReportDetailModal） -->
+    <style>
+        #hrReportDetailModal.eval-report-overlay:not(.hidden) {
+            position: fixed;
+            inset: 0;
+            z-index: 10050;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+        }
+        #hrReportDetailModal .eval-modal {
+            width: 980px;
+            max-width: calc(100vw - 32px);
+            max-height: min(680px, 90vh);
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+        }
+    </style>
     <!-- 仅登录页 #loginPage.login-v2，不影响其他界面 -->
     <link rel="stylesheet" href="login-v2.css?v=3">
     <!-- ECharts库 -->
@@ -2490,62 +2511,134 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- 评估报告详情弹窗（与企业端 hr-dashboard 报告弹窗结构一致） -->
-        <div id="hrReportDetailModal" class="hr-report-modal-overlay hidden">
-            <div style="background:#fff; max-width:min(900px,94vw); width:100%; margin:0 auto; border-radius:16px; padding:24px 32px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.12); max-height:90vh; overflow-y:auto;">
-                <button id="hrReportDetailClose" type="button" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#666;">×</button>
-
-                <h2 id="hrReportDetailTitle" style="text-align:center;font-size:22px;margin-bottom:4px;">评估报告详情</h2>
-                <p style="text-align:center;color:#888;font-size:13px;margin-bottom:32px;">本报告由企业HR基于简历审阅与能力评估生成</p>
-
-                <div id="reportBasicInfo" style="display:flex;gap:24px;background:#f6f4ef;border-radius:12px;padding:20px;margin-bottom:24px;">
-                    <div style="flex:1"><span style="color:#888;font-size:12px;">公司</span><div id="reportCompanyName" style="font-weight:600;margin-top:4px;"></div></div>
-                    <div style="flex:1"><span style="color:#888;font-size:12px;">评估岗位</span><div id="reportTargetJob" style="font-weight:600;margin-top:4px;"></div></div>
-                    <div style="flex:1"><span style="color:#888;font-size:12px;">提交时间</span><div id="reportSubmittedAt" style="font-weight:600;margin-top:4px;"></div></div>
+    <!-- 评估报告详情弹窗：置于 #app 外，避免主布局 flex 影响 position:fixed；类名 eval-* 避免与全局冲突 -->
+    <div id="hrReportDetailModal" class="eval-report-overlay hidden" aria-hidden="true">
+        <div class="eval-modal" role="dialog" aria-modal="true" aria-labelledby="hrReportDetailTitle">
+            <div class="eval-header">
+                <div class="eval-header-top">
+                    <div>
+                        <h2 id="hrReportDetailTitle" class="eval-title">评估报告 · 算法工程师</h2>
+                        <p class="eval-sub">本报告由企业HR基于您的简历与能力评估生成</p>
+                    </div>
+                    <button id="hrReportDetailClose" type="button" class="eval-close" aria-label="关闭">✕</button>
                 </div>
-
-                <div style="display:flex;gap:16px;margin-bottom:24px;">
-                    <div style="flex:1;border:1px solid #e8e4dc;border-radius:12px;padding:16px;text-align:center;">
-                        <div style="color:#888;font-size:12px;margin-bottom:8px;">整体印象</div>
-                        <div id="reportOverall" style="font-size:20px;font-weight:700;color:#2d6a4f;"></div>
+                <div class="eval-header-info eval-header-info--student">
+                    <div class="eval-info-cell">
+                        <div class="eval-info-cell-label">公司</div>
+                        <div id="reportCompanyName" class="eval-info-cell-value"></div>
                     </div>
-                    <div style="flex:1;border:1px solid #e8e4dc;border-radius:12px;padding:16px;text-align:center;">
-                        <div style="color:#888;font-size:12px;margin-bottom:8px;">录用意向</div>
-                        <div id="reportHiring" style="font-size:20px;font-weight:700;color:#2d6a4f;"></div>
+                    <div class="eval-info-cell">
+                        <div class="eval-info-cell-label">评估岗位</div>
+                        <div id="reportTargetJob" class="eval-info-cell-value eval-bold"></div>
                     </div>
-                </div>
-
-                <div style="display:flex;gap:24px;margin-bottom:24px;align-items:flex-start;flex-wrap:wrap;">
-                    <div style="flex:1 1 260px;min-width:0;">
-                        <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">能力维度评分</h4>
-                        <canvas id="reportRadarChart" width="360" height="260" style="display:block;margin:0;"></canvas>
+                    <div class="eval-info-cell">
+                        <div class="eval-info-cell-label">报告生成时间</div>
+                        <div id="reportSubmittedAt" class="eval-info-cell-value"></div>
                     </div>
-                    <div style="flex:1 1 260px;min-width:0;">
-                        <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">维度得分概览</h4>
-                        <div id="reportScoreBars" style="margin-top:0;"></div>
+                    <div class="eval-info-cell">
+                        <div class="eval-info-cell-label">整体印象</div>
+                        <div id="reportOverall" class="eval-info-cell-value eval-student-ok"></div>
                     </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
-                    <div style="background:#f0f7f4;border-radius:12px;padding:16px;">
-                        <div style="font-size:13px;font-weight:600;color:#2d6a4f;margin-bottom:8px;">✦ 优势亮点</div>
-                        <div id="reportStrengths" style="font-size:13px;color:#333;line-height:1.6;"></div>
-                    </div>
-                    <div style="background:#fdf8f0;border-radius:12px;padding:16px;">
-                        <div style="font-size:13px;font-weight:600;color:#b56a00;margin-bottom:8px;">△ 待提升方向</div>
-                        <div id="reportWeaknesses" style="font-size:13px;color:#333;line-height:1.6;"></div>
+                    <div class="eval-info-cell">
+                        <div class="eval-info-cell-label">录用意向</div>
+                        <div id="reportHiring" class="eval-info-cell-value eval-student-hi"></div>
                     </div>
                 </div>
+            </div>
 
-                <div style="margin-bottom:24px;">
-                    <h4 style="font-size:14px;font-weight:600;margin-bottom:10px;">推荐岗位方向</h4>
-                    <div id="reportPositions" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+            <div class="eval-score-strip">
+                <div>
+                    <div class="eval-avg-block">
+                        <span id="reportAvgScore" class="eval-avg-num">91.5</span>
+                        <span class="eval-avg-denom">/ 100</span>
+                    </div>
+                    <div class="eval-avg-label">综合平均分</div>
+                </div>
+                <div class="eval-score-divider"></div>
+                <div id="reportMiniScores" class="eval-mini-scores"></div>
+                <div class="eval-rank-badge">
+                    <span>候选人排名</span>
+                    <span>Top 5%</span>
+                </div>
+            </div>
+
+            <div class="eval-body">
+                <div class="eval-left">
+                    <div>
+                        <div class="eval-section-label">能力雷达图</div>
+                        <div class="eval-radar-wrap">
+                            <canvas id="reportRadarChart" width="220" height="170"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="eval-section-label">优势 &amp; 待提升</div>
+                        <div class="eval-pro-con">
+                            <div class="eval-pro-box">
+                                <div class="eval-box-title"><span class="eval-box-dot"></span>优势亮点</div>
+                                <p id="reportStrengths" class="eval-box-text"></p>
+                            </div>
+                            <div class="eval-con-box">
+                                <div class="eval-box-title"><span class="eval-box-dot"></span>待提升方向</div>
+                                <p id="reportWeaknesses" class="eval-box-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="eval-section-label">推荐岗位方向</div>
+                        <div id="reportPositions" class="eval-job-tags"></div>
+                    </div>
                 </div>
 
-                <div style="background:#f6f4ef;border-radius:12px;padding:20px;">
-                    <div style="font-size:13px;font-weight:600;margin-bottom:10px;">🤖 AI综合洞察</div>
-                    <div id="reportInsight" style="font-size:13px;color:#444;line-height:1.8;"></div>
+                <div class="eval-right">
+                    <div>
+                        <div class="eval-divider-label">能力维度评分</div>
+                        <div id="reportScoreBars" class="eval-bars"></div>
+                    </div>
+                    <div class="eval-timeline-section">
+                        <div class="eval-divider-label">评估时间线</div>
+                        <div class="eval-timeline-h">
+                            <div class="eval-tl-item-h">
+                                <div class="eval-tl-dot-h eval-tl-dot-h--filled"></div>
+                                <div class="eval-tl-date-h">03-08 10:12</div>
+                                <div class="eval-tl-title-h">我投递了简历</div>
+                                <div class="eval-tl-desc-h" id="reportTlDesc1">「主动投递算法工程师岗位」</div>
+                            </div>
+                            <div class="eval-tl-item-h">
+                                <div class="eval-tl-dot-h eval-tl-dot-h--filled"></div>
+                                <div class="eval-tl-date-h">03-09 14:30</div>
+                                <div class="eval-tl-title-h">HR完成初审</div>
+                                <div class="eval-tl-desc-h">「匹配分95，被标记为重点候选人」</div>
+                            </div>
+                            <div class="eval-tl-item-h">
+                                <div class="eval-tl-dot-h eval-tl-dot-h--filled"></div>
+                                <div class="eval-tl-date-h">03-09 16:40</div>
+                                <div class="eval-tl-title-h">收到评估报告</div>
+                                <div class="eval-tl-desc-h" id="reportTlDesc3">「HR完成能力评估，均分91.5」</div>
+                            </div>
+                            <div class="eval-tl-item-h">
+                                <div class="eval-tl-dot-h eval-tl-dot-h--pending"></div>
+                                <div class="eval-tl-date-h">待安排</div>
+                                <div class="eval-tl-title-h">等待面试邀请</div>
+                                <div class="eval-tl-desc-h">「HR可能发起面试邀约，请留意通知」</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eval-ai-box">
+                        <div class="eval-ai-header">
+                            <div class="eval-ai-icon">🤖</div>
+                            <div class="eval-ai-title">AI 综合洞察</div>
+                        </div>
+                        <div id="reportInsight"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="eval-footer">
+                <div id="reportFooterMeta" class="eval-footer-meta"></div>
+                <div>
+                    <button type="button" id="hrReportDetailCloseFooter" class="eval-btn-primary">关闭</button>
                 </div>
             </div>
         </div>
@@ -2624,7 +2717,6 @@
     </script>
     <script src="app.js?v=19&t=20260311"></script>
     <script src="hr-app.js"></script>
-    <link rel="stylesheet" href="styles.css?v=10&t=20260305">
     
     <!-- 粒子效果已关闭，背景为纯色暖米白 -->
 
