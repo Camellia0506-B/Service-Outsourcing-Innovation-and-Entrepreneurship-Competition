@@ -43,6 +43,24 @@ def _get_resume_store_path():
     return path
 
 
+def _coerce_resume_anonymous_id(resume: dict) -> dict:
+    """HR 列表/详情统一使用 student_XXX；兼容历史 anonymous_id 为 求职者_XXX 的旧数据。"""
+    if not isinstance(resume, dict):
+        return resume
+    uid = resume.get("user_id")
+    aid = (resume.get("anonymous_id") or "").strip()
+    if uid is None:
+        return resume
+    try:
+        n = int(uid)
+    except (TypeError, ValueError):
+        return resume
+    std = f"student_{n:03d}"
+    if not aid or aid.startswith("求职者_"):
+        return {**resume, "anonymous_id": std}
+    return resume
+
+
 def _get_evaluation_store_path():
     """获取评估邀请存储路径"""
     path = get_abs_path("data/evaluations")
@@ -149,7 +167,7 @@ def _build_resume_entry_from_student_sources(user_id, profile=None, ability_prof
         uid = int(user_id) if user_id is not None else 0
     except (TypeError, ValueError):
         uid = 0
-    anonymous_id = f"求职者_{uid:03d}"
+    anonymous_id = f"student_{uid:03d}"
 
     education_level = "本科"
     major_category = "计算机相关"
@@ -271,9 +289,10 @@ def _load_all_resumes():
                         if user_id is not None:
                             if not resume.get("anonymous_id"):
                                 try:
-                                    resume = {**resume, "anonymous_id": f"求职者_{int(user_id):03d}"}
+                                    resume = {**resume, "anonymous_id": f"student_{int(user_id):03d}"}
                                 except (TypeError, ValueError):
                                     pass
+                            resume = _coerce_resume_anonymous_id(resume)
                             privacy_settings = _load_user_privacy_settings(user_id)
                             if privacy_settings.get("consents", {}).get("resume_visible_to_hr", False):
                                 resumes.append(resume)
@@ -311,7 +330,7 @@ def _load_all_resumes():
         if not privacy_settings.get("consents", {}).get("resume_visible_to_hr", False):
             continue
         entry = _build_resume_entry_from_student_sources(user_id, profile, ability_profile)
-        resumes.append(entry)
+        resumes.append(_coerce_resume_anonymous_id(entry))
         seen_user_ids.add(user_id)
 
     return resumes
@@ -583,10 +602,20 @@ def student_detail():
         if not anonymous_id:
             return error_response(400, "请提供 anonymous_id 参数")
 
-        if JAVA_BACKEND_URL and anonymous_id.startswith("student_"):
+        java_aid = anonymous_id
+        if java_aid.startswith("求职者_"):
             try:
-                url = f"{JAVA_BACKEND_URL}/api/v1/hr/students/detail?anonymous_id={anonymous_id}"
-                r = requests.get(url, timeout=10)
+                _n = int(java_aid.replace("求职者_", "").strip())
+                java_aid = f"student_{_n:03d}"
+            except (TypeError, ValueError):
+                pass
+        if JAVA_BACKEND_URL and java_aid.startswith("student_"):
+            try:
+                r = requests.get(
+                    f"{JAVA_BACKEND_URL}/api/v1/hr/students/detail",
+                    params={"anonymous_id": java_aid},
+                    timeout=10,
+                )
                 if r.status_code == 200:
                     body = r.json()
                     if isinstance(body, dict) and body.get("code") == 200 and body.get("data") is not None:
@@ -624,7 +653,7 @@ def student_detail():
             return error_response(404, "未找到该学生档案")
 
         data = {
-            "anonymous_id": f"求职者_{user_id:03d}",
+            "anonymous_id": f"student_{user_id:03d}",
             "user_id": user_id,
             "profile": profile or {},
             "ability_profile": ability_profile or {},
@@ -643,6 +672,11 @@ def send_invitation():
         body = request.get_json(silent=True) or {}
         hr_id = body.get("hr_id")
         anonymous_student_id = (body.get("anonymous_student_id") or "").strip()
+        if anonymous_student_id.startswith("求职者_"):
+            try:
+                anonymous_student_id = f"student_{int(anonymous_student_id.replace('求职者_', '').strip()):03d}"
+            except (TypeError, ValueError):
+                pass
         target_job = body.get("target_job")
         message = body.get("message")
 
@@ -660,8 +694,8 @@ def send_invitation():
         
         if not user_id:
             ids_in_list = [str((r.get("anonymous_id") or "").strip()) for r in all_resumes[:5]]
-            logger.warning(f"[HR] 邀约未找到求职者: anonymous_student_id={repr(anonymous_student_id)}, 当前列表前几条 anonymous_id={ids_in_list}")
-            return error_response(404, "未找到该求职者信息")
+            logger.warning(f"[HR] 邀约未找到 student: anonymous_student_id={repr(anonymous_student_id)}, 当前列表前几条 anonymous_id={ids_in_list}")
+            return error_response(404, "未找到该 student 对应信息")
 
         # 检查用户隐私设置
         privacy_settings = _load_user_privacy_settings(user_id)

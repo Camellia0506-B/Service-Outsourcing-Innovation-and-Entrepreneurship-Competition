@@ -63,7 +63,7 @@ def _save_resume(user_id, resume_data):
 # ========== AI简历生成相关函数 ==========
 def _build_resume_generation_chain():
     """构建简历生成链"""
-    prompt_text = """你是一位专业的HR简历专家，擅长根据求职者的个人信息生成高质量的求职简历。
+    prompt_text = """你是一位专业的HR简历专家，擅长根据 student（学生/候选人）的个人信息生成高质量的求职简历。
 
 请根据以下用户信息，为用户生成一份匿名简历，简历样式要适合企业HR查看。
 
@@ -125,7 +125,7 @@ def _ai_generate_resume_from_profile(profile, user_id):
         # 补充完整简历数据
         resume_data = {
             "user_id": user_id,
-            "anonymous_id": f"求职者_{user_id:03d}",
+            "anonymous_id": f"student_{user_id:03d}",
             "education_level": ai_data.get("education_level", "本科"),
             "major_category": ai_data.get("major_category", "计算机科学与技术"),
             "gpa_level": ai_data.get("gpa_level", "良好（3.3-3.7）"),
@@ -173,7 +173,7 @@ def _generate_simulated_resume(profile, user_id):
         education_info = {}
         skills = []
 
-    anonymous_id = f"求职者_{user_id:03d}"
+    anonymous_id = f"student_{user_id:03d}"
     education_level = education_info.get("degree", random.choice(education_levels))
     major_category = education_info.get("major", random.choice(major_categories))
     gpa_level = basic_info.get("gpa", random.choice(gpa_levels))

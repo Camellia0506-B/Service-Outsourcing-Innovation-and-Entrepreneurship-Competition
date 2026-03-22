@@ -109,4 +109,7 @@ AI算法/data/student_profiles/*.json
 # AI 生成任务状态（跨进程/重启恢复用，可不入库）
 AI算法/data/ai_tasks/
 
+# 用户隐私设置与访问日志（本地，不入库）
+AI算法/data/privacy_settings/
+
  

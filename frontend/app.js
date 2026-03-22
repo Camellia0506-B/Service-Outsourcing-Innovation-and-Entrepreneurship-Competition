@@ -332,8 +332,8 @@ async function loadTransferGraph(jobName) {
 
     const loadingDiv = document.createElement('div');
     loadingDiv.id = '_graphLoading';
-    loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#aab4cc';
-    loadingDiv.innerHTML = '<div class="graph-loading-spinner" style="margin:0 auto"></div><div style="font-size:14px">Agent正在生成换岗路径图谱，请稍后...</div>';
+    loadingDiv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#4a7350';
+    loadingDiv.innerHTML = '<div class="graph-loading-spinner" style="margin:0 auto"></div><div style="font-size:14px;font-weight:500">Agent正在生成换岗路径图谱，请稍后...</div>';
     if (!document.getElementById('_spinStyle')) {
         const s = document.createElement('style');
         s.id = '_spinStyle';
@@ -1152,6 +1152,9 @@ class CareerPlanningApp {
             this.loadStudentEvaluationReports();
         });
         document.getElementById('hrReportDetailClose')?.addEventListener('click', () => {
+            this.closeReportDetailModal();
+        });
+        document.getElementById('hrReportDetailCloseFooter')?.addEventListener('click', () => {
             this.closeReportDetailModal();
         });
         document.getElementById('hrReportDetailModal')?.addEventListener('click', function (e) {
@@ -1989,6 +1992,80 @@ class CareerPlanningApp {
         this.initDateInput();
 
         this.renderSkillsSection(skills);
+
+        // 填充实习经历（class 与 collectInternships() 一致；addInternship 需容器内先有 .exp-item 模板，故清空前先克隆一条）
+        const internships = profileData.internships || [];
+        const internContainer = document.getElementById('internshipsContainer');
+        if (internContainer && internships.length > 0) {
+            const internTmpl = internContainer.querySelector('.exp-item');
+            const internTmplClone = internTmpl ? internTmpl.cloneNode(true) : null;
+            internContainer.querySelectorAll('.exp-item').forEach((el) => el.remove());
+            if (internTmplClone) {
+                internTmplClone.querySelectorAll('input').forEach((inp) => { inp.value = ''; });
+                internContainer.appendChild(internTmplClone);
+            }
+            internships.forEach((intern, idx) => {
+                if (idx > 0) this.addInternship();
+                const items = internContainer.querySelectorAll('.exp-item');
+                const item = items[items.length - 1];
+                if (item) {
+                    const companyEl = item.querySelector('.internship-company');
+                    const positionEl = item.querySelector('.internship-position');
+                    const timeInput = item.querySelector('.internship-time');
+                    const descEl = item.querySelector('.internship-description');
+                    if (companyEl) companyEl.value = intern.company || '';
+                    if (positionEl) positionEl.value = intern.position || '';
+                    if (timeInput) {
+                        const start = intern.start_date || '';
+                        const end = intern.end_date || '';
+                        const dur = intern.duration || '';
+                        if (start && end) timeInput.value = `${start} - ${end}`;
+                        else if (start) timeInput.value = start;
+                        else if (dur) timeInput.value = dur;
+                        else timeInput.value = end || '';
+                    }
+                    if (descEl) descEl.value = intern.description || '';
+                }
+            });
+        }
+
+        // 填充项目经历（class 与 collectProjects() 一致；技术栈为 .project-tech-stack）
+        const projects = profileData.projects || [];
+        const projContainer = document.getElementById('projectsContainer');
+        if (projContainer && projects.length > 0) {
+            const projTmpl = projContainer.querySelector('.exp-item');
+            const projTmplClone = projTmpl ? projTmpl.cloneNode(true) : null;
+            projContainer.querySelectorAll('.exp-item').forEach((el) => el.remove());
+            if (projTmplClone) {
+                projTmplClone.querySelectorAll('input').forEach((inp) => { inp.value = ''; });
+                projContainer.appendChild(projTmplClone);
+            }
+            projects.forEach((proj, idx) => {
+                if (idx > 0) this.addProject();
+                const items = projContainer.querySelectorAll('.exp-item');
+                const item = items[items.length - 1];
+                if (item) {
+                    const nameInput = item.querySelector('.project-name');
+                    const roleInput = item.querySelector('.project-role');
+                    const timeInput = item.querySelector('.project-time');
+                    const descInput = item.querySelector('.project-description');
+                    const techInput = item.querySelector('.project-tech-stack');
+                    if (nameInput) nameInput.value = proj.name || '';
+                    if (roleInput) roleInput.value = proj.role || '';
+                    if (timeInput) {
+                        const start = proj.start_date || '';
+                        const end = proj.end_date || '';
+                        timeInput.value = end ? `${start} - ${end}` : start;
+                    }
+                    if (descInput) descInput.value = proj.description || '';
+                    if (techInput) {
+                        techInput.value = Array.isArray(proj.tech_stack)
+                            ? proj.tech_stack.join(', ')
+                            : (proj.tech_stack || '');
+                    }
+                }
+            });
+        }
     }
 
     // 渲染技能模块（带默认分类和标签）
@@ -2029,7 +2106,7 @@ class CareerPlanningApp {
     // 将简历解析结果转换为档案结构，便于直接填充表单（输出完整结构，用于覆盖模式）
     transformParsedResumeData(parsed) {
         if (!parsed || typeof parsed !== 'object') {
-            return { basic_info: {}, education_info: {}, skills: [] };
+            return { basic_info: {}, education_info: {}, skills: [], internships: [], projects: [] };
         }
         const basicRaw = parsed.basic_info || {};
         const basic = {
@@ -2070,7 +2147,9 @@ class CareerPlanningApp {
                 expected_graduation: firstEduNorm.expected_graduation || '',
                 gpa: firstEduNorm.gpa || ''
             },
-            skills: []
+            skills: [],
+            internships: parsed.internships || [],
+            projects: parsed.projects || []
         };
 
         if (skillsFromResume.length > 0) {
@@ -2102,6 +2181,42 @@ class CareerPlanningApp {
                 });
             }
         }
+
+        const normIntern = (i) => {
+            if (!i || typeof i !== 'object') return null;
+            const company = (i.company || '').trim();
+            const position = (i.position || i.role || '').trim();
+            const start = (i.start_date || '').trim();
+            const end = (i.end_date || '').trim();
+            const dur = (i.duration || '').trim();
+            let desc = (i.description || '').trim();
+            if (!desc && Array.isArray(i.achievements) && i.achievements.length) {
+                desc = i.achievements.map((a) => (typeof a === 'string' ? a : (a && a.text) || '')).filter(Boolean).join('；');
+            }
+            if (!company && !position && !start && !end && !dur && !desc) return null;
+            return { company, position, start_date: start, end_date: end, duration: dur, description: desc };
+        };
+        const normProject = (p) => {
+            if (!p || typeof p !== 'object') return null;
+            const name = (p.name || p.title || '').trim();
+            const role = (p.role || '').trim();
+            const start = (p.start_date || '').trim();
+            const end = (p.end_date || '').trim();
+            let desc = (p.description || '').trim();
+            let tech = p.tech_stack || p.techStack || [];
+            if (typeof tech === 'string') {
+                tech = tech.split(',').map((s) => s.trim()).filter(Boolean);
+            }
+            if (!Array.isArray(tech)) tech = [];
+            if (!name && !role && !start && !end && !desc && !tech.length) return null;
+            return { name, role, start_date: start, end_date: end, description: desc, tech_stack: tech };
+        };
+        profileData.internships = Array.isArray(parsed.internships)
+            ? parsed.internships.map(normIntern).filter(Boolean)
+            : [];
+        profileData.projects = Array.isArray(parsed.projects)
+            ? parsed.projects.map(normProject).filter(Boolean)
+            : [];
 
         return profileData;
     }
@@ -2813,12 +2928,13 @@ class CareerPlanningApp {
             return;
         }
         const parsedData = r.parsedData;
-        const userId = r.userId;
         const hasValidData = this._countParsedFields(parsedData) > 0;
         if (hasValidData) {
             try {
                 const profileData = this.transformParsedResumeData(parsedData);
                 this.fillProfileFormFromResume(profileData);
+                // 档案已在轮询到 completed 且 fill 之后由 _resumeParsePollSteps 中 saveProfile 持久化；此处仅导航展示
+                this.showToast('已打开个人档案，可核对实习/项目等信息', 'success');
                 // 切换到档案页并打开「基本信息」，让用户看到已填充内容
                 this.showPage('profilePage');
                 const profilePage = document.getElementById('profilePage');
@@ -2826,15 +2942,7 @@ class CareerPlanningApp {
                     const basicTab = profilePage.querySelector('.tab[data-tab="basic"]');
                     if (basicTab) basicTab.click();
                 }
-                this.saveProfile().then(() => {
-                    this.showToast('简历解析完成，档案已保存，正在重新生成能力画像…', 'success');
-                    aiGenerateAbilityProfile(userId, 'profile').then((res) => {
-                        if (res.success) this.showToast('能力画像已更新，岗位匹配将基于新简历', 'success');
-                    }).catch(() => {});
-                    this.loadDashboardData(); // 保存后再刷新仪表盘
-                }).catch(() => {
-                    this.loadDashboardData();
-                });
+                this.loadDashboardData();
             } catch (e) {
                 console.error('应用简历解析结果到表单时出错:', e);
                 this.showToast('填充失败: ' + (e.message || '未知错误'), 'error');
@@ -3992,6 +4100,7 @@ class CareerPlanningApp {
         const titleEl = document.getElementById('hrReportDetailTitle');
         if (!overlay) return;
         overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
 
         const setEl = function (id, text) { var el = document.getElementById(id); if (el) el.textContent = text || '—'; };
         setEl('reportCompanyName', '');
@@ -4001,9 +4110,20 @@ class CareerPlanningApp {
         setEl('reportHiring', '');
         setEl('reportStrengths', '');
         setEl('reportWeaknesses', '');
-        document.getElementById('reportScoreBars').innerHTML = '';
-        document.getElementById('reportPositions').innerHTML = '';
+        var barsHost = document.getElementById('reportScoreBars');
+        if (barsHost) barsHost.innerHTML = '';
+        var posHost = document.getElementById('reportPositions');
+        if (posHost) posHost.innerHTML = '';
+        var miniHost = document.getElementById('reportMiniScores');
+        if (miniHost) miniHost.innerHTML = '';
+        var avgEl0 = document.getElementById('reportAvgScore');
+        if (avgEl0) avgEl0.textContent = '—';
         setEl('reportInsight', '');
+        setEl('reportFooterMeta', '');
+        var tl1 = document.getElementById('reportTlDesc1');
+        if (tl1) tl1.textContent = '「主动投递算法工程师岗位」';
+        var tl3 = document.getElementById('reportTlDesc3');
+        if (tl3) tl3.textContent = '「HR完成能力评估，均分—」';
 
         const userId = getCurrentUserId();
         if (!userId) {
@@ -4057,10 +4177,12 @@ class CareerPlanningApp {
         var overallText = impressionToText[overallRaw] || overallRaw;
         var hiringText = intentToText[hiringRaw] || hiringRaw;
 
-        if (titleEl) titleEl.textContent = '评估报告详情 · ' + (data.target_job || data.targetJob || '');
+        var jobTitle = data.target_job || data.targetJob || '—';
+        if (titleEl) titleEl.textContent = '评估报告 · ' + jobTitle;
         setEl('reportCompanyName', data.company_name || data.companyName || '—');
-        setEl('reportTargetJob', data.target_job || data.targetJob || '—');
-        setEl('reportSubmittedAt', data.submitted_at || data.submittedAt || '—');
+        setEl('reportTargetJob', jobTitle);
+        var genTime = data.submitted_at || data.submittedAt || '—';
+        setEl('reportSubmittedAt', genTime);
         setEl('reportOverall', overallText);
         setEl('reportHiring', hiringText);
         setEl('reportStrengths', data.strengths_noted || data.strengthsNoted || '—');
@@ -4071,42 +4193,84 @@ class CareerPlanningApp {
         if (posEl) {
             if (Array.isArray(positions) && positions.length) {
                 posEl.innerHTML = positions.map(function (p) {
-                    return '<span style="background:#e8f4ee;color:#2d6a4f;padding:4px 12px;border-radius:20px;font-size:13px;">' + String(p).replace(/</g, '&lt;') + '</span>';
+                    return '<span class="eval-job-tag">' + String(p).replace(/</g, '&lt;') + '</span>';
                 }).join('');
             } else {
-                posEl.innerHTML = '<span style="color:#999;font-size:13px;">暂无推荐岗位</span>';
+                posEl.innerHTML = '<span style="color:#8a8a8a;font-size:12px;">暂无推荐岗位</span>';
             }
         }
 
         var barsHtml = dimensions.map(function (dim) {
             var val = scores[dim] !== undefined ? scores[dim] : 0;
-            var color = val >= 85 ? '#2d6a4f' : val >= 70 ? '#b56a00' : '#888';
-            return '<div style="margin-bottom:12px;">' +
-                '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">' +
-                '<span>' + dim + '</span><span style="font-weight:600;color:' + color + '">' + val + '</span></div>' +
-                '<div style="background:#eee;border-radius:4px;height:6px;">' +
-                '<div style="width:' + Math.min(100, val) + '%;background:' + color + ';height:6px;border-radius:4px;transition:width 0.6s;"></div></div></div>';
+            var w = Math.min(100, Math.max(0, val));
+            var isGold = dim === '沟通表达';
+            return '<div class="eval-bar-row">' +
+                '<div class="eval-bar-header">' +
+                '<span class="eval-bar-name">' + dim + '</span>' +
+                '<span class="eval-bar-score' + (isGold ? ' eval-gold' : '') + '">' + val + '</span></div>' +
+                '<div class="eval-bar-track"><div class="eval-bar-fill' + (isGold ? ' eval-gold' : '') + '" style="width:' + w + '%;"></div></div></div>';
         }).join('');
         var barsEl = document.getElementById('reportScoreBars');
         if (barsEl) barsEl.innerHTML = barsHtml;
 
         var dimValues = dimensions.map(function (d) { return Number(scores[d]) || 0; });
         var avgScore = dimValues.length ? dimValues.reduce(function (a, b) { return a + b; }, 0) / dimValues.length : 0;
+        var avgEl = document.getElementById('reportAvgScore');
+        if (avgEl) avgEl.textContent = avgScore.toFixed(1);
+
+        var miniOrder = [
+            { key: '专业技能匹配度', short: '专业技能' },
+            { key: '学习能力', short: '学习能力' },
+            { key: '沟通表达', short: '沟通表达' },
+            { key: '团队协作意愿', short: '团队协作' },
+            { key: '抗压能力', short: '抗压能力' },
+            { key: '职业成熟度', short: '职业成熟度' }
+        ];
+        var miniEl = document.getElementById('reportMiniScores');
+        if (miniEl) {
+            miniEl.innerHTML = miniOrder.map(function (m) {
+                var val = scores[m.key] !== undefined ? scores[m.key] : 0;
+                var gold = m.key === '沟通表达';
+                return '<div class="eval-mini-score">' +
+                    '<div class="eval-mini-score-val' + (gold ? ' eval-gold' : '') + '">' + val + '</div>' +
+                    '<div class="eval-mini-score-label">' + m.short + '</div></div>';
+            }).join('');
+        }
+
         var topDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) > (scores[b] || 0) ? a : b; });
         var lowDim = dimensions.reduce(function (a, b) { return (scores[a] || 0) < (scores[b] || 0) ? a : b; });
-        var insightText = '综合6项维度评分，平均得分为 ' + avgScore.toFixed(1) + ' 分，整体表现' + (avgScore >= 85 ? '优秀' : avgScore >= 75 ? '良好' : '中等') + '。' +
-            '其中「' + topDim + '」维度表现最为突出（' + (scores[topDim] || 0) + '分）；' +
-            '「' + lowDim + '」维度（' + (scores[lowDim] || 0) + '分）仍有提升空间，建议后续重点关注。' +
-            'HR录用意向为「' + hiringText + '」，综合建议优先考虑 ' + (positions[0] || '相关') + ' 方向岗位。';
+        var perfWord = avgScore >= 85 ? '优秀' : avgScore >= 75 ? '良好' : '中等';
+        var insightText = '根据HR对您的评估，综合6项维度得分' + avgScore.toFixed(1) + '分，整体表现' + perfWord + '。\n' +
+            '「' + topDim + '」维度表现最为突出（' + (scores[topDim] || 0) + '分），显示出较强核心竞争力；\n' +
+            '「' + lowDim + '」维度（' + (scores[lowDim] || 0) + '分）仍有提升空间，建议您在后续面试与工作中持续关注。\n' +
+            'HR录用意向为「' + hiringText + '」，综合建议可优先考虑 ' + (positions[0] || '相关') + ' 方向岗位。';
         setEl('reportInsight', insightText);
 
+        var companyName = data.company_name || data.companyName || '星途智探科技有限公司';
+        var fm = document.getElementById('reportFooterMeta');
+        if (fm) fm.textContent = '报告生成时间：' + genTime + ' · ' + companyName;
+
+        var tlJob = document.getElementById('reportTlDesc1');
+        if (tlJob) tlJob.textContent = '「主动投递' + jobTitle + '岗位」';
+        var tlAvg = document.getElementById('reportTlDesc3');
+        if (tlAvg) tlAvg.textContent = '「HR完成能力评估，均分' + avgScore.toFixed(1) + '」';
+
+        var radarLabels = dimensions.map(function (d) {
+            if (d === '专业技能匹配度') return '专业技能\n匹配度';
+            if (d === '团队协作意愿') return '团队协作\n意愿';
+            if (d === '职业成熟度') return '职业\n成熟度';
+            return d;
+        });
         var canvas = document.getElementById('reportRadarChart');
-        if (canvas && typeof window.drawRadar === 'function') window.drawRadar(canvas, dimensions, dimValues);
+        if (canvas && typeof window.drawRadar === 'function') window.drawRadar(canvas, radarLabels, dimValues);
     }
 
     closeReportDetailModal() {
         const overlay = document.getElementById('hrReportDetailModal');
-        if (overlay) overlay.classList.add('hidden');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
     }
 
     // 加载简历
@@ -8536,7 +8700,7 @@ class CareerPlanningApp {
     async loadPromotionPath(jobName) {
         const container = document.getElementById('promotionContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">Agent正在生成垂直岗位图谱，请稍后...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#4a7350"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px;font-weight:500">Agent正在生成垂直岗位图谱，请稍后...</div></div>`;
         try {
             const result = await getCareerPath(jobName);
             if (result.code === 200 && result.data && result.data.path && result.data.path.length) {
@@ -8603,7 +8767,7 @@ class CareerPlanningApp {
     async loadTransferPath(jobName) {
         const container = document.getElementById('transferContainer');
         if (!container) return;
-        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#aab4cc"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px">Agent正在生成换岗路径图谱，请稍后...</div></div>`;
+        container.innerHTML = `<div style="text-align:center;padding:60px 0;color:#4a7350"><div class="graph-loading-spinner" style="margin:0 auto 12px"></div><div style="font-size:14px;margin-top:8px;font-weight:500">Agent正在生成换岗路径图谱，请稍后...</div></div>`;
         try {
             const result = await getRelationGraphByJobName(jobName);
             if (result.code === 200 && result.data && Array.isArray(result.data) && result.data.length) {

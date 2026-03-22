@@ -2108,7 +2108,7 @@ AI 给出的改进建议。
         "total": 45,
         "list": [
           {
-            "anonymous_id": "student_anon_001",  // 匿名ID
+            "anonymous_id": "student_001",  // 匿名ID
             "education_level": "本科",
             "major_category": "计算机科学与技术",
             "gpa_level": "优秀（3.7+）",
@@ -2132,7 +2132,7 @@ AI 给出的改进建议。
 
     {
       "hr_id": "hr_001",
-      "anonymous_student_id": "student_anon_001",
+      "anonymous_student_id": "student_001",
       "target_job": "AI产品经理",
       "message": "您好，我们公司正在招聘AI产品经理，看到您的简历后很感兴趣，希望邀请您参与一次评估交流。"
     }

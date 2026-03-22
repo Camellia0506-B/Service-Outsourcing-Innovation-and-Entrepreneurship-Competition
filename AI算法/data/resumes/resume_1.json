@@ -1,0 +1,25 @@
+{
+  "user_id": 1,
+  "anonymous_id": "student_001",
+  "target_job": "技术支持工程师",
+  "education_level": "本科",
+  "major_category": "计算机科学与技术",
+  "gpa_level": "良好（3.3-3.7）",
+  "system_match_score": 95,
+  "ability_tags": [
+    "机器学习",
+    "深度学习",
+    "数据结构",
+    "Python",
+    "Java",
+    "MySQL",
+    "Vue.js",
+    "Spring Boot"
+  ],
+  "highlight": "有完整的项目和实习经验",
+  "is_open_to_contact": true,
+  "source": "student_profile",
+  "generated_at": "2026-03-22T15:28:38.000776",
+  "submitted_to_hr": true,
+  "submitted_at": "2026-03-22T15:28:38.000776"
+}
