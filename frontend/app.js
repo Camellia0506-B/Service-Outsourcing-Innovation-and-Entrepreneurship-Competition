@@ -1037,10 +1037,18 @@ class CareerPlanningApp {
             if (e.target && e.target.id === 'trackingFullAnalysisModal') this.closeTrackingFullAnalysisModal();
         });
 
-        // Tab5 报告列表：点击报告卡片显示详情
+        // Tab5 报告列表：点击报告卡片显示详情；删除按钮单独处理
         const trackingReportsList = document.getElementById('trackingReportsList');
         if (trackingReportsList) {
             trackingReportsList.addEventListener('click', (e) => {
+                const delBtn = e.target.closest?.('[data-action="delete-report"]');
+                if (delBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const rid = delBtn.getAttribute('data-report-id') || delBtn.dataset.reportId;
+                    if (rid) this.confirmDeleteTrackingReport(rid);
+                    return;
+                }
                 const card = e.target.closest?.('.tracking-rpt-card');
                 if (card && card.dataset.reportId) this.selectTrackingReport(card.dataset.reportId);
             });
@@ -4514,12 +4522,52 @@ class CareerPlanningApp {
             if (item.key_weakness) tags.push('<span class="tracking-tag-s">技能Gap</span>');
             if (item.plan_updated) tags.push('<span class="tracking-tag-r">简历优化</span>');
             tags.push('<span class="tracking-tag-i">面试准备</span>');
+            const trashSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
             return `<div class="tracking-rpt-card" data-report-id="${rid}">
-                <div class="tracking-rpt-head"><h4>${title}</h4><span class="tracking-rpt-date">${esc(item.created_at || '')}</span></div>
+                <div class="tracking-rpt-head">
+                    <h4>${title}</h4>
+                    <div class="tracking-rpt-head-meta">
+                        <span class="tracking-rpt-date">${esc(item.created_at || '')}</span>
+                        <button type="button" class="tracking-rpt-delete" data-action="delete-report" data-report-id="${rid}" title="删除此报告" aria-label="删除此报告">${trashSvg}</button>
+                    </div>
+                </div>
                 <p class="tracking-rpt-desc">${desc}</p>
                 <div class="tracking-rpt-tags">${tags.join('')}</div>
             </div>`;
         }).join('');
+    }
+
+    /** Tab5：删除反馈报告（确认后请求后端并刷新列表） */
+    async confirmDeleteTrackingReport(reportId) {
+        if (!reportId || !confirm('确定删除该反馈报告？删除后不可恢复。')) return;
+        const userId = getCurrentUserId();
+        if (!userId) {
+            this.showToast('用户未登录', 'error');
+            return;
+        }
+        if (typeof deleteFailureReport !== 'function') {
+            this.showToast('删除接口未就绪', 'error');
+            return;
+        }
+        this.showLoading();
+        const res = await deleteFailureReport(reportId, userId);
+        this.hideLoading();
+        if (res && res.success) {
+            this.showToast('已删除', 'success');
+            const sel = document.querySelector('#trackingPage .tracking-rpt-card.sel');
+            if (sel && sel.dataset.reportId === reportId) {
+                const detailEl = document.getElementById('trackingReportDetail');
+                if (detailEl) {
+                    detailEl.innerHTML = '<p class="tracking-rpt-detail-placeholder">左侧选择一份报告查看详情</p>';
+                }
+            }
+            if (this.trackingReportsCache && this.trackingReportsCache[reportId]) {
+                delete this.trackingReportsCache[reportId];
+            }
+            await this.loadTrackingData();
+        } else {
+            this.showToast((res && res.msg) || '删除失败', 'error');
+        }
     }
 
     // AI生成学生能力画像

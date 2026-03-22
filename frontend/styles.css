@@ -4218,9 +4218,18 @@ body.on-login-page {
     border-color: var(--primary-color);
     box-shadow: 0 2px 12px rgba(45, 91, 227, 0.1);
 }
-.tracking-rpt-card .tracking-rpt-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.tracking-rpt-card h4 { font-size: 13px; font-weight: 600; }
-.tracking-rpt-card .tracking-rpt-date { font-size: 11px; color: var(--text-secondary); }
+.tracking-rpt-card .tracking-rpt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.tracking-rpt-card h4 { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; }
+.tracking-rpt-head-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.tracking-rpt-card .tracking-rpt-date { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+.tracking-rpt-delete {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; padding: 0; border: 1px solid var(--border, #e5e0d8);
+    border-radius: 6px; background: var(--surface, #fff); color: var(--text-secondary, #64748b);
+    cursor: pointer; flex-shrink: 0;
+}
+.tracking-rpt-delete:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+.tracking-rpt-delete svg { display: block; }
 .tracking-rpt-card .tracking-rpt-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 .tracking-rpt-tags { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
 .tracking-tag-s { background: #ede9fe; color: #7c3aed; padding: 2px 8px; border-radius: 4px; font-size: 11px; }

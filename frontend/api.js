@@ -638,6 +638,37 @@ class API {
                             return { success: true, data: { summary: { total_applied: 0, written_test_pass_rate: 0, interview_pass_rate: 0, offer_count: 0, rejected_count: 0, in_progress_count: 0 }, records: [], agent_insight: null } };
                         }
                     }
+                    if (endpoint.match(/^\/tracking\/failure-reports\/.+/) && (options.method || 'POST') === 'DELETE') {
+                        try {
+                            const reportId = decodeURIComponent((endpoint.match(/^\/tracking\/failure-reports\/([^/?]+)/) || [])[1] || '');
+                            const uid = String(data.user_id || '');
+                            const raw = _storage.getItem('mock_tracking_reports');
+                            let list = raw ? JSON.parse(raw) : [];
+                            if (!Array.isArray(list)) list = [];
+                            const removed = list.find(r => String(r.report_id) === reportId && (!uid || String(r.user_id) === uid));
+                            list = list.filter(r => !(String(r.report_id) === reportId && (!uid || String(r.user_id) === uid)));
+                            _storage.setItem('mock_tracking_reports', JSON.stringify(list));
+                            if (removed && removed.record_id) {
+                                try {
+                                    const rawRec = _storage.getItem('mock_tracking_records');
+                                    const arr = rawRec ? JSON.parse(rawRec) : [];
+                                    if (Array.isArray(arr)) {
+                                        const idx = arr.findIndex(r => r.record_id === removed.record_id);
+                                        if (idx >= 0) {
+                                            arr[idx].has_failure_report = false;
+                                            _storage.setItem('mock_tracking_records', JSON.stringify(arr));
+                                        }
+                                    }
+                                } catch (_) {}
+                            }
+                            if (!removed) {
+                                return { success: false, msg: '报告不存在或无权删除' };
+                            }
+                            return { success: true, msg: '报告已删除' };
+                        } catch (_) {
+                            return { success: false, msg: '删除失败' };
+                        }
+                    }
                     if (endpoint.startsWith('/tracking/failure-reports')) {
                         try {
                             const raw = _storage.getItem('mock_tracking_reports');
@@ -2483,6 +2514,15 @@ async function deleteTrackingRecord(recordId, userId) {
 // 响应：{ total, list: [{ report_id, job_title, company_name, failure_stage, key_weakness, plan_updated, created_at }] }
 async function getFailureReports(userId, page = 1, size = 10) {
     return await api.get('/tracking/failure-reports', { user_id: userId, page, size });
+}
+
+// 删除一条反馈优化报告
+// DELETE /tracking/failure-reports/<report_id>  body: { user_id }
+async function deleteFailureReport(reportId, userId) {
+    return await api.request(`/tracking/failure-reports/${encodeURIComponent(reportId)}`, {
+        method: 'DELETE',
+        body: { user_id: userId }
+    });
 }
 
 // 9.7 保存失败分析为报告

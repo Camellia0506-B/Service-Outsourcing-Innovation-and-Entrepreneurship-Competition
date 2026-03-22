@@ -263,246 +263,117 @@
     ],
     "has_failure_report": false
   },
-  "track_20260310125137997_5": {
-    "record_id": "track_20260310125137997_5",
+  "track_20260322110431215_5": {
+    "record_id": "track_20260322110431215_5",
     "user_id": 5,
-    "job_id": "job_apply_1773118297991",
+    "job_id": "job_apply_1774148671206",
     "job_title": "后端开发工程师（实习）",
     "company_name": "腾讯",
-    "apply_date": "2026-03-05",
+    "apply_date": "2026-03-10",
     "source": "self_found",
     "current_stage": "offer",
     "result": "offer",
-    "created_at": "2026-03-10 12:51:37",
-    "updated_at": "2026-03-10 12:52:46",
+    "created_at": "2026-03-22 11:04:31",
+    "updated_at": "2026-03-22 11:05:34",
     "timeline": [
       {
         "stage": "applied",
         "result": "pending",
-        "stage_date": "2026-03-05",
+        "stage_date": "2026-03-10",
+        "notes": ""
+      },
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "技术栈要求：Java + SpringBoot + MySQL + Redis\n岗位要求熟悉Linux与数据库优化"
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "written_test",
         "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": "时间：3月7日\n题目：\n1. Java集合框架\n2. SQL索引优化\n3. 算法题：最长递增子序列\n整体完成度：80%"
+        "notes": "笔试时间：3月12日\n\n题目：\n1. Java集合\n2. SQL索引优化\n3. 算法题：二叉树遍历\n\n整体完成度：80%"
       },
       {
         "stage": "interview_1",
         "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "interview_1",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": "面试官：后端技术负责人\n\n问题：\n1. SpringBoot自动装配原理\n2. Redis为什么这么快\n3. MySQL事务隔离级别\n4. 项目中的难点\n\n反馈：基础不错"
-      },
-      {
-        "stage": "interview_2",
-        "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "interview_2",
         "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "面试官：技术经理\n\n问题：\n1. 设计一个秒杀系统\n2. 如何避免缓存击穿\n3. 如何设计高并发接口\n\n整体表现：良好"
+        "notes": ""
+      },
+      {
+        "stage": "interview_2",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "系统设计题：\n\n设计一个秒杀系统\n\n回答思路：\n缓存 + 限流 + 队列"
       },
       {
         "stage": "final",
         "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "final",
         "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "HR主要问题：\n\n1. 职业规划\n2. 为什么选择腾讯\n3. 是否能长期实习\n\n反馈：态度良好"
+        "notes": "HR问题：\n\n1. 职业规划\n2. 实习时间\n3. 是否能长期实习"
       },
       {
         "stage": "offer",
         "result": "offer",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "offer",
         "result": "offer",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "实习offer\n薪资：4500/月\n实习期：3个月"
+        "notes": "获得实习Offer\n\n薪资：4500/月\n实习期：3个月"
       }
     ],
     "has_failure_report": false,
     "stage_notes": {
-      "written_test": "时间：3月7日\n题目：\n1. Java集合框架\n2. SQL索引优化\n3. 算法题：最长递增子序列\n整体完成度：80%",
-      "interview_1": "面试官：后端技术负责人\n\n问题：\n1. SpringBoot自动装配原理\n2. Redis为什么这么快\n3. MySQL事务隔离级别\n4. 项目中的难点\n\n反馈：基础不错",
-      "interview_2": "面试官：技术经理\n\n问题：\n1. 设计一个秒杀系统\n2. 如何避免缓存击穿\n3. 如何设计高并发接口\n\n整体表现：良好",
-      "final": "HR主要问题：\n\n1. 职业规划\n2. 为什么选择腾讯\n3. 是否能长期实习\n\n反馈：态度良好",
-      "offer": "实习offer\n薪资：4500/月\n实习期：3个月"
+      "applied": "技术栈要求：Java + SpringBoot + MySQL + Redis\n岗位要求熟悉Linux与数据库优化",
+      "written_test": "笔试时间：3月12日\n\n题目：\n1. Java集合\n2. SQL索引优化\n3. 算法题：二叉树遍历\n\n整体完成度：80%",
+      "interview_2": "系统设计题：\n\n设计一个秒杀系统\n\n回答思路：\n缓存 + 限流 + 队列",
+      "final": "HR问题：\n\n1. 职业规划\n2. 实习时间\n3. 是否能长期实习",
+      "offer": "获得实习Offer\n\n薪资：4500/月\n实习期：3个月"
     }
   },
-  "track_20260310125435927_5": {
-    "record_id": "track_20260310125435927_5",
+  "track_20260322110612307_5": {
+    "record_id": "track_20260322110612307_5",
     "user_id": 5,
-    "job_id": "job_apply_1773118475921",
-    "job_title": "Java开发工程师（实习）",
-    "company_name": "阿里巴巴",
-    "apply_date": "2026-03-02",
-    "source": "self_found",
-    "current_stage": "rejected",
-    "result": "rejected",
-    "created_at": "2026-03-10 12:54:35",
-    "updated_at": "2026-03-10 19:39:05",
-    "timeline": [
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-02",
-        "notes": ""
-      },
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": "要求熟悉分布式系统\n技术栈：Java + Dubbo + MySQL"
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": "笔试时间：3月4日\n\n题目：\n1. Java并发\n2. 网络协议\n3. 算法题：二叉树遍历\n\n算法题没有写完"
-      },
-      {
-        "stage": "rejected",
-        "result": "rejected",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      }
-    ],
-    "has_failure_report": true,
-    "stage_notes": {
-      "applied": "要求熟悉分布式系统\n技术栈：Java + Dubbo + MySQL",
-      "written_test": "笔试时间：3月4日\n\n题目：\n1. Java并发\n2. 网络协议\n3. 算法题：二叉树遍历\n\n算法题没有写完"
-    }
-  },
-  "track_20260310125541279_5": {
-    "record_id": "track_20260310125541279_5",
-    "user_id": 5,
-    "job_id": "job_apply_1773118541278",
-    "job_title": "数据分析实习生",
-    "company_name": "美团",
-    "apply_date": "2026-03-01",
-    "source": "system_recommend",
-    "current_stage": "rejected",
-    "result": "pending",
-    "created_at": "2026-03-10 12:55:41",
-    "updated_at": "2026-03-10 19:40:25",
-    "timeline": [
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-01",
-        "notes": ""
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "interview_1",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "interview_2",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "final",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "final",
-        "result": "passed",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": "HR问题：\n\n1. 是否能长期实习\n2. 毕业规划\n3. 是否接受加班\n\n反馈：\n希望找更长期实习生"
-      },
-      {
-        "stage": "rejected",
-        "result": "rejected",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "rejected",
-        "result": "pending",
-        "stage_date": "2026-03-10",
-        "self_evaluation": {},
-        "notes": "HR面未通过\n原因：实习时间不够长"
-      }
-    ],
-    "has_failure_report": true,
-    "stage_notes": {
-      "final": "HR问题：\n\n1. 是否能长期实习\n2. 毕业规划\n3. 是否接受加班\n\n反馈：\n希望找更长期实习生",
-      "rejected": "HR面未通过\n原因：实习时间不够长"
-    }
-  },
-  "track_20260310130153095_5": {
-    "record_id": "track_20260310130153095_5",
-    "user_id": 5,
-    "job_id": "job_apply_1773118912935",
-    "job_title": "AI算法实习生",
-    "company_name": "商汤科技",
+    "job_id": "job_apply_1774148772302",
+    "job_title": "前端开发工程师（实习）",
+    "company_name": "字节跳动",
     "apply_date": "2026-03-08",
     "source": "system_recommend",
-    "current_stage": "written_test",
-    "result": "passed",
-    "created_at": "2026-03-10 13:01:53",
-    "updated_at": "2026-03-10 13:02:19",
+    "current_stage": "rejected",
+    "result": "rejected",
+    "created_at": "2026-03-22 11:06:12",
+    "updated_at": "2026-03-22 11:07:51",
     "timeline": [
       {
         "stage": "applied",
@@ -513,220 +384,197 @@
       {
         "stage": "applied",
         "result": "pending",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "要求：\n\n深度学习\nPyTorch\n计算机视觉"
+        "notes": "要求：\n\nVue\nJavaScript\n浏览器原理"
       },
       {
         "stage": "written_test",
         "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "written_test",
         "result": "passed",
-        "stage_date": "2026-03-10",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "笔试内容：\n\n1. CNN原理\n2. 目标检测算法\n3. Python编程题"
-      }
-    ],
-    "has_failure_report": false,
-    "stage_notes": {
-      "applied": "要求：\n\n深度学习\nPyTorch\n计算机视觉",
-      "written_test": "笔试内容：\n\n1. CNN原理\n2. 目标检测算法\n3. Python编程题"
-    }
-  },
-  "track_20260311215006840_5": {
-    "record_id": "track_20260311215006840_5",
-    "user_id": 5,
-    "job_id": "job_apply_1773237006824",
-    "job_title": "软件开发工程师",
-    "company_name": "中国移动",
-    "apply_date": "2026-03-04",
-    "source": "self_found",
-    "current_stage": "offer",
-    "result": "offer",
-    "created_at": "2026-03-11 21:50:06",
-    "updated_at": "2026-03-11 21:50:56",
-    "timeline": [
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-04",
-        "notes": ""
-      },
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "岗位要求：\nJava开发\n熟悉Linux系统\n了解计算机网络"
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "笔试时间：3月6日\n\n题目：\n1. 操作系统基础\n2. TCP三次握手\n3. Java基础\n\n整体难度中等"
+        "notes": "笔试内容：\n\nJS基础\nCSS布局\n算法题"
       },
       {
         "stage": "interview_1",
         "result": "passed",
-        "stage_date": "2026-03-11",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "interview_1",
         "result": "passed",
-        "stage_date": "2026-03-11",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "技术面试\n\n问题：\n1. 线程和进程区别\n2. Java垃圾回收机制\n3. 项目介绍"
+        "notes": "问题：\n\n1. Vue响应式原理\n2. JS事件循环\n3. 浏览器渲染流程"
       },
       {
         "stage": "interview_2",
         "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "interview_2",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "面试官：部门主管\n\n问题：\n1. 为什么选择通信行业\n2. 项目中承担的角色"
-      },
-      {
-        "stage": "final",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "offer",
-        "result": "offer",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "offer",
-        "result": "offer",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "录用为软件开发实习生\n薪资：3500/月"
-      }
-    ],
-    "has_failure_report": false,
-    "stage_notes": {
-      "applied": "岗位要求：\nJava开发\n熟悉Linux系统\n了解计算机网络",
-      "written_test": "笔试时间：3月6日\n\n题目：\n1. 操作系统基础\n2. TCP三次握手\n3. Java基础\n\n整体难度中等",
-      "interview_1": "技术面试\n\n问题：\n1. 线程和进程区别\n2. Java垃圾回收机制\n3. 项目介绍",
-      "interview_2": "面试官：部门主管\n\n问题：\n1. 为什么选择通信行业\n2. 项目中承担的角色",
-      "offer": "录用为软件开发实习生\n薪资：3500/月"
-    }
-  },
-  "track_20260311215208598_5": {
-    "record_id": "track_20260311215208598_5",
-    "user_id": 5,
-    "job_id": "job_apply_1773237128588",
-    "job_title": "后端开发工程师",
-    "company_name": "京东",
-    "apply_date": "2026-03-07",
-    "source": "self_found",
-    "current_stage": "rejected",
-    "result": "rejected",
-    "created_at": "2026-03-11 21:52:08",
-    "updated_at": "2026-03-11 21:53:58",
-    "timeline": [
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-07",
-        "notes": ""
-      },
-      {
-        "stage": "applied",
-        "result": "pending",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "技术栈要求：\nJava\nSpringBoot\nMySQL"
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "written_test",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "笔试内容：\n\nJava基础\n数据库索引\n算法题\n\n算法题较难"
-      },
-      {
-        "stage": "interview_1",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": ""
-      },
-      {
-        "stage": "interview_1",
-        "result": "passed",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "问题：\n\n1. SpringBoot自动配置\n2. MySQL事务\n3. Redis缓存设计"
-      },
-      {
-        "stage": "interview_2",
-        "result": "passed",
-        "stage_date": "2026-03-11",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
       },
       {
         "stage": "interview_2",
         "result": "passed",
-        "stage_date": "2026-03-11",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
-        "notes": "系统设计题：\n\n设计一个订单系统\n\n回答不够完善"
+        "notes": "系统设计题：\n\n设计一个在线聊天系统\n\n回答不够完善"
       },
       {
         "stage": "rejected",
         "result": "rejected",
-        "stage_date": "2026-03-11",
+        "stage_date": "2026-03-22",
         "self_evaluation": {},
         "notes": ""
-      },
-      {
-        "stage": "rejected",
-        "result": "rejected",
-        "stage_date": "2026-03-11",
-        "self_evaluation": {},
-        "notes": "二面未通过\n原因：系统设计经验不足"
       }
     ],
     "has_failure_report": true,
     "stage_notes": {
-      "applied": "技术栈要求：\nJava\nSpringBoot\nMySQL",
-      "written_test": "笔试内容：\n\nJava基础\n数据库索引\n算法题\n\n算法题较难",
-      "interview_1": "问题：\n\n1. SpringBoot自动配置\n2. MySQL事务\n3. Redis缓存设计",
-      "interview_2": "系统设计题：\n\n设计一个订单系统\n\n回答不够完善",
-      "rejected": "二面未通过\n原因：系统设计经验不足"
+      "applied": "要求：\n\nVue\nJavaScript\n浏览器原理",
+      "written_test": "笔试内容：\n\nJS基础\nCSS布局\n算法题",
+      "interview_1": "问题：\n\n1. Vue响应式原理\n2. JS事件循环\n3. 浏览器渲染流程",
+      "interview_2": "系统设计题：\n\n设计一个在线聊天系统\n\n回答不够完善"
+    }
+  },
+  "track_20260322110852663_5": {
+    "record_id": "track_20260322110852663_5",
+    "user_id": 5,
+    "job_id": "job_apply_1774148932656",
+    "job_title": "数据分析实习生",
+    "company_name": "美团",
+    "apply_date": "2026-03-05",
+    "source": "self_found",
+    "current_stage": "rejected",
+    "result": "rejected",
+    "created_at": "2026-03-22 11:08:52",
+    "updated_at": "2026-03-22 11:10:04",
+    "timeline": [
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-05",
+        "notes": ""
+      },
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "技能要求：\n\nSQL\nPython\n数据可视化"
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "笔试题目：\n\nSQL查询\nPython数据处理\n统计学基础\n\nPython题未完成"
+      },
+      {
+        "stage": "rejected",
+        "result": "rejected",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "rejected",
+        "result": "rejected",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "笔试未通过\n原因：Python编程能力不足"
+      }
+    ],
+    "has_failure_report": true,
+    "stage_notes": {
+      "applied": "技能要求：\n\nSQL\nPython\n数据可视化",
+      "written_test": "笔试题目：\n\nSQL查询\nPython数据处理\n统计学基础\n\nPython题未完成",
+      "rejected": "笔试未通过\n原因：Python编程能力不足"
+    }
+  },
+  "track_20260322111104996_5": {
+    "record_id": "track_20260322111104996_5",
+    "user_id": 5,
+    "job_id": "job_apply_1774149064989",
+    "job_title": "算法工程师（实习）",
+    "company_name": "百度",
+    "apply_date": "2026-03-10",
+    "source": "self_found",
+    "current_stage": "interview_2",
+    "result": "passed",
+    "created_at": "2026-03-22 11:11:04",
+    "updated_at": "2026-03-22 11:11:43",
+    "timeline": [
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-10",
+        "notes": ""
+      },
+      {
+        "stage": "applied",
+        "result": "pending",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "要求：\n\nPython\n算法基础\n机器学习"
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "written_test",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "笔试内容：\n\n两道算法题\n一道机器学习基础题"
+      },
+      {
+        "stage": "interview_1",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": ""
+      },
+      {
+        "stage": "interview_1",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": "面试问题：\n\n1. 常见排序算法\n2. 时间复杂度分析\n3. 介绍项目"
+      },
+      {
+        "stage": "interview_2",
+        "result": "passed",
+        "stage_date": "2026-03-22",
+        "self_evaluation": {},
+        "notes": ""
+      }
+    ],
+    "has_failure_report": false,
+    "stage_notes": {
+      "applied": "要求：\n\nPython\n算法基础\n机器学习",
+      "written_test": "笔试内容：\n\n两道算法题\n一道机器学习基础题",
+      "interview_1": "面试问题：\n\n1. 常见排序算法\n2. 时间复杂度分析\n3. 介绍项目"
     }
   }
 }

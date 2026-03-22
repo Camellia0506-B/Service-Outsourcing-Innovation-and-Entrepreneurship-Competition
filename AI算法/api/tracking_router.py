@@ -8,6 +8,7 @@ Career Tracking 模块 API 路由
   POST /api/v1/tracking/record/<record_id>/failure-analysis - 9.3 求职失败反馈分析（SSE）
   GET  /api/v1/tracking/overview                   - 9.4 获取求职跟踪总览
   GET  /api/v1/tracking/failure-reports            - 9.5 获取反馈优化报告列表
+  DELETE /api/v1/tracking/failure-reports/<report_id> - 删除一条反馈优化报告
 """
 
 import json
@@ -594,6 +595,49 @@ def list_failure_reports():
         )
     except Exception as e:
         logger.error(f"[API] /tracking/failure-reports 异常: {e}", exc_info=True)
+        return _error(500, f"服务器内部错误: {e}")
+
+
+# ============================================================
+# 9.5.1 删除一条反馈优化报告
+# ============================================================
+
+
+@tracking_bp.route("/failure-reports/<report_id>", methods=["DELETE"])
+def delete_failure_report(report_id: str):
+    """
+    删除当前用户的一条失败复盘报告。
+    请求体 JSON：{ "user_id": ... }
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        user_id = body.get("user_id")
+        if not user_id:
+            return _error(400, "请提供 user_id")
+
+        store = _load_failure_reports()
+        report = store.get(report_id)
+        if not report:
+            return _error(404, f"报告不存在: {report_id}")
+        if str(report.get("user_id")) != str(user_id):
+            return _error(403, "无权操作该报告")
+
+        record_id = report.get("record_id")
+        store.pop(report_id, None)
+        _save_failure_reports(store)
+
+        if record_id:
+            records = _load_records()
+            rec = records.get(record_id)
+            if rec and str(rec.get("user_id")) == str(user_id):
+                rec["has_failure_report"] = False
+                records[record_id] = rec
+                _save_records(records)
+
+        logger.info(f"[Tracking] 删除反馈报告 report_id={report_id}, user_id={user_id}")
+        return _success(msg="报告已删除")
+    except Exception as e:
+        logger.error(f"[API] DELETE /tracking/failure-reports/{report_id} 异常: {e}", exc_info=True)
         return _error(500, f"服务器内部错误: {e}")
 
 
