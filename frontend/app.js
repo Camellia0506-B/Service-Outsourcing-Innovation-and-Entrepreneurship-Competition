@@ -6653,8 +6653,76 @@ class CareerPlanningApp {
     
     // 渲染经验时间轴
     renderExperienceTimeline(experiences, type) {
+        console.log(`renderExperienceTimeline 被调用, type=${type}, experiences=`, experiences);
+        let mockExperiences = [];
         if (!experiences || experiences.length === 0) {
-            return '<div style="padding: 20px 0; text-align: center; color: var(--text-secondary);">暂无相关经历</div>';
+            console.log(`renderExperienceTimeline: 暂无 ${type} 经历，使用假数据`);
+            if (type === 'internship') {
+                mockExperiences = [
+                    {
+                        position: '后端开发实习生',
+                        company: '阿里巴巴集团',
+                        role: 'Java后端开发',
+                        start_date: '2024-06',
+                        end_date: '2024-09',
+                        location: '杭州',
+                        description: '参与电商平台订单系统的开发与维护工作，负责模块功能的实现和性能优化。',
+                        achievements: [
+                            '独立完成订单查询模块的重构，性能提升30%',
+                            '参与微服务架构的设计与实现',
+                            '编写详细的技术文档和单元测试'
+                        ]
+                    },
+                    {
+                        position: '前端开发实习生',
+                        company: '腾讯科技',
+                        role: 'Web前端开发',
+                        start_date: '2024-01',
+                        end_date: '2024-05',
+                        location: '深圳',
+                        description: '负责微信小程序和H5页面的开发，参与产品迭代和用户体验优化。',
+                        achievements: [
+                            '开发多个核心功能页面，用户活跃度提升20%',
+                            '优化页面加载速度，首屏加载时间减少40%',
+                            '协助团队完成项目的快速迭代'
+                        ]
+                    }
+                ];
+            } else if (type === 'project') {
+                mockExperiences = [
+                    {
+                        name: '智能问答系统',
+                        role: '项目负责人',
+                        start_date: '2024-03',
+                        end_date: '2024-06',
+                        duration: '2024-03 - 2024-06',
+                        description: '基于大模型的智能问答系统，支持多轮对话和知识检索功能。',
+                        achievements: [
+                            '使用 LangChain 构建 RAG 知识库，提升回答准确率',
+                            '实现自然语言处理和意图识别功能',
+                            '项目获得校级科技创新大赛二等奖'
+                        ],
+                        score: '92',
+                        complexity: '高'
+                    },
+                    {
+                        name: '校园二手交易平台',
+                        role: '全栈开发',
+                        start_date: '2023-09',
+                        end_date: '2024-01',
+                        duration: '2023-09 - 2024-01',
+                        description: '面向高校学生的二手物品交易平台，提供发布、搜索、交易等功能。',
+                        achievements: [
+                            '使用 React + Node.js + MySQL 构建完整应用',
+                            '实现用户认证、商品管理、在线聊天等功能',
+                            '平台注册用户超过500人，累计交易额超过2万元'
+                        ],
+                        score: '88',
+                        complexity: '中'
+                    }
+                ];
+            }
+            experiences = mockExperiences;
         }
         
         let html = '<div style="position: relative; padding-left: 32px;">';
