@@ -13448,26 +13448,22 @@ body.on-login-page {
 #assessmentPage #assessmentReportWrap .report-ability-detail .bar-bg {
     background: rgba(45,74,62,0.10);
 }
-/* theme-blue/theme-orange/theme-red 仍保留区分，但颜色更克制、贴合主题 */
-#assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .ab-card::before { background: var(--ink-green); }
+/* theme-blue/theme-orange/theme-red 仍保留区分，但颜色更克制、贴合主题（左侧竖条已去掉） */
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .card-icon { background: rgba(45,74,62,0.10); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .score-num { color: var(--ink-green); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .bar-fill { background: linear-gradient(90deg, var(--ink-green), var(--mid-green)); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-green .level-badge { background: rgba(45,74,62,0.08); color: var(--ink-green); border: 1px solid rgba(45,74,62,0.18); }
 
-#assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .ab-card::before { background: var(--mid-green); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .card-icon { background: rgba(74,124,104,0.10); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .score-num { color: var(--mid-green); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .bar-fill { background: linear-gradient(90deg, var(--mid-green), var(--light-green)); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-blue .level-badge { background: rgba(74,124,104,0.08); color: var(--mid-green); border: 1px solid rgba(74,124,104,0.18); }
 
-#assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .ab-card::before { background: #B8862A; }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .card-icon { background: rgba(184,134,42,0.10); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .score-num { color: #B8862A; }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .bar-fill { background: linear-gradient(90deg, #B8862A, #D1A94D); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-orange .level-badge { background: rgba(184,134,42,0.10); color: #B8862A; border: 1px solid rgba(184,134,42,0.20); }
 
-#assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .ab-card::before { background: #B94040; }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .card-icon { background: rgba(185,64,64,0.10); }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .score-num { color: #B94040; }
 #assessmentPage #assessmentReportWrap .report-ability-detail .theme-red .bar-fill { background: linear-gradient(90deg, #B94040, #D36A6A); }
@@ -13973,7 +13969,7 @@ body.on-login-page {
 .report-ability-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
 .report-ability-desc { margin-top: 10px; font-size: 13px; color: #5a6c7d; line-height: 1.5; }
 
-/* 能力详细分析 — 严格按 ability_detail (1).html：3 列网格、左侧彩色竖条、图标、等级徽章、大分数、进度条、描述 */
+/* 能力详细分析：3 列网格、图标、等级徽章、大分数、进度条、描述（左侧竖条已去掉） */
 .report-ability-detail {
     --ab-bg: #f2f5ff;
     --ab-border: rgba(79,124,255,0.1);
@@ -14017,13 +14013,8 @@ body.on-login-page {
 .report-ability-detail .ability-grid > div:nth-child(5) .ab-card { animation-delay: 0.25s; }
 .report-ability-detail .ability-grid > div:nth-child(6) .ab-card { animation-delay: 0.3s; }
 .report-ability-detail .ab-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    border-radius: 14px 0 0 14px;
+    display: none !important;
+    content: none !important;
 }
 .report-ability-detail .card-top {
     display: flex;
@@ -14093,25 +14084,21 @@ body.on-login-page {
     line-height: 1.5;
 }
 /* 主题：优秀 绿 */
-.report-ability-detail .theme-green .ab-card::before { background: #00b894; }
 .report-ability-detail .theme-green .card-icon { background: rgba(0,184,148,0.1); }
 .report-ability-detail .theme-green .score-num { color: #00966e; }
 .report-ability-detail .theme-green .bar-fill { background: linear-gradient(90deg, #00b894, #00d9b0); }
 .report-ability-detail .theme-green .level-badge { background: rgba(0,184,148,0.1); color: #009e7a; border: 1px solid rgba(0,184,148,0.2); }
 /* 主题：良好 蓝 */
-.report-ability-detail .theme-blue .ab-card::before { background: #4f7cff; }
 .report-ability-detail .theme-blue .card-icon { background: rgba(79,124,255,0.1); }
 .report-ability-detail .theme-blue .score-num { color: #3a65e8; }
 .report-ability-detail .theme-blue .bar-fill { background: linear-gradient(90deg, #4f7cff, #7c9fff); }
 .report-ability-detail .theme-blue .level-badge { background: rgba(79,124,255,0.08); color: #3d65e0; border: 1px solid rgba(79,124,255,0.18); }
 /* 主题：一般 橙 */
-.report-ability-detail .theme-orange .ab-card::before { background: #f5a623; }
 .report-ability-detail .theme-orange .card-icon { background: rgba(245,166,35,0.1); }
 .report-ability-detail .theme-orange .score-num { color: #c47d00; }
 .report-ability-detail .theme-orange .bar-fill { background: linear-gradient(90deg, #f5a623, #ffc043); }
 .report-ability-detail .theme-orange .level-badge { background: rgba(245,166,35,0.1); color: #c47d00; border: 1px solid rgba(245,166,35,0.2); }
 /* 主题：待提升 红 */
-.report-ability-detail .theme-red .ab-card::before { background: #ff4d6d; }
 .report-ability-detail .theme-red .card-icon { background: rgba(255,77,109,0.09); }
 .report-ability-detail .theme-red .score-num { color: #d03050; }
 .report-ability-detail .theme-red .bar-fill { background: linear-gradient(90deg, #ff4d6d, #ff7c94); }
@@ -22593,9 +22580,6 @@ body {
 }
 
 /* “theme-blue” 视觉改为墨绿 */
-.report-ability-detail .theme-blue .ab-card::before {
-    background: var(--primary-color) !important;
-}
 .report-ability-detail .theme-blue .bar-fill {
     background: linear-gradient(90deg, var(--primary-color), var(--primary-dark)) !important;
 }
