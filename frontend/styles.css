@@ -11407,6 +11407,7 @@ body.on-login-page {
 /* ========== 职业规划报告页面（专业/清晰/现代风格） ========== */
 .report-page {
     min-height: 100vh;
+    overflow-y: hidden;
 }
 
 .report-title-bar {
@@ -11446,6 +11447,7 @@ body.on-login-page {
 /* 生成报告入口卡片 */
 .report-generate-area {
     margin-bottom: 24px;
+    position: relative;
 }
 
 .report-generate-card {
@@ -12596,7 +12598,7 @@ body.on-login-page {
 
 /* 历史报告面板 */
 .report-history-panel {
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
