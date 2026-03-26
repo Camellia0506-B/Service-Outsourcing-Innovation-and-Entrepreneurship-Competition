@@ -127,8 +127,13 @@ def upload_resume():
     """
     try:
         user_id = request.form.get("user_id")
-        if not user_id:
-            return error_response(400, "请提供 user_id 参数")
+        # 前端 FormData 在 user_id 为 null/undefined 时可能上传字面量 "null"/"undefined"，int() 会抛错并变成 500
+        if not user_id or str(user_id).strip().lower() in ("", "null", "undefined", "none"):
+            return error_response(400, "请提供有效的 user_id（请先登录）")
+        try:
+            user_id_int = int(user_id)
+        except (TypeError, ValueError):
+            return error_response(400, f"user_id 必须为数字，收到: {user_id!r}")
 
         resume_file = request.files.get("resume_file")
         if not resume_file:
@@ -157,7 +162,7 @@ def upload_resume():
         )
         os.makedirs(upload_dir, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]  # 精确到毫秒
-        save_name = f"{user_id}_{ts}{ext}"
+        save_name = f"{user_id_int}_{ts}{ext}"
         save_path = os.path.join(upload_dir, save_name)
         resume_file.save(save_path)
 
@@ -170,11 +175,11 @@ def upload_resume():
 
         # 生成task_id：毫秒时间戳 + 随机数，确保唯一
         random_num = random.randint(1000, 999999)
-        task_id = f"resume_parse_{ts}_{user_id}_{random_num}"
+        task_id = f"resume_parse_{ts}_{user_id_int}_{random_num}"
         service = get_profile_service()
-        service.parse_resume_async(int(user_id), resume_text, task_id)
+        service.parse_resume_async(user_id_int, resume_text, task_id)
 
-        logger.info(f"[API] 简历上传成功，user_id={user_id}, task_id={task_id}")
+        logger.info(f"[API] 简历上传成功，user_id={user_id_int}, task_id={task_id}")
         return success_response(
             {"task_id": task_id, "status": "processing"},
             msg="简历上传成功，正在解析..."

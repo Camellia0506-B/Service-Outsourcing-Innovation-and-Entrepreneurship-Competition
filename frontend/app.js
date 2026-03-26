@@ -2808,6 +2808,10 @@ class CareerPlanningApp {
         }
 
         const userId = getCurrentUserId();
+        if (userId == null || userId === '') {
+            this.showToast('请先登录后再上传简历', 'error');
+            return;
+        }
         const statusDiv = document.getElementById('uploadStatus');
         statusDiv.textContent = '上传中...';
         statusDiv.style.background = '#e0f2fe';

@@ -1797,10 +1797,13 @@ async function updateProfile(userId, profileData) {
     });
 }
 
-// 上传简历（使用 Python AI 服务解析，走 5001）
+// 上传简历（使用 Python AI 服务解析，走 5002）
 async function uploadResume(userId, resumeFile) {
+    if (userId == null || userId === '') {
+        return { success: false, msg: '请先登录后再上传简历' };
+    }
     const formData = new FormData();
-    formData.append('user_id', userId);
+    formData.append('user_id', String(userId));
     formData.append('resume_file', resumeFile);
     return await api.uploadToAI('/profile/upload-resume', formData);
 }

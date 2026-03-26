@@ -79,6 +79,7 @@ AI算法/test_feature1.py
 
 # AI 侧简历上传/生成物（不要入库）
 AI算法/data/profiles/resumes/*.pdf
+AI算法/data/mock_interview_sessions.json
 
 # 前端依赖
 node_modules/
