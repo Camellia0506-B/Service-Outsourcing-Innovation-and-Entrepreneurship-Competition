@@ -21,6 +21,9 @@ public class DataAccessLog {
     @TableField("accessor_info")
     private String accessorInfo;
 
+    @TableField("hash")
+    private String hash;
+
     @TableField(value = "accessed_at", fill = FieldFill.INSERT)
     private LocalDateTime accessedAt;
 }

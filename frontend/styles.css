@@ -18869,6 +18869,67 @@ body.on-login-page #agentAssistant { display: none !important; }
     margin-top: 2px;
 }
 
+/* 数据安全保护面板 */
+#privacyPage .privacy-security {
+    margin-bottom: 1.5rem;
+}
+#privacyPage .privacy-security-panel {
+    background: var(--page-match-sage-pale);
+    border: 0.5px solid var(--page-match-sage-line);
+    border-radius: 0;
+    padding: 1rem 1.25rem;
+}
+#privacyPage .privacy-security-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0.5rem 0;
+}
+#privacyPage .privacy-security-row + .privacy-security-row {
+    border-top: 0.5px solid rgba(194, 224, 209, 0.5);
+}
+#privacyPage .privacy-security-left {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-primary);
+}
+#privacyPage .privacy-security-sep {
+    color: var(--color-text-secondary);
+    margin: 0 2px;
+}
+#privacyPage .privacy-security-use {
+    color: var(--color-text-secondary);
+}
+#privacyPage .privacy-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--page-match-sage);
+    white-space: nowrap;
+}
+#privacyPage .privacy-status-badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--page-match-sage);
+    flex-shrink: 0;
+}
+#privacyPage .privacy-security-note {
+    margin: 0.75rem 0 0 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+}
+
 /* 数据管理按钮组 */
 #privacyPage .privacy-actions {
     display: flex;

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import www.gradquest.com.dto.profile.ProfileInfoResponse;
 import www.gradquest.com.dto.student.AbilityProfileRequest;
 import www.gradquest.com.dto.student.AiGenerateProfileRequest;
@@ -16,6 +17,7 @@ import www.gradquest.com.service.ProfileService;
 import www.gradquest.com.service.StudentAbilityService;
 
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +39,7 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
 
     private WebClient getWebClient() {
         return WebClient.builder()
-                .baseUrl(aiAlgorithmBaseUrl)
+                .baseUrl(String.valueOf(aiAlgorithmBaseUrl))
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
@@ -48,15 +50,7 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("user_id", request.getUserId());
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = getWebClient()
-                    .post()
-                    .uri("/student/ability-profile")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(30))
-                    .block();
+            Map<String, Object> response = callAi("/student/ability-profile", requestBody, "获取能力画像", 45);
 
             if (response != null && response.get("code") != null) {
                 Integer code = (Integer) response.get("code");
@@ -76,6 +70,10 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
                 throw new RuntimeException("用户能力画像不存在，请先生成");
             }
             throw new RuntimeException("调用AI服务失败: " + e.getMessage());
+        } catch (TimeoutException e) {
+            throw new RuntimeException("获取能力画像超时，请稍后重试（如持续失败请确认 AI 算法服务已启动）");
+        } catch (WebClientRequestException e) {
+            throw new RuntimeException("无法连接 AI 算法服务，请确认服务已启动并可访问");
         } catch (Exception e) {
             log.error("[StudentAbility] 获取能力画像异常", e);
             throw new RuntimeException("获取能力画像失败: " + e.getMessage());
@@ -95,20 +93,11 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
                 if (profile == null) {
                     throw new RuntimeException("用户档案不存在，请先完善个人档案");
                 }
-                @SuppressWarnings("unchecked")
                 Map<String, Object> profileData = JSON.convertValue(profile, Map.class);
                 requestBody.put("profile_data", profileData);
             }
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = getWebClient()
-                    .post()
-                    .uri("/student/ai-generate-profile")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(30))
-                    .block();
+            Map<String, Object> response = callAi("/student/ai-generate-profile", requestBody, "AI生成画像", 90);
 
             if (response != null && response.get("code") != null) {
                 Integer code = (Integer) response.get("code");
@@ -125,6 +114,10 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
         } catch (WebClientResponseException e) {
             log.error("[StudentAbility] 调用AI服务失败: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new RuntimeException("调用AI服务失败: " + e.getMessage());
+        } catch (TimeoutException e) {
+            throw new RuntimeException("AI画像生成超时，请稍后重试（如持续失败请确认 AI 算法服务已启动）");
+        } catch (WebClientRequestException e) {
+            throw new RuntimeException("无法连接 AI 算法服务，请确认服务已启动并可访问");
         } catch (Exception e) {
             log.error("[StudentAbility] AI生成画像异常", e);
             throw new RuntimeException("AI生成画像失败: " + e.getMessage());
@@ -138,15 +131,7 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
             requestBody.put("user_id", request.getUserId());
             requestBody.put("updates", request.getUpdates());
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = getWebClient()
-                    .post()
-                    .uri("/student/update-profile")
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(Duration.ofSeconds(30))
-                    .block();
+            Map<String, Object> response = callAi("/student/update-profile", requestBody, "更新画像", 45);
 
             if (response != null && response.get("code") != null) {
                 Integer code = (Integer) response.get("code");
@@ -166,9 +151,31 @@ public class StudentAbilityServiceImpl implements StudentAbilityService {
                 throw new RuntimeException("用户能力画像不存在，请先生成");
             }
             throw new RuntimeException("调用AI服务失败: " + e.getMessage());
+        } catch (TimeoutException e) {
+            throw new RuntimeException("更新画像超时，请稍后重试（如持续失败请确认 AI 算法服务已启动）");
+        } catch (WebClientRequestException e) {
+            throw new RuntimeException("无法连接 AI 算法服务，请确认服务已启动并可访问");
         } catch (Exception e) {
             log.error("[StudentAbility] 更新画像异常", e);
             throw new RuntimeException("更新画像失败: " + e.getMessage());
+        }
+    }
+
+    private Map<String, Object> callAi(String uri, Map<String, Object> requestBody, String action, int timeoutSeconds) throws TimeoutException {
+        try {
+            return getWebClient()
+                    .post()
+                    .uri(uri)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .timeout(Duration.ofSeconds(timeoutSeconds))
+                    .block();
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof TimeoutException te) {
+                throw te;
+            }
+            throw e;
         }
     }
 }

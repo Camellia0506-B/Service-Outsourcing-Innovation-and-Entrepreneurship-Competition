@@ -15,6 +15,7 @@ import www.gradquest.com.mapper.UserMapper;
 import www.gradquest.com.mapper.UserProfileMapper;
 import www.gradquest.com.service.AuthService;
 import www.gradquest.com.service.UserService;
+import www.gradquest.com.util.SM4Util;
 import www.gradquest.com.utils.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -81,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("用户不存在");
         }
         UserProfile profile = userProfileMapper.selectById(user.getId());
-        String profileEmail = profile != null ? profile.getEmail() : null;
+        String profileEmail = profile != null ? safeDecrypt(profile.getEmail()) : null;
         if (profileEmail == null || profileEmail.isBlank()) {
             throw new IllegalArgumentException("该账号未绑定邮箱，无法发送验证码");
         }
@@ -132,5 +133,14 @@ public class AuthServiceImpl implements AuthService {
             sb.append(r.nextInt(10));
         }
         return sb.toString();
+    }
+
+    private static String safeDecrypt(String maybeCipherText) {
+        if (maybeCipherText == null || maybeCipherText.isBlank()) return maybeCipherText;
+        try {
+            return SM4Util.decrypt(maybeCipherText);
+        } catch (Exception e) {
+            return maybeCipherText;
+        }
     }
 }

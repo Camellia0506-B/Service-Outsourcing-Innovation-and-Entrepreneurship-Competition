@@ -30,10 +30,47 @@ public class DbMigrationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        migrateUserProfilesPhoneEmailLength();
         migrateProfileProjects();
         migrateHrUsers();
         migratePrivacySettings();
         migrateDataAccessLogs();
+    }
+
+    private void migrateUserProfilesPhoneEmailLength() {
+        String checkPhoneSql = "SELECT CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_profiles' AND COLUMN_NAME = 'phone'";
+        String checkEmailSql = "SELECT CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_profiles' AND COLUMN_NAME = 'email'";
+        String alterPhoneSql = "ALTER TABLE user_profiles MODIFY COLUMN phone VARCHAR(255) NULL";
+        String alterEmailSql = "ALTER TABLE user_profiles MODIFY COLUMN email VARCHAR(255) NULL";
+        try (Connection conn = dataSource.getConnection();
+             Statement st = conn.createStatement()) {
+            Integer phoneLen = null;
+            Integer emailLen = null;
+            try (ResultSet rs = st.executeQuery(checkPhoneSql)) {
+                if (rs.next()) phoneLen = rs.getInt(1);
+            }
+            try (ResultSet rs = st.executeQuery(checkEmailSql)) {
+                if (rs.next()) emailLen = rs.getInt(1);
+            }
+            if (phoneLen != null && phoneLen > 0 && phoneLen < 255) {
+                try {
+                    st.executeUpdate(alterPhoneSql);
+                    log.info("[DbMigration] Modified user_profiles.phone to VARCHAR(255)");
+                } catch (Exception e) {
+                    log.warn("[DbMigration] Modify user_profiles.phone skipped or failed: {}", e.getMessage());
+                }
+            }
+            if (emailLen != null && emailLen > 0 && emailLen < 255) {
+                try {
+                    st.executeUpdate(alterEmailSql);
+                    log.info("[DbMigration] Modified user_profiles.email to VARCHAR(255)");
+                } catch (Exception e) {
+                    log.warn("[DbMigration] Modify user_profiles.email skipped or failed: {}", e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[DbMigration] Migration for user_profiles phone/email length skipped or failed: {}", e.getMessage());
+        }
     }
     
     private void migrateProfileProjects() {
@@ -125,12 +162,15 @@ public class DbMigrationRunner implements ApplicationRunner {
     
     private void migrateDataAccessLogs() {
         String checkTableSql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'data_access_logs'";
+        String checkHashColumnSql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'data_access_logs' AND COLUMN_NAME = 'hash'";
+        String alterHashColumnSql = "ALTER TABLE data_access_logs ADD COLUMN hash VARCHAR(64) NULL COMMENT 'SM3 hash chain'";
         String createTableSql = """
             CREATE TABLE data_access_logs (
               id                          BIGINT NOT NULL AUTO_INCREMENT,
               user_id                     BIGINT NOT NULL,
               access_type                VARCHAR(50) NOT NULL,
               accessor_info              TEXT NULL,
+              hash                      VARCHAR(64) NULL COMMENT 'SM3 hash chain',
               accessed_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (id),
               KEY idx_access_user_id (user_id),
@@ -144,7 +184,14 @@ public class DbMigrationRunner implements ApplicationRunner {
              Statement st = conn.createStatement()) {
             try (ResultSet rs = st.executeQuery(checkTableSql)) {
                 if (rs.next() && rs.getInt(1) > 0) {
-                    log.info("[DbMigration] data_access_logs table already exists, skip");
+                    try (ResultSet rs2 = st.executeQuery(checkHashColumnSql)) {
+                        if (rs2.next() && rs2.getInt(1) > 0) {
+                            log.info("[DbMigration] data_access_logs.hash already exists, skip");
+                            return;
+                        }
+                    }
+                    st.executeUpdate(alterHashColumnSql);
+                    log.info("[DbMigration] Added column data_access_logs.hash");
                     return;
                 }
             }

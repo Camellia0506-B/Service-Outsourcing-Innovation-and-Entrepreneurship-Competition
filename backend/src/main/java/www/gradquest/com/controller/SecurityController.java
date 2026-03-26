@@ -13,10 +13,10 @@ import www.gradquest.com.entity.DataAccessLog;
 import www.gradquest.com.entity.PrivacySetting;
 import www.gradquest.com.mapper.DataAccessLogMapper;
 import www.gradquest.com.mapper.PrivacySettingMapper;
+import www.gradquest.com.util.SM3Util;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/security")
@@ -123,20 +123,25 @@ public class SecurityController {
             return ApiResponse.badRequest("请提供 user_id 参数");
         }
 
-        LambdaQueryWrapper<DataAccessLog> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DataAccessLog::getUserId, userId)
-                .orderByDesc(DataAccessLog::getAccessedAt)
+        LambdaQueryWrapper<DataAccessLog> wrapperAsc = new LambdaQueryWrapper<>();
+        wrapperAsc.eq(DataAccessLog::getUserId, userId)
+                .orderByAsc(DataAccessLog::getAccessedAt)
                 .last("LIMIT " + limit);
-        List<DataAccessLog> logs = dataAccessLogMapper.selectList(wrapper);
+        List<DataAccessLog> logsAsc = dataAccessLogMapper.selectList(wrapperAsc);
 
-        List<GetAccessLogsResponse.LogItem> logItems = logs.stream().map(log ->
-                GetAccessLogsResponse.LogItem.builder()
+        boolean chainOk = verifyChain(logsAsc);
+
+        List<GetAccessLogsResponse.LogItem> logItems = logsAsc.stream()
+                .sorted((a, b) -> b.getAccessedAt().compareTo(a.getAccessedAt()))
+                .map(log -> GetAccessLogsResponse.LogItem.builder()
                         .timestamp(log.getAccessedAt().toString())
                         .accessType(log.getAccessType())
                         .accessorInfo(log.getAccessorInfo() != null ? log.getAccessorInfo() : "{}")
                         .id("log_" + log.getId())
+                        .hashPrefix(hashPrefix(log.getHash()))
+                        .verified(chainOk)
                         .build()
-        ).toList();
+                ).toList();
 
         GetAccessLogsResponse response = GetAccessLogsResponse.builder()
                 .userId(userId)
@@ -272,6 +277,47 @@ public class SecurityController {
             private String accessorInfo;
 
             private String id;
+
+            @JsonProperty("hash_prefix")
+            private String hashPrefix;
+
+            private Boolean verified;
         }
+    }
+
+    private static boolean verifyChain(List<DataAccessLog> logsAsc) {
+        if (logsAsc == null || logsAsc.isEmpty()) return true;
+        String prevHash = "";
+        for (DataAccessLog log : logsAsc) {
+            String timestamp = log.getAccessedAt() != null ? log.getAccessedAt().toString() : "";
+            String operatorId = extractOperatorId(log.getAccessorInfo());
+            String action = log.getAccessType() != null ? log.getAccessType() : "";
+            String expected = SM3Util.hash(prevHash + timestamp + operatorId + action);
+            if (log.getHash() == null || log.getHash().isBlank()) return false;
+            if (!expected.equalsIgnoreCase(log.getHash().trim())) return false;
+            prevHash = log.getHash().trim();
+        }
+        return true;
+    }
+
+    private static String hashPrefix(String hash) {
+        if (hash == null || hash.isBlank()) return "";
+        String h = hash.trim();
+        return h.length() <= 8 ? h : h.substring(0, 8);
+    }
+
+    private static String extractOperatorId(String accessorInfoJson) {
+        if (accessorInfoJson == null || accessorInfoJson.isBlank()) return "";
+        String s = accessorInfoJson;
+        int k = s.indexOf("\"operator_id\"");
+        if (k < 0) k = s.indexOf("\"operatorId\"");
+        if (k < 0) return "";
+        int colon = s.indexOf(':', k);
+        if (colon < 0) return "";
+        int startQ = s.indexOf('"', colon);
+        if (startQ < 0) return "";
+        int endQ = s.indexOf('"', startQ + 1);
+        if (endQ < 0) return "";
+        return s.substring(startQ + 1, endQ).trim();
     }
 }

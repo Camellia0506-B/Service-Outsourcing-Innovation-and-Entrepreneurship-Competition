@@ -160,7 +160,10 @@ class API {
         const url = `${this.aiBaseURL}${endpoint}`;
         const token = _storage.getItem('token');
         if (API_CONFIG.mockMode) {
-            return this.mockRequest(endpoint, options);
+            // 转岗/周边岗位图谱必须走真实后端，避免 mock 将周边岗位固定写死
+            if (endpoint !== '/job/relation-graph') {
+                return this.mockRequest(endpoint, options);
+            }
         }
         // 为避免网络/防火墙导致 fetch 长时间挂起，这里为所有请求加超时控制
         // 并对容易慢的接口做默认加长（仅在调用方未显式传 timeout 时生效）
@@ -233,7 +236,10 @@ class API {
         
         // 模拟模式
         if (API_CONFIG.mockMode) {
-            return this.mockRequest(endpoint, options);
+            // 转岗/周边岗位图谱必须走真实后端，避免 mock 将周边岗位固定写死
+            if (endpoint !== '/job/relation-graph') {
+                return this.mockRequest(endpoint, options);
+            }
         }
         
         const config = {

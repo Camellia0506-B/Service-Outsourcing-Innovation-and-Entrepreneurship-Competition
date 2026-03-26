@@ -34,6 +34,7 @@ CREATE TABLE data_access_logs (
   user_id                     BIGINT NOT NULL COMMENT '用户ID，关联users.id',
   access_type                VARCHAR(50) NOT NULL COMMENT '访问类型',
   accessor_info              TEXT NULL COMMENT '访问者信息（JSON格式）',
+  hash                      VARCHAR(64) NULL COMMENT 'SM3 hash chain',
   accessed_at               DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '访问时间',
   PRIMARY KEY (id),
   KEY idx_access_user_id (user_id),

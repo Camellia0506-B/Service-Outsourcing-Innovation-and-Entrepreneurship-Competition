@@ -2814,6 +2814,275 @@ def _build_graph_data_from_json(resolved_id, graph_type, display_name, job_index
     return result
 
 
+def _detect_transfer_mock_category(resolved_id: str, display_name: str) -> str:
+    """按岗位名称/ID大类决定周边岗位兜底推荐集合。"""
+    n = (display_name or "").lower()
+    rid = (resolved_id or "").lower()
+
+    # Java 后端相关
+    if (
+        "java" in n
+        or "后端" in n
+        or rid in {"job_001", "job_002", "job_005", "job_006", "job_018", "job_022", "job_026", "job_027"}
+    ):
+        return "java_backend"
+
+    # 算法/数据相关
+    if (
+        "算法" in n
+        or "机器学习" in n
+        or "ai" in n
+        or "数据科学" in n
+        or rid in {"job_011", "job_012", "job_013", "job_014", "job_015", "job_016", "job_017"}
+    ):
+        return "algorithm"
+
+    # 前端相关
+    if (
+        "前端" in n
+        or rid in {"job_007", "job_008", "job_009", "job_010", "job_025"}
+    ):
+        return "frontend"
+
+    return "other"
+
+
+# ============================================================
+# 计算机岗位转岗图谱预置（用于 relation-graph 的兜底）
+# ============================================================
+# 说明：当后端返回空/不足的 transfer_graph 时，对以下中心岗位直接返回你给定的周边岗位与 match/type。
+# 非计算机岗位保持原有兜底分类逻辑不变。
+_COMPUTER_CENTER_TRANSFER_PRESET = {
+    "Java": [
+        {"job_name": "C/C++", "match_score": 92, "type": "high"},
+        {"job_name": "实施工程师", "match_score": 90, "type": "high"},
+        {"job_name": "技术支持工程师", "match_score": 86, "type": "medium"},
+        {"job_name": "项目经理/主管", "match_score": 83, "type": "medium"},
+        {"job_name": "产品专员/助理", "match_score": 75, "type": "low"},
+    ],
+    "C/C++": [
+        {"job_name": "Java", "match_score": 93, "type": "high"},
+        {"job_name": "硬件测试", "match_score": 91, "type": "high"},
+        {"job_name": "测试工程师", "match_score": 87, "type": "medium"},
+        {"job_name": "实施工程师", "match_score": 84, "type": "medium"},
+        {"job_name": "技术支持工程师", "match_score": 76, "type": "low"},
+    ],
+    "前端开发": [
+        {"job_name": "Java", "match_score": 92, "type": "high"},
+        {"job_name": "产品专员/助理", "match_score": 90, "type": "high"},
+        {"job_name": "实施工程师", "match_score": 85, "type": "medium"},
+        {"job_name": "项目经理/主管", "match_score": 82, "type": "medium"},
+        {"job_name": "技术支持工程师", "match_score": 74, "type": "low"},
+    ],
+    "软件测试": [
+        {"job_name": "测试工程师", "match_score": 93, "type": "high"},
+        {"job_name": "硬件测试", "match_score": 91, "type": "high"},
+        {"job_name": "质量管理/测试", "match_score": 88, "type": "medium"},
+        {"job_name": "技术支持工程师", "match_score": 84, "type": "medium"},
+        {"job_name": "实施工程师", "match_score": 77, "type": "low"},
+    ],
+    "测试工程师": [
+        {"job_name": "软件测试", "match_score": 92, "type": "high"},
+        {"job_name": "硬件测试", "match_score": 90, "type": "high"},
+        {"job_name": "质量管理/测试", "match_score": 87, "type": "medium"},
+        {"job_name": "实施工程师", "match_score": 83, "type": "medium"},
+        {"job_name": "项目经理/主管", "match_score": 72, "type": "low"},
+    ],
+    "硬件测试": [
+        {"job_name": "测试工程师", "match_score": 92, "type": "high"},
+        {"job_name": "软件测试", "match_score": 91, "type": "high"},
+        {"job_name": "质量管理/测试", "match_score": 86, "type": "medium"},
+        {"job_name": "技术支持工程师", "match_score": 83, "type": "medium"},
+        {"job_name": "实施工程师", "match_score": 75, "type": "low"},
+    ],
+    "实施工程师": [
+        {"job_name": "技术支持工程师", "match_score": 93, "type": "high"},
+        {"job_name": "项目经理/主管", "match_score": 90, "type": "high"},
+        {"job_name": "Java", "match_score": 86, "type": "medium"},
+        {"job_name": "测试工程师", "match_score": 83, "type": "medium"},
+        {"job_name": "产品专员/助理", "match_score": 76, "type": "low"},
+    ],
+    "技术支持工程师": [
+        {"job_name": "实施工程师", "match_score": 92, "type": "high"},
+        {"job_name": "项目经理/主管", "match_score": 91, "type": "high"},
+        {"job_name": "测试工程师", "match_score": 85, "type": "medium"},
+        {"job_name": "质量管理/测试", "match_score": 82, "type": "medium"},
+        {"job_name": "销售工程师", "match_score": 74, "type": "low"},
+    ],
+    "产品专员/助理": [
+        {"job_name": "项目经理/主管", "match_score": 92, "type": "high"},
+        {"job_name": "项目专员/助理", "match_score": 90, "type": "high"},
+        {"job_name": "前端开发", "match_score": 85, "type": "medium"},
+        {"job_name": "运营助理/专员", "match_score": 82, "type": "medium"},
+        {"job_name": "销售工程师", "match_score": 76, "type": "low"},
+    ],
+    "项目经理/主管": [
+        {"job_name": "产品专员/助理", "match_score": 91, "type": "high"},
+        {"job_name": "项目专员/助理", "match_score": 90, "type": "high"},
+        {"job_name": "实施工程师", "match_score": 85, "type": "medium"},
+        {"job_name": "技术支持工程师", "match_score": 82, "type": "medium"},
+        {"job_name": "销售工程师", "match_score": 73, "type": "low"},
+    ],
+}
+
+
+def _transition_months_by_type(tp: str) -> str:
+    """根据 type 给出转岗预计月数。"""
+    if tp == "high":
+        return "3-6个月"
+    if tp == "medium":
+        return "6-12个月"
+    return "12-24个月"
+
+
+def _detect_computer_center_job(display_name: str) -> str:
+    """从 display_name 中识别计算机岗位中心（与预置 key 对齐）。"""
+    d = (display_name or "").strip()
+    if not d:
+        return ""
+    if "Java" in d:
+        return "Java"
+    # C/C++ 可能因为转义/编码在字符串里出现成 C/C 或 C/C++，统一兜底匹配
+    if "C/C" in d:
+        return "C/C++"
+    if "前端开发" in d:
+        return "前端开发"
+    if "软件测试" in d:
+        return "软件测试"
+    if "测试工程师" in d:
+        return "测试工程师"
+    if "硬件测试" in d:
+        return "硬件测试"
+    if "实施工程师" in d:
+        return "实施工程师"
+    if "技术支持工程师" in d:
+        return "技术支持工程师"
+    if "产品专员" in d:
+        return "产品专员/助理"
+    if "项目经理" in d:
+        return "项目经理/主管"
+    return ""
+
+
+def _build_computer_transfer_graph_preset(resolved_id: str, center_job_name: str) -> dict:
+    """按你给定的数据集，构建 transfer_graph（nodes + edges）。"""
+    center_id = str(resolved_id or "").strip() or "job_mock"
+    preset = _COMPUTER_CENTER_TRANSFER_PRESET.get(center_job_name) or []
+
+    nodes = []
+    edges = []
+    for i, item in enumerate(preset):
+        neighbor_name = item.get("job_name", "")
+        match_score = item.get("match_score", 0)
+        tp = item.get("type", "low")
+        transition_months = item.get("transition_months") or _transition_months_by_type(tp)
+        to_id = f"{center_id}__preset_to_{i+1}"
+
+        # nodes：给前端 nodesMap 用（job_id -> job_name）
+        nodes.append({
+            "job_id": to_id,
+            "job_name": neighbor_name,
+        })
+
+        # edges：给前端 match/type 解析用（match_score 等字段）
+        edges.append({
+            "from": center_id,
+            "to": to_id,
+            "job_name": neighbor_name,
+            "match_score": match_score,
+            "relevance_score": match_score,
+            "type": tp,
+            "difficulty": "低" if tp == "high" else ("中" if tp == "medium" else "高"),
+            "time": transition_months,
+            "transition_months": transition_months,
+            "skills_gap": []
+        })
+
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "message": "计算机岗位预置兜底周边图谱"
+    }
+
+
+def _build_transfer_graph_mock(resolved_id: str, display_name: str) -> dict:
+    """当后端返回空/不可用转岗图谱时，按岗位类别给出不同周边推荐。"""
+    base_id = str(resolved_id or "").strip() or "job_mock"
+    cat = _detect_transfer_mock_category(resolved_id, display_name)
+
+    if cat == "java_backend":
+        neighbor_names = ["后端架构师", "技术经理", "后端专家"]
+        difficulty = ["低", "中", "中"]
+        times = ["3-6个月", "6-12个月", "6-12个月"]
+        scores = [92, 85, 80]
+    elif cat == "algorithm":
+        neighbor_names = ["算法专家", "AI研究员", "数据科学家"]
+        difficulty = ["低", "中", "中"]
+        times = ["3-6个月", "6-12个月", "6-12个月"]
+        scores = [90, 86, 82]
+    elif cat == "frontend":
+        neighbor_names = ["前端架构师", "全栈工程师", "技术负责人"]
+        difficulty = ["低", "中", "中"]
+        times = ["3-6个月", "6-12个月", "6-12个月"]
+        scores = [91, 84, 81]
+    else:
+        neighbor_names = ["项目经理", "运维专家", "数据分析师"]
+        difficulty = ["中", "中", "低"]
+        times = ["6-12个月", "6-12个月", "3-6个月"]
+        scores = [86, 82, 88]
+
+    # 节点/边 job_id 仅用于前端图谱匹配；不要求一定存在真实详情
+    nodes = []
+    edges = []
+    for i, nm in enumerate(neighbor_names):
+        to_id = f"{base_id}__mock_to_{i+1}"
+        nodes.append({
+            "job_id": to_id,
+            "job_name": nm,
+            "level": 0,
+            "category": "",
+            "salary_range": "",
+            "description": ""
+        })
+        edges.append({
+            "from": base_id,
+            "to": to_id,
+            "relevance_score": scores[i],
+            "match_score": scores[i],
+            "difficulty": difficulty[i],
+            "time": times[i],
+            "skills_gap": []
+        })
+
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "message": f"兜底周边岗位（{cat}）"
+    }
+
+
+def _maybe_fill_transfer_graph_mock(graph_data: dict, resolved_id: str, display_name: str, graph_type: str) -> None:
+    """如果后端没有给出可展示的转岗节点/边，则按岗位类别补齐不同周边推荐。
+
+    其中：计算机岗位中心（Java、C/C++...）走你提供的固定预置数据。
+    """
+    if graph_type not in ("transfer", "all"):
+        return
+    center_preset = _detect_computer_center_job(display_name)
+    if center_preset:
+        # 计算机岗位：不依赖后端返回内容，直接覆盖为固定预置数据
+        graph_data["transfer_graph"] = _build_computer_transfer_graph_preset(resolved_id, center_preset)
+        return
+
+    # 非计算机岗位：沿用原有“空/不足才填充”的兜底逻辑
+    tg = graph_data.get("transfer_graph") or {}
+    edges = tg.get("edges") or []
+    nodes = tg.get("nodes") or []
+    if len(edges) >= 2 and len(nodes) >= 2:
+        return
+    graph_data["transfer_graph"] = _build_transfer_graph_mock(resolved_id, display_name)
+
+
 @job_bp.route("/relation-graph", methods=["POST"])
 def get_job_relation_graph():
     """
@@ -2850,6 +3119,7 @@ def get_job_relation_graph():
                         db_data[key] = _empty_graph_data(resolved_id)[key]
                 if display_name and db_data.get("center_job"):
                     db_data["center_job"]["job_name"] = display_name
+                _maybe_fill_transfer_graph_mock(db_data, resolved_id, display_name, graph_type)
                 return success_response(db_data)
         except Exception as e:
             logger.warning(f"[API] relation-graph 从 DB 读取失败: {e}")
@@ -2860,6 +3130,7 @@ def get_job_relation_graph():
             for key in ("center_job", "vertical_graph", "transfer_graph", "career_path"):
                 if key not in json_data:
                     json_data[key] = _empty_graph_data(resolved_id)[key]
+            _maybe_fill_transfer_graph_mock(json_data, resolved_id, display_name, graph_type)
             return success_response(json_data)
 
         # 3) 回退实时构建（可能较慢）
@@ -2874,6 +3145,7 @@ def get_job_relation_graph():
                     graph_data[key] = _empty_graph_data(resolved_id)[key]
         if display_name and graph_data.get("center_job"):
             graph_data["center_job"]["job_name"] = display_name
+        _maybe_fill_transfer_graph_mock(graph_data, resolved_id, display_name, graph_type)
         return success_response(graph_data)
 
     except ValueError as e:

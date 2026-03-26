@@ -2492,5 +2492,866 @@
       ]
     },
     "error": null
+  },
+  "resume_parse_20260326193319070_1_998635": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-03-26 19:33:19",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "李明远",
+          "phone": "13812345678",
+          "email": "liminyuan2023@whut.edu.cn",
+          "gender": "男",
+          "birth_date": "2003-08",
+          "nickname": "李明远"
+        },
+        "education": [
+          {
+            "school": "武汉理工大学",
+            "major": "计算机科学与技术",
+            "degree": "本科",
+            "grade": "2023级",
+            "start_date": "2023-09",
+            "expected_graduation": "2027-06",
+            "gpa": "3.6/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "机器学习",
+              "深度学习",
+              "数据结构",
+              "算法",
+              "RAG架构",
+              "语义匹配",
+              "特征工程",
+              "模型训练",
+              "多轮对话",
+              "知识检索"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "CNN",
+              "PyTorch",
+              "Vue.js",
+              "Flask",
+              "Spring Boot",
+              "MySQL",
+              "ChromaDB",
+              "LangChain",
+              "FastAPI",
+              "Linux",
+              "Git"
+            ]
+          },
+          {
+            "category": "语言能力",
+            "items": [
+              "英语CET-6",
+              "普通话二级甲等",
+              "计算机二级（Python）"
+            ]
+          }
+        ],
+        "certificates": [
+          {
+            "name": "英语六级（CET-6）",
+            "issue_date": null
+          },
+          {
+            "name": "计算机二级（Python）",
+            "issue_date": null
+          },
+          {
+            "name": "普通话二级甲等",
+            "issue_date": null
+          }
+        ],
+        "internships": [
+          {
+            "company": "腾讯科技",
+            "position": "后端开发实习生",
+            "start_date": "2024-07",
+            "end_date": "2024-09",
+            "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+          },
+          {
+            "company": "字节跳动",
+            "position": "算法实习生",
+            "start_date": "2025-03",
+            "end_date": "2025-06",
+            "description": "参与推荐系统召回模块的优化工作，使用 Python 对用户行为数据进行特征工程处理，配合团队完成离线模型训练与 A/B 实验评估。实习期间独立完成一项数据清洗流水线的重构，处理效率提升 25%。"
+          }
+        ],
+        "projects": [
+          {
+            "name": "基于深度学习的图像识别系统",
+            "role": "独立开发",
+            "start_date": "2024-03",
+            "end_date": "2024-06",
+            "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+            "tech_stack": [
+              "Python",
+              "PyTorch",
+              "Vue.js",
+              "Flask"
+            ]
+          },
+          {
+            "name": "校园智能问答系统",
+            "role": "核心开发",
+            "start_date": "2024-09",
+            "end_date": "2024-12",
+            "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库存储语义向量，集成 LangChain 框架实现多轮对话与知识检索，日均查询响应时间小于 2 秒。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          },
+          {
+            "name": "GradQuest 职业规划智能体",
+            "role": "AI算法负责人",
+            "start_date": "2025-01",
+            "end_date": null,
+            "description": "参与服务外包创新创业竞赛项目，负责 AI 算法模块开发。基于 ReAct Agent 架构实现多工具调用与任务自动分解，集成 BGE-M3 语义嵌入模型与 ChromaDB 实现岗位语义匹配，匹配准确率达 90% 以上。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "DashScope/Qwen",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "全国大学生数学建模竞赛 二等奖",
+            "level": "国家级",
+            "date": "2024-01"
+          },
+          {
+            "name": "武汉理工大学优秀学生奖学金 一等奖",
+            "level": "校级",
+            "date": "2023-01"
+          },
+          {
+            "name": "计算机程序设计竞赛 校级三等奖证书",
+            "level": "校级",
+            "date": "2024-01"
+          }
+        ]
+      },
+      "confidence_score": 0.98,
+      "suggestions": [
+        "建议在‘技能’板块统一归纳技术栈，避免分散在项目/实习中导致HR漏读；可按‘编程语言｜框架与工具｜AI/ML｜系统能力’分层呈现。",
+        "建议为‘GradQuest 职业规划智能体’补充明确结束状态（如‘进行中’或预计结项时间），增强时间线可信度。",
+        "建议在教育背景中补充入学年份对应月份（如2023-09），当前‘2023级’已合理推断，但显式标注更规范。"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260326195521067_1_467139": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-03-26 19:55:21",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "李明远",
+          "phone": "13812345678",
+          "email": "liminyuan2023@whut.edu.cn",
+          "gender": "男",
+          "birth_date": "2003-08",
+          "nickname": "李明远"
+        },
+        "education": [
+          {
+            "school": "武汉理工大学",
+            "major": "计算机科学与技术",
+            "degree": "本科",
+            "grade": "2023级",
+            "start_date": "2023-09",
+            "expected_graduation": "2027-06",
+            "gpa": "3.6/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "机器学习",
+              "深度学习",
+              "数据结构",
+              "算法",
+              "RAG架构",
+              "语义匹配",
+              "特征工程",
+              "模型训练",
+              "多轮对话",
+              "知识检索"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "CNN",
+              "PyTorch",
+              "Vue.js",
+              "Flask",
+              "Spring Boot",
+              "MySQL",
+              "ChromaDB",
+              "LangChain",
+              "FastAPI",
+              "Linux"
+            ]
+          },
+          {
+            "category": "语言能力",
+            "items": [
+              "英语CET-6",
+              "普通话二级甲等",
+              "计算机二级（Python）"
+            ]
+          }
+        ],
+        "certificates": [
+          {
+            "name": "英语六级（CET-6）",
+            "issue_date": null
+          },
+          {
+            "name": "计算机二级（Python）",
+            "issue_date": null
+          },
+          {
+            "name": "普通话二级甲等",
+            "issue_date": null
+          }
+        ],
+        "internships": [
+          {
+            "company": "腾讯科技",
+            "position": "后端开发实习生",
+            "start_date": "2024-07",
+            "end_date": "2024-09",
+            "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+          },
+          {
+            "company": "字节跳动",
+            "position": "算法实习生",
+            "start_date": "2025-03",
+            "end_date": "2025-06",
+            "description": "参与推荐系统召回模块的优化工作，使用 Python 对用户行为数据进行特征工程处理，配合团队完成离线模型训练与 A/B 实验评估。实习期间独立完成一项数据清洗流水线的重构，处理效率提升 25%。"
+          }
+        ],
+        "projects": [
+          {
+            "name": "基于深度学习的图像识别系统",
+            "role": "独立开发",
+            "start_date": "2024-03",
+            "end_date": "2024-06",
+            "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+            "tech_stack": [
+              "Python",
+              "PyTorch",
+              "Vue.js",
+              "Flask"
+            ]
+          },
+          {
+            "name": "校园智能问答系统",
+            "role": "核心开发",
+            "start_date": "2024-09",
+            "end_date": "2024-12",
+            "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库存储语义向量，集成 LangChain 框架实现多轮对话与知识检索，日均查询响应时间小于 2 秒。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          },
+          {
+            "name": "GradQuest 职业规划智能体",
+            "role": "AI算法负责人",
+            "start_date": "2025-01",
+            "end_date": null,
+            "description": "参与服务外包创新创业竞赛项目，负责 AI 算法模块开发。基于 ReAct Agent 架构实现多工具调用与任务自动分解，集成 BGE-M3 语义嵌入模型与 ChromaDB 实现岗位语义匹配，匹配准确率达 90% 以上。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "DashScope/Qwen",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "全国大学生数学建模竞赛 二等奖",
+            "level": "国家级",
+            "date": "2024-01"
+          },
+          {
+            "name": "武汉理工大学优秀学生奖学金 一等奖",
+            "level": "校级",
+            "date": "2023-01"
+          },
+          {
+            "name": "计算机程序设计竞赛 校级三等奖证书",
+            "level": "校级",
+            "date": "2024-01"
+          }
+        ]
+      },
+      "confidence_score": 0.98,
+      "suggestions": [
+        "建议在‘技能’板块显式补充编程语言与框架的熟练程度（如‘熟练：Python, Spring Boot；了解：LangChain’），增强技术画像清晰度",
+        "建议为‘GradQuest 职业规划智能体’项目补充明确结束状态（如‘至今（持续迭代中）’或预计结项时间），提升时间线可信度",
+        "建议将‘荣誉奖项’中‘计算机二级（Python）’和‘普通话二级甲等’统一归入证书模块，避免类别交叉重复"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260326200045962_1_326234": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-03-26 20:00:46",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "李明远",
+          "phone": "13812345678",
+          "email": "liminyuan2023@whut.edu.cn",
+          "gender": "男",
+          "birth_date": "2003-08",
+          "nickname": "李明远"
+        },
+        "education": [
+          {
+            "school": "武汉理工大学",
+            "major": "计算机科学与技术",
+            "degree": "本科",
+            "grade": "2023级",
+            "start_date": "2023-09",
+            "expected_graduation": "2027-06",
+            "gpa": "3.6/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "机器学习",
+              "深度学习",
+              "数据结构",
+              "算法",
+              "RAG架构",
+              "语义匹配",
+              "特征工程",
+              "模型训练",
+              "多轮对话",
+              "知识检索"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "CNN",
+              "PyTorch",
+              "Vue.js",
+              "Flask",
+              "Spring Boot",
+              "MySQL",
+              "ChromaDB",
+              "LangChain",
+              "FastAPI",
+              "Linux"
+            ]
+          },
+          {
+            "category": "语言能力",
+            "items": [
+              "英语CET-6",
+              "普通话二级甲等",
+              "计算机二级（Python）"
+            ]
+          }
+        ],
+        "certificates": [
+          {
+            "name": "英语六级（CET-6）",
+            "issue_date": null
+          },
+          {
+            "name": "计算机二级（Python）",
+            "issue_date": null
+          },
+          {
+            "name": "普通话二级甲等",
+            "issue_date": null
+          }
+        ],
+        "internships": [
+          {
+            "company": "腾讯科技",
+            "position": "后端开发实习生",
+            "start_date": "2024-07",
+            "end_date": "2024-09",
+            "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+          },
+          {
+            "company": "字节跳动",
+            "position": "算法实习生",
+            "start_date": "2025-03",
+            "end_date": "2025-06",
+            "description": "参与推荐系统召回模块的优化工作，使用 Python 对用户行为数据进行特征工程处理，配合团队完成离线模型训练与 A/B 实验评估。实习期间独立完成一项数据清洗流水线的重构，处理效率提升 25%。"
+          }
+        ],
+        "projects": [
+          {
+            "name": "基于深度学习的图像识别系统",
+            "role": "独立开发",
+            "start_date": "2024-03",
+            "end_date": "2024-06",
+            "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+            "tech_stack": [
+              "Python",
+              "PyTorch",
+              "Vue.js",
+              "Flask"
+            ]
+          },
+          {
+            "name": "校园智能问答系统",
+            "role": "核心开发",
+            "start_date": "2024-09",
+            "end_date": "2024-12",
+            "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库存储语义向量，集成 LangChain 框架实现多轮对话与知识检索，日均查询响应时间小于 2 秒。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          },
+          {
+            "name": "GradQuest 职业规划智能体",
+            "role": "AI算法负责人",
+            "start_date": "2025-01",
+            "end_date": null,
+            "description": "参与服务外包创新创业竞赛项目，负责 AI 算法模块开发。基于 ReAct Agent 架构实现多工具调用与任务自动分解，集成 BGE-M3 语义嵌入模型与 ChromaDB 实现岗位语义匹配，匹配准确率达 90% 以上。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "DashScope/Qwen",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "全国大学生数学建模竞赛 二等奖",
+            "level": "国家级",
+            "date": "2024-01"
+          },
+          {
+            "name": "武汉理工大学优秀学生奖学金 一等奖",
+            "level": "校级",
+            "date": "2023-01"
+          },
+          {
+            "name": "计算机程序设计竞赛 校级三等奖证书",
+            "level": "校级",
+            "date": "2024-01"
+          }
+        ]
+      },
+      "confidence_score": 0.98,
+      "suggestions": [
+        "建议在‘技能’板块统一归纳所有技术栈，避免分散在项目/实习中导致关键能力被忽略",
+        "建议补充‘核心课程’（如《数据结构》《操作系统》《计算机网络》等）以强化专业基础可信度",
+        "项目中提及‘ReAct Agent’‘BGE-M3’等前沿技术，可简要说明应用场景或贡献，进一步凸显技术深度"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260326200728785_1_524308": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-03-26 20:07:29",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "李明远",
+          "phone": "13812345678",
+          "email": "liminyuan2023@whut.edu.cn",
+          "gender": "男",
+          "birth_date": "2003-08",
+          "nickname": "李明远"
+        },
+        "education": [
+          {
+            "school": "武汉理工大学",
+            "major": "计算机科学与技术",
+            "degree": "本科",
+            "grade": "2023级",
+            "start_date": "2023-09",
+            "expected_graduation": "2027-06",
+            "gpa": "3.6/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "机器学习",
+              "深度学习",
+              "数据结构",
+              "算法",
+              "RAG架构",
+              "语义匹配",
+              "特征工程",
+              "模型训练",
+              "A/B实验评估",
+              "多轮对话系统设计"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "CNN",
+              "PyTorch",
+              "Vue.js",
+              "Flask",
+              "Spring Boot",
+              "MySQL",
+              "ChromaDB",
+              "LangChain",
+              "FastAPI",
+              "Linux"
+            ]
+          },
+          {
+            "category": "语言能力",
+            "items": [
+              "英语CET-6",
+              "普通话二级甲等",
+              "计算机二级（Python）"
+            ]
+          }
+        ],
+        "certificates": [
+          {
+            "name": "英语六级（CET-6）",
+            "issue_date": null
+          },
+          {
+            "name": "计算机二级（Python）",
+            "issue_date": null
+          },
+          {
+            "name": "普通话二级甲等",
+            "issue_date": null
+          }
+        ],
+        "internships": [
+          {
+            "company": "腾讯科技",
+            "position": "后端开发实习生",
+            "start_date": "2024-07",
+            "end_date": "2024-09",
+            "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+          },
+          {
+            "company": "字节跳动",
+            "position": "算法实习生",
+            "start_date": "2025-03",
+            "end_date": "2025-06",
+            "description": "参与推荐系统召回模块的优化工作，使用 Python 对用户行为数据进行特征工程处理，配合团队完成离线模型训练与 A/B 实验评估。实习期间独立完成一项数据清洗流水线的重构，处理效率提升25%。"
+          }
+        ],
+        "projects": [
+          {
+            "name": "基于深度学习的图像识别系统",
+            "role": "独立开发",
+            "start_date": "2024-03",
+            "end_date": "2024-06",
+            "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+            "tech_stack": [
+              "Python",
+              "PyTorch",
+              "Vue.js",
+              "Flask"
+            ]
+          },
+          {
+            "name": "校园智能问答系统",
+            "role": "核心开发",
+            "start_date": "2024-09",
+            "end_date": "2024-12",
+            "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库存储语义向量，集成 LangChain 框架实现多轮对话与知识检索，日均查询响应时间小于 2 秒。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          },
+          {
+            "name": "GradQuest 职业规划智能体",
+            "role": "AI算法负责人",
+            "start_date": "2025-01",
+            "end_date": "2025-06",
+            "description": "参与服务外包创新创业竞赛项目，负责 AI 算法模块开发。基于 ReAct Agent 架构实现多工具调用与任务自动分解，集成 BGE-M3 语义嵌入模型与 ChromaDB 实现岗位语义匹配，匹配准确率达 90% 以上。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "DashScope/Qwen",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "全国大学生数学建模竞赛 二等奖",
+            "level": "国家级",
+            "date": "2024-01"
+          },
+          {
+            "name": "武汉理工大学优秀学生奖学金 一等奖",
+            "level": "校级",
+            "date": "2023-01"
+          },
+          {
+            "name": "计算机程序设计竞赛 校级三等奖证书",
+            "level": "校级",
+            "date": "2024-01"
+          }
+        ]
+      },
+      "confidence_score": 0.98,
+      "suggestions": [
+        "建议在‘技能’板块中统一归类并补充标准化术语（如将‘CNN’明确为‘卷积神经网络’，‘RAG’标注为‘检索增强生成’），便于ATS系统识别",
+        "建议补充教育经历中入学月份（如‘2023-09’），当前根据中国高校常规秋季入学推断；若实际为春季入学请修正",
+        "建议在项目描述中补充量化成果归属（如‘独立完成’或‘主导开发’等角色强度说明），进一步强化技术影响力"
+      ]
+    },
+    "error": null
+  },
+  "resume_parse_20260326200935100_1_488052": {
+    "status": "completed",
+    "user_id": 1,
+    "created_at": "2026-03-26 20:09:39",
+    "result": {
+      "parsed_data": {
+        "basic_info": {
+          "name": "李明远",
+          "phone": "13812345678",
+          "email": "liminyuan2023@whut.edu.cn",
+          "gender": "男",
+          "birth_date": "2003-08",
+          "nickname": "李明远"
+        },
+        "education": [
+          {
+            "school": "武汉理工大学",
+            "major": "计算机科学与技术",
+            "degree": "本科",
+            "grade": "2023级",
+            "start_date": "2023-09",
+            "expected_graduation": "2027-06",
+            "gpa": "3.6/4.0"
+          }
+        ],
+        "skills": [
+          {
+            "category": "专业技能",
+            "items": [
+              "机器学习",
+              "深度学习",
+              "数据结构",
+              "算法",
+              "RAG架构",
+              "ReAct Agent架构",
+              "特征工程",
+              "模型训练",
+              "语义嵌入",
+              "岗位匹配算法"
+            ]
+          },
+          {
+            "category": "编程语言",
+            "items": [
+              "Python",
+              "Java",
+              "JavaScript"
+            ]
+          },
+          {
+            "category": "工具与框架",
+            "items": [
+              "CNN",
+              "PyTorch",
+              "Vue.js",
+              "Flask",
+              "LangChain",
+              "ChromaDB",
+              "FastAPI",
+              "Spring Boot",
+              "MySQL",
+              "Linux"
+            ]
+          },
+          {
+            "category": "语言能力",
+            "items": [
+              "英语CET-6",
+              "普通话二级甲等",
+              "计算机二级（Python）"
+            ]
+          }
+        ],
+        "certificates": [
+          {
+            "name": "英语六级（CET-6）",
+            "issue_date": null
+          },
+          {
+            "name": "计算机二级（Python）",
+            "issue_date": null
+          },
+          {
+            "name": "普通话二级甲等",
+            "issue_date": null
+          }
+        ],
+        "internships": [
+          {
+            "company": "腾讯科技",
+            "position": "后端开发实习生",
+            "start_date": "2024-07",
+            "end_date": "2024-09",
+            "description": "参与微信支付模块性能优化，使用 Java Spring Boot 重构部分接口，响应时间降低 30%。协助代码审查和单元测试，累计提交有效 PR 12 个。"
+          },
+          {
+            "company": "字节跳动",
+            "position": "算法实习生",
+            "start_date": "2025-03",
+            "end_date": "2025-06",
+            "description": "参与推荐系统召回模块的优化工作，使用 Python 对用户行为数据进行特征工程处理，配合团队完成离线模型训练与 A/B 实验评估。实习期间独立完成一项数据清洗流水线的重构，处理效率提升 25%。"
+          }
+        ],
+        "projects": [
+          {
+            "name": "基于深度学习的图像识别系统",
+            "role": "独立开发",
+            "start_date": "2024-03",
+            "end_date": "2024-06",
+            "description": "使用 CNN 卷积神经网络构建图像分类模型，在 CIFAR-10 数据集上准确率达 92%。负责模型设计、训练调优及前端展示页面开发，独立完成从数据预处理到模型部署全流程。",
+            "tech_stack": [
+              "Python",
+              "PyTorch",
+              "Vue.js",
+              "Flask"
+            ]
+          },
+          {
+            "name": "校园智能问答系统",
+            "role": "核心开发",
+            "start_date": "2024-09",
+            "end_date": "2024-12",
+            "description": "基于 RAG 架构和大语言模型构建校园信息智能问答系统，使用 ChromaDB 向量数据库存储语义向量，集成 LangChain 框架实现多轮对话与知识检索，日均查询响应时间小于 2 秒。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          },
+          {
+            "name": "GradQuest 职业规划智能体",
+            "role": "AI算法负责人",
+            "start_date": "2025-01",
+            "end_date": null,
+            "description": "参与服务外包创新创业竞赛项目，负责 AI 算法模块开发。基于 ReAct Agent 架构实现多工具调用与任务自动分解，集成 BGE-M3 语义嵌入模型与 ChromaDB 实现岗位语义匹配，匹配准确率达 90% 以上。",
+            "tech_stack": [
+              "Python",
+              "LangChain",
+              "DashScope/Qwen",
+              "ChromaDB",
+              "FastAPI"
+            ]
+          }
+        ],
+        "awards": [
+          {
+            "name": "全国大学生数学建模竞赛 二等奖",
+            "level": "国家级",
+            "date": "2024-01"
+          },
+          {
+            "name": "武汉理工大学优秀学生奖学金 一等奖",
+            "level": "校级",
+            "date": "2023-01"
+          },
+          {
+            "name": "计算机程序设计竞赛 校级三等奖证书",
+            "level": "校级",
+            "date": "2024-01"
+          }
+        ]
+      },
+      "confidence_score": 0.98,
+      "suggestions": [
+        "建议在‘技能’板块统一归纳并标准化技术术语（如将‘CNN’明确归类为‘深度学习’子项或保留为独立框架技能），增强HR筛选效率",
+        "建议补充教育经历中‘入学时间’（可合理推断为2023年9月），当前已按常规学制补全；另建议在项目中补充量化成果归属（如‘独立完成’是否含部署上线、用户规模等）",
+        "证书未标注颁发时间，建议补充；普通话与计算机等级证书可注明发证单位（如教育部考试中心）以提升可信度"
+      ]
+    },
+    "error": null
   }
 }

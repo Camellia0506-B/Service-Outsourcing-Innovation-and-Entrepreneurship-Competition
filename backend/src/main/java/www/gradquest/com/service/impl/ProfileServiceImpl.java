@@ -14,6 +14,7 @@ import www.gradquest.com.dto.profile.*;
 import www.gradquest.com.entity.*;
 import www.gradquest.com.mapper.*;
 import www.gradquest.com.service.ProfileService;
+import www.gradquest.com.util.SM4Util;
 import www.gradquest.com.utils.PDFProcessor;
 
 import java.io.File;
@@ -25,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
@@ -66,8 +68,8 @@ public class ProfileServiceImpl implements ProfileService {
                 .avatar(user.getAvatar() != null ? user.getAvatar() : "")
                 .gender(profile != null ? profile.getGender() : null)
                 .birthDate(profile != null && profile.getBirthDate() != null ? profile.getBirthDate().format(DATE_FORMAT) : null)
-                .phone(profile != null ? profile.getPhone() : null)
-                .email(profile != null ? profile.getEmail() : null)
+                .phone(profile != null ? safeDecrypt(profile.getPhone()) : null)
+                .email(profile != null ? safeDecrypt(profile.getEmail()) : null)
                 .build();
 
         ProfileInfoResponse.EducationInfo educationInfo = null;
@@ -147,8 +149,8 @@ public class ProfileServiceImpl implements ProfileService {
                     profile.setBirthDate(LocalDate.parse(req.getBasicInfo().getBirthDate()));
                 } catch (Exception ignored) {}
             }
-            if (req.getBasicInfo().getPhone() != null) profile.setPhone(req.getBasicInfo().getPhone());
-            if (req.getBasicInfo().getEmail() != null) profile.setEmail(req.getBasicInfo().getEmail());
+            if (req.getBasicInfo().getPhone() != null) profile.setPhone(SM4Util.encrypt(req.getBasicInfo().getPhone()));
+            if (req.getBasicInfo().getEmail() != null) profile.setEmail(SM4Util.encrypt(req.getBasicInfo().getEmail()));
         }
         if (req.getEducationInfo() != null) {
             if (req.getEducationInfo().getSchool() != null) profile.setSchool(req.getEducationInfo().getSchool());
@@ -161,8 +163,9 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setUpdatedAt(LocalDateTime.now());
         userProfileMapper.updateById(profile);
 
-        profileSkillMapper.delete(new LambdaQueryWrapper<ProfileSkill>().eq(ProfileSkill::getUserId, req.getUserId()));
         if (req.getSkills() != null) {
+            // skills 由前端按表单全量提交：若前端没有携带 skills（null），则不做 delete，避免误清空历史
+            profileSkillMapper.delete(new LambdaQueryWrapper<ProfileSkill>().eq(ProfileSkill::getUserId, req.getUserId()));
             for (ProfileUpdateRequest.SkillItem si : req.getSkills()) {
                 if (si.getCategory() == null || si.getItems() == null) continue;
                 ProfileSkill s = new ProfileSkill();
@@ -173,8 +176,9 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        profileCertificateMapper.delete(new LambdaQueryWrapper<ProfileCertificate>().eq(ProfileCertificate::getUserId, req.getUserId()));
         if (req.getCertificates() != null) {
+            // certificates 在前端可能并未展示/传入：未携带则不 delete，避免误清空历史
+            profileCertificateMapper.delete(new LambdaQueryWrapper<ProfileCertificate>().eq(ProfileCertificate::getUserId, req.getUserId()));
             for (ProfileUpdateRequest.CertificateItem ci : req.getCertificates()) {
                 if (ci.getName() == null) continue;
                 ProfileCertificate c = new ProfileCertificate();
@@ -182,6 +186,57 @@ public class ProfileServiceImpl implements ProfileService {
                 c.setName(ci.getName());
                 c.setIssueDate(ci.getIssueDate());
                 profileCertificateMapper.insert(c);
+            }
+        }
+
+        // 实习经历（不加密）：仅当请求体携带 internships（非 null）时才 delete+全量写入，避免请求未携带字段导致误清空
+        if (req.getInternships() != null) {
+            profileInternshipMapper.delete(new LambdaQueryWrapper<ProfileInternship>().eq(ProfileInternship::getUserId, req.getUserId()));
+            for (ProfileUpdateRequest.InternshipItem ii : req.getInternships()) {
+                if (ii == null) continue;
+                // 如果整条为空则跳过
+                boolean empty = (ii.getCompany() == null || ii.getCompany().isBlank())
+                        && (ii.getPosition() == null || ii.getPosition().isBlank())
+                        && (ii.getStartDate() == null || ii.getStartDate().isBlank())
+                        && (ii.getEndDate() == null || ii.getEndDate().isBlank())
+                        && (ii.getDescription() == null || ii.getDescription().isBlank());
+                if (empty) continue;
+                ProfileInternship i = new ProfileInternship();
+                i.setUserId(req.getUserId());
+                i.setCompany(ii.getCompany());
+                i.setPosition(ii.getPosition());
+                i.setStartDate(ii.getStartDate());
+                i.setEndDate(ii.getEndDate());
+                i.setDescription(ii.getDescription());
+                profileInternshipMapper.insert(i);
+            }
+        }
+
+        // 项目经历（不加密）：仅当请求体携带 projects（非 null）时才 delete+全量写入，tech_stack 存 JSON 数组
+        if (req.getProjects() != null) {
+            profileProjectMapper.delete(new LambdaQueryWrapper<ProfileProject>().eq(ProfileProject::getUserId, req.getUserId()));
+            for (ProfileUpdateRequest.ProjectItem piReq : req.getProjects()) {
+                if (piReq == null) continue;
+                boolean empty = (piReq.getName() == null || piReq.getName().isBlank())
+                        && (piReq.getRole() == null || piReq.getRole().isBlank())
+                        && (piReq.getStartDate() == null || piReq.getStartDate().isBlank())
+                        && (piReq.getEndDate() == null || piReq.getEndDate().isBlank())
+                        && (piReq.getDescription() == null || piReq.getDescription().isBlank())
+                        && (piReq.getTechStack() == null || piReq.getTechStack().isEmpty());
+                if (empty) continue;
+                ProfileProject p = new ProfileProject();
+                p.setUserId(req.getUserId());
+                p.setName(piReq.getName());
+                p.setRole(piReq.getRole());
+                p.setStartDate(piReq.getStartDate());
+                p.setEndDate(piReq.getEndDate());
+                p.setDescription(piReq.getDescription());
+                try {
+                    p.setTechStack(piReq.getTechStack() != null ? JSON.writeValueAsString(piReq.getTechStack()) : "[]");
+                } catch (Exception e) {
+                    p.setTechStack("[]");
+                }
+                profileProjectMapper.insert(p);
             }
         }
 
@@ -375,8 +430,8 @@ public class ProfileServiceImpl implements ProfileService {
             String name = str(basic.get("name"));
             if (name.isEmpty()) name = str(basic.get("nickname"));
             if (!name.isEmpty()) { user.setNickname(name); userMapper.updateById(user); }
-            if (has(str(basic.get("phone")))) profile.setPhone(str(basic.get("phone")));
-            if (has(str(basic.get("email")))) profile.setEmail(str(basic.get("email")));
+            if (has(str(basic.get("phone")))) profile.setPhone(SM4Util.encrypt(str(basic.get("phone"))));
+            if (has(str(basic.get("email")))) profile.setEmail(SM4Util.encrypt(str(basic.get("email"))));
             if (has(str(basic.get("gender")))) profile.setGender(str(basic.get("gender")));
             String bd = str(basic.get("birth_date"));
             if (bd.isEmpty()) bd = str(basic.get("birthday"));
@@ -453,6 +508,28 @@ public class ProfileServiceImpl implements ProfileService {
 
     private static String str(Object o) {
         return o != null ? o.toString().trim() : "";
+    }
+
+    private static String safeDecrypt(String maybeCipherText) {
+        if (maybeCipherText == null || maybeCipherText.isBlank()) return maybeCipherText;
+        try {
+            // 历史数据可能是明文；若不是合法 Base64，则跳过解密直接返回原值
+            if (!isValidBase64(maybeCipherText)) return maybeCipherText;
+            return SM4Util.decrypt(maybeCipherText);
+        } catch (Exception e) {
+            return maybeCipherText;
+        }
+    }
+
+    private static boolean isValidBase64(String s) {
+        if (s == null || s.isBlank()) return false;
+        // SM4Util.encrypt 使用的是 Base64 标准编码（带 padding），这里以“能 decode”为准
+        try {
+            Base64.getDecoder().decode(s);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private static String extractEmail(String text) {

@@ -24,6 +24,8 @@ public class ProfileUpdateRequest {
 
     private List<SkillItem> skills;
     private List<CertificateItem> certificates;
+    private List<InternshipItem> internships;
+    private List<ProjectItem> projects;
 
     @Data
     public static class BasicInfo {
@@ -60,5 +62,36 @@ public class ProfileUpdateRequest {
 
         @JsonProperty("issue_date")
         private String issueDate;
+    }
+
+    @Data
+    public static class InternshipItem {
+        private String company;
+        private String position;
+
+        @JsonProperty("start_date")
+        private String startDate;
+
+        @JsonProperty("end_date")
+        private String endDate;
+
+        private String description;
+    }
+
+    @Data
+    public static class ProjectItem {
+        private String name;
+        private String role;
+
+        @JsonProperty("start_date")
+        private String startDate;
+
+        @JsonProperty("end_date")
+        private String endDate;
+
+        private String description;
+
+        @JsonProperty("tech_stack")
+        private List<String> techStack;
     }
 }

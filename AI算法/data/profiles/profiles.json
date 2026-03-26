@@ -27,11 +27,11 @@
           "数据结构",
           "算法",
           "RAG架构",
-          "语义匹配",
+          "ReAct Agent架构",
           "特征工程",
           "模型训练",
-          "多轮对话",
-          "知识检索"
+          "语义嵌入",
+          "岗位匹配算法"
         ]
       },
       {
@@ -49,11 +49,11 @@
           "PyTorch",
           "Vue.js",
           "Flask",
+          "LangChain",
+          "ChromaDB",
+          "FastAPI",
           "Spring Boot",
           "MySQL",
-          "ChromaDB",
-          "LangChain",
-          "FastAPI",
           "Linux"
         ]
       },
@@ -155,7 +155,7 @@
         "date": "2024-01"
       }
     ],
-    "updated_at": "2026-03-22 18:29:00",
+    "updated_at": "2026-03-26 20:10:11",
     "profile_completeness": 100
   },
   "5": {

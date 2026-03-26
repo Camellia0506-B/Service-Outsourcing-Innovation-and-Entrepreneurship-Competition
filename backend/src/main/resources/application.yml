@@ -51,3 +51,7 @@ logging:
     root: INFO
     com.zaxxer.hikari: WARN
     org.apache.catalina: WARN
+
+sm4:
+  key: GradQuest20260326
+  iv: GradQuestIV000000
