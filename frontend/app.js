@@ -13426,26 +13426,40 @@ class CareerPlanningApp {
             this.prepareCareerReportCloneForExport(contentClone);
         }
 
+        // 创建临时容器
+        const host = document.createElement('div');
+        host.style.position = 'fixed';
+        host.style.left = '-99999px';
+        host.style.top = '0';
+        host.style.width = '1000px';
+        host.style.zIndex = '-1';
+        host.style.backgroundColor = '#fff';
+        host.style.padding = '20px';
+        
         // 设置克隆内容的样式
         contentClone.style.width = '1000px';
         contentClone.style.maxWidth = '1000px';
-        contentClone.style.padding = '20px';
         contentClone.style.backgroundColor = '#fff';
         contentClone.style.color = '#000';
         contentClone.style.height = 'auto';
         contentClone.style.maxHeight = 'none';
         contentClone.style.overflow = 'visible';
+        contentClone.style.display = 'block';
         
-        // 将克隆内容添加到页面
-        document.body.appendChild(contentClone);
+        host.appendChild(contentClone);
+        document.body.appendChild(host);
         
         try {
+            this.showToast('正在生成PDF，请稍候...', 'info');
+            
             // 使用html2canvas将内容转换为图片
-            const canvas = await html2canvas(generated, {
+            const canvas = await html2canvas(host, {
                 scale: 2,
                 useCORS: true,
-                logging: false,
-                letterRendering: true
+                logging: true,
+                letterRendering: true,
+                backgroundColor: '#ffffff',
+                allowTaint: true
             });
             
             // 创建PDF文档（按内容高度自动分页，避免只导出当前可见区域）
@@ -13461,9 +13475,14 @@ class CareerPlanningApp {
             pdf.save(filename);
             
             this.showToast('PDF导出成功', 'success');
+        } catch (error) {
+            console.error('PDF导出失败:', error);
+            this.showToast('PDF导出失败: ' + (error.message || '未知错误'), 'error');
         } finally {
             // 移除临时容器
-            document.body.removeChild(host);
+            if (document.body.contains(host)) {
+                document.body.removeChild(host);
+            }
         }
     }
     
@@ -13854,14 +13873,18 @@ class CareerPlanningApp {
     // 导出职业规划报告时，展开所有模块并去掉滚动容器限制
     prepareCareerReportCloneForExport(cloneRoot) {
         if (!cloneRoot) return;
-        cloneRoot.querySelectorAll('.report-section.hidden').forEach(sec => {
+        cloneRoot.querySelectorAll('.report-section, .report-section.hidden').forEach(sec => {
             sec.classList.remove('hidden');
             sec.style.display = 'block';
+            sec.style.visibility = 'visible';
         });
-        cloneRoot.querySelectorAll('.report-content-area-main, .career-report-wrap').forEach(el => {
+        cloneRoot.querySelectorAll('.report-content-area-main, .career-report-wrap, .report-content-area').forEach(el => {
             el.style.height = 'auto';
             el.style.maxHeight = 'none';
             el.style.overflow = 'visible';
+        });
+        cloneRoot.querySelectorAll('.no-print').forEach(el => {
+            el.style.display = 'none';
         });
     }
 
@@ -13869,6 +13892,7 @@ class CareerPlanningApp {
     buildCareerReportFullExportClone(reportContentEl) {
         if (!reportContentEl) return null;
         const sectionIds = [
+            'section-overview',
             'section-module-summary',
             'section-module-explore',
             'section-module-job-requirements',
