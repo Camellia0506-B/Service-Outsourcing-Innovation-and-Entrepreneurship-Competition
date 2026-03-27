@@ -283,90 +283,22 @@
                 var el = document.getElementById('reportPdfContent') || document.getElementById('report-content');
                 if (!el) return;
 
-                // 只移动“被分割线切到的内容块”，其它区域不动：
-                // 把“雷达图卡片（综合能力图谱）之后”的所有同级模块整体下移。
-                // 使用 transform：不会改变文档流，因此上半部分保持不变，只有视觉被推开。
-                var blockShiftPx = 1050; // 整体下移量（可微调：150/200/230/300/450/650...）
-                var groupWrapper = null;
-                try {
-                    var radar = el.querySelector('#reportRadarChart');
-                    var startCard = radar ? radar.closest('.report-section-card') : null;
-                    if (startCard) {
-                        var children = Array.prototype.slice.call(el.children || []);
-                        var startIdx = children.indexOf(startCard);
-                        if (startIdx >= 0 && startIdx < children.length) {
-                            groupWrapper = document.createElement('div');
-                            groupWrapper.style.display = 'block';
-                            // 避免 margin collapse 影响与上一块的间距
-                            groupWrapper.style.overflow = 'hidden';
-                            groupWrapper.style.transform = 'translateY(' + blockShiftPx + 'px)';
-
-                            // 在 startCard 前插入 wrapper，再把后续所有节点移入 wrapper（作为一个整体下移）
-                            el.insertBefore(groupWrapper, children[startIdx]);
-                            for (var ci = startIdx; ci < children.length; ci++) {
-                                if (!children[ci] || children[ci].nodeType !== 1) continue;
-                                groupWrapper.appendChild(children[ci]);
-                            }
-                        }
-                    }
-                } catch (e) { /* ignore */ }
-
-                // 1) 渲染完整画布（一次 html2canvas）
+                // 单页导出：整份报告渲染为一张超长 PDF，避免任何分页分割
                 var canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-
-                // 恢复 wrapper（避免影响页面后续交互）
-                if (groupWrapper && groupWrapper.parentNode === el) {
-                    while (groupWrapper.firstChild) {
-                        el.insertBefore(groupWrapper.firstChild, groupWrapper);
-                    }
-                    groupWrapper.parentNode.removeChild(groupWrapper);
-                    groupWrapper = null;
-                }
 
                 var jsPDF = window.jspdf && window.jspdf.jsPDF;
                 if (!jsPDF) { throw new Error('jsPDF 未加载'); }
-
-                var pdf = new jsPDF('p', 'mm', 'a4');
-                var pdfW = pdf.internal.pageSize.getWidth();
-                var pageH = pdf.internal.pageSize.getHeight();
-
                 var canvasW = canvas.width;
                 var canvasH = canvas.height;
-
-                var imgW = pdfW;
-                var imgScale = imgW / canvasW; // canvas(px) -> pdf(mm)
-                var pageHeightPxExact = pageH / imgScale; // 每页对应的“像素高度”
-                // 为了避开“固定高度边界”穿过关键内容（黑色分割线/裁切缝），
-                // 让分页边界相对 A4 做一点点重排：每页 step 稍小于 pageHeight，
-                // 这样切缝位置会漂移到空白区域；同时通过“step < pageHeight”产生少量重叠，尽量不丢内容。
-                var pageStepPx = pageHeightPxExact * 0.98;
-
-                // 2) 按 A4 精确切片：PNG + 逐段 addImage（避免分割线/撕裂）
-                var pageIndex = 0;
-                while (true) {
-                    var sliceStartPx = Math.round(pageIndex * pageStepPx);
-                    if (sliceStartPx >= canvasH) break;
-
-                    var sliceEndPx = Math.round(sliceStartPx + pageHeightPxExact);
-                    if (sliceEndPx > canvasH) sliceEndPx = canvasH;
-
-                    var sliceHeightPx = Math.max(1, sliceEndPx - sliceStartPx);
-
-                    var sliceCanvas = document.createElement('canvas');
-                    sliceCanvas.width = canvasW;
-                    sliceCanvas.height = sliceHeightPx;
-                    var ctx = sliceCanvas.getContext('2d');
-                    ctx.drawImage(canvas, 0, sliceStartPx, canvasW, sliceHeightPx, 0, 0, canvasW, sliceHeightPx);
-
-                    var imgDataSlice = sliceCanvas.toDataURL('image/png');
-
-                    if (pageIndex > 0) pdf.addPage();
-
-                    var sliceImgH = sliceHeightPx * imgScale;
-                    pdf.addImage(imgDataSlice, 'PNG', 0, 0, imgW, sliceImgH);
-
-                    pageIndex++;
-                }
+                var basePageWmm = 210; // A4 宽
+                var pageHmm = (canvasH * basePageWmm) / canvasW;
+                var pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: [basePageWmm, pageHmm]
+                });
+                var imgData = canvas.toDataURL('image/png');
+                pdf.addImage(imgData, 'PNG', 0, 0, basePageWmm, pageHmm);
 
                 pdf.save('职业测评报告.pdf');
             } catch (e) {
