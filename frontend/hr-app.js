@@ -6,6 +6,10 @@ let totalPages = 1;
 let currentHrData = null;
 let currentStudents = [];
 
+function getHrMockStoreApi() {
+    return window.HRMockStore || window.MockStore || null;
+}
+
 function showLoading() {
     document.getElementById('loading').classList.remove('hidden');
 }
@@ -371,6 +375,25 @@ function closeEvalReportModal() {
 async function loadJobOptions() {
     const sel = document.getElementById('filterJob');
     if (!sel) return;
+    const mockApi = getHrMockStoreApi();
+    if (mockApi) {
+        const store = mockApi.getMockStore();
+        const jobs = Array.from(new Set((store.students || [])
+            .map(s => (s.targetJob || s.target_job || '').trim())
+            .filter(Boolean)));
+        const currentVal = sel.value;
+        sel.innerHTML = '<option value="">全部岗位</option>';
+        jobs.forEach(job => {
+            const opt = document.createElement('option');
+            opt.value = job;
+            opt.textContent = job;
+            sel.appendChild(opt);
+        });
+        if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+            sel.value = currentVal;
+        }
+        return;
+    }
     try {
         const response = await fetch(`${API_BASE_URL}/hr/students/job-options`, {
             headers: { 'Authorization': `Bearer ${currentHrData.token}` }
@@ -395,8 +418,9 @@ async function loadJobOptions() {
 }
 
 async function loadStudents() {
-    if (window.MockStore) {
-        var store = window.MockStore.getMockStore();
+    var mockApi = getHrMockStoreApi();
+    if (mockApi) {
+        var store = mockApi.getMockStore();
         var list = (store.students || []).slice();
         var targetJob = (document.getElementById('filterJob') && document.getElementById('filterJob').value) || '';
         var minScore = (document.getElementById('filterMinScore') && document.getElementById('filterMinScore').value) || '';
@@ -913,8 +937,9 @@ function renderInvitations(invitations) {
 
 async function loadEvaluations() {
     var list;
-    if (window.MockStore) {
-        var store = window.MockStore.getMockStore();
+    var mockApi = getHrMockStoreApi();
+    if (mockApi) {
+        var store = mockApi.getMockStore();
         list = (store.evaluations || []).slice();
         renderEvaluations(list);
     } else {
@@ -1363,8 +1388,9 @@ async function handleEvaluationSubmit(e) {
 }
 
 function syncEvalToMockStore(evaluationId, invitationId, formData) {
-    if (typeof window.MockStore === 'undefined') return;
-    var store = window.MockStore.getMockStore();
+    var mockApi = getHrMockStoreApi();
+    if (!mockApi) return;
+    var store = mockApi.getMockStore();
     var evalRecord = store.evaluations && store.evaluations.find(function (e) {
         return String(e.evaluationId || e.evaluation_id) === String(evaluationId);
     });
@@ -1401,7 +1427,7 @@ function syncEvalToMockStore(evaluationId, invitationId, formData) {
             else store.myReports.push(report);
         }
     }
-    window.MockStore.saveMockStore(store);
+    mockApi.saveMockStore(store);
 }
 
 async function handleHrModalRegister(e) {
