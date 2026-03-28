@@ -11753,7 +11753,7 @@ class CareerPlanningApp {
                     </div>
                     
                     <h6 style="color: #2D5A3D; margin-bottom: 8px;">前端开发工程师</h6>
-                    <div>
+                    <div style="margin-bottom: 16px;">
                         <strong style="color: #2D5A3D;">专业技能：</strong>
                         <ul class="report-list" style="margin-top: 8px;">
                             <li>基础：HTML5、CSS3、JavaScript（ES6+）</li>
@@ -11761,6 +11761,54 @@ class CareerPlanningApp {
                             <li>工具：Webpack、Vite、npm/yarn等</li>
                             <li>响应式设计：能够适配不同设备</li>
                             <li>性能优化：页面加载速度和用户体验</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">数据分析师</h6>
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>数据处理：SQL（熟练）、Python（pandas、numpy）</li>
+                            <li>数据可视化：Tableau、Power BI、Matplotlib、ECharts</li>
+                            <li>统计学：假设检验、回归分析、时间序列分析</li>
+                            <li>Excel：数据透视表、VLOOKUP、宏</li>
+                            <li>业务分析：能够将数据转化为业务洞察</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">产品经理</h6>
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>需求分析：用户调研、需求梳理、优先级排序</li>
+                            <li>原型设计：Axure、Figma、Sketch、墨刀</li>
+                            <li>文档能力：PRD、MRD、用户故事撰写</li>
+                            <li>项目管理：敏捷开发、Scrum、版本规划</li>
+                            <li>数据分析：用户行为分析、产品指标监控</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">测试工程师</h6>
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>功能测试：测试用例设计、缺陷管理、回归测试</li>
+                            <li>自动化测试：Selenium、Appium、JUnit、TestNG</li>
+                            <li>性能测试：JMeter、LoadRunner、压力测试</li>
+                            <li>接口测试：Postman、JMeter、RESTful API</li>
+                            <li>测试工具：Jira、TestLink、禅道</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">运维工程师/DevOps</h6>
+                    <div>
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>操作系统：Linux（CentOS、Ubuntu）、Shell脚本</li>
+                            <li>容器技术：Docker、Kubernetes、容器编排</li>
+                            <li>CI/CD：Jenkins、GitLab CI、GitHub Actions</li>
+                            <li>监控告警：Prometheus、Grafana、ELK Stack</li>
+                            <li>云平台：阿里云、腾讯云、AWS</li>
                         </ul>
                     </div>
                 </div>

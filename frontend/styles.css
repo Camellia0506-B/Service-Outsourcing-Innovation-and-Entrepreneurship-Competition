@@ -12491,48 +12491,7 @@ body.on-login-page {
     box-shadow: 0 4px 16px rgba(45, 91, 227, 0.15);
 }
 
-/* 为不同功能的按钮设置不同的颜色 */
-#reportCheckCompletenessBtn {
-    color: #2e7d32;
-    border-color: #4caf50;
-}
 
-#reportCheckCompletenessBtn:hover {
-    background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
-}
-
-#reportAgentBtn {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-#reportAgentBtn:hover {
-    background: linear-gradient(135deg, rgba(45, 91, 227, 0.05), rgba(45, 91, 227, 0.1));
-}
-
-#reportEditBtn {
-    color: #1565c0;
-    border-color: #2196f3;
-}
-
-#reportEditBtn:hover {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border-color: #1565c0;
-    color: #1565c0;
-    box-shadow: 0 8px 24px rgba(33, 150, 243, 0.3);
-}
-
-#reportPolishBtn {
-    color: #7b1fa2;
-    border-color: #9c27b0;
-}
-
-#reportPolishBtn:hover {
-    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-    border-color: #7b1fa2;
-    color: #7b1fa2;
-    box-shadow: 0 8px 24px rgba(156, 39, 176, 0.3);
-}
 
 .btn-export {
     color: #1565c0;
@@ -23363,24 +23322,25 @@ body {
     gap: 8px;
 }
 
-.report-action-btn {
-    background: white;
-    color: #1c1c18;
-    border: 1px solid #e5e5e5;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
+.report-action-bar .report-action-btn:not(.report-action-btn-primary) {
+    background: white !important;
+    color: #2C4A3E !important;
+    border: 1px solid #d1d5db !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
 }
 
-.report-action-btn:hover {
-    background: #f5f5f5;
+.report-action-bar .report-action-btn:not(.report-action-btn-primary):hover {
+    background: #f6f7f3 !important;
+    border-color: #2C4A3E !important;
 }
 
 .report-action-btn-primary {
-    background: #2D5A3D;
-    color: white;
-    border-color: #2D5A3D;
+    background: #2D5A3D !important;
+    color: white !important;
+    border-color: #2D5A3D !important;
 }
 
 /* ���岼�� */
