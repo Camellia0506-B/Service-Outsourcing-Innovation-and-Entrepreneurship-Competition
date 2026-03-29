@@ -19478,6 +19478,33 @@ body.on-login-page #agentAssistant { display: none !important; }
     box-shadow: none;
 }
 
+/* PDF导出防止内容被切割 */
+.avoid-page-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.force-page-break-before {
+    page-break-before: always;
+    break-before: page;
+}
+
+/* 职业规划报告模块防止分页 */
+.career-report-wrap .report-section,
+.career-report-wrap .report-card,
+.career-report-wrap .report-inset-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* 能力卡片、图表卡片、总结卡片防止分页 */
+.career-report-wrap .ability-card,
+.career-report-wrap .report-chart-card,
+.career-report-wrap .report-summary-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
 #reportPage .agent-quick-actions .btn-secondary:hover {
     border-color: var(--mock-sage);
     color: var(--mock-sage);

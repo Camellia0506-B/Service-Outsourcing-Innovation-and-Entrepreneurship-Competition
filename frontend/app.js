@@ -13519,13 +13519,16 @@ class CareerPlanningApp {
                 allowTaint: true
             });
             
-            // 创建PDF文档（按内容高度自动分页，避免只导出当前可见区域）
+            // 创建PDF文档（使用自定义高度，避免内容被切割）
+            const pdfW = 210; // A4宽度mm
+            const imgH = (canvas.height * pdfW) / canvas.width;
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
-                format: 'a4'
+                format: [pdfW, imgH]
             });
-            this.addCanvasToPdfWithPagination(pdf, canvas);
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
 
             // 保存PDF文件
             const filename = `career_report_${reportId}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -13891,8 +13894,15 @@ class CareerPlanningApp {
         if (btn) { btn.disabled = true; btn.textContent = '导出中...'; }
         try {
             const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-            const pdf = new JsPDF('p', 'mm', 'a4');
-            this.addCanvasToPdfWithPagination(pdf, canvas);
+            const pdfW = 210;
+            const imgH = (canvas.height * pdfW) / canvas.width;
+            const pdf = new JsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [pdfW, imgH]
+            });
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
             pdf.save('职业测评报告.pdf');
             this.showToast('导出成功', 'success');
         } catch (e) {
@@ -13907,24 +13917,11 @@ class CareerPlanningApp {
     addCanvasToPdfWithPagination(pdf, canvas) {
         if (!pdf || !canvas) return;
         const pdfW = pdf.internal.pageSize.getWidth();
-        const pdfH = pdf.internal.pageSize.getHeight();
         const imgW = pdfW;
         const imgH = (canvas.height * imgW) / canvas.width;
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        let heightLeft = imgH;
-        let yOffset = 0;
-
-        // 第一页
-        pdf.addImage(imgData, 'JPEG', 0, yOffset, imgW, imgH);
-        heightLeft -= pdfH;
-
-        // 后续分页
-        while (heightLeft > 0) {
-            yOffset -= pdfH;
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 0, yOffset, imgW, imgH);
-            heightLeft -= pdfH;
-        }
+        
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH);
     }
 
     // 导出职业规划报告时，展开所有模块并去掉滚动容器限制
@@ -13934,11 +13931,15 @@ class CareerPlanningApp {
             sec.classList.remove('hidden');
             sec.style.display = 'block';
             sec.style.visibility = 'visible';
+            sec.classList.add('avoid-page-break');
         });
         cloneRoot.querySelectorAll('.report-content-area-main, .career-report-wrap, .report-content-area').forEach(el => {
             el.style.height = 'auto';
             el.style.maxHeight = 'none';
             el.style.overflow = 'visible';
+        });
+        cloneRoot.querySelectorAll('.report-card, .report-inset-block, .ability-card, .report-chart-card, .report-summary-card').forEach(el => {
+            el.classList.add('avoid-page-break');
         });
         cloneRoot.querySelectorAll('.no-print').forEach(el => {
             el.style.display = 'none';
