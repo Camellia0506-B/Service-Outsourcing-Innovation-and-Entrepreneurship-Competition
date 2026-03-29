@@ -12584,7 +12584,7 @@ body.on-login-page {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 400px;
+    width: 650px;
     max-width: 90%;
     max-height: 80vh;
     background: var(--card-bg);
@@ -12599,12 +12599,12 @@ body.on-login-page {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 20px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .report-history-header h3 {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -12629,8 +12629,8 @@ body.on-login-page {
 }
 
 .career-history-item {
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
     background: var(--card-bg);
     border-radius: 12px;
     border: 1px solid var(--border-color);
@@ -12643,10 +12643,10 @@ body.on-login-page {
     box-shadow: var(--shadow);
 }
 
-.history-item-main { margin-bottom: 6px; }
-.history-item-title { font-weight: 600; font-size: 14px; color: var(--text-primary); }
-.history-item-meta { font-size: 13px; color: var(--text-secondary); }
-.history-item-score { font-size: 14px; font-weight: 700; color: #2e7d32; }
+.history-item-main { margin-bottom: 8px; }
+.history-item-title { font-weight: 600; font-size: 16px; color: var(--text-primary); }
+.history-item-meta { font-size: 14px; color: var(--text-secondary); }
+.history-item-score { font-size: 15px; font-weight: 700; color: #2e7d32; }
 
 /* 职业规划报告内容 - 模块标题左侧蓝线 */
 .career-report-wrap {

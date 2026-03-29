@@ -1159,13 +1159,12 @@ class API {
             { job_id: 'job_003', job_name: '后端开发工程师', avg_salary: '14k-25k', demand_score: 88, growth_trend: '上升', tags: ['Java', 'Go', '微服务'], industry: '互联网', level: '中级', skills: ['Java/Go', 'MySQL', 'Redis', '分布式'], location: '深圳', company_nature: '私企' },
             { job_id: 'job_004', job_name: '数据分析师', avg_salary: '10k-18k', demand_score: 85, growth_trend: '上升', tags: ['Python', 'SQL', '数据可视化'], industry: '互联网/金融', level: '初级', skills: ['Python', 'SQL', 'Excel', 'Tableau'], location: '北京', company_nature: '外资' },
             { job_id: 'job_005', job_name: '产品经理', avg_salary: '15k-28k', demand_score: 82, growth_trend: '稳定', tags: ['产品设计', '需求分析'], industry: '互联网', level: '中级', skills: ['需求分析', '原型设计', '用户研究'], location: '杭州', company_nature: '私企' },
-            { job_id: 'job_006', job_name: '新能源电池工程师', avg_salary: '18k-30k', demand_score: 88, growth_trend: '上升', tags: ['锂电池', 'BMS'], industry: '新能源', level: '中级', skills: ['电化学', '电池管理', '测试验证'], location: '深圳', company_nature: '国企' },
             { job_id: 'job_007', job_name: 'UI/UX设计师', avg_salary: '12k-22k', demand_score: 80, growth_trend: '稳定', tags: ['Figma', '交互设计'], industry: '互联网', level: '中级', skills: ['Figma/Sketch', '交互设计', '视觉设计'], location: '杭州', company_nature: '私企' },
-            { job_id: 'job_008', job_name: '测试开发工程师', avg_salary: '12k-20k', demand_score: 78, growth_trend: '稳定', tags: ['自动化测试', '性能测试'], industry: '互联网', level: '中级', skills: ['Python', 'Selenium', 'JMeter'], location: '北京', company_nature: '外资' },
-            { job_id: 'job_009', job_name: '运维工程师', avg_salary: '11k-20k', demand_score: 75, growth_trend: '稳定', tags: ['Linux', 'K8s', '云原生'], industry: '互联网', level: '中级', skills: ['Linux', 'Docker', 'Kubernetes'], location: '广州', company_nature: '私企' },
+            { job_id: 'job_008', job_name: '测试工程师', avg_salary: '12k-20k', demand_score: 78, growth_trend: '稳定', tags: ['自动化测试', '性能测试'], industry: '互联网', level: '中级', skills: ['Python', 'Selenium', 'JMeter'], location: '北京', company_nature: '外资' },
+            { job_id: 'job_009', job_name: '运维工程师/DevOps', avg_salary: '11k-20k', demand_score: 75, growth_trend: '稳定', tags: ['Linux', 'K8s', '云原生'], industry: '互联网', level: '中级', skills: ['Linux', 'Docker', 'Kubernetes'], location: '广州', company_nature: '私企' },
             { job_id: 'job_010', job_name: 'AI应用工程师', avg_salary: '18k-32k', demand_score: 90, growth_trend: '上升', tags: ['大模型', 'RAG', 'Agent'], industry: 'AI/互联网', level: '中级', skills: ['Python', 'LLM', 'Prompt工程'], location: '北京', company_nature: '私企' },
             { job_id: 'job_011', job_name: '嵌入式软件工程师', avg_salary: '14k-24k', demand_score: 80, growth_trend: '上升', tags: ['C/C++', '嵌入式'], industry: '智能硬件/汽车', level: '中级', skills: ['C/C++', 'RTOS', '驱动开发'], location: '深圳', company_nature: '国企' },
-            { job_id: 'job_012', job_name: '咨询顾问', avg_salary: '15k-30k', demand_score: 72, growth_trend: '稳定', tags: ['战略咨询', '商业分析'], industry: '咨询', level: '中级', skills: ['商业分析', 'PPT', '客户沟通'], location: '上海', company_nature: '外资' }
+            { job_id: 'job_013', job_name: '全栈开发工程师', avg_salary: '15k-28k', demand_score: 85, growth_trend: '上升', tags: ['全栈', 'React', 'Node.js'], industry: '互联网', level: '中级', skills: ['JavaScript', 'Node.js', 'React', 'MongoDB'], location: '北京', company_nature: '私企' }
         ];
     }
 
@@ -1180,13 +1179,12 @@ class API {
             'job_003': { certs: ['云厂商认证'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有实习经历' },
             'job_004': { certs: ['数据分析师认证'], innovation: '中', learning: '高', pressure: '中', communication: '中高', internship: '有分析报告' },
             'job_005': { certs: ['PMP加分'], innovation: '高', learning: '高', pressure: '高', communication: '高', internship: '产品实习' },
-            'job_006': { certs: ['电池/电化学相关'], innovation: '高', learning: '高', pressure: '中', communication: '中', internship: '车企/电池厂实习' },
             'job_007': { certs: ['设计类作品集'], innovation: '高', learning: '中高', pressure: '中', communication: '高', internship: '设计实习' },
             'job_008': { certs: ['ISTQB等'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '测试实习' },
             'job_009': { certs: ['CKA/CKAD', '云认证'], innovation: '中', learning: '高', pressure: '中高', communication: '中', internship: '运维实习' },
             'job_010': { certs: ['AI相关课程/项目'], innovation: '高', learning: '极高', pressure: '中高', communication: '中', internship: 'AI项目' },
             'job_011': { certs: ['嵌入式/电子相关'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '硬件/嵌入式实习' },
-            'job_012': { certs: ['咨询实习经历'], innovation: '高', learning: '高', pressure: '高', communication: '极高', internship: '咨询实习' }
+            'job_013': { certs: ['全栈相关项目经验'], innovation: '中高', learning: '高', pressure: '中高', communication: '中', internship: '全栈开发实习' }
         };
         return profiles[job.job_id] || { certs: ['相关认证优先'], innovation: '中', learning: '高', pressure: '中', communication: '中', internship: '有实习优先' };
     }
@@ -1201,13 +1199,12 @@ class API {
             'job_003': '负责服务端系统设计与开发，保障高可用、高并发业务',
             'job_004': '负责数据采集、清洗、建模与可视化，支撑业务决策',
             'job_005': '负责产品规划、需求分析与迭代，协调研发与业务',
-            'job_006': '负责动力电池系统设计、BMS开发或测试验证',
             'job_007': '负责产品交互与视觉设计，提升用户体验',
             'job_008': '负责自动化测试、性能测试及质量保障体系建设',
             'job_009': '负责服务器运维、CI/CD、监控告警与故障排查',
             'job_010': '负责大模型应用、RAG、Agent等AI能力落地',
             'job_011': '负责嵌入式软件开发、驱动与RTOS适配',
-            'job_012': '负责客户调研、战略分析与方案输出'
+            'job_013': '负责前后端全栈开发，独立完成产品功能迭代'
         };
         return {
             job_id: job.job_id,
