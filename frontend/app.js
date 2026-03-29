@@ -6138,6 +6138,17 @@ class CareerPlanningApp {
         const exp = data.practical_experience || {};
         const overall = data.overall_assessment || {};
         
+        // 计算调整后的百分位：能力越高，数字越小（超过 90% 的人 → Top 10%）
+        let adjustedPercentile = null;
+        if (overall.percentile !== undefined && overall.percentile !== null && overall.percentile !== '') {
+            const p = Number(overall.percentile);
+            if (!isNaN(p)) {
+                adjustedPercentile = Math.round(100 - p);
+                // 确保在 1-99 范围内
+                adjustedPercentile = Math.max(1, Math.min(99, adjustedPercentile));
+            }
+        }
+        
         // 根据个人档案数据分析当前能力（带最低值30分）
         const currentAbilities = this.analyzeAbilitiesFromProfile(data);
         
@@ -6170,7 +6181,7 @@ class CareerPlanningApp {
                                 <div id="competitivenessGauge" style="width: 160px; height: 160px; margin: 0 auto;"></div>
                                 <div style="display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 2px;">
                                     <div style="background-color: #e6f7ff; padding: 10px 20px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
-                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${overall.percentile || '-'}${overall.percentile ? '%' : ''}</div>
+                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${adjustedPercentile !== null ? adjustedPercentile : '-'}${adjustedPercentile !== null ? '%' : ''}</div>
                                         <div style="font-size: 13px; color: var(--text-secondary);">同专业学生中的百分位排名</div>
                                     </div>
                                     <div style="background-color: #f5f5f5; padding: 14px; border-radius: 8px; width: 100%; max-width: 280px;">
@@ -6865,7 +6876,7 @@ class CareerPlanningApp {
             const role = exp.role || '';
             const startDate = exp.start_date || '';
             const endDate = exp.end_date || '';
-            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : exp.duration || '';
+            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : (startDate || exp.duration || '');
             const location = exp.location || '';
             const description = exp.description || '';
             const achievements = exp.achievements || [];
@@ -6873,25 +6884,23 @@ class CareerPlanningApp {
             const complexity = exp.complexity || '';
             
             let details = '';
-            if (dateRange || location || score || complexity) {
-                details += '<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">';
-                if (dateRange) details += `${dateRange}`;
-                if (location) details += `${dateRange ? ' · ' : ''}${location}`;
-                if (score) details += `${(dateRange || location) ? ' · ' : ''}评分: ${score}`;
-                if (complexity) details += `${(dateRange || location || score) ? ' · ' : ''}复杂度: ${complexity}`;
-                details += '</div>';
-            }
+            details += '<div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">';
+            if (dateRange) details += `${dateRange}`;
+            if (location) details += `${dateRange ? ' · ' : ''}${location}`;
+            if (score) details += `${(dateRange || location) ? ' · ' : ''}评分: ${score}`;
+            if (complexity) details += `${(dateRange || location || score) ? ' · ' : ''}复杂度: ${complexity}`;
+            details += '</div>';
             
             let descriptionHtml = '';
             if (description) {
-                descriptionHtml = `<p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">${description}</p>`;
+                descriptionHtml = `<p style="margin: 0; font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${description}</p>`;
             }
             
             let achievementsHtml = '';
             if (achievements.length > 0) {
-                achievementsHtml = '<div style="margin-top: 8px;">';
+                achievementsHtml = '<div style="margin-top: 12px;">';
                 achievements.forEach(achievement => {
-                    achievementsHtml += `<p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">${achievement}</p>`;
+                    achievementsHtml += `<p style="margin: 0; font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${achievement}</p>`;
                 });
                 achievementsHtml += '</div>';
             }
@@ -6899,13 +6908,13 @@ class CareerPlanningApp {
             const isLast = index === experiences.length - 1;
             const itemId = `exp-item-${index}`;
             
-            html += `<div id="${itemId}" style="margin-bottom: ${isLast ? '0' : '24px'};">
+            html += `<div id="${itemId}" style="margin-bottom: ${isLast ? '0' : '32px'};">
                 <div style="position: absolute; left: 0; transform: translateX(-50%);">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--primary-color); margin-top: 2px;"></div>
-                    ${!isLast ? `<div style="width: 2px; background-color: #e6f7ff; position: absolute; left: 5px; top: 14px; bottom: -24px;"></div>` : ''}
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background-color: var(--primary-color); margin-top: 2px;"></div>
+                    ${!isLast ? `<div style="width: 2px; background-color: #e6f7ff; position: absolute; left: 7px; top: 20px; bottom: -32px;"></div>` : ''}
                 </div>
-                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">${title}</h4>
-                ${company ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${company}${role ? ` · ${role}` : ''}</div>` : role ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${role}</div>` : ''}
+                <h4 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">${title}</h4>
+                ${company ? `<div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">${company}${role ? ` · ${role}` : ''}</div>` : role ? `<div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">${role}</div>` : ''}
                 ${details}
                 ${descriptionHtml}
                 ${achievementsHtml}
