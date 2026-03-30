@@ -2506,7 +2506,7 @@ function normalizeTrackingSource(source) {
     return 'self_found'; // official/campus/referral/自行寻找 等统一为 self_found
 }
 
-// 9.1 创建求职跟踪记录
+// 9.1 创建求职闭环记录
 // 请求体：user_id, job_id, job_title, company_name, apply_date, source (system_recommend | self_found)
 async function createTrackingRecord(userId, payload) {
     const applyDate = (payload.apply_date || '').trim();
@@ -2535,7 +2535,7 @@ async function updateTrackingRecord(recordId, payload) {
     });
 }
 
-// 9.4 获取求职跟踪总览
+// 9.4 获取求职闭环总览
 // GET /tracking/overview?user_id=xxx
 // 响应：{ summary: { total_applied, written_test_pass_rate, interview_pass_rate, offer_count, rejected_count, in_progress_count }, records: [...], agent_insight? }
 async function getTrackingOverview(userId) {

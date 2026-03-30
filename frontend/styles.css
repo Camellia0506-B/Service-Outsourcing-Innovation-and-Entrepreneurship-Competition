@@ -3617,7 +3617,7 @@ body.on-login-page {
     margin: 4px 0 0 0;
 }
 
-/* 求职跟踪页右下角：应对措施/计划定制 悬浮按钮（置于智能体 FAB 上方避免被遮挡） */
+/* 求职闭环页右下角：应对措施/计划定制 悬浮按钮（置于智能体 FAB 上方避免被遮挡） */
 #trackingPage .tracking-plan-fab {
     position: fixed;
     right: 24px;
@@ -3725,7 +3725,7 @@ body.on-login-page {
     font-size: 12px;
 }
 
-/* 求职跟踪 5 Tab 一屏布局 */
+/* 求职闭环 5 Tab 一屏布局 */
 .tracking-page-wrap {
     display: flex;
     flex-direction: column;
@@ -3831,7 +3831,7 @@ body.on-login-page {
     background: var(--light-blue-bg);
 }
 
-/* 求职跟踪：投递日期（统一展示 YYYY/MM/DD） */
+/* 求职闭环：投递日期（统一展示 YYYY/MM/DD） */
 .tracking-date-input {
     position: relative;
     display: flex;
@@ -4022,7 +4022,7 @@ body.on-login-page {
 
 .tracking-step-actions { display: flex; gap: 8px; margin-top: 10px; }
 
-/* 求职跟踪：淘汰按钮（危险次按钮，更符合整体风格） */
+/* 求职闭环：淘汰按钮（危险次按钮，更符合整体风格） */
 #trackingPage .tracking-step-actions .tracking-reject-btn {
     padding: 12px 16px;
     border-radius: 12px;
@@ -4290,7 +4290,7 @@ body.on-login-page {
 }
 
 /* ══════════════════════════════════════
-   求职跟踪页 · 编辑风格设计语言
+   求职闭环页 · 编辑风格设计语言
    暖米色背景、白色卡片、黑色主元素，无蓝色、无 emoji
    ══════════════════════════════════════ */
 
@@ -15703,7 +15703,7 @@ body.on-login-page {
     pointer-events: none !important;
 }
 
-/* 求职跟踪·反馈报告列表：右侧详情区不出现灰色遮罩（避免残留或伪元素） */
+/* 求职闭环·反馈报告列表：右侧详情区不出现灰色遮罩（避免残留或伪元素） */
 #trackingPage .tracking-rpt-detail::before,
 #trackingPage .tracking-rpt-detail::after,
 #trackingPage .tracking-t5-layout::after {

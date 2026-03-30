@@ -71,7 +71,7 @@
                         <a href="#" class="nav-link" data-page="matching"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M3 7h8M8.5 4.5L11 7l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>岗位匹配</a>
                         <a href="#" class="nav-link" data-page="report"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M3 1.5h5.5L12 5v7.5a.5.5 0 01-.5.5h-8a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.4"/><path d="M8.5 1.5V5H12M5 7.5h4M5 9.5h2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>职业规划报告</a>
                         <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a0a098;padding:10px 9px 5px;">扩展功能</div>
-                        <a href="#" class="nav-link" data-page="tracking"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1.5" y="2.5" width="11" height="9" rx="1.4" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 2v2M9.5 2v2M1.5 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>求职跟踪</a>
+                        <a href="#" class="nav-link" data-page="tracking"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1.5" y="2.5" width="11" height="9" rx="1.4" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 2v2M9.5 2v2M1.5 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>求职闭环</a>
                         <a href="#" class="nav-link" data-page="mockInterview"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M2 2.5h10a.5.5 0 01.5.5v6a.5.5 0 01-.5.5H8L5.5 12V9.5H2a.5.5 0 01-.5-.5V3a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.4"/></svg>模拟面试</a>
                         <a href="#" class="nav-link" data-page="hrInvite"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>HR邀约</a>
                         <a href="#" class="nav-link" data-page="privacy"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1L2 3v4c0 3.5 2.5 6.5 5 7 2.5-.5 5-3.5 5-7V3L7 1z" stroke="currentColor" stroke-width="1.4"/><path d="M7 4.5v3M5.5 6.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>隐私设置</a>
@@ -1384,7 +1384,7 @@
                     <button type="button" class="tracking-tab active" data-tab="trackingCreate">创建跟踪记录</button>
                     <button type="button" class="tracking-tab" data-tab="trackingUpdate">更新求职进展</button>
                     <button type="button" class="tracking-tab" data-tab="trackingFailure">失败反馈分析</button>
-                    <button type="button" class="tracking-tab" data-tab="trackingOverview">求职跟踪总览</button>
+                    <button type="button" class="tracking-tab" data-tab="trackingOverview">求职闭环总览</button>
                     <button type="button" class="tracking-tab" data-tab="trackingReports">反馈报告列表</button>
                 </div>
 
@@ -1393,7 +1393,7 @@
                     <div class="tracking-panel on" id="trackingCreateTab">
                         <div class="tracking-t1-layout">
                             <div class="tracking-card">
-                                <h3 class="tracking-card-title">新建求职跟踪记录</h3>
+                                <h3 class="tracking-card-title">新建求职闭环记录</h3>
                                 <div class="tracking-form-grid">
                                     <div class="tracking-form-item">
                                         <label>岗位名称</label>
@@ -1517,7 +1517,7 @@
                         </div>
                     </div>
 
-                    <!-- Tab4: 求职跟踪总览 -->
+                    <!-- Tab4: 求职闭环总览 -->
                     <div class="tracking-panel" id="trackingOverviewTab">
                         <div class="tracking-t4-layout">
                             <div class="tracking-kpi"><div class="tracking-kpi-lbl">累计投递</div><div class="tracking-kpi-val" id="trackingTotalApplied">0</div><div class="tracking-kpi-sub">岗位</div></div>
@@ -2137,11 +2137,11 @@
             </div>
         </div>
 
-        <!-- 新建求职跟踪记录弹窗 -->
+        <!-- 新建求职闭环记录弹窗 -->
         <div id="trackingCreateModal" class="modal-overlay hidden">
             <div class="modal-content tracking-modal" onclick="event.stopPropagation()">
                 <div class="modal-header">
-                    <h3>新建求职跟踪记录</h3>
+                    <h3>新建求职闭环记录</h3>
                     <button type="button" class="modal-close" id="trackingCreateClose">&times;</button>
                 </div>
                 <div class="modal-body">

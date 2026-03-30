@@ -962,7 +962,7 @@ class CareerPlanningApp {
         });
         this._initAIGenTab();
 
-        // 求职跟踪 5 Tab 切换
+        // 求职闭环 5 Tab 切换
         document.querySelectorAll('#trackingPage .tracking-tab').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tab = (e.currentTarget && e.currentTarget.dataset.tab) || e.target.dataset.tab;
@@ -1014,7 +1014,7 @@ class CareerPlanningApp {
         document.getElementById('trackingViewFullAnalysisBtn')?.addEventListener('click', () => this.openTrackingFullAnalysisModal());
         document.getElementById('trackingSaveAsReportBtn')?.addEventListener('click', () => this.saveFailureAsReport());
 
-        // 求职跟踪：更新进展弹窗（仍用于详细编辑）
+        // 求职闭环：更新进展弹窗（仍用于详细编辑）
         document.getElementById('trackingUpdateClose')?.addEventListener('click', () => this.closeTrackingUpdateModal());
         document.getElementById('trackingUpdateCancel')?.addEventListener('click', () => this.closeTrackingUpdateModal());
         document.getElementById('trackingUpdateConfirm')?.addEventListener('click', () => this.handleUpdateTrackingRecord());
@@ -4832,7 +4832,7 @@ class CareerPlanningApp {
         }
     }
 
-    // 求职跟踪：切换 5 个 Tab
+    // 求职闭环：切换 5 个 Tab
     switchTrackingTab(tabName) {
         document.querySelectorAll('#trackingPage .tracking-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
@@ -4943,7 +4943,7 @@ class CareerPlanningApp {
         }
     }
 
-    // 求职跟踪：更新进展弹窗
+    // 求职闭环：更新进展弹窗
     openTrackingUpdateModal(record) {
         const modal = document.getElementById('trackingUpdateModal');
         if (!modal || !record) return;
@@ -5808,7 +5808,7 @@ class CareerPlanningApp {
                     this.trackingSelectedRecordId = null;
                     this.renderTrackingSteps(null);
                 }
-                // 重新加载求职跟踪数据（总览 + 左侧列表 + 报告），确保 UI 中这条记录消失
+                // 重新加载求职闭环数据（总览 + 左侧列表 + 报告），确保 UI 中这条记录消失
                 await this.loadTrackingData();
             } else {
                 this.showToast((res && res.msg) || '删除失败', 'error');
@@ -14925,18 +14925,18 @@ var AGENT_QUICK_BUTTON_CONTENT = {
     matching:     { userMsg: '岗位匹配' },
     report:       { userMsg: '职业规划报告' },
     query:        { userMsg: '查看岗位画像' },
-    tracking:     { userMsg: '我想使用求职跟踪' },
+    tracking:     { userMsg: '我想使用求职闭环' },
     mockInterview: { userMsg: '我想进行模拟面试' }
 };
 
 /** 跟踪/面试快捷按钮：流式说明文案（不含按钮，按钮单独渲染），语气生动、带表情符号 */
 var AGENT_LOCAL_NAV_MESSAGES = {
-    tracking: '📋 在这里可以记录你的每一次投递、笔试、面试进展，还能查看失败分析与复盘报告，让求职有据可查～ ✨ 点击下方按钮进入求职跟踪页面。',
+    tracking: '📋 在这里可以记录你的每一次投递、笔试、面试进展，还能查看失败分析与复盘报告，让求职有据可查～ ✨ 点击下方按钮进入求职闭环页面。',
     mockInterview: '🎤 在这里可以和 AI 面试官进行模拟面试练习，实时获得回答评估与改进建议，越练越稳～ 💪 点击下方按钮开始你的模拟面试吧！'
 };
 /** 跟踪/面试跳转按钮文案与页面 */
 var AGENT_LOCAL_NAV_BUTTONS = {
-    tracking:     { label: '进入求职跟踪', page: 'tracking' },
+    tracking:     { label: '进入求职闭环', page: 'tracking' },
     mockInterview: { label: '进入模拟面试', page: 'mockInterview' }
 };
 
@@ -15318,7 +15318,7 @@ function agentFormatText(text) {
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/【立即开始测评】/g, '<a href="#" class="agent-inline-link" data-agent-nav="assessment">【立即开始测评】</a>')
-        .replace(/【进入求职跟踪】/g, '<a href="#" class="agent-inline-link" data-agent-nav="tracking">【进入求职跟踪】</a>')
+        .replace(/【进入求职闭环】/g, '<a href="#" class="agent-inline-link" data-agent-nav="tracking">【进入求职闭环】</a>')
         .replace(/【进入模拟面试】/g, '<a href="#" class="agent-inline-link" data-agent-nav="mockInterview">【进入模拟面试】</a>')
         .replace(/\n/g, '<br>');
 }
