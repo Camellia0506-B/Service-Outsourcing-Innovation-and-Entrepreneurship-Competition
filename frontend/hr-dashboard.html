@@ -1620,6 +1620,171 @@
                     </div>
                 </template>
 
+                <template id="tplResumeStudent002">
+                <div class="resume-detail-modal" onclick="event.stopPropagation()">
+                        <div class="resume-privacy-banner">该学生已开启隐私保护，当前展示为匿名简历。发起评估邀请后可查看完整信息。</div>
+                        <div class="resume-modal-bar">
+                            <span class="breadcrumb">学生简历库 / <span>匿名学生</span></span>
+                            <button type="button" class="resume-modal-close" onclick="closeStudentModal()" aria-label="关闭">✕</button>
+                        </div>
+                        <div class="resume-modal-body">
+                            <div class="resume-col-left">
+                                <div>
+                                    <div class="resume-candidate-id">S2 · 2026-03-12</div>
+                                    <div class="resume-candidate-name">匿名学生</div>
+                                    <div class="resume-candidate-sub">985/211 重点高校 · 人工智能<br>硕士，2022级 · 预计毕业 2025.06</div>
+                                </div>
+                                <div class="resume-score-display">
+                                    <div class="resume-score-num">85</div>
+                                    <div class="resume-score-label">综合匹配分</div>
+                                </div>
+                                <div class="resume-divider"></div>
+                                <div class="resume-meta-block">
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">学号/编号</span>
+                                        <span class="resume-meta-value">S2</span>
+                                    </div>
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">学历</span>
+                                        <span class="resume-meta-value">硕士</span>
+                                    </div>
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">GPA</span>
+                                        <span class="resume-meta-value">3.8 / 4.0</span>
+                                    </div>
+                                    <div class="resume-meta-row">
+                                        <span class="resume-meta-label">性别</span>
+                                        <span class="resume-meta-value">女</span>
+                                    </div>
+                                </div>
+                                <div class="resume-divider"></div>
+                                <div class="resume-skill-section">
+                                    <div class="resume-section-title">核心技能</div>
+                                    <div class="resume-skill-grid">
+                                        <span class="resume-skill-chip highlight">NLP</span>
+                                        <span class="resume-skill-chip highlight">大模型微调</span>
+                                        <span class="resume-skill-chip highlight">PyTorch</span>
+                                        <span class="resume-skill-chip highlight">Python</span>
+                                        <span class="resume-skill-chip highlight">HuggingFace</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="resume-col-right">
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>教育背景</h3></div>
+                                    <div class="resume-edu-grid" style="border:1px solid var(--rule)">
+                                        <div class="resume-edu-cell">
+                                            <div class="resume-edu-cell-label">学校</div>
+                                            <div class="resume-edu-cell-value">985/211 重点高校</div>
+                                            <div class="resume-edu-cell-sub">不展示具体院校名称</div>
+                                        </div>
+                                        <div class="resume-edu-cell">
+                                            <div class="resume-edu-cell-label">专业 · 学历</div>
+                                            <div class="resume-edu-cell-value">人工智能</div>
+                                            <div class="resume-edu-cell-sub">硕士 · 2022级</div>
+                                        </div>
+                                        <div class="resume-edu-cell">
+                                            <div class="resume-edu-cell-label">绩点 · 毕业</div>
+                                            <div class="resume-edu-cell-value">GPA 3.8 / 4.0</div>
+                                            <div class="resume-edu-cell-sub">预计 2025.06 毕业</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>实习经历</h3></div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2024.06 — 2024.12</div>
+                                            <div class="resume-exp-org">字节跳动</div>
+                                            <div class="resume-exp-role">NLP算法实习生 · 北京</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">项目：大模型对话安全与对齐优化</div>
+                                            <div class="resume-exp-desc">参与字节跳动对话大模型的安全对齐研究，基于RLHF框架对7B参数模型进行微调，有害内容拒绝率提升34%，同时保持回复质量无显著下降。独立完成数据清洗与标注流程搭建，构建10万条高质量SFT训练集。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">RLHF</span>
+                                                <span class="resume-tech-tag">LLaMA</span>
+                                                <span class="resume-tech-tag">PyTorch</span>
+                                                <span class="resume-tech-tag">Python</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>项目经历</h3></div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2023.09 — 2024.05</div>
+                                            <div class="resume-exp-org">学术研究</div>
+                                            <div class="resume-exp-role">第一作者</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">中文医疗问答领域大模型微调与评测</div>
+                                            <div class="resume-exp-desc">基于HuggingFace Transformers对Qwen-7B进行LoRA微调，构建中文医疗QA数据集5000条，在CMedQA基准上BLEU-4提升8.2个点。论文已投稿EMNLP 2024 Workshop。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">LoRA</span>
+                                                <span class="resume-tech-tag">Qwen</span>
+                                                <span class="resume-tech-tag">HuggingFace</span>
+                                                <span class="resume-tech-tag">NLP</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="resume-exp-item">
+                                        <div class="resume-exp-meta">
+                                            <div class="resume-exp-date">2023.03 — 2023.08</div>
+                                            <div class="resume-exp-org">团队开发</div>
+                                            <div class="resume-exp-role">算法负责人</div>
+                                        </div>
+                                        <div>
+                                            <div class="resume-exp-title">多轮对话意图识别系统</div>
+                                            <div class="resume-exp-desc">设计并实现基于BERT+CRF的多轮对话意图识别系统，在校企合作项目中部署落地，意图识别准确率达91.3%，较基线提升6.8%，已支撑日均10万次查询。</div>
+                                            <div class="resume-exp-tech">
+                                                <span class="resume-tech-tag">BERT</span>
+                                                <span class="resume-tech-tag">CRF</span>
+                                                <span class="resume-tech-tag">意图识别</span>
+                                                <span class="resume-tech-tag">FastAPI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>荣誉奖项</h3></div>
+                                    <div class="resume-award-list">
+                                        <div class="resume-award-item top">
+                                            <div class="resume-award-year">2024</div>
+                                            <div class="resume-award-name">全国大学生计算机设计大赛</div>
+                                            <div class="resume-award-level gold">一等奖</div>
+                                        </div>
+                                        <div class="resume-award-item">
+                                            <div class="resume-award-year">2023</div>
+                                            <div class="resume-award-name">研究生国家奖学金</div>
+                                            <div class="resume-award-level">荣誉</div>
+                                        </div>
+                                        <div class="resume-award-item">
+                                            <div class="resume-award-year">2024</div>
+                                            <div class="resume-award-name">校级优秀研究生</div>
+                                            <div class="resume-award-level">荣誉</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resume-section-block">
+                                    <div class="resume-sec-head"><h3>证书资质</h3></div>
+                                    <div class="resume-cert-row">
+                                        <div class="resume-cert-chip">英语六级 CET-6</div>
+                                        <div class="resume-cert-chip">计算机技术与软件资格（软件设计师）</div>
+                                        <div class="resume-cert-chip">普通话二级甲等</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="resume-modal-footer">
+                            <span class="resume-footer-status">候选人 S2 · 待处理</span>
+                            <button type="button" class="resume-btn-secondary" onclick="closeStudentModal()">关闭</button>
+                            <button type="button" class="resume-btn-primary" onclick="closeStudentModal();openInviteModal('student_002')">发起评估邀请</button>
+                        </div>
+                    </div>
+                </template>
+
                 <template id="tplResumeStudent003Anonymous">
                 <div class="resume-detail-modal" onclick="event.stopPropagation()">
                         <div class="resume-privacy-banner">该学生已开启隐私保护，当前展示为匿名简历。发起评估邀请后可查看完整信息。</div>

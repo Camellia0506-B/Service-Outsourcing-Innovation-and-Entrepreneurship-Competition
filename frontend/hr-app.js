@@ -192,7 +192,7 @@ function _setStudentResumeModalContent(studentId) {
     if (studentId === 'student_002') {
         html = getResumeModalHTML_Student002();
         if (!html) {
-            console.warn('[HR] 未找到 #tplResumeStudent002，无法展示 student_002 简历');
+            console.warn('[HR] 未找到 #tplResumeStudent002，无法展示 student_002 匿名简历');
             return;
         }
     } else if (studentId === 'student_003') {
