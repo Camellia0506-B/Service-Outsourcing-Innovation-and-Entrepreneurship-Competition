@@ -3617,7 +3617,7 @@ body.on-login-page {
     margin: 4px 0 0 0;
 }
 
-/* 求职跟踪页右下角：应对措施/计划定制 悬浮按钮（置于智能体 FAB 上方避免被遮挡） */
+/* 求职闭环页右下角：应对措施/计划定制 悬浮按钮（置于智能体 FAB 上方避免被遮挡） */
 #trackingPage .tracking-plan-fab {
     position: fixed;
     right: 24px;
@@ -3725,7 +3725,7 @@ body.on-login-page {
     font-size: 12px;
 }
 
-/* 求职跟踪 5 Tab 一屏布局 */
+/* 求职闭环 5 Tab 一屏布局 */
 .tracking-page-wrap {
     display: flex;
     flex-direction: column;
@@ -3831,7 +3831,7 @@ body.on-login-page {
     background: var(--light-blue-bg);
 }
 
-/* 求职跟踪：投递日期（统一展示 YYYY/MM/DD） */
+/* 求职闭环：投递日期（统一展示 YYYY/MM/DD） */
 .tracking-date-input {
     position: relative;
     display: flex;
@@ -4022,7 +4022,7 @@ body.on-login-page {
 
 .tracking-step-actions { display: flex; gap: 8px; margin-top: 10px; }
 
-/* 求职跟踪：淘汰按钮（危险次按钮，更符合整体风格） */
+/* 求职闭环：淘汰按钮（危险次按钮，更符合整体风格） */
 #trackingPage .tracking-step-actions .tracking-reject-btn {
     padding: 12px 16px;
     border-radius: 12px;
@@ -4290,7 +4290,7 @@ body.on-login-page {
 }
 
 /* ══════════════════════════════════════
-   求职跟踪页 · 编辑风格设计语言
+   求职闭环页 · 编辑风格设计语言
    暖米色背景、白色卡片、黑色主元素，无蓝色、无 emoji
    ══════════════════════════════════════ */
 
@@ -12491,48 +12491,7 @@ body.on-login-page {
     box-shadow: 0 4px 16px rgba(45, 91, 227, 0.15);
 }
 
-/* 为不同功能的按钮设置不同的颜色 */
-#reportCheckCompletenessBtn {
-    color: #2e7d32;
-    border-color: #4caf50;
-}
 
-#reportCheckCompletenessBtn:hover {
-    background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
-}
-
-#reportAgentBtn {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-#reportAgentBtn:hover {
-    background: linear-gradient(135deg, rgba(45, 91, 227, 0.05), rgba(45, 91, 227, 0.1));
-}
-
-#reportEditBtn {
-    color: #1565c0;
-    border-color: #2196f3;
-}
-
-#reportEditBtn:hover {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border-color: #1565c0;
-    color: #1565c0;
-    box-shadow: 0 8px 24px rgba(33, 150, 243, 0.3);
-}
-
-#reportPolishBtn {
-    color: #7b1fa2;
-    border-color: #9c27b0;
-}
-
-#reportPolishBtn:hover {
-    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-    border-color: #7b1fa2;
-    color: #7b1fa2;
-    box-shadow: 0 8px 24px rgba(156, 39, 176, 0.3);
-}
 
 .btn-export {
     color: #1565c0;
@@ -12625,7 +12584,7 @@ body.on-login-page {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 400px;
+    width: 650px;
     max-width: 90%;
     max-height: 80vh;
     background: var(--card-bg);
@@ -12640,12 +12599,12 @@ body.on-login-page {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 20px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .report-history-header h3 {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -12670,8 +12629,8 @@ body.on-login-page {
 }
 
 .career-history-item {
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
     background: var(--card-bg);
     border-radius: 12px;
     border: 1px solid var(--border-color);
@@ -12684,10 +12643,10 @@ body.on-login-page {
     box-shadow: var(--shadow);
 }
 
-.history-item-main { margin-bottom: 6px; }
-.history-item-title { font-weight: 600; font-size: 14px; color: var(--text-primary); }
-.history-item-meta { font-size: 13px; color: var(--text-secondary); }
-.history-item-score { font-size: 14px; font-weight: 700; color: #2e7d32; }
+.history-item-main { margin-bottom: 8px; }
+.history-item-title { font-weight: 600; font-size: 16px; color: var(--text-primary); }
+.history-item-meta { font-size: 14px; color: var(--text-secondary); }
+.history-item-score { font-size: 15px; font-weight: 700; color: #2e7d32; }
 
 /* 职业规划报告内容 - 模块标题左侧蓝线 */
 .career-report-wrap {
@@ -15744,7 +15703,7 @@ body.on-login-page {
     pointer-events: none !important;
 }
 
-/* 求职跟踪·反馈报告列表：右侧详情区不出现灰色遮罩（避免残留或伪元素） */
+/* 求职闭环·反馈报告列表：右侧详情区不出现灰色遮罩（避免残留或伪元素） */
 #trackingPage .tracking-rpt-detail::before,
 #trackingPage .tracking-rpt-detail::after,
 #trackingPage .tracking-t5-layout::after {
@@ -19517,6 +19476,33 @@ body.on-login-page #agentAssistant { display: none !important; }
     color: var(--mock-ink-2);
     transition: all 0.15s;
     box-shadow: none;
+}
+
+/* PDF导出防止内容被切割 */
+.avoid-page-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.force-page-break-before {
+    page-break-before: always;
+    break-before: page;
+}
+
+/* 职业规划报告模块防止分页 */
+.career-report-wrap .report-section,
+.career-report-wrap .report-card,
+.career-report-wrap .report-inset-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* 能力卡片、图表卡片、总结卡片防止分页 */
+.career-report-wrap .ability-card,
+.career-report-wrap .report-chart-card,
+.career-report-wrap .report-summary-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 #reportPage .agent-quick-actions .btn-secondary:hover {
@@ -23363,24 +23349,25 @@ body {
     gap: 8px;
 }
 
-.report-action-btn {
-    background: white;
-    color: #1c1c18;
-    border: 1px solid #e5e5e5;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
+.report-action-bar .report-action-btn:not(.report-action-btn-primary) {
+    background: white !important;
+    color: #2C4A3E !important;
+    border: 1px solid #d1d5db !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
 }
 
-.report-action-btn:hover {
-    background: #f5f5f5;
+.report-action-bar .report-action-btn:not(.report-action-btn-primary):hover {
+    background: #f6f7f3 !important;
+    border-color: #2C4A3E !important;
 }
 
 .report-action-btn-primary {
-    background: #2D5A3D;
-    color: white;
-    border-color: #2D5A3D;
+    background: #2D5A3D !important;
+    color: white !important;
+    border-color: #2D5A3D !important;
 }
 
 /* ���岼�� */

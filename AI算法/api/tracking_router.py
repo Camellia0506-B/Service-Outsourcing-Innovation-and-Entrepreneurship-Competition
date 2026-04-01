@@ -3,10 +3,10 @@ Career Tracking 模块 API 路由
 对应 API 文档第 9 章：规划落地性跟踪模块
 
 路由列表：
-  POST /api/v1/tracking/record/create              - 9.1 创建求职跟踪记录
+  POST /api/v1/tracking/record/create              - 9.1 创建求职闭环记录
   PUT  /api/v1/tracking/record/<record_id>/update  - 9.2 更新求职进展
   POST /api/v1/tracking/record/<record_id>/failure-analysis - 9.3 求职失败反馈分析（SSE）
-  GET  /api/v1/tracking/overview                   - 9.4 获取求职跟踪总览
+  GET  /api/v1/tracking/overview                   - 9.4 获取求职闭环总览
   GET  /api/v1/tracking/failure-reports            - 9.5 获取反馈优化报告列表
   DELETE /api/v1/tracking/failure-reports/<report_id> - 删除一条反馈优化报告
 """
@@ -83,13 +83,13 @@ def _error(code: int, msg: str, data=None):
 
 
 # ============================================================
-# 9.1 创建求职跟踪记录
+# 9.1 创建求职闭环记录
 # ============================================================
 
 @tracking_bp.route("/record/create", methods=["POST"])
 def create_record():
     """
-    学生开始投递某个推荐岗位后，创建该岗位的求职跟踪记录。
+    学生开始投递某个推荐岗位后，创建该岗位的求职闭环记录。
     请求体：{ user_id, job_id, job_title, company_name, apply_date, source }
     """
     try:
@@ -140,7 +140,7 @@ def create_record():
         store[record_id] = record
         _save_records(store)
 
-        logger.info(f"[Tracking] 创建求职跟踪记录 record_id={record_id}, user_id={user_id}, job_id={job_id}")
+        logger.info(f"[Tracking] 创建求职闭环记录 record_id={record_id}, user_id={user_id}, job_id={job_id}")
         return _success(
             {
                 "record_id": record_id,
@@ -456,7 +456,7 @@ def failure_analysis(record_id: str):
 
 
 # ============================================================
-# 9.4 获取求职跟踪总览
+# 9.4 获取求职闭环总览
 # ============================================================
 
 @tracking_bp.route("/overview", methods=["GET"])
@@ -700,13 +700,13 @@ def save_failure_report():
 
 
 # ============================================================
-# 9.7 删除求职跟踪记录
+# 9.7 删除求职闭环记录
 # ============================================================
 
 @tracking_bp.route("/record/<record_id>/delete", methods=["DELETE"])
 def delete_record(record_id: str):
     """
-    删除当前用户的一条求职跟踪记录。
+    删除当前用户的一条求职闭环记录。
     前端按约定以 JSON 方式传入 { user_id }。
     """
     try:

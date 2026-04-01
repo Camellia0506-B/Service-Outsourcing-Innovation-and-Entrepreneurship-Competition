@@ -962,7 +962,7 @@ class CareerPlanningApp {
         });
         this._initAIGenTab();
 
-        // 求职跟踪 5 Tab 切换
+        // 求职闭环 5 Tab 切换
         document.querySelectorAll('#trackingPage .tracking-tab').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tab = (e.currentTarget && e.currentTarget.dataset.tab) || e.target.dataset.tab;
@@ -1014,7 +1014,7 @@ class CareerPlanningApp {
         document.getElementById('trackingViewFullAnalysisBtn')?.addEventListener('click', () => this.openTrackingFullAnalysisModal());
         document.getElementById('trackingSaveAsReportBtn')?.addEventListener('click', () => this.saveFailureAsReport());
 
-        // 求职跟踪：更新进展弹窗（仍用于详细编辑）
+        // 求职闭环：更新进展弹窗（仍用于详细编辑）
         document.getElementById('trackingUpdateClose')?.addEventListener('click', () => this.closeTrackingUpdateModal());
         document.getElementById('trackingUpdateCancel')?.addEventListener('click', () => this.closeTrackingUpdateModal());
         document.getElementById('trackingUpdateConfirm')?.addEventListener('click', () => this.handleUpdateTrackingRecord());
@@ -4832,7 +4832,7 @@ class CareerPlanningApp {
         }
     }
 
-    // 求职跟踪：切换 5 个 Tab
+    // 求职闭环：切换 5 个 Tab
     switchTrackingTab(tabName) {
         document.querySelectorAll('#trackingPage .tracking-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
@@ -4943,7 +4943,7 @@ class CareerPlanningApp {
         }
     }
 
-    // 求职跟踪：更新进展弹窗
+    // 求职闭环：更新进展弹窗
     openTrackingUpdateModal(record) {
         const modal = document.getElementById('trackingUpdateModal');
         if (!modal || !record) return;
@@ -5808,7 +5808,7 @@ class CareerPlanningApp {
                     this.trackingSelectedRecordId = null;
                     this.renderTrackingSteps(null);
                 }
-                // 重新加载求职跟踪数据（总览 + 左侧列表 + 报告），确保 UI 中这条记录消失
+                // 重新加载求职闭环数据（总览 + 左侧列表 + 报告），确保 UI 中这条记录消失
                 await this.loadTrackingData();
             } else {
                 this.showToast((res && res.msg) || '删除失败', 'error');
@@ -6138,6 +6138,17 @@ class CareerPlanningApp {
         const exp = data.practical_experience || {};
         const overall = data.overall_assessment || {};
         
+        // 计算调整后的百分位：能力越高，数字越小（超过 90% 的人 → Top 10%）
+        let adjustedPercentile = null;
+        if (overall.percentile !== undefined && overall.percentile !== null && overall.percentile !== '') {
+            const p = Number(overall.percentile);
+            if (!isNaN(p)) {
+                adjustedPercentile = Math.round(100 - p);
+                // 确保在 1-99 范围内
+                adjustedPercentile = Math.max(1, Math.min(99, adjustedPercentile));
+            }
+        }
+        
         // 根据个人档案数据分析当前能力（带最低值30分）
         const currentAbilities = this.analyzeAbilitiesFromProfile(data);
         
@@ -6170,7 +6181,7 @@ class CareerPlanningApp {
                                 <div id="competitivenessGauge" style="width: 160px; height: 160px; margin: 0 auto;"></div>
                                 <div style="display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 2px;">
                                     <div style="background-color: #e6f7ff; padding: 10px 20px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
-                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${overall.percentile || '-'}${overall.percentile ? '%' : ''}</div>
+                                        <div style="font-size: 22px; font-weight: 600; color: var(--primary-color); margin-bottom: 2px;">Top ${adjustedPercentile !== null ? adjustedPercentile : '-'}${adjustedPercentile !== null ? '%' : ''}</div>
                                         <div style="font-size: 13px; color: var(--text-secondary);">同专业学生中的百分位排名</div>
                                     </div>
                                     <div style="background-color: #f5f5f5; padding: 14px; border-radius: 8px; width: 100%; max-width: 280px;">
@@ -6865,7 +6876,7 @@ class CareerPlanningApp {
             const role = exp.role || '';
             const startDate = exp.start_date || '';
             const endDate = exp.end_date || '';
-            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : exp.duration || '';
+            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : (startDate || exp.duration || '');
             const location = exp.location || '';
             const description = exp.description || '';
             const achievements = exp.achievements || [];
@@ -6873,25 +6884,23 @@ class CareerPlanningApp {
             const complexity = exp.complexity || '';
             
             let details = '';
-            if (dateRange || location || score || complexity) {
-                details += '<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">';
-                if (dateRange) details += `${dateRange}`;
-                if (location) details += `${dateRange ? ' · ' : ''}${location}`;
-                if (score) details += `${(dateRange || location) ? ' · ' : ''}评分: ${score}`;
-                if (complexity) details += `${(dateRange || location || score) ? ' · ' : ''}复杂度: ${complexity}`;
-                details += '</div>';
-            }
+            details += '<div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">';
+            if (dateRange) details += `${dateRange}`;
+            if (location) details += `${dateRange ? ' · ' : ''}${location}`;
+            if (score) details += `${(dateRange || location) ? ' · ' : ''}评分: ${score}`;
+            if (complexity) details += `${(dateRange || location || score) ? ' · ' : ''}复杂度: ${complexity}`;
+            details += '</div>';
             
             let descriptionHtml = '';
             if (description) {
-                descriptionHtml = `<p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">${description}</p>`;
+                descriptionHtml = `<p style="margin: 0; font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${description}</p>`;
             }
             
             let achievementsHtml = '';
             if (achievements.length > 0) {
-                achievementsHtml = '<div style="margin-top: 8px;">';
+                achievementsHtml = '<div style="margin-top: 12px;">';
                 achievements.forEach(achievement => {
-                    achievementsHtml += `<p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">${achievement}</p>`;
+                    achievementsHtml += `<p style="margin: 0; font-size: 15px; color: var(--text-secondary); line-height: 1.6;">${achievement}</p>`;
                 });
                 achievementsHtml += '</div>';
             }
@@ -6899,13 +6908,13 @@ class CareerPlanningApp {
             const isLast = index === experiences.length - 1;
             const itemId = `exp-item-${index}`;
             
-            html += `<div id="${itemId}" style="margin-bottom: ${isLast ? '0' : '24px'};">
+            html += `<div id="${itemId}" style="margin-bottom: ${isLast ? '0' : '32px'};">
                 <div style="position: absolute; left: 0; transform: translateX(-50%);">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--primary-color); margin-top: 2px;"></div>
-                    ${!isLast ? `<div style="width: 2px; background-color: #e6f7ff; position: absolute; left: 5px; top: 14px; bottom: -24px;"></div>` : ''}
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background-color: var(--primary-color); margin-top: 2px;"></div>
+                    ${!isLast ? `<div style="width: 2px; background-color: #e6f7ff; position: absolute; left: 7px; top: 20px; bottom: -32px;"></div>` : ''}
                 </div>
-                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--text-primary);">${title}</h4>
-                ${company ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${company}${role ? ` · ${role}` : ''}</div>` : role ? `<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">${role}</div>` : ''}
+                <h4 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">${title}</h4>
+                ${company ? `<div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">${company}${role ? ` · ${role}` : ''}</div>` : role ? `<div style="font-size: 15px; color: var(--text-secondary); margin-bottom: 12px;">${role}</div>` : ''}
                 ${details}
                 ${descriptionHtml}
                 ${achievementsHtml}
@@ -9637,7 +9646,7 @@ class CareerPlanningApp {
     }
 
     // AI 生成 Tab：联想列表、热门岗位、胶囊选项、进度与结果
-    static AI_JOB_SUGGESTIONS = ['算法工程师', '前端开发工程师', '后端开发工程师', '数据分析师', '产品经理', 'UI/UX设计师', '测试开发工程师', '运维工程师', 'AI应用工程师', '嵌入式软件工程师', '新能源电池工程师', '咨询顾问'];
+    static AI_JOB_SUGGESTIONS = ['算法工程师', '前端开发工程师', '后端开发工程师', '数据分析师', '产品经理', 'UI/UX设计师', '测试工程师', '运维工程师/DevOps', 'AI应用工程师', '全栈开发工程师', '嵌入式软件工程师'];
     static AI_HOT_JOBS = [
         { name: '算法工程师', heat: 92 },
         { name: 'AI应用工程师', heat: 95 },
@@ -11753,7 +11762,7 @@ class CareerPlanningApp {
                     </div>
                     
                     <h6 style="color: #2D5A3D; margin-bottom: 8px;">前端开发工程师</h6>
-                    <div>
+                    <div style="margin-bottom: 16px;">
                         <strong style="color: #2D5A3D;">专业技能：</strong>
                         <ul class="report-list" style="margin-top: 8px;">
                             <li>基础：HTML5、CSS3、JavaScript（ES6+）</li>
@@ -11761,6 +11770,54 @@ class CareerPlanningApp {
                             <li>工具：Webpack、Vite、npm/yarn等</li>
                             <li>响应式设计：能够适配不同设备</li>
                             <li>性能优化：页面加载速度和用户体验</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">数据分析师</h6>
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>数据处理：SQL（熟练）、Python（pandas、numpy）</li>
+                            <li>数据可视化：Tableau、Power BI、Matplotlib、ECharts</li>
+                            <li>统计学：假设检验、回归分析、时间序列分析</li>
+                            <li>Excel：数据透视表、VLOOKUP、宏</li>
+                            <li>业务分析：能够将数据转化为业务洞察</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">产品经理</h6>
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>需求分析：用户调研、需求梳理、优先级排序</li>
+                            <li>原型设计：Axure、Figma、Sketch、墨刀</li>
+                            <li>文档能力：PRD、MRD、用户故事撰写</li>
+                            <li>项目管理：敏捷开发、Scrum、版本规划</li>
+                            <li>数据分析：用户行为分析、产品指标监控</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">测试工程师</h6>
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>功能测试：测试用例设计、缺陷管理、回归测试</li>
+                            <li>自动化测试：Selenium、Appium、JUnit、TestNG</li>
+                            <li>性能测试：JMeter、LoadRunner、压力测试</li>
+                            <li>接口测试：Postman、JMeter、RESTful API</li>
+                            <li>测试工具：Jira、TestLink、禅道</li>
+                        </ul>
+                    </div>
+                    
+                    <h6 style="color: #2D5A3D; margin-bottom: 8px;">运维工程师/DevOps</h6>
+                    <div>
+                        <strong style="color: #2D5A3D;">专业技能：</strong>
+                        <ul class="report-list" style="margin-top: 8px;">
+                            <li>操作系统：Linux（CentOS、Ubuntu）、Shell脚本</li>
+                            <li>容器技术：Docker、Kubernetes、容器编排</li>
+                            <li>CI/CD：Jenkins、GitLab CI、GitHub Actions</li>
+                            <li>监控告警：Prometheus、Grafana、ELK Stack</li>
+                            <li>云平台：阿里云、腾讯云、AWS</li>
                         </ul>
                     </div>
                 </div>
@@ -13462,13 +13519,16 @@ class CareerPlanningApp {
                 allowTaint: true
             });
             
-            // 创建PDF文档（按内容高度自动分页，避免只导出当前可见区域）
+            // 创建PDF文档（使用自定义高度，避免内容被切割）
+            const pdfW = 210; // A4宽度mm
+            const imgH = (canvas.height * pdfW) / canvas.width;
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
-                format: 'a4'
+                format: [pdfW, imgH]
             });
-            this.addCanvasToPdfWithPagination(pdf, canvas);
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
 
             // 保存PDF文件
             const filename = `career_report_${reportId}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -13834,8 +13894,15 @@ class CareerPlanningApp {
         if (btn) { btn.disabled = true; btn.textContent = '导出中...'; }
         try {
             const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-            const pdf = new JsPDF('p', 'mm', 'a4');
-            this.addCanvasToPdfWithPagination(pdf, canvas);
+            const pdfW = 210;
+            const imgH = (canvas.height * pdfW) / canvas.width;
+            const pdf = new JsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [pdfW, imgH]
+            });
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, imgH);
             pdf.save('职业测评报告.pdf');
             this.showToast('导出成功', 'success');
         } catch (e) {
@@ -13850,24 +13917,11 @@ class CareerPlanningApp {
     addCanvasToPdfWithPagination(pdf, canvas) {
         if (!pdf || !canvas) return;
         const pdfW = pdf.internal.pageSize.getWidth();
-        const pdfH = pdf.internal.pageSize.getHeight();
         const imgW = pdfW;
         const imgH = (canvas.height * imgW) / canvas.width;
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        let heightLeft = imgH;
-        let yOffset = 0;
-
-        // 第一页
-        pdf.addImage(imgData, 'JPEG', 0, yOffset, imgW, imgH);
-        heightLeft -= pdfH;
-
-        // 后续分页
-        while (heightLeft > 0) {
-            yOffset -= pdfH;
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 0, yOffset, imgW, imgH);
-            heightLeft -= pdfH;
-        }
+        
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH);
     }
 
     // 导出职业规划报告时，展开所有模块并去掉滚动容器限制
@@ -13877,11 +13931,15 @@ class CareerPlanningApp {
             sec.classList.remove('hidden');
             sec.style.display = 'block';
             sec.style.visibility = 'visible';
+            sec.classList.add('avoid-page-break');
         });
         cloneRoot.querySelectorAll('.report-content-area-main, .career-report-wrap, .report-content-area').forEach(el => {
             el.style.height = 'auto';
             el.style.maxHeight = 'none';
             el.style.overflow = 'visible';
+        });
+        cloneRoot.querySelectorAll('.report-card, .report-inset-block, .ability-card, .report-chart-card, .report-summary-card').forEach(el => {
+            el.classList.add('avoid-page-break');
         });
         cloneRoot.querySelectorAll('.no-print').forEach(el => {
             el.style.display = 'none';
@@ -14867,18 +14925,18 @@ var AGENT_QUICK_BUTTON_CONTENT = {
     matching:     { userMsg: '岗位匹配' },
     report:       { userMsg: '职业规划报告' },
     query:        { userMsg: '查看岗位画像' },
-    tracking:     { userMsg: '我想使用求职跟踪' },
+    tracking:     { userMsg: '我想使用求职闭环' },
     mockInterview: { userMsg: '我想进行模拟面试' }
 };
 
 /** 跟踪/面试快捷按钮：流式说明文案（不含按钮，按钮单独渲染），语气生动、带表情符号 */
 var AGENT_LOCAL_NAV_MESSAGES = {
-    tracking: '📋 在这里可以记录你的每一次投递、笔试、面试进展，还能查看失败分析与复盘报告，让求职有据可查～ ✨ 点击下方按钮进入求职跟踪页面。',
+    tracking: '📋 在这里可以记录你的每一次投递、笔试、面试进展，还能查看失败分析与复盘报告，让求职有据可查～ ✨ 点击下方按钮进入求职闭环页面。',
     mockInterview: '🎤 在这里可以和 AI 面试官进行模拟面试练习，实时获得回答评估与改进建议，越练越稳～ 💪 点击下方按钮开始你的模拟面试吧！'
 };
 /** 跟踪/面试跳转按钮文案与页面 */
 var AGENT_LOCAL_NAV_BUTTONS = {
-    tracking:     { label: '进入求职跟踪', page: 'tracking' },
+    tracking:     { label: '进入求职闭环', page: 'tracking' },
     mockInterview: { label: '进入模拟面试', page: 'mockInterview' }
 };
 
@@ -15260,7 +15318,7 @@ function agentFormatText(text) {
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/【立即开始测评】/g, '<a href="#" class="agent-inline-link" data-agent-nav="assessment">【立即开始测评】</a>')
-        .replace(/【进入求职跟踪】/g, '<a href="#" class="agent-inline-link" data-agent-nav="tracking">【进入求职跟踪】</a>')
+        .replace(/【进入求职闭环】/g, '<a href="#" class="agent-inline-link" data-agent-nav="tracking">【进入求职闭环】</a>')
         .replace(/【进入模拟面试】/g, '<a href="#" class="agent-inline-link" data-agent-nav="mockInterview">【进入模拟面试】</a>')
         .replace(/\n/g, '<br>');
 }
