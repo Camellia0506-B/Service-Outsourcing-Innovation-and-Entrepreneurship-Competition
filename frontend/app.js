@@ -14267,6 +14267,219 @@ let currentInterview = null;
 var _interviewReportLoading = false;
 let mockInterviewInitialized = false;
 
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let stream = null;
+let recordingTimer = null;
+let speechMeta = null;
+let scoreCardTimeout = null;
+
+function initVoiceRecognition() {
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (!voiceBtn) return;
+    
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+        voiceBtn.style.display = 'none';
+        if (typeof showToast === 'function') {
+            showToast('请使用 Chrome/Edge 浏览器', 'warning');
+        }
+        return;
+    }
+    
+    voiceBtn.onclick = async () => {
+        if (!isRecording) {
+            await startRecording();
+        } else {
+            stopRecording();
+        }
+    };
+}
+
+async function startRecording() {
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (!voiceBtn) return;
+    
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+        
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+        
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+        
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            sendAudioToServer(audioBlob);
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        voiceBtn.classList.add('recording');
+        voiceBtn.classList.remove('processing');
+        voiceBtn.title = '停止录音';
+        
+        recordingTimer = setTimeout(() => {
+            if (isRecording) {
+                stopRecording();
+                if (typeof showToast === 'function') {
+                    showToast('录音已达120秒上限', 'info');
+                }
+            }
+        }, 120000);
+        
+        if (typeof showToast === 'function') {
+            showToast('正在录音，请说话...', 'info');
+        }
+        
+    } catch (error) {
+        console.error('[VoiceRecognition] 录音失败:', error);
+        if (typeof showToast === 'function') {
+            showToast('无法访问麦克风，请确保已授予麦克风权限', 'error');
+        }
+    }
+}
+
+function stopRecording() {
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (!voiceBtn || !mediaRecorder) return;
+    
+    if (recordingTimer) {
+        clearTimeout(recordingTimer);
+        recordingTimer = null;
+    }
+    
+    mediaRecorder.stop();
+    isRecording = false;
+    voiceBtn.classList.remove('recording');
+    voiceBtn.classList.add('processing');
+    voiceBtn.title = '识别中...';
+}
+
+function updateFloatingScoreCard(data) {
+    const scoreCard = document.getElementById('floatingScoreCard');
+    const scoreCardContent = document.getElementById('scoreCardContent');
+    const scoreCardTotal = document.getElementById('scoreCardTotal');
+    
+    if (!scoreCard || !scoreCardContent || !scoreCardTotal) return;
+    
+    console.log('[ScoreCard] 更新评分卡数据:', data);
+    
+    const dimensions = data.dimensions || [];
+    const totalScore = data.total_score || 0;
+    
+    const existingDims = scoreCardContent.querySelectorAll('.score-card-dimension');
+    existingDims.forEach((dimDiv, index) => {
+        const dim = dimensions[index];
+        if (dim) {
+            const nameSpan = dimDiv.querySelector('.score-card-dimension-name span:first-child');
+            const scoreSpan = dimDiv.querySelector('.score-card-dimension-score');
+            const progressFill = dimDiv.querySelector('.score-card-progress-fill');
+            
+            if (nameSpan) nameSpan.textContent = dim.name || '维度';
+            if (scoreSpan) scoreSpan.textContent = (dim.score || 0) + '分';
+            
+            const score = dim.score || 0;
+            if (progressFill) {
+                progressFill.style.width = `${Math.min(100, score)}%`;
+                progressFill.classList.remove('red', 'orange', 'green');
+                if (score < 60) {
+                    progressFill.classList.add('red');
+                } else if (score < 80) {
+                    progressFill.classList.add('orange');
+                } else {
+                    progressFill.classList.add('green');
+                }
+            }
+        }
+    });
+    
+    scoreCardTotal.textContent = totalScore;
+}
+
+function testScoreCard() {
+    console.log('[ScoreCard] 测试评分卡显示');
+    const testData = {
+        dimensions: [
+            {name: '表达能力', score: 85},
+            {name: '专业知识', score: 72},
+            {name: '项目经验', score: 90}
+        ],
+        total_score: 82
+    };
+    updateFloatingScoreCard(testData);
+}
+
+async function sendAudioToServer(audioBlob) {
+    const voiceBtn = document.getElementById('voiceBtn');
+    const answerInput = document.getElementById('answerInput');
+    if (!answerInput || !voiceBtn) return;
+    
+    const formData = new FormData();
+    formData.append('audio_file', audioBlob, 'audio.webm');
+    formData.append('interview_id', currentInterview ? currentInterview.interview_id : '');
+    
+    console.log('[VoiceRecognition] 开始发送音频文件到服务器');
+    console.log('[VoiceRecognition] 音频文件大小:', audioBlob.size, '字节');
+    
+    try {
+        if (typeof showToast === 'function') {
+            showToast('正在识别语音...', 'info');
+        }
+        
+        const response = await fetch('http://localhost:5002/api/v1/mock-interview/speech/transcribe', {
+            method: 'POST',
+            body: formData
+        });
+        
+        console.log('[VoiceRecognition] 收到服务器响应，状态码:', response.status);
+        
+        const result = await response.json();
+        console.log('[VoiceRecognition] 响应数据:', result);
+        
+        if (result.code === 200 && result.data) {
+            answerInput.value = result.data.transcript || '';
+            speechMeta = result.data.speech_meta || null;
+            console.log('[VoiceRecognition] 识别结果已填入输入框:', result.data.transcript);
+            console.log('[VoiceRecognition] 语音元数据:', speechMeta);
+            
+            if (typeof showToast === 'function') {
+                showToast(result.msg || '语音识别成功', 'success');
+            }
+        } else {
+            console.error('[VoiceRecognition] 语音识别失败:', result);
+            if (typeof showToast === 'function') {
+                showToast(result.msg || '语音识别失败', 'error');
+            }
+        }
+        
+    } catch (error) {
+        console.error('[VoiceRecognition] 发送音频失败:', error);
+        if (typeof showToast === 'function') {
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    } finally {
+        voiceBtn.classList.remove('processing');
+        voiceBtn.title = '语音输入';
+    }
+}
+
 function initMockInterviewModule() {
     if (mockInterviewInitialized) return;
     
@@ -14274,6 +14487,7 @@ function initMockInterviewModule() {
     initMockInterviewForm();
     initMockInterviewHistoryDelegation();
     loadInterviewHistory();
+    
     mockInterviewInitialized = true;
 }
 
@@ -14370,6 +14584,8 @@ function initMockInterviewForm() {
             }
         };
     }
+    
+    initVoiceRecognition();
 }
 
 function switchToInterviewTab() {
@@ -14553,10 +14769,12 @@ async function submitInterviewAnswer() {
     }
     
     const userId = getCurrentUserId();
+    const metaToSend = speechMeta;
     
     sendBtn.disabled = true;
     answerInput.disabled = true;
     answerInput.value = '';
+    speechMeta = null;
     
     currentInterview.messages.push({
         role: 'user',
@@ -14591,6 +14809,10 @@ async function submitInterviewAnswer() {
             if (currentInterview == null) return;
             currentInterview.current_question_index = currentIndex;
             updateInterviewStats();
+        },
+        metaToSend,
+        (scoreData) => {
+            updateFloatingScoreCard(scoreData);
         }
     );
     
@@ -14770,6 +14992,8 @@ function renderInterviewReport(report) {
         '<button type="button" class="mock-btn mock-btn-primary" style="width:auto;margin:0;padding:8px 18px;font-size:13px" onclick="switchToCreateInterviewTab();">再次面试</button></div>';
 }
 
+let growthChart = null;
+
 async function loadInterviewHistory() {
     const userId = getCurrentUserId();
     const getHistoryFn = (typeof api !== 'undefined' && typeof api.getInterviewHistory === 'function')
@@ -14778,30 +15002,173 @@ async function loadInterviewHistory() {
     
     if (!getHistoryFn) {
         renderInterviewHistory([]);
+        renderGrowthChart(null);
         return;
     }
     if (!userId) {
         renderInterviewHistory([]);
+        renderGrowthChart(null);
         return;
     }
     
     var list = [];
+    var chartData = null;
     try {
-        var result = await getHistoryFn(userId, 1, 50);
+        var result = await getHistoryFn(userId, 1, 10);
         console.log('[历史] 接口返回全量数据:', result && result.data);
         list = (result.success && result.data)
             ? (result.data.list || result.data.interviews || (Array.isArray(result.data) ? result.data : []))
             : [];
+        chartData = (result.success && result.data)
+            ? {
+                score_trend: result.data.score_trend,
+                dimension_trend: result.data.dimension_trend
+            }
+            : null;
     } catch (e) {
         console.warn('[MockInterview] 获取历史记录接口异常，尝试使用本地记录:', e && e.message);
     }
-    // 后端不可用或返回空时，用本地缓存的面试列表兜底，避免历史数量为零
     if (list.length === 0 && typeof api !== 'undefined' && api.mockInterviews && Array.isArray(api.mockInterviews)) {
         var uid = String(userId);
         list = api.mockInterviews.filter(function(i) { return String(i.user_id) === uid; });
     }
     console.log('[MockInterview] 渲染历史记录，数量:', list.length);
     renderInterviewHistory(list);
+    renderGrowthChart(chartData);
+}
+
+function renderGrowthChart(chartData) {
+    const chartEmptyState = document.getElementById('chartEmptyState');
+    const growthChartCanvas = document.getElementById('growthChart');
+    
+    if (!chartEmptyState || !growthChartCanvas) return;
+    
+    if (!chartData || !chartData.score_trend || chartData.score_trend.length < 2) {
+        chartEmptyState.style.display = 'block';
+        growthChartCanvas.style.display = 'none';
+        if (growthChart) {
+            growthChart.destroy();
+            growthChart = null;
+        }
+        return;
+    }
+    
+    chartEmptyState.style.display = 'none';
+    growthChartCanvas.style.display = 'block';
+    
+    const ctx = growthChartCanvas.getContext('2d');
+    if (growthChart) {
+        growthChart.destroy();
+    }
+    
+    const labels = chartData.score_trend.map(item => {
+        const date = new Date(item.date || item.created_at);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+    });
+    
+    const totalScores = chartData.score_trend.map(item => item.total_score || item.score);
+    
+    const dimensionTrend = chartData.dimension_trend || {};
+    const contentQuality = dimensionTrend['内容质量'] || dimensionTrend['专业知识'] || [];
+    const expression = dimensionTrend['表达能力'] || [];
+    const logic = dimensionTrend['逻辑思维'] || dimensionTrend['项目经验'] || [];
+    
+    const datasets = [];
+    
+    datasets.push({
+        label: '综合分',
+        data: totalScores,
+        borderColor: '#1e40af',
+        backgroundColor: 'rgba(30, 64, 175, 0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true
+    });
+    
+    if (contentQuality.length > 0) {
+        datasets.push({
+            label: '内容质量',
+            data: contentQuality,
+            borderColor: '#5e8c65',
+            backgroundColor: 'rgba(94, 140, 101, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+        });
+    }
+    
+    if (expression.length > 0) {
+        datasets.push({
+            label: '表达能力',
+            data: expression,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+        });
+    }
+    
+    if (logic.length > 0) {
+        datasets.push({
+            label: '逻辑思维',
+            data: logic,
+            borderColor: '#7c3aed',
+            backgroundColor: 'rgba(124, 58, 237, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+        });
+    }
+    
+    growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + '分';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 10
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
 }
 
 /** 模拟面试历史列表：仅绑定一次委托，避免每次渲染重复绑定导致点一次触发多次 */

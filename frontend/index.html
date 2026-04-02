@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css?v=27">
     <!-- 评估报告弹窗关键布局兜底（完整样式在 styles.css #hrReportDetailModal） -->
     <style>
@@ -2070,7 +2071,7 @@
 
                     <!-- Tab 2: 面试进行 (10.2 发送面试回答) -->
                     <div id="interviewTab" class="tab-content">
-                        <div class="mock-interview-layout">
+                        <div class="mock-interview-grid">
                             <div class="mock-card mock-chat-card mock-chat-card-full">
                                 <div class="mock-chat-header">
                                     <div class="mock-interviewer-info">
@@ -2086,10 +2087,61 @@
                                 </div>
                                 <div class="mock-chat-body" id="interviewChat"></div>
                                 <div class="mock-chat-footer">
-                                    <textarea class="mock-chat-input" id="answerInput" placeholder="请输入你的回答..."></textarea>
+                                    <div style="display:flex;gap:8px;align-items:flex-start;">
+                                        <button type="button" id="voiceBtn" class="voice-btn" title="语音输入">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                                <line x1="8" y1="23" x2="16" y2="23"/>
+                                            </svg>
+                                        </button>
+                                        <textarea class="mock-chat-input" id="answerInput" placeholder="请输入你的回答..."></textarea>
+                                    </div>
                                     <div class="mock-chat-actions">
                                         <button type="button" id="endInterviewBtn" class="mock-btn-end">结束面试</button>
                                         <button type="button" id="sendAnswerBtn" class="mock-btn-send">发送回答 →</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mock-side-score">
+                                <!-- 实时评分卡 -->
+                                <div id="floatingScoreCard" class="floating-score-card">
+                                    <div class="score-card-header">本题实时评分</div>
+                                    <div id="scoreCardContent" class="score-card-content">
+                                        <div class="score-card-dimension">
+                                            <div class="score-card-dimension-name">
+                                                <span>表达能力</span>
+                                                <span class="score-card-dimension-score">--</span>
+                                            </div>
+                                            <div class="score-card-progress-bar">
+                                                <div class="score-card-progress-fill" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="score-card-dimension">
+                                            <div class="score-card-dimension-name">
+                                                <span>专业知识</span>
+                                                <span class="score-card-dimension-score">--</span>
+                                            </div>
+                                            <div class="score-card-progress-bar">
+                                                <div class="score-card-progress-fill" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="score-card-dimension">
+                                            <div class="score-card-dimension-name">
+                                                <span>项目经验</span>
+                                                <span class="score-card-dimension-score">--</span>
+                                            </div>
+                                            <div class="score-card-progress-bar">
+                                                <div class="score-card-progress-fill" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="score-card-footer">
+                                        <span class="score-card-total-label">本题综合分：</span>
+                                        <span id="scoreCardTotal" class="score-card-total">--</span>
+                                        <span class="score-card-unit">分</span>
                                     </div>
                                 </div>
                             </div>
@@ -2105,7 +2157,16 @@
                     <!-- Tab 4: 历史记录 (10.4 获取历史面试记录) -->
                     <div id="historyTab" class="tab-content">
                         <div class="mock-history-wrap">
-                            <div class="mock-history-title">历史面试记录</div>
+                            
+                            <!-- 能力成长折线图 -->
+                            <div class="mock-chart-container">
+                                <div class="mock-chart-title">能力成长曲线</div>
+                                <div id="chartEmptyState" class="mock-chart-empty">
+                                    <span>完成 2 次以上面试后将展示成长曲线</span>
+                                </div>
+                                <canvas id="growthChart" style="display: none;"></canvas>
+                            </div>
+                            
                             <div class="mock-history-table">
                                 <div class="mock-history-table-head">
                                     <div>岗位</div>
@@ -2809,7 +2870,7 @@
       }
     })();
     </script>
-    <script src="app.js?v=26&t=20260328"></script>
+    <script src="app.js?v=37&t=20260328"></script>
     <script src="hr-app.js"></script>
     
     <!-- 粒子效果已关闭，背景为纯色暖米白 -->

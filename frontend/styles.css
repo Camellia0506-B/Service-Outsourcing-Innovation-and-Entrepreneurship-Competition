@@ -20201,6 +20201,175 @@ body.on-login-page #agentAssistant { display: none !important; }
 #mockInterviewPage .mock-btn-send { background: #1a1a1a; color: #fff; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
 #mockInterviewPage .mock-btn-end { background: none; border: 1.5px solid var(--mock-line); color: var(--mock-ink-3); padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 #mockInterviewPage .mock-btn-end:hover { border-color: var(--mock-red); color: var(--mock-red); }
+#mockInterviewPage .voice-btn { width: 48px; height: 48px; min-width: 48px; background: var(--mock-bg); border: 1.5px solid var(--mock-line); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--mock-ink-2); transition: all 0.2s; flex-shrink: 0; }
+#mockInterviewPage .voice-btn:hover { border-color: var(--mock-sage); color: var(--mock-sage); }
+#mockInterviewPage .voice-btn.recording { border-color: var(--mock-red); color: var(--mock-red); animation: pulse 1.5s infinite; background: #fef2f2; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(185, 64, 64, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(185, 64, 64, 0); } }
+#mockInterviewPage .voice-btn.processing { border-color: var(--mock-sage); color: var(--mock-sage); background: #f0fdf4; }
+#mockInterviewPage .voice-btn.processing svg { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#mockInterviewPage .voice-btn svg { width: 24px; height: 24px; }
+
+/* 面试进行页面 grid 布局 */
+#mockInterviewPage #interviewTab.active {
+    display: flex !important;
+    min-height: calc(100vh - 280px);
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 48px;
+}
+
+#mockInterviewPage .mock-interview-grid {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 20px;
+    align-items: start;
+    width: 100%;
+}
+
+#mockInterviewPage .mock-interview-grid .mock-chat-card {
+    width: 100%;
+    max-width: 100%;
+}
+
+#mockInterviewPage .mock-side-score {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 100px;
+}
+
+/* 实时评分卡 */
+.floating-score-card {
+    width: 100%;
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    box-shadow: var(--mock-shadow);
+    border-left: 4px solid var(--mock-sage);
+    padding: 16px;
+    border: 1px solid var(--mock-line);
+}
+
+.score-card-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--mock-ink);
+    margin-bottom: 12px;
+}
+
+.score-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.score-card-dimension {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.score-card-dimension-name {
+    font-size: 12px;
+    color: var(--mock-ink-3);
+    display: flex;
+    justify-content: space-between;
+}
+
+.score-card-dimension-score {
+    font-weight: 600;
+    color: var(--mock-ink);
+}
+
+.score-card-progress-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.score-card-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.score-card-progress-fill.red {
+    background: #ef4444;
+}
+
+.score-card-progress-fill.orange {
+    background: #f59e0b;
+}
+
+.score-card-progress-fill.green {
+    background: var(--mock-sage);
+}
+
+.score-card-footer {
+    padding-top: 12px;
+    border-top: 1px solid var(--mock-line);
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.score-card-total-label {
+    font-size: 13px;
+    color: var(--mock-ink-3);
+}
+
+.score-card-total {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--mock-sage);
+}
+
+.score-card-unit {
+    font-size: 12px;
+    color: var(--mock-ink-3);
+}
+
+@media (max-width: 768px) {
+    #mockInterviewPage .mock-interview-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #mockInterviewPage .mock-side-score {
+        display: none;
+    }
+}
+
+/* 能力成长折线图容器 */
+#mockInterviewPage .mock-chart-container {
+    background: var(--mock-white);
+    border-radius: var(--mock-radius);
+    border: 1px solid var(--mock-line);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+#mockInterviewPage .mock-chart-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--mock-ink);
+    margin-bottom: 16px;
+}
+
+#mockInterviewPage .mock-chart-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--mock-ink-3);
+    font-size: 14px;
+}
+
+#mockInterviewPage #growthChart {
+    width: 100% !important;
+    height: 300px !important;
+}
+
 /* 报告区域（#reportArea 在 mockInterviewPage 内） */
 #mockInterviewPage #reportArea .mock-report-header { background: var(--mock-white); border-radius: var(--mock-radius); border: 1px solid var(--mock-line); padding: 28px 32px; margin-bottom: 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; }
 #mockInterviewPage #reportArea .mock-report-score-circle { width: 90px; height: 90px; border-radius: 50%; background: var(--mock-sage-soft); color: var(--mock-sage); border: 1px solid var(--mock-sage-mid); display: flex; flex-direction: column; align-items: center; justify-content: center; }

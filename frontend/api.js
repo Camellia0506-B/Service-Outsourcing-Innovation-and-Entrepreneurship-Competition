@@ -2748,7 +2748,7 @@ async function restoreMockInterview(interview) {
 }
 
 // 10.2 发送面试回答（支持SSE流式响应）
-async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, onNextQuestion = null) {
+async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, onNextQuestion = null, speechMeta = null, onScoreUpdate = null) {
     if (API_CONFIG.mockMode) {
         const interview = api.mockInterviews.find(i => i.interview_id === interviewId);
         if (!interview) {
@@ -2818,14 +2818,20 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
             answer_text: answer
         });
         
+        const requestBody = {
+            user_id: userId,
+            interview_id: interviewId,
+            answer_text: answer
+        };
+        if (speechMeta) {
+            requestBody.speech_meta = speechMeta;
+        }
+        console.log('[MockInterview] 请求参数:', requestBody);
+        
         let response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: userId,
-                interview_id: interviewId,
-                answer_text: answer
-            })
+            body: JSON.stringify(requestBody)
         });
         
         // 如果会话不存在，尝试恢复会话
@@ -2837,11 +2843,7 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
                 response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        interview_id: interviewId,
-                        answer_text: answer
-                    })
+                    body: JSON.stringify(requestBody)
                 });
             }
         }
@@ -2894,6 +2896,9 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
                                     interview.current_question_index = currentIndex;
                                     if (onNextQuestion) onNextQuestion(currentIndex, data.remaining_questions);
                                 }
+                            }
+                            if (data.event === 'score_update') {
+                                if (onScoreUpdate) onScoreUpdate(data);
                             }
                         } catch (e) {
                             console.error('[MockInterview] 解析SSE数据失败:', e, '行内容:', line);
