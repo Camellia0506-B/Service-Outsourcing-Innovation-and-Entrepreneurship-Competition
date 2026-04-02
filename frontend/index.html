@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles.css?v=26">
+    <link rel="stylesheet" href="styles.css?v=27">
     <!-- 评估报告弹窗关键布局兜底（完整样式在 styles.css #hrReportDetailModal） -->
     <style>
         #hrReportDetailModal.eval-report-overlay:not(.hidden) {
@@ -35,7 +35,7 @@
         }
     </style>
     <!-- 仅登录页 #loginPage.login-v2，不影响其他界面 -->
-    <link rel="stylesheet" href="login-v2.css?v=5">
+    <link rel="stylesheet" href="login-v2.css?v=9">
     <!-- ECharts库 -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     
@@ -101,10 +101,12 @@
                     <div class="lp-ring lp-r1"></div>
                     <div class="lp-ring lp-r2"></div>
                     <div class="lp-ring lp-r3"></div>
+                    <div class="lp-ring lp-r3b"></div>
                     <div class="lp-ring lp-r4"></div>
                     <div class="lp-odot lp-od1"></div>
                     <div class="lp-odot lp-od2"></div>
                     <div class="lp-odot lp-od3"></div>
+                    <div class="lp-odot lp-od4"></div>
                     <div class="lp-orbit-center">星</div>
                 </div>
 
@@ -192,7 +194,7 @@
                             <a href="#" class="lp-forgot forgot-password">忘记密码？</a>
                         </div>
 
-                        <button type="submit" class="btn-primary">登录</button>
+                        <button type="submit" class="btn-primary">登 录</button>
                         <button type="button" id="goRegister" class="btn-secondary">创建新账号</button>
 
                         <div class="lp-card-footer login-tos">
@@ -232,7 +234,7 @@
                             <a href="#" class="lp-forgot forgot-password">忘记密码？</a>
                         </div>
 
-                        <button type="submit" class="btn-primary">登录</button>
+                        <button type="submit" class="btn-primary">登 录</button>
                         <button type="button" id="hrRegisterBtn" class="btn-secondary">创建 HR 账号</button>
 
                         <div class="lp-card-footer login-tos">
@@ -2745,15 +2747,19 @@
         var wrap = document.getElementById('loginOrbitWrap');
         if (wrap && !wrap.dataset.lpNodesDone) {
           wrap.dataset.lpNodesDone = '1';
-          var cx = 250;
-          var cy = 250;
+          var cx = 310;
+          var cy = 310;
           var nodes = [
             ['个人档案', '👤', 115, 0, 1.3],
-            ['能力画像', '🎯', 115, 130, 1.6],
-            ['职业报告', '📄', 115, 255, 1.9],
-            ['职业测评', '📈', 175, 55, 1.4],
-            ['岗位匹配', '🔗', 175, 185, 1.7],
-            ['模拟面试', '💬', 175, 310, 2.0]
+            ['能力画像', '🎯', 115, 120, 1.6],
+            ['职业报告', '📄', 115, 240, 1.9],
+            ['职业测评', '📈', 175, 60, 1.4],
+            ['岗位匹配', '🔗', 175, 180, 1.7],
+            ['模拟面试', '💬', 175, 300, 2.0],
+            ['岗位画像', '🏢', 235, 30, 2.1],
+            ['求职跟踪', '📅', 235, 120, 2.2],
+            ['HR邀约', '✉️', 235, 210, 2.3],
+            ['隐私设置', '🔒', 235, 300, 2.4]
           ];
           for (var i = 0; i < nodes.length; i++) {
             var label = nodes[i][0], icon = nodes[i][1], r = nodes[i][2], deg = nodes[i][3], delay = nodes[i][4];

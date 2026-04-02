@@ -16126,17 +16126,21 @@ body.on-login-page {
 
 /* 首页样式 */
 
-/* 主页面容器：不限制高度，允许内容撑开与滚动 */
+/* 主页面容器：在视口高度内纵向滚动（勿用 height:auto+overflow:visible，否则遭 #app overflow:hidden 裁切） */
 #dashboardPage.dashboard-page {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100vh;
+    max-height: 100vh;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 40px 24px 60px;
     background: transparent;
     position: relative;
     z-index: 1;
     max-width: 1400px;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* Hero 装饰光晕与点阵 - 覆盖整页，与左侧一致 */
