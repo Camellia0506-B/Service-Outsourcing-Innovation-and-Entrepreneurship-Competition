@@ -2775,6 +2775,23 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
             interview.status = 'completed';
             interview.total_score = Math.floor(Math.random() * 30) + 70;
         }
+        
+        // ========== 发送评分：先发送评分更新
+        if (onScoreUpdate) {
+            const scoreData = {
+                question_id: `q_${Date.now()}`,
+                dimension_scores: {
+                    '内容质量': Math.floor(Math.random() * 30) + 70,
+                    '表达能力': Math.floor(Math.random() * 30) + 70,
+                    '逻辑思维': Math.floor(Math.random() * 30) + 70,
+                    '岗位匹配度': Math.floor(Math.random() * 30) + 70
+                },
+                overall_score: Math.floor(Math.random() * 30) + 70
+            };
+            console.log('[MockInterview] 发送模拟评分:', scoreData);
+            onScoreUpdate(scoreData);
+        }
+        
         const delay = Math.random() * 2000 + 1500;
         await new Promise(resolve => setTimeout(resolve, delay));
         if (onChunk) {
@@ -2859,6 +2876,7 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
             const decoder = new TextDecoder();
             let fullResponse = '';
             let isComplete = false;
+            let currentEvent = null;
             
             while (true) {
                 const { done, value } = await reader.read();
@@ -2872,21 +2890,25 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
                 const lines = chunk.split('\n');
                 
                 for (const line of lines) {
-                    if (line.trim() === '') continue;
+                    const trimmedLine = line.trim();
+                    if (trimmedLine === '') continue;
                     console.log('[MockInterview] 处理SSE行:', line);
                     
-                    if (line.startsWith('data:')) {
+                    if (line.startsWith('event:')) {
+                        currentEvent = line.substring(6).trim();
+                        console.log('[MockInterview] 收到事件类型:', currentEvent);
+                    } else if (line.startsWith('data:')) {
                         const payload = line.substring(5).trim();
                         if (payload === '[DONE]') continue;
                         try {
                             const data = JSON.parse(payload);
-                            console.log('[MockInterview] 解析的data:', data);
+                            console.log('[MockInterview] 解析的data:', data, '事件类型:', currentEvent);
                             
                             if (data.chunk && onChunk) {
                                 fullResponse += data.chunk;
                                 onChunk(data.chunk);
                             }
-                            if (data.event === 'next_question') {
+                            if (currentEvent === 'next_question') {
                                 if (data.remaining_questions === 0) isComplete = true;
                                 const totalQuestions = 5;
                                 const currentIndex = data.current_question_index != null
@@ -2897,7 +2919,7 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
                                     if (onNextQuestion) onNextQuestion(currentIndex, data.remaining_questions);
                                 }
                             }
-                            if (data.event === 'score_update') {
+                            if (currentEvent === 'score_update') {
                                 if (onScoreUpdate) onScoreUpdate(data);
                             }
                         } catch (e) {

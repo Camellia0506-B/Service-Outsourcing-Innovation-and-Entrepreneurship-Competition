@@ -20332,6 +20332,17 @@ body.on-login-page #agentAssistant { display: none !important; }
     color: var(--mock-ink-3);
 }
 
+/* 评分卡空状态 */
+.score-empty-state {
+    text-align: center;
+    padding: 40px 10px;
+    color: var(--mock-ink-3);
+    font-size: 13px;
+    background: #f8f8f8;
+    border-radius: 6px;
+    border: 1px dashed #ddd;
+}
+
 @media (max-width: 768px) {
     #mockInterviewPage .mock-interview-grid {
         grid-template-columns: 1fr;

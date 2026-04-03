@@ -14242,6 +14242,62 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = new CareerPlanningApp();
     window.openTrackingPlanModal = openTrackingPlanModal;
 
+    // ========== 调试和诊断工具 ==========
+    window.testScoreCard = function() {
+        console.log('[Debug] 开始测试评分卡');
+        testScoreCardDirect();
+    };
+    
+    window.testScoreCardDirect = testScoreCardDirect;
+    
+    // 诊断后端连接
+    window.diagnoseBackend = async function() {
+        console.log('========== 开始后端诊断 ==========');
+        
+        // 检查 API 配置
+        console.log('[诊断] API_CONFIG:', {
+            baseURL: API_CONFIG.baseURL,
+            assessmentBaseURL: API_CONFIG.assessmentBaseURL,
+            mockMode: API_CONFIG.mockMode
+        });
+        
+        // 尝试测试 Python AI 后端连接
+        const testURL = `${API_CONFIG.assessmentBaseURL}/mock-interview/question-bank/stats`;
+        console.log('[诊断] 尝试连接:', testURL);
+        
+        try {
+            const response = await fetch(testURL, { method: 'GET' });
+            console.log('[诊断] 响应状态:', response.status);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[诊断] Python AI 后端连接成功!', data);
+                alert('✅ Python AI 后端 (端口 5002) 连接成功!');
+            } else {
+                console.error('[诊断] Python AI 后端响应异常:', response.status);
+                alert('❌ Python AI 后端 (端口 5002) 响应异常，请检查后端是否正常运行!');
+            }
+        } catch (e) {
+            console.error('[诊断] Python AI 后端连接失败!', e);
+            alert('❌ 无法连接 Python AI 后端 (端口 5002)!\n\n请启动后端: \ncd AI算法\npython app.py');
+        }
+        
+        console.log('========== 诊断完成 ==========');
+    };
+    
+    // 自动测试：延迟2秒后显示评分卡
+    setTimeout(() => {
+        console.log('[Debug] 页面加载完成');
+        console.log('[Debug] 输入 window.diagnoseBackend() 可以诊断后端连接');
+        console.log('[Debug] 输入 window.testScoreCard() 可以测试评分卡');
+        
+        const scoreCard = document.getElementById('floatingScoreCard');
+        if (scoreCard) {
+            console.log('[Debug] 找到评分卡元素:', scoreCard);
+        } else {
+            console.error('[Debug] 找不到评分卡元素');
+        }
+    }, 2000);
+
     // 计划定制按钮：文档级委托，确保点击一定能触发（避免被遮挡或绑定丢失）
     document.addEventListener('click', function planFabDelegate(e) {
         if (e.target && e.target.closest && e.target.closest('#trackingPlanFab')) {
@@ -14373,55 +14429,116 @@ function stopRecording() {
 }
 
 function updateFloatingScoreCard(data) {
+    console.log('[ScoreCard] ========== 开始更新评分卡 ==========');
+    console.log('[ScoreCard] 输入数据:', data);
+    
     const scoreCard = document.getElementById('floatingScoreCard');
     const scoreCardContent = document.getElementById('scoreCardContent');
     const scoreCardTotal = document.getElementById('scoreCardTotal');
     
-    if (!scoreCard || !scoreCardContent || !scoreCardTotal) return;
+    console.log('[ScoreCard] 元素检查:', {
+        scoreCard: !!scoreCard,
+        scoreCardContent: !!scoreCardContent,
+        scoreCardTotal: !!scoreCardTotal
+    });
     
-    console.log('[ScoreCard] 更新评分卡数据:', data);
+    if (!scoreCard || !scoreCardContent || !scoreCardTotal) {
+        console.error('[ScoreCard] 找不到评分卡元素！');
+        return;
+    }
     
-    const dimensions = data.dimensions || [];
-    const totalScore = data.total_score || 0;
+    // 强制评分卡可见
+    scoreCard.style.display = 'block';
+    scoreCard.style.opacity = '1';
+    console.log('[ScoreCard] 已设置评分卡可见');
     
-    const existingDims = scoreCardContent.querySelectorAll('.score-card-dimension');
-    existingDims.forEach((dimDiv, index) => {
-        const dim = dimensions[index];
-        if (dim) {
-            const nameSpan = dimDiv.querySelector('.score-card-dimension-name span:first-child');
-            const scoreSpan = dimDiv.querySelector('.score-card-dimension-score');
-            const progressFill = dimDiv.querySelector('.score-card-progress-fill');
-            
-            if (nameSpan) nameSpan.textContent = dim.name || '维度';
-            if (scoreSpan) scoreSpan.textContent = (dim.score || 0) + '分';
-            
-            const score = dim.score || 0;
-            if (progressFill) {
-                progressFill.style.width = `${Math.min(100, score)}%`;
-                progressFill.classList.remove('red', 'orange', 'green');
-                if (score < 60) {
-                    progressFill.classList.add('red');
-                } else if (score < 80) {
-                    progressFill.classList.add('orange');
-                } else {
-                    progressFill.classList.add('green');
-                }
+    let dimensionScores = {};
+    let totalScore = 0;
+    
+    if (data.dimension_scores && typeof data.dimension_scores === 'object') {
+        dimensionScores = data.dimension_scores;
+        totalScore = data.overall_score || data.total_score || 0;
+        console.log('[ScoreCard] 使用新格式数据');
+    } else if (data.dimensions && Array.isArray(data.dimensions)) {
+        data.dimensions.forEach(dim => {
+            if (dim && dim.name) {
+                dimensionScores[dim.name] = dim.score || 0;
             }
+        });
+        totalScore = data.total_score || data.overall_score || 0;
+        console.log('[ScoreCard] 使用旧格式数据');
+    } else {
+        console.error('[ScoreCard] 数据格式不匹配，使用默认测试数据');
+        dimensionScores = {
+            '内容质量': 75,
+            '表达能力': 72,
+            '逻辑思维': 78,
+            '岗位匹配度': 80
+        };
+        totalScore = 76;
+    }
+    
+    console.log('[ScoreCard] 处理后数据:', { dimensionScores, totalScore });
+    
+    const dimensionOrder = ['内容质量', '表达能力', '逻辑思维', '岗位匹配度'];
+    scoreCardContent.innerHTML = '';
+    
+    dimensionOrder.forEach(dimName => {
+        const score = dimensionScores[dimName];
+        if (score !== undefined && score !== null) {
+            const dimDiv = document.createElement('div');
+            dimDiv.className = 'score-card-dimension';
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'score-card-dimension-name';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = dimName;
+            
+            const scoreSpan = document.createElement('span');
+            scoreSpan.className = 'score-card-dimension-score';
+            scoreSpan.textContent = score + '分';
+            
+            nameDiv.appendChild(nameSpan);
+            nameDiv.appendChild(scoreSpan);
+            
+            const progressBarDiv = document.createElement('div');
+            progressBarDiv.className = 'score-card-progress-bar';
+            
+            const progressFill = document.createElement('div');
+            progressFill.className = 'score-card-progress-fill';
+            progressFill.style.width = `${Math.min(100, score)}%`;
+            
+            if (score < 60) {
+                progressFill.classList.add('red');
+            } else if (score < 80) {
+                progressFill.classList.add('orange');
+            } else {
+                progressFill.classList.add('green');
+            }
+            
+            progressBarDiv.appendChild(progressFill);
+            dimDiv.appendChild(nameDiv);
+            dimDiv.appendChild(progressBarDiv);
+            scoreCardContent.appendChild(dimDiv);
         }
     });
     
     scoreCardTotal.textContent = totalScore;
+    console.log('[ScoreCard] ========== 评分卡更新完成 ==========');
 }
 
-function testScoreCard() {
-    console.log('[ScoreCard] 测试评分卡显示');
+// ========== 简单的测试函数
+function testScoreCardDirect() {
+    console.log('[Test] 直接测试评分卡');
     const testData = {
-        dimensions: [
-            {name: '表达能力', score: 85},
-            {name: '专业知识', score: 72},
-            {name: '项目经验', score: 90}
-        ],
-        total_score: 82
+        dimension_scores: {
+            '内容质量': 85,
+            '表达能力': 78,
+            '逻辑思维': 82,
+            '岗位匹配度': 88
+        },
+        overall_score: 83
     };
     updateFloatingScoreCard(testData);
 }
@@ -14599,6 +14716,27 @@ function switchToInterviewTab() {
     tabs[1].classList.add('active');
     document.getElementById('interviewTab').classList.add('active');
     if (container) container.classList.add('interview-tab-active');
+    
+    // 进入面试页面时，评分卡可见但显示空状态
+    setTimeout(() => {
+        console.log('[InterviewTab] 进入面试页面，显示空评分卡');
+        const scoreCard = document.getElementById('floatingScoreCard');
+        const scoreCardContent = document.getElementById('scoreCardContent');
+        const scoreCardTotal = document.getElementById('scoreCardTotal');
+        
+        if (scoreCard) {
+            scoreCard.style.display = 'block';
+            scoreCard.style.opacity = '1';
+            
+            // 显示空状态提示
+            if (scoreCardContent) {
+                scoreCardContent.innerHTML = '<div class="score-empty-state">回答问题后查看实时评分</div>';
+            }
+            if (scoreCardTotal) {
+                scoreCardTotal.textContent = '--';
+            }
+        }
+    }, 300);
 }
 
 /** 切换到「开始面试」tab */
@@ -14812,6 +14950,7 @@ async function submitInterviewAnswer() {
         },
         metaToSend,
         (scoreData) => {
+            console.log('[SubmitAnswer] 收到真实评分数据:', scoreData);
             updateFloatingScoreCard(scoreData);
         }
     );
@@ -15014,7 +15153,7 @@ async function loadInterviewHistory() {
     var list = [];
     var chartData = null;
     try {
-        var result = await getHistoryFn(userId, 1, 10);
+        var result = await getHistoryFn(userId, 1, 100);
         console.log('[历史] 接口返回全量数据:', result && result.data);
         list = (result.success && result.data)
             ? (result.data.list || result.data.interviews || (Array.isArray(result.data) ? result.data : []))
@@ -15038,44 +15177,98 @@ async function loadInterviewHistory() {
 }
 
 function renderGrowthChart(chartData) {
+    // 0. 先强制清理一切
+    if (typeof window.forceCleanCharts === 'function') {
+        window.forceCleanCharts();
+    }
+    
     const chartEmptyState = document.getElementById('chartEmptyState');
-    const growthChartCanvas = document.getElementById('growthChart');
+    const oldCanvas = document.getElementById('growthChart');
+    const chartContainer = oldCanvas ? oldCanvas.parentElement : null;
     
-    if (!chartEmptyState || !growthChartCanvas) return;
+    if (!chartEmptyState || !chartContainer) return;
     
-    if (!chartData || !chartData.score_trend || chartData.score_trend.length < 2) {
-        chartEmptyState.style.display = 'block';
-        growthChartCanvas.style.display = 'none';
-        if (growthChart) {
+    // 1. 再次彻底销毁旧图表
+    if (growthChart) {
+        try {
             growthChart.destroy();
-            growthChart = null;
+        } catch (e) {
+            console.warn('[Chart] 销毁旧图表失败:', e);
         }
+        growthChart = null;
+    }
+    
+    // 2. 删除旧的 canvas，创建全新的 canvas
+    if (oldCanvas) {
+        oldCanvas.remove();
+    }
+    
+    // 创建全新的 canvas 元素
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = 'growthChart';
+    newCanvas.style.display = 'none';
+    chartContainer.appendChild(newCanvas);
+    
+    // 3. 检查是否有足够的数据
+    if (!chartData) {
+        chartEmptyState.style.display = 'block';
+        newCanvas.style.display = 'none';
         return;
     }
     
-    chartEmptyState.style.display = 'none';
-    growthChartCanvas.style.display = 'block';
+    const scoreTrend = chartData.score_trend || [];
+    const dates = chartData.dates || [];
     
-    const ctx = growthChartCanvas.getContext('2d');
-    if (growthChart) {
-        growthChart.destroy();
+    let hasEnoughData = false;
+    let labels = [];
+    let totalScores = [];
+    let dimensionData = null;
+    
+    // 保存所有维度数据供 tooltip 使用
+    if (chartData.dimension_trend) {
+        dimensionData = chartData.dimension_trend;
     }
     
-    const labels = chartData.score_trend.map(item => {
-        const date = new Date(item.date || item.created_at);
-        return `${date.getMonth() + 1}/${date.getDate()}`;
-    });
+    if (Array.isArray(scoreTrend) && scoreTrend.length >= 2) {
+        const firstItem = scoreTrend[0];
+        if (typeof firstItem === 'object' && firstItem !== null) {
+            // 对象数组格式
+            labels = scoreTrend.map(item => {
+                const dateStr = item.date || item.created_at;
+                if (dateStr) {
+                    const date = new Date(dateStr);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                }
+                return '';
+            });
+            totalScores = scoreTrend.map(item => item.total_score || item.score);
+            hasEnoughData = true;
+        } else if (typeof firstItem === 'number' && dates.length >= 2) {
+            // 纯数字数组 + 独立日期数组
+            labels = dates.map(dateStr => {
+                if (dateStr) {
+                    const date = new Date(dateStr);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                }
+                return '';
+            });
+            totalScores = scoreTrend;
+            hasEnoughData = true;
+        }
+    }
     
-    const totalScores = chartData.score_trend.map(item => item.total_score || item.score);
+    if (!hasEnoughData) {
+        chartEmptyState.style.display = 'block';
+        newCanvas.style.display = 'none';
+        return;
+    }
     
-    const dimensionTrend = chartData.dimension_trend || {};
-    const contentQuality = dimensionTrend['内容质量'] || dimensionTrend['专业知识'] || [];
-    const expression = dimensionTrend['表达能力'] || [];
-    const logic = dimensionTrend['逻辑思维'] || dimensionTrend['项目经验'] || [];
+    // 4. 准备显示图表
+    chartEmptyState.style.display = 'none';
+    newCanvas.style.display = 'block';
     
-    const datasets = [];
-    
-    datasets.push({
+    // 5. 只创建一条综合分曲线
+    const datasets = [{
         label: '综合分',
         data: totalScores,
         borderColor: '#1e40af',
@@ -15083,44 +15276,13 @@ function renderGrowthChart(chartData) {
         borderWidth: 2,
         tension: 0.3,
         fill: true
-    });
+    }];
     
-    if (contentQuality.length > 0) {
-        datasets.push({
-            label: '内容质量',
-            data: contentQuality,
-            borderColor: '#5e8c65',
-            backgroundColor: 'rgba(94, 140, 101, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: false
-        });
-    }
+    console.log('[Chart] 最终 datasets:', datasets, 'labels:', labels);
+    console.log('[Chart] dimensionData:', dimensionData);
     
-    if (expression.length > 0) {
-        datasets.push({
-            label: '表达能力',
-            data: expression,
-            borderColor: '#f59e0b',
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: false
-        });
-    }
-    
-    if (logic.length > 0) {
-        datasets.push({
-            label: '逻辑思维',
-            data: logic,
-            borderColor: '#7c3aed',
-            backgroundColor: 'rgba(124, 58, 237, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: false
-        });
-    }
-    
+    // 6. 在全新的 canvas 上创建图表
+    const ctx = newCanvas.getContext('2d');
     growthChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -15132,6 +15294,7 @@ function renderGrowthChart(chartData) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
+                    display: true,
                     position: 'top',
                     labels: {
                         usePointStyle: true,
@@ -15142,8 +15305,44 @@ function renderGrowthChart(chartData) {
                     mode: 'index',
                     intersect: false,
                     callbacks: {
+                        title: function(context) {
+                            return context[0].label;
+                        },
                         label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + '分';
+                            const index = context.dataIndex;
+                            let result = [];
+                            
+                            console.log('[Chart-Tooltip] index:', index, 'dimensionData:', dimensionData);
+                            
+                            // 显示综合分
+                            result.push('综合分: ' + context.parsed.y + '分');
+                            
+                            // 显示各维度分数
+                            if (dimensionData) {
+                                const contentScore = dimensionData['内容质量'] ? dimensionData['内容质量'][index] : null;
+                                const expressionScore = dimensionData['表达能力'] ? dimensionData['表达能力'][index] : null;
+                                const logicScore = dimensionData['逻辑思维'] ? dimensionData['逻辑思维'][index] : null;
+                                const fitScore = dimensionData['岗位匹配度'] ? dimensionData['岗位匹配度'][index] : null;
+                                
+                                console.log('[Chart-Tooltip] 各维度分数:', {
+                                    contentScore, expressionScore, logicScore, fitScore
+                                });
+                                
+                                if (contentScore != null) {
+                                    result.push('内容质量: ' + contentScore + '分');
+                                }
+                                if (expressionScore != null) {
+                                    result.push('表达能力: ' + expressionScore + '分');
+                                }
+                                if (logicScore != null) {
+                                    result.push('逻辑思维: ' + logicScore + '分');
+                                }
+                                if (fitScore != null) {
+                                    result.push('岗位匹配度: ' + fitScore + '分');
+                                }
+                            }
+                            
+                            return result;
                         }
                     }
                 }

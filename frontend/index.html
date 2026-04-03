@@ -2870,7 +2870,27 @@
       }
     })();
     </script>
-    <script src="app.js?v=37&t=20260328"></script>
+    <!-- 强制清理所有旧图表 -->
+    <script>
+    (function() {
+        window.forceCleanCharts = function() {
+            if (typeof growthChart !== 'undefined' && growthChart) {
+                try {
+                    growthChart.destroy();
+                } catch(e) {}
+                growthChart = null;
+            }
+            const canvas = document.getElementById('growthChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            console.log('[Cleanup] 已强制清理所有图表');
+        };
+        window.forceCleanCharts();
+    })();
+    </script>
+    <script src="app.js?v=38&t=20260403"></script>
     <script src="hr-app.js"></script>
     
     <!-- 粒子效果已关闭，背景为纯色暖米白 -->
