@@ -14548,41 +14548,54 @@ async function sendAudioToServer(audioBlob) {
     const answerInput = document.getElementById('answerInput');
     if (!answerInput || !voiceBtn) return;
     
+    const userId = getCurrentUserId();
     const formData = new FormData();
     formData.append('audio_file', audioBlob, 'audio.webm');
     formData.append('interview_id', currentInterview ? currentInterview.interview_id : '');
+    formData.append('user_id', userId || '');
     
     console.log('[VoiceRecognition] 开始发送音频文件到服务器');
     console.log('[VoiceRecognition] 音频文件大小:', audioBlob.size, '字节');
+    console.log('[VoiceRecognition] 用户ID:', userId);
     
     try {
         if (typeof showToast === 'function') {
             showToast('正在识别语音...', 'info');
         }
         
-        const response = await fetch('http://localhost:5002/api/v1/mock-interview/speech/transcribe', {
+        const transcribeUrl = (typeof getMockInterviewSpeechTranscribeURL === 'function')
+            ? getMockInterviewSpeechTranscribeURL()
+            : 'http://127.0.0.1:5002/api/v1/mock-interview/speech/transcribe';
+        const response = await fetch(transcribeUrl, {
             method: 'POST',
             body: formData
         });
         
         console.log('[VoiceRecognition] 收到服务器响应，状态码:', response.status);
         
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
         console.log('[VoiceRecognition] 响应数据:', result);
         
-        if (result.code === 200 && result.data) {
-            answerInput.value = result.data.transcript || '';
-            speechMeta = result.data.speech_meta || null;
-            console.log('[VoiceRecognition] 识别结果已填入输入框:', result.data.transcript);
-            console.log('[VoiceRecognition] 语音元数据:', speechMeta);
-            
-            if (typeof showToast === 'function') {
-                showToast(result.msg || '语音识别成功', 'success');
+        if (response.ok && result.code === 200 && result.data) {
+            const text = (result.data.transcript != null ? String(result.data.transcript) : '').trim();
+            if (!text) {
+                if (typeof showToast === 'function') {
+                    showToast(result.msg || '未识别到有效语音，请重试', 'warning');
+                }
+            } else {
+                answerInput.value = text;
+                speechMeta = result.data.speech_meta || null;
+                console.log('[VoiceRecognition] 识别结果已填入输入框:', text);
+                console.log('[VoiceRecognition] 语音元数据:', speechMeta);
+                if (typeof showToast === 'function') {
+                    showToast(result.msg || '语音识别成功', 'success');
+                }
             }
         } else {
             console.error('[VoiceRecognition] 语音识别失败:', result);
+            const errMsg = result.msg || (response.status ? `语音识别失败（HTTP ${response.status}）` : '语音识别失败');
             if (typeof showToast === 'function') {
-                showToast(result.msg || '语音识别失败', 'error');
+                showToast(errMsg, 'error');
             }
         }
         
@@ -15015,6 +15028,36 @@ async function loadInterviewReport(interviewId) {
     }
     
     if (result && result.success && result.data) {
+        // 保存评分数据到currentInterview
+        if (currentInterview) {
+            currentInterview.total_score = result.data.overall_score;
+            currentInterview.dimension_scores = {};
+            
+            // 同时保存中英文键
+            if (result.data.dimension_scores) {
+                currentInterview.dimension_scores = result.data.dimension_scores;
+                
+                // 添加中文键（如果没有的话）
+                if (result.data.dimension_scores.content != null) {
+                    currentInterview.dimension_scores["内容质量"] = result.data.dimension_scores.content;
+                }
+                if (result.data.dimension_scores.expression != null) {
+                    currentInterview.dimension_scores["表达能力"] = result.data.dimension_scores.expression;
+                }
+                if (result.data.dimension_scores.logic != null) {
+                    currentInterview.dimension_scores["逻辑思维"] = result.data.dimension_scores.logic;
+                }
+                if (result.data.dimension_scores.cultural_fit != null) {
+                    currentInterview.dimension_scores["岗位匹配度"] = result.data.dimension_scores.cultural_fit;
+                }
+            }
+            
+            // 保存到本地mock数据
+            if (typeof api !== 'undefined' && api.saveMockInterviews) {
+                api.saveMockInterviews();
+            }
+        }
+        
         try {
             renderInterviewReport(result.data);
         } catch (err) {
@@ -15161,7 +15204,8 @@ async function loadInterviewHistory() {
         chartData = (result.success && result.data)
             ? {
                 score_trend: result.data.score_trend,
-                dimension_trend: result.data.dimension_trend
+                dimension_trend: result.data.dimension_trend,
+                dates: result.data.dates
             }
             : null;
     } catch (e) {
@@ -15171,6 +15215,63 @@ async function loadInterviewHistory() {
         var uid = String(userId);
         list = api.mockInterviews.filter(function(i) { return String(i.user_id) === uid; });
     }
+    
+    // 如果没有后端的chartData，但有本地数据，从本地数据构建chartData
+    if (!chartData && list.length > 0) {
+        console.log('[历史] 从本地数据构建chartData');
+        var scoreTrend = [];
+        var dates = [];
+        var dimensionTrend = {
+            "内容质量": [],
+            "表达能力": [],
+            "逻辑思维": [],
+            "岗位匹配度": []
+        };
+        
+        // 按时间正序处理（从旧到新）
+        for (var i = list.length - 1; i >= 0; i--) {
+            var interview = list[i];
+            if (interview.total_score) {
+                scoreTrend.push(interview.total_score);
+                
+                // 处理日期
+                var dateStr = interview.created_at || interview.started_at;
+                if (dateStr) {
+                    try {
+                        var dt = new Date(dateStr);
+                        dateStr = dt.toISOString().split('T')[0];
+                    } catch (e) {}
+                }
+                dates.push(dateStr);
+                
+                // 处理维度得分
+                var dims = interview.dimension_scores || {};
+                if (dims) {
+                    dimensionTrend["内容质量"].push(dims["内容质量"] || dims["content"] || 75);
+                    dimensionTrend["表达能力"].push(dims["表达能力"] || dims["expression"] || 75);
+                    dimensionTrend["逻辑思维"].push(dims["逻辑思维"] || dims["logic"] || 75);
+                    dimensionTrend["岗位匹配度"].push(dims["岗位匹配度"] || dims["cultural_fit"] || 75);
+                } else {
+                    dimensionTrend["内容质量"].push(75);
+                    dimensionTrend["表达能力"].push(75);
+                    dimensionTrend["逻辑思维"].push(75);
+                    dimensionTrend["岗位匹配度"].push(75);
+                }
+            }
+            
+            if (scoreTrend.length >= 10) break;
+        }
+        
+        if (scoreTrend.length > 0) {
+            chartData = {
+                score_trend: scoreTrend,
+                dimension_trend: dimensionTrend,
+                dates: dates
+            };
+            console.log('[历史] 本地构建的chartData:', chartData);
+        }
+    }
+    
     console.log('[MockInterview] 渲染历史记录，数量:', list.length);
     renderInterviewHistory(list);
     renderGrowthChart(chartData);

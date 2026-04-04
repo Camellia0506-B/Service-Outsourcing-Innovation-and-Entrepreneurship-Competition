@@ -359,8 +359,10 @@ def _load_json(path: str, default: dict):
 
 def _save_sessions() -> None:
     os.makedirs(os.path.dirname(_get_sessions_path()), exist_ok=True)
+    # 创建字典的副本，避免在序列化过程中被修改
+    sessions_copy = dict(interview_sessions)
     with open(_get_sessions_path(), "w", encoding="utf-8") as f:
-        json.dump(interview_sessions, f, ensure_ascii=False, indent=2)
+        json.dump(sessions_copy, f, ensure_ascii=False, indent=2)
 
 
 # 内存中存储面试会话，启动时从文件恢复，避免重启后历史丢失
@@ -1469,44 +1471,60 @@ def speech_transcribe():
                 api_key = os.environ.get("DASHSCOPE_API_KEY")
             
             if not api_key:
-                logger.warning("[SpeechTranscribe] 未找到API Key，返回模拟数据")
-                # 返回模拟数据（演示用）
-                mock_duration = 28
-                return success_response({
-                    "transcript": "我在上一个项目中主要负责了 Spring Boot 的服务拆分...",
-                    "duration_seconds": mock_duration,
-                    "speech_meta": {
-                        "words_per_minute": 158,
-                        "pause_count": 3,
-                        "confidence_keywords": ["Spring Boot", "服务拆分", "接口"],
-                        "fluency_score": 78
-                    }
-                }, msg="转写成功（模拟数据）")
+                logger.warning("[SpeechTranscribe] 未找到 API Key，拒绝语音识别")
+                try:
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+                except Exception:
+                    pass
+                return error_response(
+                    503,
+                    "未配置语音识别服务：请在环境变量 DASHSCOPE_API_KEY 或配置文件（api_key / dashscope_api_key）中设置阿里云 DashScope 密钥后重试。",
+                )
             
             # 调用阿里云Paraformer
             try:
                 import dashscope
                 dashscope.api_key = api_key
                 
-                # Paraformer语音识别
+                # 将 webm 格式转换为 wav 格式（paraformer-realtime-v2 仅支持 wav）
+                wav_file_path = temp_file_path.replace('.webm', '.wav')
+                try:
+                    from pydub import AudioSegment
+                    audio = AudioSegment.from_file(temp_file_path, format='webm')
+                    audio = audio.set_frame_rate(16000).set_channels(1)
+                    audio.export(wav_file_path, format='wav')
+                    logger.info(f"[SpeechTranscribe] 格式转换成功: {temp_file_path} -> {wav_file_path}")
+                except Exception as e:
+                    logger.warning(f"[SpeechTranscribe] 格式转换失败，尝试使用原文件: {e}")
+                    wav_file_path = temp_file_path
+                
+                # Paraformer语音识别（非流式调用）
                 from dashscope.audio.asr import Recognition
-                recognition = Recognition()
+                recognition = Recognition(
+                    model='paraformer-realtime-v2',
+                    format='wav',
+                    sample_rate=16000,
+                    language_hints=['zh', 'en'],
+                    callback=None
+                )
                 
                 # 调用语音识别
-                result = recognition.call(
-                    model='paraformer-v2',
-                    file_path=temp_file_path,
-                    format='webm'
-                )
+                result = recognition.call(wav_file_path)
                 
                 logger.info(f"[SpeechTranscribe] 阿里云识别结果: {result}")
                 
-                if result.status_code == 200 and result.output:
-                    # 解析识别结果
+                if result.status_code == 200:
+                    # 解析识别结果（paraformer-realtime-v2）
                     sentences = []
                     full_text = ""
                     
-                    if hasattr(result.output, 'results') and result.output.results:
+                    # 尝试获取识别文本
+                    if hasattr(result, 'get_sentence'):
+                        full_text = result.get_sentence()
+                    elif hasattr(result, 'output') and hasattr(result.output, 'text'):
+                        full_text = result.output.text
+                    elif hasattr(result, 'output') and hasattr(result.output, 'results'):
                         for item in result.output.results:
                             if hasattr(item, 'sentence') and item.sentence:
                                 sentences.append({
@@ -1516,13 +1534,20 @@ def speech_transcribe():
                                 })
                                 full_text += item.sentence.text if hasattr(item.sentence, 'text') else str(item.sentence)
                     
-                    # 如果没有获取到详细结果，尝试获取纯文本
-                    if not sentences and hasattr(result.output, 'text'):
-                        full_text = result.output.text
+                    # 如果没有句子数据但有文本，创建默认句子
+                    if not sentences and full_text:
                         sentences = [{"text": full_text, "begin_time": 0, "end_time": 10000}]
                     
-                    # 计算语音指标
-                    speech_meta = calculate_speech_metrics(sentences, job_title, job_type)
+                    full_text = (full_text or "").strip()
+                    
+                    # 计算语音指标（即使没有识别到文本）
+                    speech_meta = calculate_speech_metrics(sentences, job_title, job_type) if sentences else {
+                        "words_per_minute": 0,
+                        "pause_count": 0,
+                        "confidence_keywords": [],
+                        "fluency_score": 0,
+                        "total_duration_seconds": 0
+                    }
                     duration_seconds = speech_meta.get("total_duration_seconds", 0)
                     
                     # 删除临时文件
@@ -1531,7 +1556,15 @@ def speech_transcribe():
                         logger.info(f"[SpeechTranscribe] 删除临时文件: {temp_file_path}")
                     except:
                         pass
+                    # 删除转换后的 wav 文件（如果存在）
+                    try:
+                        if wav_file_path and wav_file_path != temp_file_path and os.path.exists(wav_file_path):
+                            os.remove(wav_file_path)
+                            logger.info(f"[SpeechTranscribe] 删除转换后的文件: {wav_file_path}")
+                    except:
+                        pass
                     
+                    # 即使没有识别到文本也返回成功
                     return success_response({
                         "transcript": full_text,
                         "duration_seconds": duration_seconds,
@@ -1541,62 +1574,57 @@ def speech_transcribe():
                             "confidence_keywords": speech_meta.get("confidence_keywords", []),
                             "fluency_score": speech_meta.get("fluency_score", 0)
                         }
-                    }, msg="转写成功")
+                    }, msg="转写成功" if full_text else "转写完成（未识别到有效语音）")
                 
                 else:
                     logger.warning(f"[SpeechTranscribe] 阿里云识别失败: {result}")
-                    # 删除临时文件
                     try:
                         os.remove(temp_file_path)
-                    except:
+                    except Exception:
                         pass
-                    # 返回模拟数据
-                    mock_duration = 28
-                    return success_response({
-                        "transcript": "我在上一个项目中主要负责了 Spring Boot 的服务拆分...",
-                        "duration_seconds": mock_duration,
-                        "speech_meta": {
-                            "words_per_minute": 158,
-                            "pause_count": 3,
-                            "confidence_keywords": ["Spring Boot", "服务拆分", "接口"],
-                            "fluency_score": 78
-                        }
-                    }, msg="转写成功（模拟数据）")
+                    # 删除转换后的 wav 文件（如果存在）
+                    try:
+                        if wav_file_path and wav_file_path != temp_file_path and os.path.exists(wav_file_path):
+                            os.remove(wav_file_path)
+                    except Exception:
+                        pass
+                    err_detail = getattr(result, "message", None) or str(result)
+                    return error_response(
+                        502,
+                        f"语音识别服务调用失败（status={getattr(result, 'status_code', '?')}）：{err_detail}",
+                    )
             
             except ImportError as e:
-                logger.warning(f"[SpeechTranscribe] 导入dashscope失败: {e}")
-                # 删除临时文件
+                logger.warning(f"[SpeechTranscribe] 导入 dashscope 失败: {e}")
                 try:
                     os.remove(temp_file_path)
-                except:
+                except Exception:
                     pass
-                # 返回模拟数据
-                mock_duration = 28
-                return success_response({
-                    "transcript": "我在上一个项目中主要负责了 Spring Boot 的服务拆分...",
-                    "duration_seconds": mock_duration,
-                    "speech_meta": {
-                        "words_per_minute": 158,
-                        "pause_count": 3,
-                        "confidence_keywords": ["Spring Boot", "服务拆分", "接口"],
-                        "fluency_score": 78
-                    }
-                }, msg="转写成功（模拟数据）")
+                # 删除转换后的 wav 文件（如果存在）
+                try:
+                    if 'wav_file_path' in locals() and wav_file_path and wav_file_path != temp_file_path and os.path.exists(wav_file_path):
+                        os.remove(wav_file_path)
+                except Exception:
+                    pass
+                return error_response(
+                    503,
+                    "语音识别依赖未就绪：请安装 dashscope（pip install dashscope）并配置 DASHSCOPE_API_KEY。",
+                )
             
             except Exception as e:
                 logger.error(f"[SpeechTranscribe] 调用阿里云识别失败: {e}", exc_info=True)
-                # 返回模拟数据
-                mock_duration = 28
-                return success_response({
-                    "transcript": "我在上一个项目中主要负责了 Spring Boot 的服务拆分...",
-                    "duration_seconds": mock_duration,
-                    "speech_meta": {
-                        "words_per_minute": 158,
-                        "pause_count": 3,
-                        "confidence_keywords": ["Spring Boot", "服务拆分", "接口"],
-                        "fluency_score": 78
-                    }
-                }, msg="转写成功（模拟数据）")
+                try:
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+                except Exception:
+                    pass
+                # 删除转换后的 wav 文件（如果存在）
+                try:
+                    if 'wav_file_path' in locals() and wav_file_path and wav_file_path != temp_file_path and os.path.exists(wav_file_path):
+                        os.remove(wav_file_path)
+                except Exception:
+                    pass
+                return error_response(500, f"语音识别处理异常：{str(e)}")
         
         finally:
             # 清理临时文件
@@ -1605,6 +1633,12 @@ def speech_transcribe():
                     os.remove(temp_file_path)
             except Exception as e:
                 logger.warning(f"[SpeechTranscribe] 删除临时文件失败: {e}")
+            # 清理转换后的 wav 文件
+            try:
+                if 'wav_file_path' in locals() and wav_file_path and wav_file_path != temp_file_path and os.path.exists(wav_file_path):
+                    os.remove(wav_file_path)
+            except Exception as e:
+                logger.warning(f"[SpeechTranscribe] 删除转换后文件失败: {e}")
     
     except Exception as e:
         logger.error(f"[SpeechTranscribe] 语音识别异常: {e}", exc_info=True)

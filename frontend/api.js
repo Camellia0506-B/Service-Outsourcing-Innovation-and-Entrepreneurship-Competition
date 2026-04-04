@@ -2590,6 +2590,12 @@ function getTrackingActionPlanURL() {
     return `${base}/tracking/action-plan`;
 }
 
+// 6.1 模拟面试语音转写（multipart/form-data，由 app.js 直接 fetch，与 assessmentBaseURL 一致）
+function getMockInterviewSpeechTranscribeURL() {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    return `${String(base).replace(/\/$/, '')}/mock-interview/speech/transcribe`;
+}
+
 // ==================== 知识库模块 ====================
 
 // 查询知识库
