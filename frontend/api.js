@@ -18,9 +18,9 @@ var _storage = (function () {
 const API_CONFIG = {
     // Windows 上 localhost 有时会解析到 IPv6 ::1，导致“服务明明启动了但连不上”
     // 这里默认使用 127.0.0.1 更稳。
-    baseURL: 'http://127.0.0.1:5000/api/v1',            // Java 后端（登录、档案更新等）
-    assessmentBaseURL: 'http://127.0.0.1:5002/api/v1', // Python AI 服务（默认 5002）
-    jobProfilesBaseURL: 'http://127.0.0.1:5002/api/v1', // 岗位画像 → Flask AI
+    baseURL: 'http://gradquest.alwaysdata.net/api/v1',            // Java 后端（登录、档案更新等）
+    assessmentBaseURL: 'http://gradquest.alwaysdata.net/ai/api/v1', // Python AI 服务（默认 5002）
+    jobProfilesBaseURL: 'http://gradquest.alwaysdata.net/ai/api/v1', // 岗位画像 → Flask AI
     // 默认超时：60s（Windows 本地首次构建索引/加载数据时，30s 容易误触发 AbortError）
     timeout: 60000,
     mockMode: false  // true=模拟数据；false=连接真实后端（Java:5000 / AI:5002）
@@ -31,7 +31,7 @@ const AI_SERVICE_START_HINT = 'AI 服务 (5002) 未连接，请先启动：在�
 
 // 规范化 baseURL：若缺少 host（如 http://:5002）或非 http(s) 则补全为 localhost，避免 404
 function normalizeBaseURL(url, defaultOrigin) {
-    const def = defaultOrigin || 'http://127.0.0.1:5002/api/v1';
+    const def = defaultOrigin || 'http://gradquest.alwaysdata.net/ai/api/v1';
     if (!url || typeof url !== 'string') return def;
     var s = url.trim();
     if (!s.startsWith('http://') && !s.startsWith('https://')) return def;
@@ -54,7 +54,7 @@ async function agentParseJobProfileRequirement(userText) {
     if (!userText || !String(userText).trim()) {
         return { success: false, msg: '请输入岗位画像生成需求' };
     }
-    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.jobProfilesBaseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     const url = `${base}/job/agent/parse-requirement`.replace(/\/api\/v1\/?$/, '/api/v1/job/agent/parse-requirement');
     // LLM 解析可能较慢，单独拉长超时（默认 60s）
     const controller = new AbortController();
@@ -77,8 +77,8 @@ async function agentParseJobProfileRequirement(userText) {
         return {
             success: false,
             msg: (e && e.name === 'AbortError')
-                ? '智能解析超时（60s），请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常'
-                : '智能解析失败，请确认 AI 服务 (http://127.0.0.1:5002) 已启动',
+                ? '智能解析超时（60s），请确认 AI 服务 (http://gradquest.alwaysdata.net/ai) 已启动且网络正常'
+                : '智能解析失败，请确认 AI 服务 (http://gradquest.alwaysdata.net/ai) 已启动',
             error: e
         };
     } finally {
@@ -208,9 +208,9 @@ class API {
                 console.error('API请求错误(AI):', { endpoint, url, timeoutMs, error });
             }
             const msg = error.name === 'AbortError'
-                ? '请求超时，请确认 AI 服务 (http://127.0.0.1:5002) 已启动且网络正常'
+                ? '请求超时，请确认 AI 服务 (http://gradquest.alwaysdata.net/ai) 已启动且网络正常'
                 : (error.message && error.message.toLowerCase().includes('fetch'))
-                    ? '无法连接 AI 服务 (http://127.0.0.1:5002)，请确认已启动'
+                    ? '无法连接 AI 服务 (http://gradquest.alwaysdata.net/ai)，请确认已启动'
                     : (error.message || '网络错误');
             return { success: false, msg };
         }
@@ -230,7 +230,7 @@ class API {
             || endpoint.startsWith('/resume/')
             || endpoint.startsWith('/security/');
         const raw = useAI ? (API_CONFIG.jobProfilesBaseURL || API_CONFIG.assessmentBaseURL || this.baseURL) : this.baseURL;
-        const base = normalizeBaseURL(raw, useAI ? 'http://127.0.0.1:5002/api/v1' : 'http://127.0.0.1:5000/api/v1');
+        const base = normalizeBaseURL(raw, useAI ? 'http://gradquest.alwaysdata.net/ai/api/v1' : 'http://gradquest.alwaysdata.net/api/v1');
         const url = `${base}${endpoint}`;
         const token = _storage.getItem('token');
         
@@ -272,8 +272,8 @@ class API {
                 // 服务返回了 HTML 或非 JSON（如 501 错误页），给出明确提示
                 const isAssessment = endpoint.startsWith('/assessment/');
                 const hint = response.status === 501
-                    ? '当前地址不支持 POST，请确认已启动 AI 服务 (http://127.0.0.1:5002)'
-                    : (isAssessment ? '请确认已启动 AI 服务 (http://127.0.0.1:5002)' : '请确认后端服务已运行');
+                    ? '当前地址不支持 POST，请确认已启动 AI 服务 (http://gradquest.alwaysdata.net/ai)'
+                    : (isAssessment ? '请确认已启动 AI 服务 (http://gradquest.alwaysdata.net/ai)' : '请确认后端服务已运行');
                 return { success: false, msg: `服务返回异常 (${response.status}): ${hint}` };
             }
             // 根据code判断是否成功
@@ -290,8 +290,8 @@ class API {
         } catch (error) {
             console.error('API请求错误:', { endpoint, url, timeoutMs, error });
             const serviceHint = useAI
-                ? 'AI 服务 (http://127.0.0.1:5002)'
-                : 'Java 后端 (http://127.0.0.1:5000/api/v1)';
+                ? 'AI 服务 (http://gradquest.alwaysdata.net/ai)'
+                : 'Java 后端 (http://gradquest.alwaysdata.net/api/v1)';
             const msg = (error && error.name === 'AbortError')
                 ? `请求超时（${timeoutMs / 1000}s）：请确认 ${serviceHint} 已启动且网络未被拦截`
                 : (error.message && error.message.toLowerCase().includes('fetch'))
@@ -313,7 +313,7 @@ class API {
 
     // 明确请求 Java 后端 5000（用于 5002 返回 404 时的回退）
     async postToJava(endpoint, data) {
-        const base = normalizeBaseURL(this.baseURL, 'http://127.0.0.1:5000/api/v1');
+        const base = normalizeBaseURL(this.baseURL, 'http://gradquest.alwaysdata.net/api/v1');
         const url = `${base}${endpoint}`;
         const token = _storage.getItem('token');
         if (API_CONFIG.mockMode) return this.mockRequest(endpoint, { method: 'POST', body: data });
@@ -2580,13 +2580,13 @@ async function saveFailureReport(recordId, userId) {
 
 // 9.3 求职失败反馈分析（SSE）— 与 9.1/9.2/9.4/9.5 同属规划落地跟踪，走 AI 服务 5002
 function getTrackingFailureAnalysisURL(recordId) {
-    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     return `${base}/tracking/record/${encodeURIComponent(recordId)}/failure-analysis`;
 }
 
 // 应对措施/计划定制（可执行计划生成，流式或一次性）
 function getTrackingActionPlanURL() {
-    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     return `${base}/tracking/action-plan`;
 }
 
@@ -3142,7 +3142,7 @@ async function submitResumeToHr(userId) {
 // ==================== 学生端 HR 评估邀请 ====================
 // 获取当前学生收到的评估邀请列表（GET，走 AI 服务 5002）
 async function getStudentInvitations(userId) {
-    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     const url = `${base}/hr/student/invitations?user_id=${encodeURIComponent(userId)}`;
     try {
         const resp = await fetch(url, { method: 'GET' });
@@ -3159,7 +3159,7 @@ async function getStudentInvitations(userId) {
 
 // 学生响应邀请：接受或拒绝（POST，走 AI 服务 5002）
 async function respondToInvitation(invitationId, userId, action) {
-    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     const url = `${base}/hr/student/invitation/${encodeURIComponent(invitationId)}/respond`;
     try {
         const resp = await fetch(url, {
@@ -3180,7 +3180,7 @@ async function respondToInvitation(invitationId, userId, action) {
 
 // 学生端：获取 HR 评估报告列表（GET，走 AI 服务 5002）
 async function getStudentEvaluationReports(userId) {
-    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     const url = `${base}/hr/student/evaluation-reports?user_id=${encodeURIComponent(userId)}`;
     try {
         const resp = await fetch(url, { method: 'GET' });
@@ -3197,7 +3197,7 @@ async function getStudentEvaluationReports(userId) {
 
 // 学生端：获取单条评估报告详情（GET）
 async function getStudentEvaluationReportDetail(userId, evaluationId) {
-    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://127.0.0.1:5002/api/v1');
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.baseURL, 'http://gradquest.alwaysdata.net/ai/api/v1');
     const url = `${base}/hr/student/evaluation-reports/${encodeURIComponent(evaluationId)}?user_id=${encodeURIComponent(userId)}`;
     try {
         const resp = await fetch(url, { method: 'GET' });
