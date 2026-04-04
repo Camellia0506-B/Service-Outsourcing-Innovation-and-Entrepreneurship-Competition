@@ -1,3 +1,4 @@
 #key: value
 chat_model_name: qwen-plus
 embedding_model_name: text-embedding-v4
+api_key: sk-0485e7bf81264263966468a975580d75

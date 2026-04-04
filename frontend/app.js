@@ -6506,7 +6506,6 @@ class CareerPlanningApp {
     renderGapAnalysis(dimension, current, target) {
         const gap = target - current;
         const gapPercentage = Math.round((gap / target) * 100);
-        const matchPercentage = Math.round((current / target) * 100);
         
         let gapLevel = '';
         let gapColor = '';
@@ -6567,10 +6566,6 @@ class CareerPlanningApp {
                             </div>
                             <span style="font-size: 12px; font-weight: 500; color: white; background-color: ${gapColor}; padding: 2px 8px; border-radius: 10px;">${gapLevel}</span>
                         </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-                        <span style="font-size: 11px; color: var(--text-secondary);">匹配度</span>
-                        <span style="font-size: 14px; font-weight: 700; color: ${gapColor};">${matchPercentage}%</span>
                     </div>
                 </div>
                 
@@ -14323,109 +14318,367 @@ let currentInterview = null;
 var _interviewReportLoading = false;
 let mockInterviewInitialized = false;
 
-let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
-let stream = null;
 let recordingTimer = null;
 let speechMeta = null;
 let scoreCardTimeout = null;
+let socket = null;
+let isStreaming = false;
+/** 实时识别：麦克风 PCM 采集（16kHz s16le 推给服务端 DashScope 流式识别） */
+let voiceAudioContext = null;
+let voiceMediaStreamSource = null;
+let voiceScriptProcessor = null;
+let voiceInputStream = null;
+
+function _downsampleFloat32(buffer, inRate, outRate) {
+    if (outRate >= inRate) {
+        return buffer;
+    }
+    const ratio = inRate / outRate;
+    const newLen = Math.floor(buffer.length / ratio);
+    const out = new Float32Array(newLen);
+    let offset = 0;
+    for (let i = 0; i < newLen; i++) {
+        const next = Math.min(buffer.length, Math.round((i + 1) * ratio));
+        let sum = 0;
+        let n = 0;
+        for (let j = offset; j < next; j++) {
+            sum += buffer[j];
+            n++;
+        }
+        out[i] = n ? sum / n : 0;
+        offset = next;
+    }
+    return out;
+}
+
+function _floatTo16BitLE(float32Array) {
+    const buf = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buf);
+    for (let i = 0; i < float32Array.length; i++) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return new Uint8Array(buf);
+}
+
+function _uint8ToBase64(u8) {
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < u8.length; i += chunk) {
+        binary += String.fromCharCode.apply(null, u8.subarray(i, Math.min(i + chunk, u8.length)));
+    }
+    return btoa(binary);
+}
+
+function _waitRealtimeAsrReady(sock, payload) {
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            tearDown();
+            reject(new Error('等待语音识别服务就绪超时（请确认已重启后端 AI 服务，且未开启会双进程的热重载）'));
+        }, 25000);
+        function tearDown() {
+            clearTimeout(timer);
+            sock.off('streaming_started', onStarted);
+            sock.off('streaming_failed', onFailed);
+            sock.off('error', onErr);
+        }
+        function onStarted() {
+            if (settled) return;
+            settled = true;
+            tearDown();
+            resolve();
+        }
+        function onFailed(data) {
+            if (settled) return;
+            settled = true;
+            tearDown();
+            reject(new Error((data && data.message) || '语音识别启动失败'));
+        }
+        function onErr(e) {
+            onFailed(e && typeof e === 'object' ? e : { message: String(e || '') });
+        }
+        sock.once('streaming_started', onStarted);
+        sock.once('streaming_failed', onFailed);
+        sock.once('error', onErr);
+        sock.emit('start_streaming', payload);
+    });
+}
 
 function initVoiceRecognition() {
     const voiceBtn = document.getElementById('voiceBtn');
     if (!voiceBtn) return;
-    
-    if (!navigator.mediaDevices || !window.MediaRecorder) {
+
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !AC) {
         voiceBtn.style.display = 'none';
         if (typeof showToast === 'function') {
-            showToast('请使用 Chrome/Edge 浏览器', 'warning');
+            showToast('请使用支持 Web Audio 的 Chrome / Edge 浏览器', 'warning');
         }
         return;
     }
-    
+
     voiceBtn.onclick = async () => {
         if (!isRecording) {
-            await startRecording();
+            await startStreamingRecording();
         } else {
-            stopRecording();
+            stopStreamingRecording();
         }
     };
 }
 
-async function startRecording() {
+async function initSocketConnection() {
+    if (socket && socket.connected) {
+        return socket;
+    }
+    
+    const socketUrl = (typeof getMockInterviewBaseURL === 'function')
+        ? getMockInterviewBaseURL()
+        : 'http://127.0.0.1:5002';
+    
+    socket = io(socketUrl, {
+        transports: ['websocket', 'polling']
+    });
+    
+    socket.on('connect', () => {
+        console.log('[WebSocket] 连接成功:', socket.id);
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('[WebSocket] 连接断开');
+    });
+    
+    socket.on('connected', (data) => {
+        console.log('[WebSocket] 已连接:', data);
+    });
+    
+    socket.on('streaming_started', (data) => {
+        console.log('[WebSocket] 实时流式识别已启动:', data);
+    });
+
+    socket.on('streaming_failed', (data) => {
+        console.warn('[WebSocket] 实时识别启动失败:', data);
+    });
+
+    socket.on('streaming_progress', (data) => {
+        console.log('[WebSocket] 实时识别进度:', data);
+    });
+
+    socket.on('asr_partial', (data) => {
+        const answerInput = document.getElementById('answerInput');
+        if (!answerInput || !data) return;
+        const t = data.transcript != null ? String(data.transcript) : '';
+        answerInput.value = t;
+    });
+    
+    socket.on('streaming_stopped', (data) => {
+        console.log('[WebSocket] 流式识别完成:', data);
+        handleStreamingResult(data);
+    });
+    
+    socket.on('error', (data) => {
+        console.error('[WebSocket] 错误:', data);
+        const voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.classList.remove('recording', 'processing');
+            voiceBtn.title = '开始录音';
+        }
+        isRecording = false;
+        isStreaming = false;
+        if (typeof showToast === 'function') {
+            showToast(data.message || '语音识别出错', 'error');
+        }
+    });
+    
+    return socket;
+}
+
+function _teardownVoiceAudioPipeline() {
+    if (voiceScriptProcessor) {
+        try {
+            voiceScriptProcessor.disconnect();
+        } catch (e) { /* ignore */ }
+        voiceScriptProcessor.onaudioprocess = null;
+        voiceScriptProcessor = null;
+    }
+    if (voiceMediaStreamSource) {
+        try {
+            voiceMediaStreamSource.disconnect();
+        } catch (e) { /* ignore */ }
+        voiceMediaStreamSource = null;
+    }
+    if (voiceAudioContext) {
+        voiceAudioContext.close().catch(() => {});
+        voiceAudioContext = null;
+    }
+    if (voiceInputStream) {
+        voiceInputStream.getTracks().forEach(track => track.stop());
+        voiceInputStream = null;
+    }
+}
+
+async function startStreamingRecording() {
     const voiceBtn = document.getElementById('voiceBtn');
     if (!voiceBtn) return;
-    
+
+    const AC = window.AudioContext || window.webkitAudioContext;
+
     try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        await initSocketConnection();
+
+        if (!socket || !socket.connected) {
+            if (typeof showToast === 'function') {
+                showToast('未连接识别服务，请确认后端已启动后重试', 'error');
+            }
+            return;
+        }
+
+        const userId = getCurrentUserId();
+        const startPayload = {
+            interview_id: currentInterview ? currentInterview.interview_id : '',
+            user_id: userId || ''
+        };
+
+        voiceInputStream = await navigator.mediaDevices.getUserMedia({
             audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
-                autoGainControl: true
+                autoGainControl: true,
+                channelCount: 1
             }
         });
-        
-        mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'audio/webm;codecs=opus'
-        });
-        
-        audioChunks = [];
-        
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                audioChunks.push(event.data);
-            }
+
+        await _waitRealtimeAsrReady(socket, startPayload);
+
+        voiceAudioContext = new AC();
+        if (voiceAudioContext.state === 'suspended') {
+            await voiceAudioContext.resume();
+        }
+
+        const inRate = voiceAudioContext.sampleRate;
+        const outRate = 16000;
+
+        voiceMediaStreamSource = voiceAudioContext.createMediaStreamSource(voiceInputStream);
+        const bufferSize = 4096;
+        voiceScriptProcessor = voiceAudioContext.createScriptProcessor(bufferSize, 1, 1);
+        voiceScriptProcessor.onaudioprocess = (ev) => {
+            if (!isStreaming || !socket || !socket.connected) return;
+            const input = ev.inputBuffer.getChannelData(0);
+            if (!input || !input.length) return;
+            const down = _downsampleFloat32(input, inRate, outRate);
+            const pcm = _floatTo16BitLE(down);
+            const b64 = _uint8ToBase64(pcm);
+            socket.emit('audio_chunk', { audio_data: b64 });
         };
-        
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            sendAudioToServer(audioBlob);
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        };
-        
-        mediaRecorder.start();
+
+        const voiceMuteGain = voiceAudioContext.createGain();
+        voiceMuteGain.gain.value = 0;
+        voiceMediaStreamSource.connect(voiceScriptProcessor);
+        voiceScriptProcessor.connect(voiceMuteGain);
+        voiceMuteGain.connect(voiceAudioContext.destination);
+
+        isStreaming = true;
         isRecording = true;
         voiceBtn.classList.add('recording');
         voiceBtn.classList.remove('processing');
         voiceBtn.title = '停止录音';
-        
+
         recordingTimer = setTimeout(() => {
             if (isRecording) {
-                stopRecording();
+                stopStreamingRecording();
                 if (typeof showToast === 'function') {
                     showToast('录音已达120秒上限', 'info');
                 }
             }
         }, 120000);
-        
+
         if (typeof showToast === 'function') {
-            showToast('正在录音，请说话...', 'info');
+            showToast('实时识别中，请说话…', 'info');
         }
-        
     } catch (error) {
-        console.error('[VoiceRecognition] 录音失败:', error);
+        console.error('[VoiceRecognition] 实时录音失败:', error);
+        _teardownVoiceAudioPipeline();
+        isStreaming = false;
+        isRecording = false;
         if (typeof showToast === 'function') {
-            showToast('无法访问麦克风，请确保已授予麦克风权限', 'error');
+            const msg = (error && error.message) ? error.message : '无法启动语音识别';
+            showToast(msg, 'error');
         }
     }
 }
 
-function stopRecording() {
+function stopStreamingRecording() {
     const voiceBtn = document.getElementById('voiceBtn');
-    if (!voiceBtn || !mediaRecorder) return;
-    
+    if (!voiceBtn || !isRecording) return;
+
     if (recordingTimer) {
         clearTimeout(recordingTimer);
         recordingTimer = null;
     }
-    
-    mediaRecorder.stop();
+
     isRecording = false;
+    isStreaming = false;
+    _teardownVoiceAudioPipeline();
+
     voiceBtn.classList.remove('recording');
     voiceBtn.classList.add('processing');
-    voiceBtn.title = '识别中...';
+    voiceBtn.title = '收尾中…';
+
+    if (!socket || !socket.connected) {
+        voiceBtn.classList.remove('processing');
+        voiceBtn.title = '开始录音';
+        if (typeof showToast === 'function') {
+            showToast('未连接识别服务，请确认后端已启动后重试', 'error');
+        }
+        return;
+    }
+    socket.emit('stop_streaming');
+}
+
+function handleStreamingResult(data) {
+    const voiceBtn = document.getElementById('voiceBtn');
+    const answerInput = document.getElementById('answerInput');
+    if (!answerInput || !voiceBtn) return;
+    
+    voiceBtn.classList.remove('processing');
+    voiceBtn.title = '开始录音';
+
+    const text = (data.transcript != null ? String(data.transcript) : '').trim();
+    
+    if (data.status === 'success' || data.status === 'warning') {
+        if (!text) {
+            if (typeof showToast === 'function') {
+                showToast(data.message || '未识别到有效语音，请重试', 'warning');
+            }
+        } else {
+            answerInput.value = text;
+            speechMeta = data.speech_meta || null;
+            console.log('[VoiceRecognition] 识别结果已填入输入框:', text);
+            console.log('[VoiceRecognition] 语音元数据:', speechMeta);
+            if (typeof showToast === 'function') {
+                if (data.status === 'success') {
+                    showToast('语音识别成功', 'success');
+                } else {
+                    showToast(data.message || '识别完成', 'warning');
+                }
+            }
+        }
+    } else if (data.status === 'error') {
+        if (text) {
+            answerInput.value = text;
+        }
+        if (typeof showToast === 'function') {
+            showToast(data.message || '语音识别失败', 'error');
+        }
+    } else {
+        if (typeof showToast === 'function') {
+            showToast(data.message || '语音识别失败', 'error');
+        }
+    }
 }
 
 function updateFloatingScoreCard(data) {
