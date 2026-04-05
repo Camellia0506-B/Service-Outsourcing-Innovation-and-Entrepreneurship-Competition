@@ -999,11 +999,7 @@ def send_answer(interview_id):
                     follow_up_reason = random.choice(follow_up_reasons)
                     
                     yield "event: follow_up_triggered\n"
-                    yield f"data: {json.dumps({{
-                        'reason': follow_up_reason,
-                        'follow_up_count': follow_up_count,
-                        'max_follow_ups': max_follow_ups
-                    }}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'reason': follow_up_reason, 'follow_up_count': follow_up_count, 'max_follow_ups': max_follow_ups}, ensure_ascii=False)}\n\n"
 
                 remaining = 0 if is_complete else (5 - current_module_index - 1)
                 if is_complete:
@@ -1016,11 +1012,7 @@ def send_answer(interview_id):
                     next_question_id = rag_questions[next_question_index].get("id")
                 
                 yield "event: next_question\n"
-                yield f"data: {json.dumps({{
-                    'question_id': next_question_id or f'q_{uuid.uuid4().hex[:8]}',
-                    'section': section,
-                    'remaining_questions': remaining
-                }}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'question_id': next_question_id or f'q_{uuid.uuid4().hex[:8]}', 'section': section, 'remaining_questions': remaining}, ensure_ascii=False)}\n\n"
 
                 # 保存AI回复
                 interview["messages"].append({

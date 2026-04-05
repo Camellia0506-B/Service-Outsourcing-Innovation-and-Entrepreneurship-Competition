@@ -2277,8 +2277,12 @@ class CareerPlanningApp {
 
         const normIntern = (i) => {
             if (!i || typeof i !== 'object') return null;
-            const company = (i.company || '').trim();
-            const position = (i.position || i.role || '').trim();
+            // 若 company 是纯年份（如 "2024"）或无效词，AI 字段识别错误，清空
+            let company = (i.company || '').trim();
+            if (/^\d{4}$/.test(company) || ['无', '暂无', '—', '－', 'null'].includes(company)) company = '';
+            // 若 position 以日期开头（如 "2024.07 -"），AI 字段识别错误，清空
+            let position = (i.position || i.role || '').trim();
+            if (/^\d{4}[.\-/]\d/.test(position)) position = '';
             const start = (i.start_date || '').trim();
             const end = (i.end_date || '').trim();
             const dur = (i.duration || '').trim();
