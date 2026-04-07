@@ -1,0 +1,25 @@
+{
+  "user_id": 16,
+  "anonymous_id": "student_016",
+  "target_job": "技术支持工程师",
+  "education_level": "本科",
+  "major_category": "计算机科学与技术",
+  "gpa_level": "良好（3.3-3.7）",
+  "system_match_score": 95,
+  "ability_tags": [
+    "机器学习",
+    "深度学习",
+    "数据结构",
+    "Python",
+    "Java",
+    "JavaScript",
+    "CNN",
+    "Vue.js"
+  ],
+  "highlight": "该候选人尚未主动投递简历，以下信息由系统根据其职业规划档案自动生成，供参考。",
+  "is_open_to_contact": true,
+  "source": "student_profile",
+  "generated_at": "2026-04-07T16:24:15.112939",
+  "submitted_to_hr": true,
+  "submitted_at": "2026-04-07T16:24:15.112939"
+}

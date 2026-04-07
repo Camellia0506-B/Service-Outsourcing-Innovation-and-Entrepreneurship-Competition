@@ -561,11 +561,9 @@ def create_session():
         if rag_questions and len(rag_questions) > 0:
             first_question_str = rag_questions[0]["question"]
         
-        # === 步骤 6：替换 System Prompt 中的占位符 ===
-        if system_prompt:
-            system_prompt = system_prompt.replace("{student_profile}", student_profile_str)
-            system_prompt = system_prompt.replace("{current_question}", first_question_str)
-            system_prompt = system_prompt.replace("{history}", "")
+        # === 步骤 6：保存原始模板，不提前替换占位符 ===
+        # {student_profile}、{current_question}、{history} 在每次 send_answer 时动态注入，
+        # 确保 LLM 每次都能看到最新的对话历史和当前题目。
         
         # 开场消息（使用人设中的名称，避免硬编码）
         if rag_questions and len(rag_questions) > 0:
