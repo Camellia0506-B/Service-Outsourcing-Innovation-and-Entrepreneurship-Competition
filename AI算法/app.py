@@ -109,36 +109,59 @@ app.register_blueprint(resume_bp)
 app.register_blueprint(hr_bp)
 logger.info("[App] 注册路由: 安全与隐私设置模块 /api/v1/security/*")
 
-# ========== 自动导入面试题库（首次启动或 ChromaDB 为空时） ==========
-def _auto_import_question_bank():
+# ========== 启动时自动初始化所有向量库 ==========
+def _auto_init_vector_stores():
     """
-    检查面试题库 ChromaDB 是否为空，若为空则自动从 JSONL 文件导入。
-    这样无需手动运行 import_questions.py，clone 后直接启动即可正常使用。
+    服务启动时在后台线程中依次初始化三个 ChromaDB Collection：
+    1. interview_questions  —— 模拟面试题库（JSONL → ChromaDB）
+    2. assessment_questions —— 职业测评题库（内置题目 / question_bank.json）
+    3. agent                —— RAG 知识库（data/ 目录下的 txt/pdf）
+    全部使用幂等检查，已有数据则跳过，不影响服务正常启动。
     """
+
+    # ── 1. 模拟面试题库 ──────────────────────────────────────────────
     try:
         from langchain_chroma import Chroma
         from model.factory import embedding_model
         from utils.config_handler import chroma_conf
 
-        vector_store = Chroma(
+        vs = Chroma(
             collection_name="interview_questions",
             embedding_function=embedding_model,
             persist_directory=chroma_conf["persist_directory"],
         )
-        existing = vector_store.get()
-        existing_count = len(existing["ids"]) if existing and existing.get("ids") else 0
-
-        if existing_count == 0:
-            logger.info("[App] 面试题库 ChromaDB 为空，开始自动导入...")
+        existing = vs.get()
+        count = len(existing["ids"]) if existing and existing.get("ids") else 0
+        if count == 0:
+            logger.info("[App] 面试题库为空，开始自动导入...")
             from scripts.import_questions import import_questions
             import_questions()
-            logger.info("[App] 面试题库自动导入完成")
+            logger.info("[App] 面试题库导入完成")
         else:
-            logger.info(f"[App] 面试题库已有 {existing_count} 道题目，跳过导入")
+            logger.info(f"[App] 面试题库已有 {count} 道题目，跳过导入")
     except Exception as e:
-        logger.warning(f"[App] 面试题库自动导入失败（不影响服务启动）: {e}")
+        logger.warning(f"[App] 面试题库自动导入失败（不影响启动）: {e}")
 
-threading.Thread(target=_auto_import_question_bank, daemon=True).start()
+    # ── 2. 职业测评题库 ──────────────────────────────────────────────
+    try:
+        from assessment.question_bank_vector_store import QuestionBankVectorStore
+        store = QuestionBankVectorStore()
+        store.load_questions()
+        logger.info("[App] 职业测评题库初始化完成")
+    except Exception as e:
+        logger.warning(f"[App] 职业测评题库初始化失败（不影响启动）: {e}")
+
+    # ── 3. RAG 知识库 ────────────────────────────────────────────────
+    try:
+        from rag.vector_store import VectorStoreService
+        rag_vs = VectorStoreService()
+        rag_vs.load_document()
+        logger.info("[App] RAG 知识库加载完成")
+    except Exception as e:
+        logger.warning(f"[App] RAG 知识库加载失败（不影响启动）: {e}")
+
+
+threading.Thread(target=_auto_init_vector_stores, daemon=True).start()
 logger.info("[App] 注册路由: 简历生成模块 /api/v1/resume/*")
 logger.info("[App] 注册路由: HR管理模块 /api/v1/hr/*")
 logger.info("[App] 注册路由: 关联图谱模块 /api/v1/job/search, /api/v1/job/promotion-path, /api/v1/job/transfer-path")
