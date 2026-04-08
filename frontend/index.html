@@ -14,7 +14,7 @@
     <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <link rel="stylesheet" href="styles.css?v=27">
+    <link rel="stylesheet" href="styles.css?v=28">
     <!-- 评估报告弹窗关键布局兜底（完整样式在 styles.css #hrReportDetailModal） -->
     <style>
         #hrReportDetailModal.eval-report-overlay:not(.hidden) {
@@ -1980,7 +1980,7 @@
                         <div class="page-title-bar"></div>
                         <span class="page-title">模拟面试</span>
                     </div>
-                    <p class="page-subtitle">AI面试官助你提升面试能力，实时评估回答质量，生成面试表现报告与改进建议</p>
+                    <p class="page-subtitle">支持语音面试：麦克风经 WebSocket 实时推流，调用多模态链路（DashScope 流式 ASR）识别；AI 回复可选仅文字流式或「文字 + 语音」流式播报（通义语音合成）。</p>
                 </div>
 
                 <!-- 模拟面试Tab导航 -->
@@ -2049,7 +2049,7 @@
             <span class="mock-side-tip-dot"></span>面试前准备
         </div>
         <ul class="mock-side-tip-list">
-            <li>确保网络稳定、环境安静</li>
+            <li>确保网络稳定、环境安静；语音模式需本机已启动 AI 服务（5002）并配置 DASHSCOPE_API_KEY</li>
             <li>提前整理目标岗位的核心技能点</li>
             <li>回顾简历中的项目经历</li>
             <li>准备好常见问题的回答思路</li>
@@ -2088,16 +2088,27 @@
                                 </div>
                                 <div class="mock-chat-body" id="interviewChat"></div>
                                 <div class="mock-chat-footer">
-                                    <div style="display:flex;gap:8px;align-items:flex-start;">
-                                        <button type="button" id="voiceBtn" class="voice-btn" title="语音输入">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                                <line x1="12" y1="19" x2="12" y2="23"/>
-                                                <line x1="8" y1="23" x2="16" y2="23"/>
-                                            </svg>
+                                    <div class="mock-response-mode-row" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-bottom:10px;padding:8px 10px;background:#f9f8f5;border:1px solid #e2dfd7;border-radius:8px;font-size:13px;color:#3d3d38;">
+                                        <span style="font-weight:600;color:#5c5c54;">面试官回复</span>
+                                        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+                                            <input type="radio" name="mockResponseOutput" value="text" checked>
+                                            仅文字（流式）
+                                        </label>
+                                        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+                                            <input type="radio" name="mockResponseOutput" value="text_and_speech">
+                                            文字 + 语音（流式）
+                                        </label>
+                                    </div>
+                                    <div class="mock-my-answer-block" style="margin-bottom:8px;">
+                                        <div style="font-weight:600;font-size:13px;color:#3d3d38;margin-bottom:4px;">我的回答</div>
+                                        <p style="margin:0;font-size:12px;color:#7a7a72;line-height:1.5;">可用键盘输入；或点击<strong>输入框左侧「🎤 语音」按钮</strong>：优先实时识别（需 AI 服务与 WebSocket），不可用时自动改为「录一段音→上传识别」。识别结果填入右侧输入框，确认后点「发送回答」。</p>
+                                    </div>
+                                    <div class="mock-answer-voice-row" style="display:flex !important;flex-direction:row;align-items:stretch;gap:10px;width:100%;box-sizing:border-box;">
+                                        <button type="button" id="voiceBtn" class="voice-btn" title="语音输入我的回答（点按开始/结束）" aria-label="语音输入我的回答" style="flex-shrink:0;width:56px;min-width:56px;max-width:56px;box-sizing:border-box;display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 4px;border:1.5px solid #e2dfd7;border-radius:10px;background:#f5f3ee;cursor:pointer;color:#5c5c54;">
+                                            <span class="voice-btn-emoji" aria-hidden="true" style="font-size:22px;line-height:1;">🎤</span>
+                                            <span class="voice-btn-label" style="font-size:11px;font-weight:700;color:#3d3d38;">语音</span>
                                         </button>
-                                        <textarea class="mock-chat-input" id="answerInput" placeholder="请输入你的回答..."></textarea>
+                                        <textarea class="mock-chat-input" id="answerInput" placeholder="在此输入文字；或先点左侧「🎤 语音」说话，识别结果会出现在这里…" style="flex:1 1 auto !important;min-width:0 !important;width:auto !important;max-width:100%;min-height:72px;box-sizing:border-box;"></textarea>
                                     </div>
                                     <div class="mock-chat-actions">
                                         <button type="button" id="endInterviewBtn" class="mock-btn-end">结束面试</button>

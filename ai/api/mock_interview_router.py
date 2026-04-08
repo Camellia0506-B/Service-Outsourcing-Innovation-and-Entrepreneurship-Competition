@@ -561,11 +561,9 @@ def create_session():
         if rag_questions and len(rag_questions) > 0:
             first_question_str = rag_questions[0]["question"]
         
-        # === 步骤 6：替换 System Prompt 中的占位符 ===
-        if system_prompt:
-            system_prompt = system_prompt.replace("{student_profile}", student_profile_str)
-            system_prompt = system_prompt.replace("{current_question}", first_question_str)
-            system_prompt = system_prompt.replace("{history}", "")
+        # === 步骤 6：保存原始模板，不提前替换占位符 ===
+        # {student_profile}、{current_question}、{history} 在每次 send_answer 时动态注入，
+        # 确保 LLM 每次都能看到最新的对话历史和当前题目。
         
         # 开场消息（使用人设中的名称，避免硬编码）
         if rag_questions and len(rag_questions) > 0:
@@ -677,6 +675,48 @@ def send_answer(interview_id):
                 from langchain_core.prompts import PromptTemplate
                 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
                 from model.factory import chat_model
+                from utils.config_handler import rag_conf
+                from utils.interview_tts import extract_tts_segments, synthesize_speech_mp3_base64
+
+                _dash_key = (
+                    rag_conf.get("api_key")
+                    or rag_conf.get("dashscope_api_key")
+                    or rag_conf.get("DASHSCOPE_API_KEY")
+                    or os.environ.get("DASHSCOPE_API_KEY")
+                )
+                _mode = (body.get("response_output_mode") or "text").strip().lower().replace("-", "_")
+                _stream_voice = _mode in (
+                    "text_and_speech",
+                    "text_speech",
+                    "speech",
+                    "voice",
+                ) and bool(_dash_key)
+
+                def _iter_sse_from_text_chunks(chunk_iter, out_full: dict, tts_carry: list):
+                    buf = tts_carry[0]
+                    for chunk in chunk_iter:
+                        if not chunk:
+                            continue
+                        out_full["text"] += chunk
+                        yield "event: interviewer_response_chunk\n"
+                        yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
+                        if _stream_voice and _dash_key:
+                            buf += chunk
+                            segs, buf = extract_tts_segments(buf, 72)
+                            for seg in segs:
+                                if len(seg.strip()) < 2:
+                                    continue
+                                b64 = synthesize_speech_mp3_base64(seg, _dash_key)
+                                if b64:
+                                    yield "event: interviewer_tts_chunk\n"
+                                    yield f"data: {json.dumps({'format': 'mp3', 'audio_base64': b64}, ensure_ascii=False)}\n\n"
+                    tts_carry[0] = buf
+                    if _stream_voice and _dash_key and buf.strip():
+                        b64 = synthesize_speech_mp3_base64(buf.strip(), _dash_key)
+                        if b64:
+                            yield "event: interviewer_tts_chunk\n"
+                            yield f"data: {json.dumps({'format': 'mp3', 'audio_base64': b64}, ensure_ascii=False)}\n\n"
+                        tts_carry[0] = ""
 
                 # 构建面试上下文
                 history_text = ""
@@ -895,15 +935,15 @@ def send_answer(interview_id):
 
                     chain = template | chat_model | StrOutputParser()
 
-                    full_response = ""
-                    for chunk in chain.stream({
-                        "system": system_prompt,
-                        "history": history_text
-                    }):
-                        if chunk:
-                            full_response += chunk
-                            yield "event: interviewer_response_chunk\n"
-                            yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
+                    out_full = {"text": ""}
+                    tts_carry = [""]
+                    for line in _iter_sse_from_text_chunks(
+                        chain.stream({"system": system_prompt, "history": history_text}),
+                        out_full,
+                        tts_carry,
+                    ):
+                        yield line
+                    full_response = out_full["text"]
                 else:
                     # === 优先使用 System Prompt + RAG 题目 ===
                     saved_system_prompt = interview.get("system_prompt", "")
@@ -938,23 +978,31 @@ def send_answer(interview_id):
 
                         chain = template | chat_model | StrOutputParser()
 
-                        full_response = ""
-                        for chunk in chain.stream({
-                            "system": final_system_prompt
-                        }):
-                            if chunk:
-                                full_response += chunk
-                                yield "event: interviewer_response_chunk\n"
-                                yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
+                        out_full = {"text": ""}
+                        tts_carry = [""]
+                        for line in _iter_sse_from_text_chunks(
+                            chain.stream({"system": final_system_prompt}),
+                            out_full,
+                            tts_carry,
+                        ):
+                            yield line
+                        full_response = out_full["text"]
                     elif rag_questions and next_question_index < len(rag_questions):
                         # 没有 System Prompt，但有 RAG 题目可用，直接使用
-                        full_response = rag_questions[next_question_index]["question"]
+                        _rag_text = rag_questions[next_question_index]["question"]
                         logger.info(f"[MockInterview] 使用 RAG 题目: {next_question_index}")
-                        # 模拟流式输出，让用户体验更好
-                        for i in range(0, len(full_response), 5):
-                            chunk = full_response[i:i+5]
-                            yield "event: interviewer_response_chunk\n"
-                            yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
+
+                        def _rag_chunk_iter():
+                            for i in range(0, len(_rag_text), 5):
+                                yield _rag_text[i : i + 5]
+
+                        out_full = {"text": ""}
+                        tts_carry = [""]
+                        for line in _iter_sse_from_text_chunks(
+                            _rag_chunk_iter(), out_full, tts_carry
+                        ):
+                            yield line
+                        full_response = out_full["text"]
                     else:
                         # 没有 System Prompt 也没有 RAG 题目，用大模型生成
                         transition_hint = f"本模块考察充分后，可自然过渡到下一模块「{next_module_name}」。" if next_module_name else ""
@@ -976,15 +1024,17 @@ def send_answer(interview_id):
 
                         chain = template | chat_model | StrOutputParser()
 
-                        full_response = ""
-                        for chunk in chain.stream({
-                            "system": system_prompt,
-                            "history": history_text
-                        }):
-                            if chunk:
-                                full_response += chunk
-                                yield "event: interviewer_response_chunk\n"
-                                yield f"data: {json.dumps({'chunk': chunk}, ensure_ascii=False)}\n\n"
+                        out_full = {"text": ""}
+                        tts_carry = [""]
+                        for line in _iter_sse_from_text_chunks(
+                            chain.stream(
+                                {"system": system_prompt, "history": history_text}
+                            ),
+                            out_full,
+                            tts_carry,
+                        ):
+                            yield line
+                        full_response = out_full["text"]
                 
                 # 随机判断是否触发追问（模拟）
                 if not is_complete and random.random() < 0.3 and follow_up_count < max_follow_ups:
@@ -999,11 +1049,7 @@ def send_answer(interview_id):
                     follow_up_reason = random.choice(follow_up_reasons)
                     
                     yield "event: follow_up_triggered\n"
-                    yield f"data: {json.dumps({{
-                        'reason': follow_up_reason,
-                        'follow_up_count': follow_up_count,
-                        'max_follow_ups': max_follow_ups
-                    }}, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps({'reason': follow_up_reason, 'follow_up_count': follow_up_count, 'max_follow_ups': max_follow_ups}, ensure_ascii=False)}\n\n"
 
                 remaining = 0 if is_complete else (5 - current_module_index - 1)
                 if is_complete:
@@ -1016,11 +1062,7 @@ def send_answer(interview_id):
                     next_question_id = rag_questions[next_question_index].get("id")
                 
                 yield "event: next_question\n"
-                yield f"data: {json.dumps({{
-                    'question_id': next_question_id or f'q_{uuid.uuid4().hex[:8]}',
-                    'section': section,
-                    'remaining_questions': remaining
-                }}, ensure_ascii=False)}\n\n"
+                yield f"data: {json.dumps({'question_id': next_question_id or f'q_{uuid.uuid4().hex[:8]}', 'section': section, 'remaining_questions': remaining}, ensure_ascii=False)}\n\n"
 
                 # 保存AI回复
                 interview["messages"].append({

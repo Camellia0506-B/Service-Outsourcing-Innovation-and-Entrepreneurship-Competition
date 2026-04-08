@@ -2277,8 +2277,12 @@ class CareerPlanningApp {
 
         const normIntern = (i) => {
             if (!i || typeof i !== 'object') return null;
-            const company = (i.company || '').trim();
-            const position = (i.position || i.role || '').trim();
+            // 若 company 是纯年份（如 "2024"）或无效词，AI 字段识别错误，清空
+            let company = (i.company || '').trim();
+            if (/^\d{4}$/.test(company) || ['无', '暂无', '—', '－', 'null'].includes(company)) company = '';
+            // 若 position 以日期开头（如 "2024.07 -"），AI 字段识别错误，清空
+            let position = (i.position || i.role || '').trim();
+            if (/^\d{4}[.\-/]\d/.test(position)) position = '';
             const start = (i.start_date || '').trim();
             const end = (i.end_date || '').trim();
             const dur = (i.duration || '').trim();
@@ -14331,6 +14335,82 @@ let voiceMediaStreamSource = null;
 let voiceScriptProcessor = null;
 let voiceInputStream = null;
 
+/** 我的回答：WebSocket 不可用时，用 MediaRecorder 录 webm 再 HTTP 上传转写 */
+var legacyMediaRecorder = null;
+var legacyAudioChunks = [];
+var legacyStream = null;
+var isLegacyRecording = false;
+
+/** AI 面试官回复：流式 TTS 片段队列（与 SSE interviewer_tts_chunk 对应） */
+var mockInterviewTtsQueue = [];
+var mockInterviewTtsPlaying = false;
+var mockInterviewCurrentAudio = null;
+
+function getMockInterviewResponseOutputMode() {
+    var el = document.querySelector('input[name="mockResponseOutput"]:checked');
+    if (!el) return 'text';
+    return el.value === 'text_and_speech' ? 'text_and_speech' : 'text';
+}
+
+function stopMockInterviewTtsPlayback() {
+    mockInterviewTtsQueue = [];
+    mockInterviewTtsPlaying = false;
+    if (mockInterviewCurrentAudio) {
+        try {
+            mockInterviewCurrentAudio.pause();
+        } catch (e) { /* ignore */ }
+        try {
+            if (mockInterviewCurrentAudio.src && mockInterviewCurrentAudio.src.indexOf('blob:') === 0) {
+                URL.revokeObjectURL(mockInterviewCurrentAudio.src);
+            }
+        } catch (e2) { /* ignore */ }
+        mockInterviewCurrentAudio = null;
+    }
+}
+
+function playNextMockInterviewTts() {
+    if (mockInterviewTtsQueue.length === 0) {
+        mockInterviewTtsPlaying = false;
+        return;
+    }
+    mockInterviewTtsPlaying = true;
+    var item = mockInterviewTtsQueue.shift();
+    try {
+        var bin = atob(item.audio_base64);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        var mime = item.format === 'mp3' ? 'audio/mpeg' : 'audio/wav';
+        var blob = new Blob([bytes], { type: mime });
+        var url = URL.createObjectURL(blob);
+        var audio = new Audio(url);
+        mockInterviewCurrentAudio = audio;
+        audio.onended = function () {
+            URL.revokeObjectURL(url);
+            mockInterviewCurrentAudio = null;
+            playNextMockInterviewTts();
+        };
+        audio.onerror = function () {
+            URL.revokeObjectURL(url);
+            mockInterviewCurrentAudio = null;
+            playNextMockInterviewTts();
+        };
+        var p = audio.play();
+        if (p && typeof p.catch === 'function') {
+            p.catch(function () { playNextMockInterviewTts(); });
+        }
+    } catch (e) {
+        playNextMockInterviewTts();
+    }
+}
+
+function enqueueMockInterviewTts(data) {
+    if (!data || !data.audio_base64) return;
+    mockInterviewTtsQueue.push(data);
+    if (!mockInterviewTtsPlaying) {
+        playNextMockInterviewTts();
+    }
+}
+
 function _downsampleFloat32(buffer, inRate, outRate) {
     if (outRate >= inRate) {
         return buffer;
@@ -14409,25 +14489,156 @@ function _waitRealtimeAsrReady(sock, payload) {
     });
 }
 
+async function startLegacyVoiceRecording() {
+    const voiceBtn = document.getElementById('voiceBtn');
+    if (!voiceBtn || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (typeof showToast === 'function') {
+            showToast('当前浏览器不支持麦克风录音', 'error');
+        }
+        return;
+    }
+    try {
+        legacyStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1
+            }
+        });
+        legacyAudioChunks = [];
+        var mime = 'audio/webm;codecs=opus';
+        if (typeof MediaRecorder !== 'undefined' && !MediaRecorder.isTypeSupported(mime)) {
+            mime = 'audio/webm';
+        }
+        var opts = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mime) ? { mimeType: mime } : {};
+        legacyMediaRecorder = new MediaRecorder(legacyStream, opts);
+        legacyMediaRecorder.ondataavailable = function (e) {
+            if (e.data && e.data.size > 0) {
+                legacyAudioChunks.push(e.data);
+            }
+        };
+        legacyMediaRecorder.onstop = function () {
+            var s = legacyStream;
+            legacyStream = null;
+            if (s) {
+                s.getTracks().forEach(function (t) {
+                    t.stop();
+                });
+            }
+            var blob = new Blob(legacyAudioChunks, { type: 'audio/webm' });
+            legacyAudioChunks = [];
+            var rec = legacyMediaRecorder;
+            legacyMediaRecorder = null;
+            isLegacyRecording = false;
+            isRecording = false;
+            voiceBtn.classList.remove('recording');
+            voiceBtn.classList.add('processing');
+            voiceBtn.title = '识别中…';
+            if (!blob || blob.size < 80) {
+                voiceBtn.classList.remove('processing');
+                voiceBtn.title = '语音输入我的回答';
+                if (typeof showToast === 'function') {
+                    showToast('录音过短，请重试', 'warning');
+                }
+                return;
+            }
+            sendAudioToServer(blob);
+        };
+        legacyMediaRecorder.start(250);
+        isLegacyRecording = true;
+        isRecording = true;
+        isStreaming = false;
+        voiceBtn.classList.add('recording');
+        voiceBtn.classList.remove('processing');
+        voiceBtn.title = '停止录音（上传识别）';
+        recordingTimer = setTimeout(function () {
+            if (isLegacyRecording) {
+                stopLegacyVoiceRecording();
+                if (typeof showToast === 'function') {
+                    showToast('录音已达120秒上限', 'info');
+                }
+            }
+        }, 120000);
+        if (typeof showToast === 'function') {
+            showToast('录音中，再次点击麦克风结束并识别', 'info');
+        }
+    } catch (err) {
+        console.error('[VoiceRecognition] 录音模式启动失败:', err);
+        isLegacyRecording = false;
+        isRecording = false;
+        if (typeof showToast === 'function') {
+            showToast('无法访问麦克风，请检查权限', 'error');
+        }
+    }
+}
+
+function stopLegacyVoiceRecording() {
+    if (recordingTimer) {
+        clearTimeout(recordingTimer);
+        recordingTimer = null;
+    }
+    if (legacyMediaRecorder && legacyMediaRecorder.state === 'recording') {
+        try {
+            legacyMediaRecorder.stop();
+        } catch (e) {
+            console.warn('[VoiceRecognition] MediaRecorder.stop:', e);
+        }
+    } else if (legacyStream) {
+        legacyStream.getTracks().forEach(function (t) {
+            t.stop();
+        });
+        legacyStream = null;
+        legacyAudioChunks = [];
+        legacyMediaRecorder = null;
+        isLegacyRecording = false;
+        isRecording = false;
+        var voiceBtn = document.getElementById('voiceBtn');
+        if (voiceBtn) {
+            voiceBtn.classList.remove('recording', 'processing');
+            voiceBtn.title = '语音输入我的回答';
+        }
+    }
+}
+
 function initVoiceRecognition() {
     const voiceBtn = document.getElementById('voiceBtn');
     if (!voiceBtn) return;
 
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !AC) {
-        voiceBtn.style.display = 'none';
-        if (typeof showToast === 'function') {
-            showToast('请使用支持 Web Audio 的 Chrome / Edge 浏览器', 'warning');
-        }
+    /* 始终显示麦克风：勿 display:none，否则文案写「左侧麦克风」但界面上没有按钮 */
+    voiceBtn.style.display = '';
+    voiceBtn.style.visibility = '';
+    voiceBtn.classList.remove('voice-btn--unsupported');
+    voiceBtn.disabled = false;
+
+    var canMic = !!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function');
+    var canRecord = typeof MediaRecorder !== 'undefined';
+
+    if (!canMic) {
+        voiceBtn.classList.add('voice-btn--unsupported');
+        voiceBtn.title = '无法使用麦克风：请用 Chrome/Edge，并以 localhost 或 HTTPS 打开本站';
+        voiceBtn.onclick = function () {
+            if (typeof showToast === 'function') {
+                showToast('当前环境无法访问麦克风。请使用 http://127.0.0.1 或 https 访问，并在浏览器中允许麦克风权限。', 'warning');
+            }
+        };
         return;
     }
 
+    if (!canRecord) {
+        voiceBtn.title = '语音输入我的回答（实时识别；本浏览器不支持录音上传兜底）';
+    }
+
     voiceBtn.onclick = async () => {
-        if (!isRecording) {
-            await startStreamingRecording();
-        } else {
-            stopStreamingRecording();
+        if (isLegacyRecording && legacyMediaRecorder && legacyMediaRecorder.state === 'recording') {
+            stopLegacyVoiceRecording();
+            return;
         }
+        if (isRecording && isStreaming) {
+            stopStreamingRecording();
+            return;
+        }
+        await startStreamingRecording();
     };
 }
 
@@ -14450,6 +14661,16 @@ async function initSocketConnection() {
     
     socket.on('disconnect', () => {
         console.log('[WebSocket] 连接断开');
+    });
+
+    socket.on('connect_error', (err) => {
+        console.error('[WebSocket] 连接失败:', err && err.message, socketUrl);
+        if (typeof showToast === 'function') {
+            showToast(
+                '无法连接语音识别服务（' + socketUrl + '）。请确认 AI 服务已启动，且 api.js 中 assessmentBaseURL 与页面访问地址一致。',
+                'error'
+            );
+        }
     });
     
     socket.on('connected', (data) => {
@@ -14485,7 +14706,7 @@ async function initSocketConnection() {
         const voiceBtn = document.getElementById('voiceBtn');
         if (voiceBtn) {
             voiceBtn.classList.remove('recording', 'processing');
-            voiceBtn.title = '开始录音';
+            voiceBtn.title = '语音输入我的回答';
         }
         isRecording = false;
         isStreaming = false;
@@ -14526,14 +14747,19 @@ async function startStreamingRecording() {
     if (!voiceBtn) return;
 
     const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) {
+        await startLegacyVoiceRecording();
+        return;
+    }
 
     try {
         await initSocketConnection();
 
         if (!socket || !socket.connected) {
             if (typeof showToast === 'function') {
-                showToast('未连接识别服务，请确认后端已启动后重试', 'error');
+                showToast('实时通道未连接，已切换为录音上传识别', 'info');
             }
+            await startLegacyVoiceRecording();
             return;
         }
 
@@ -14585,7 +14811,7 @@ async function startStreamingRecording() {
         isRecording = true;
         voiceBtn.classList.add('recording');
         voiceBtn.classList.remove('processing');
-        voiceBtn.title = '停止录音';
+        voiceBtn.title = '停止录音（实时识别）';
 
         recordingTimer = setTimeout(() => {
             if (isRecording) {
@@ -14605,9 +14831,9 @@ async function startStreamingRecording() {
         isStreaming = false;
         isRecording = false;
         if (typeof showToast === 'function') {
-            const msg = (error && error.message) ? error.message : '无法启动语音识别';
-            showToast(msg, 'error');
+            showToast('实时识别不可用，已尝试录音上传模式', 'warning');
         }
+        await startLegacyVoiceRecording();
     }
 }
 
@@ -14630,9 +14856,9 @@ function stopStreamingRecording() {
 
     if (!socket || !socket.connected) {
         voiceBtn.classList.remove('processing');
-        voiceBtn.title = '开始录音';
+        voiceBtn.title = '语音输入我的回答';
         if (typeof showToast === 'function') {
-            showToast('未连接识别服务，请确认后端已启动后重试', 'error');
+            showToast('未连接识别服务，结束失败；请刷新后重试', 'error');
         }
         return;
     }
@@ -14645,7 +14871,7 @@ function handleStreamingResult(data) {
     if (!answerInput || !voiceBtn) return;
     
     voiceBtn.classList.remove('processing');
-    voiceBtn.title = '开始录音';
+    voiceBtn.title = '语音输入我的回答';
 
     const text = (data.transcript != null ? String(data.transcript) : '').trim();
     
@@ -14859,7 +15085,7 @@ async function sendAudioToServer(audioBlob) {
         }
     } finally {
         voiceBtn.classList.remove('processing');
-        voiceBtn.title = '语音输入';
+        voiceBtn.title = '语音输入我的回答';
     }
 }
 
@@ -14985,6 +15211,11 @@ function switchToInterviewTab() {
     
     // 进入面试页面时，评分卡可见但显示空状态
     setTimeout(() => {
+        try {
+            if (typeof initSocketConnection === 'function') {
+                initSocketConnection();
+            }
+        } catch (e) { /* ignore */ }
         console.log('[InterviewTab] 进入面试页面，显示空评分卡');
         const scoreCard = document.getElementById('floatingScoreCard');
         const scoreCardContent = document.getElementById('scoreCardContent');
@@ -15078,18 +15309,34 @@ function updateInterviewFooterState() {
     const endBtn = document.getElementById('endInterviewBtn');
     if (!inputEl || !sendBtn || !endBtn) return;
     var isCompleted = currentInterview && currentInterview.status === 'completed';
+    var modeRadios = document.querySelectorAll('input[name="mockResponseOutput"]');
+    var voiceBtn = document.getElementById('voiceBtn');
     if (isCompleted) {
+        if (isLegacyRecording) {
+            stopLegacyVoiceRecording();
+        }
         inputEl.disabled = true;
         inputEl.placeholder = '面试已结束，请查看报告';
         inputEl.style.display = 'none';
         sendBtn.style.display = 'none';
+        if (voiceBtn) {
+            voiceBtn.style.display = 'none';
+            voiceBtn.disabled = true;
+        }
+        modeRadios.forEach(function (r) { r.disabled = true; });
+        stopMockInterviewTtsPlayback();
         endBtn.textContent = '查看报告';
         endBtn.onclick = function () { if (currentInterview && currentInterview.interview_id) loadInterviewReport(currentInterview.interview_id); else switchToInterviewReportTab(); };
     } else {
         inputEl.disabled = false;
-        inputEl.placeholder = '请输入你的回答...';
+        inputEl.placeholder = '输入文字回答，或使用左侧麦克风语音输入…';
         inputEl.style.display = '';
         sendBtn.style.display = '';
+        if (voiceBtn) {
+            voiceBtn.style.display = '';
+            voiceBtn.disabled = false;
+        }
+        modeRadios.forEach(function (r) { r.disabled = false; });
         endBtn.textContent = '结束面试';
         endBtn.onclick = endInterview;
     }
@@ -15174,7 +15421,10 @@ async function submitInterviewAnswer() {
     
     const userId = getCurrentUserId();
     const metaToSend = speechMeta;
-    
+    const responseOutputMode = getMockInterviewResponseOutputMode();
+
+    stopMockInterviewTtsPlayback();
+
     sendBtn.disabled = true;
     answerInput.disabled = true;
     answerInput.value = '';
@@ -15218,7 +15468,9 @@ async function submitInterviewAnswer() {
         (scoreData) => {
             console.log('[SubmitAnswer] 收到真实评分数据:', scoreData);
             updateFloatingScoreCard(scoreData);
-        }
+        },
+        responseOutputMode === 'text_and_speech' ? enqueueMockInterviewTts : null,
+        responseOutputMode
     );
     
     sendBtn.disabled = false;

@@ -516,7 +516,7 @@ class ProfileService:
                         normalized_skills.append({"category": cat, "items": items})
             parsed["skills"] = normalized_skills
 
-        # 规范化 internships：剔除 company 仅为年份或无效词的条目不作为实习公司
+        # 规范化 internships：清洗字段被 AI 错误填充的条目
         if isinstance(parsed.get("internships"), list):
             import re
             cleaned = []
@@ -524,10 +524,16 @@ class ProfileService:
                 if not i or not isinstance(i, dict):
                     continue
                 company = (i.get("company") or "").strip()
-                # 若 company 仅为 4 位数字（年份）或明显无效词，则丢弃该条或仅保留 description
+                position = (i.get("position") or "").strip()
+                # company 是纯年份（如 "2024"）或无效词时，清空 company 字段但不丢弃整条
                 if re.match(r"^\d{4}$", company) or company in ("提交有效", "无", "暂无", "—", "－"):
-                    continue
-                if len(company) < 2 and not (i.get("description") or "").strip():
+                    i["company"] = ""
+                    company = ""
+                # position 以日期开头（如 "2024.07 -"）说明 AI 字段错位，清空 position
+                if re.match(r"^\d{4}[.\-/]\d", position):
+                    i["position"] = ""
+                # company 和 description 都为空则丢弃
+                if not company and not (i.get("description") or "").strip():
                     continue
                 cleaned.append(i)
             parsed["internships"] = cleaned

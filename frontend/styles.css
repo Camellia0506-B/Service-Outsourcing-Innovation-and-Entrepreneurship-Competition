@@ -20210,6 +20210,56 @@ body.on-login-page #agentAssistant { display: none !important; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 #mockInterviewPage .voice-btn svg { width: 24px; height: 24px; }
 
+/* 回答区：麦克风 + 文本框同一行，且麦克风不依赖 #mockInterviewPage 选择器也能显示 */
+#interviewTab .mock-answer-voice-row,
+#mockInterviewPage .mock-answer-voice-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    width: 100%;
+}
+#interviewTab .mock-answer-voice-row .mock-chat-input,
+#mockInterviewPage .mock-answer-voice-row .mock-chat-input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+}
+#interviewTab .voice-btn,
+#voiceBtn.voice-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: var(--mock-bg, #f5f3ee);
+    border: 1.5px solid var(--mock-line, #e2dfd7);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--mock-ink-2, #5c5c54);
+    padding: 0;
+    margin: 0;
+}
+#interviewTab .voice-btn:hover,
+#voiceBtn.voice-btn:hover {
+    border-color: var(--mock-sage, #6b9080);
+    color: var(--mock-sage, #6b9080);
+}
+#interviewTab .voice-btn.voice-btn--unsupported,
+#mockInterviewPage .voice-btn.voice-btn--unsupported,
+#voiceBtn.voice-btn.voice-btn--unsupported {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+#interviewTab .voice-btn svg,
+#voiceBtn.voice-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
 /* 面试进行页面 grid 布局 */
 #mockInterviewPage #interviewTab.active {
     display: flex !important;

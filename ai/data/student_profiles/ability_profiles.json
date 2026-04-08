@@ -1,0 +1,2535 @@
+{
+  "profile_4": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 4,
+    "profile_id": "profile_4",
+    "generated_at": "2026-03-12 21:27:15",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_5": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "career_plan": {
+      "employment_analysis": {
+        "strengths": [
+          "暂无可用信息"
+        ],
+        "weaknesses": [
+          "关键能力要素（教育背景、技能、证书、项目、实习等）全部缺失，当前缺乏可验证的就业竞争力支撑"
+        ],
+        "opportunities": [
+          "具备可塑性与成长潜力；可通过系统性补足经历快速提升市场适配度"
+        ],
+        "threats": [
+          "校招窗口期有限，若未及时构建基础能力证据链，将面临简历初筛淘汰风险；同龄竞争者普遍具备至少1项实证经历"
+        ]
+      },
+      "action_plan": {
+        "short_term": [
+          "立即梳理个人可验证经历（如课程设计、小组作业、开源贡献、自学成果），形成3个可量化的‘微项目’并文档化",
+          "在3个月内考取1项行业认可的入门级证书（如阿里云ACA、华为HCIA、Coursera专项证书等）"
+        ],
+        "medium_term": [
+          "争取获得至少1段为期2个月以上的相关领域实习或远程实践机会，并聚焦产出可展示的交付物",
+          "系统构建技术栈知识图谱，完成1门编程语言+1个主流框架的实战训练（如Python+Django/Flask，或Java+Spring Boot）"
+        ],
+        "long_term": [
+          "基于实践反馈明确细分方向（如前端开发、数据分析、产品助理等），完成1个完整作品集（Portfolio）并部署上线",
+          "建立持续输出习惯（如技术博客、GitHub README优化、模拟面试复盘）"
+        ],
+        "continuous": [
+          "每月更新一次能力证据清单，确保每项技能均有对应的学习记录、代码提交或成果截图",
+          "每季度进行一次目标岗位JD反向对标，动态调整补强路径"
+        ]
+      },
+      "job_seeking_advice": [
+        "切勿等待‘完美准备’再投递——从基础岗（如IT支持、数据标注助理、产品运营助理）切入积累首段职场经历",
+        "所有简历中‘自我评价’部分必须删除，改用‘能力-证据’句式（例：‘掌握Python → 完成《电商用户行为分析》课程项目，使用Pandas清洗10万条日志并输出RFM模型报告’）",
+        "主动联系校友或领英内推人时，附上具体问题（如‘请问贵司XX岗位日常使用的数据工具是？’）而非泛泛请教，显著提升回复率",
+        "参加招聘活动前，务必针对每家企业研究其最新业务动态，并在面试中自然关联自身可迁移能力（如课程报告、调研经历、协作经验）"
+      ]
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 5,
+    "profile_id": "profile_5",
+    "generated_at": "2026-04-06 11:44:38"
+  },
+  "profile_22": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 22,
+    "profile_id": "profile_22",
+    "generated_at": "2026-03-07 16:23:21",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_6": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 6,
+    "profile_id": "profile_6",
+    "generated_at": "2026-03-07 16:23:49",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_24": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 24,
+    "profile_id": "profile_24",
+    "generated_at": "2026-03-07 16:24:17",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_25": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 25,
+    "profile_id": "profile_25",
+    "generated_at": "2026-03-07 16:25:04",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_23": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 23,
+    "profile_id": "profile_23",
+    "generated_at": "2026-03-07 16:25:47",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_21": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 21,
+    "profile_id": "profile_21",
+    "generated_at": "2026-03-07 16:26:32",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_20": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 20,
+    "profile_id": "profile_20",
+    "generated_at": "2026-03-07 16:27:01",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_19": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 19,
+    "profile_id": "profile_19",
+    "generated_at": "2026-03-07 16:27:28",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_18": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 18,
+    "profile_id": "profile_18",
+    "generated_at": "2026-03-07 16:27:57",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_17": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 17,
+    "profile_id": "profile_17",
+    "generated_at": "2026-03-07 16:28:26",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_16": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 16,
+    "profile_id": "profile_16",
+    "generated_at": "2026-03-07 16:28:55",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_15": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 15,
+    "profile_id": "profile_15",
+    "generated_at": "2026-03-07 16:29:25",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_14": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 14,
+    "profile_id": "profile_14",
+    "generated_at": "2026-03-07 16:29:54",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_13": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 13,
+    "profile_id": "profile_13",
+    "generated_at": "2026-03-07 16:30:36",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_12": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 12,
+    "profile_id": "profile_12",
+    "generated_at": "2026-03-07 16:31:14",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_11": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 11,
+    "profile_id": "profile_11",
+    "generated_at": "2026-03-07 16:31:44",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_10": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "算法工程师（中级）"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 10,
+    "profile_id": "profile_10",
+    "generated_at": "2026-03-07 16:32:17",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_27": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 27,
+    "profile_id": "profile_27",
+    "generated_at": "2026-03-10 18:36:06",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_9": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 9,
+    "profile_id": "profile_9",
+    "generated_at": "2026-03-10 18:45:39",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_1": {
+    "basic_info": {
+      "education": "本科",
+      "major": "计算机科学与技术",
+      "school": "武汉理工大学",
+      "gpa": "3.6/4.0",
+      "expected_graduation": "待补充",
+      "target_job": "技术支持工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [
+        {
+          "skill": "Python",
+          "level": "熟练",
+          "evidence": [
+            "计算机二级（Python）证书",
+            "基于深度学习的图像识别系统项目",
+            "校园智能问答系统项目"
+          ],
+          "score": 89
+        },
+        {
+          "skill": "Java",
+          "level": "熟悉",
+          "evidence": [
+            "腾讯科技后端开发实习生经历"
+          ],
+          "score": 59
+        }
+      ],
+      "frameworks_tools": [
+        {
+          "skill": "MySQL",
+          "level": "熟悉",
+          "evidence": [
+            "校园智能问答系统项目"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "Vue.js",
+          "level": "了解",
+          "evidence": [
+            "基于深度学习的图像识别系统前端展示页面开发"
+          ],
+          "score": 45
+        },
+        {
+          "skill": "Spring Boot",
+          "level": "熟悉",
+          "evidence": [
+            "腾讯科技后端开发实习生经历"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "Linux",
+          "level": "了解",
+          "evidence": [
+            "基于深度学习的图像识别系统和校园智能问答系统环境配置"
+          ],
+          "score": 45
+        },
+        {
+          "skill": "CNN",
+          "level": "精通",
+          "evidence": [
+            "基于深度学习的图像识别系统项目，使用 CNN 构建模型，在 CIFAR-10 数据集上准确率达 92%"
+          ],
+          "score": 80
+        },
+        {
+          "skill": "RAG",
+          "level": "熟悉",
+          "evidence": [
+            "校园智能问答系统项目"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "ChromaDB",
+          "level": "熟悉",
+          "evidence": [
+            "校园智能问答系统项目"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "LangChain",
+          "level": "熟悉",
+          "evidence": [
+            "校园智能问答系统项目"
+          ],
+          "score": 59
+        }
+      ],
+      "domain_knowledge": [
+        {
+          "skill": "数据结构",
+          "level": "熟悉",
+          "evidence": [
+            "课程学习"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "算法",
+          "level": "熟悉",
+          "evidence": [
+            "课程学习"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "机器学习",
+          "level": "熟悉",
+          "evidence": [
+            "基于深度学习的图像识别系统项目"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "深度学习",
+          "level": "精通",
+          "evidence": [
+            "基于深度学习的图像识别系统项目"
+          ],
+          "score": 80
+        },
+        {
+          "skill": "系统设计",
+          "level": "熟悉",
+          "evidence": [
+            "腾讯科技后端开发实习生经历"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "架构设计",
+          "level": "熟悉",
+          "evidence": [
+            "腾讯科技后端开发实习生经历"
+          ],
+          "score": 59
+        },
+        {
+          "skill": "数据库原理",
+          "level": "熟悉",
+          "evidence": [
+            "课程学习"
+          ],
+          "score": 59
+        }
+      ],
+      "overall_score": 61
+    },
+    "certificates": {
+      "items": [
+        {
+          "name": "英语六级（CET-6）",
+          "level": "通过",
+          "issue_date": "待补充"
+        },
+        {
+          "name": "计算机二级（Python）",
+          "level": "通过",
+          "issue_date": "待补充"
+        },
+        {
+          "name": "普通话二级甲等",
+          "level": "通过",
+          "issue_date": "待补充"
+        }
+      ],
+      "score": 58,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [
+        {
+          "name": "基于深度学习的图像识别系统",
+          "innovation_points": [
+            "在 CIFAR-10 数据集上构建高精度的图像分类模型",
+            "独立完成从数据预处理到模型部署全流程"
+          ],
+          "impact": "提升了图像识别系统的准确性和实用性"
+        },
+        {
+          "name": "校园智能问答系统",
+          "innovation_points": [
+            "基于 RAG 架构和大语言模型实现多轮对话",
+            "使用 ChromaDB 向量数据库提高查询效率"
+          ],
+          "impact": "提高了校园信息查询的便捷性和响应速度"
+        }
+      ],
+      "competitions": [],
+      "score": 60,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [
+        {
+          "indicator": "GPA",
+          "value": 3.6,
+          "percentile": "待补充"
+        },
+        {
+          "indicator": "自学新技术",
+          "evidence": [
+            "掌握了 CNN、RAG、ChromaDB 和 LangChain 等前沿技术"
+          ]
+        }
+      ],
+      "score": 60,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [
+        "在腾讯科技实习期间，参与微信支付模块性能优化，成功降低响应时间 30%"
+      ],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [
+          "在腾讯科技实习期间，协助代码审查和单元测试，累计提交有效 PR 12 个"
+        ],
+        "score": 70
+      },
+      "presentation": {
+        "evidence": [
+          "负责基于深度学习的图像识别系统前端展示页面开发"
+        ],
+        "score": 75
+      },
+      "overall_score": 72,
+      "level": "良好"
+    },
+    "practical_experience": {
+      "internships": [
+        {
+          "company": "腾讯科技",
+          "position": "后端开发实习生",
+          "duration": "3个月",
+          "achievements": [
+            "参与微信支付模块性能优化，响应时间降低 30%",
+            "协助代码审查和单元测试，累计提交有效 PR 12 个"
+          ],
+          "score": 75
+        }
+      ],
+      "projects": [
+        {
+          "name": "基于深度学习的图像识别系统",
+          "role": "负责人",
+          "complexity": "高",
+          "score": 90
+        },
+        {
+          "name": "校园智能问答系统",
+          "role": "负责人",
+          "complexity": "高",
+          "score": 90
+        }
+      ],
+      "overall_score": 91
+    },
+    "overall_assessment": {
+      "total_score": 69,
+      "percentile": 71,
+      "completeness": 100,
+      "competitiveness": "中等",
+      "strengths": [
+        "有完整的项目和实习经验"
+      ],
+      "weaknesses": [
+        "缺少高含金量证书"
+      ]
+    },
+    "user_id": 1,
+    "profile_id": "profile_1",
+    "generated_at": "2026-03-11 22:21:31"
+  },
+  "profile_35": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 35,
+    "profile_id": "profile_35",
+    "generated_at": "2026-03-11 22:22:53",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_34": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 34,
+    "profile_id": "profile_34",
+    "generated_at": "2026-03-11 22:23:12",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_33": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 33,
+    "profile_id": "profile_33",
+    "generated_at": "2026-03-11 22:23:29",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_32": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 32,
+    "profile_id": "profile_32",
+    "generated_at": "2026-03-11 22:23:43",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_31": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 31,
+    "profile_id": "profile_31",
+    "generated_at": "2026-03-11 22:24:02",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_30": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 30,
+    "profile_id": "profile_30",
+    "generated_at": "2026-03-11 22:24:18",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_29": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 29,
+    "profile_id": "profile_29",
+    "generated_at": "2026-03-11 22:24:38",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_28": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 28,
+    "profile_id": "profile_28",
+    "generated_at": "2026-03-11 22:24:57",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_26": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": 26,
+    "profile_id": "profile_26",
+    "generated_at": "2026-03-11 22:25:19",
+    "generation_mode": "rule_fallback"
+  },
+  "profile_default": {
+    "basic_info": {
+      "education": "待补充",
+      "major": "待补充",
+      "school": "待补充",
+      "gpa": "待补充",
+      "expected_graduation": "待补充",
+      "target_job": "实施工程师"
+    },
+    "professional_skills": {
+      "programming_languages": [],
+      "frameworks_tools": [],
+      "domain_knowledge": [],
+      "overall_score": 0
+    },
+    "certificates": {
+      "items": [],
+      "score": 0,
+      "competitiveness": "待提升"
+    },
+    "innovation_ability": {
+      "projects": [],
+      "competitions": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "learning_ability": {
+      "indicators": [],
+      "score": 0,
+      "level": "中等"
+    },
+    "pressure_resistance": {
+      "evidence": [],
+      "assessment_score": 75,
+      "level": "良好"
+    },
+    "communication_ability": {
+      "teamwork": {
+        "evidence": [],
+        "score": 50
+      },
+      "presentation": {
+        "evidence": [],
+        "score": 50
+      },
+      "overall_score": 50,
+      "level": "中等"
+    },
+    "practical_experience": {
+      "internships": [],
+      "projects": [],
+      "overall_score": 0
+    },
+    "career_plan": {
+      "employment_analysis": {
+        "strengths": [
+          "暂无可用信息"
+        ],
+        "weaknesses": [
+          "关键能力要素（教育背景、技能、证书、项目、实习等）全部缺失，当前缺乏可验证的就业竞争力支撑"
+        ],
+        "opportunities": [
+          "具备可塑性与成长潜力；可通过系统性补足经历快速提升市场适配度"
+        ],
+        "threats": [
+          "校招窗口期有限，若未及时构建基础能力证据链，将面临简历初筛淘汰风险；同龄竞争者普遍具备至少1项实证经历"
+        ]
+      },
+      "action_plan": {
+        "short_term": [
+          "立即梳理个人可验证经历（如课程设计、小组作业、社团活动、自学成果），提炼3项可量化的成果并撰写成项目描述",
+          "在3个月内完成1门高相关度硬技能入门（如Python/SQL/产品原型工具）并产出可展示作品（GitHub/Notion/在线Demo）"
+        ],
+        "medium_term": [
+          "争取暑期实习或远程实践机会，优先选择有明确交付物和导师反馈的岗位",
+          "考取1项行业认可的入门级证书（如AWS Cloud Practitioner、Google Data Analytics Certificate、PMP CAPM或CDA Level I）"
+        ],
+        "long_term": [
+          "在毕业前形成‘技能+项目+实习’三角能力闭环，确保每项核心能力均有至少1个真实场景应用证据",
+          "建立个人职业品牌雏形（技术博客/作品集网站/LinkedIn专业主页）并持续更新成长轨迹"
+        ],
+        "continuous": [
+          "每月复盘能力进展，对照目标岗位JD反向拆解差距并动态调整学习路径",
+          "主动参与校友访谈、行业分享会等轻量级职业连接活动，积累真实职场认知"
+        ]
+      },
+      "job_seeking_advice": [
+        "切勿等待‘完美准备’再投递——从匹配度40%以上的岗位开始海投，在面试反馈中快速迭代简历与表达",
+        "所有申请材料必须避免空泛描述（如‘学习能力强’），一律替换为STAR结构化陈述（含具体情境、任务、行动、量化结果）",
+        "优先投递提供岗前培训或管培机制的企业，降低经验门槛依赖",
+        "同步启动‘备选路径’探索（如外包转正、初创公司早期岗位、垂直领域自由职业试水），以实战反哺能力验证"
+      ]
+    },
+    "overall_assessment": {
+      "total_score": 7,
+      "percentile": 9,
+      "completeness": 100,
+      "competitiveness": "待提升",
+      "strengths": [],
+      "weaknesses": [
+        "缺少高含金量证书",
+        "沟通能力有提升空间",
+        "实习经验需要积累"
+      ]
+    },
+    "user_id": "default",
+    "profile_id": "profile_default",
+    "generated_at": "2026-03-30 15:54:26"
+  }
+}

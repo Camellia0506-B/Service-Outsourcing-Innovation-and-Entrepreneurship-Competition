@@ -240,8 +240,8 @@ CET等级
 
   "internships": [
     {{
-      "company": "公司名称",
-      "position": "职位名称",
+      "company": "公司名称（必须是真实公司/机构名，如"腾讯科技"，严禁填入年份、日期或"-"等无效值）",
+      "position": "职位名称（如"后端实习生"，严禁填入日期、地点或时间范围）",
       "start_date": "开始时间（YYYY-MM）",
       "end_date": "结束时间（YYYY-MM）",
       "description": "工作描述（原文保留）"

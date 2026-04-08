@@ -1,0 +1,415 @@
+{
+  "stu_gen_20260221_192847_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:28:47",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_192853_4": {
+    "status": "completed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:28:53",
+    "error": null
+  },
+  "stu_gen_20260221_192854_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:28:54",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_192901_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:29:01",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_193937_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:39:37",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_193948_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:39:48",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_195814_4": {
+    "status": "completed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 19:58:14",
+    "error": null
+  },
+  "stu_gen_20260221_205554_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 20:55:54",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_205606_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 20:56:06",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260221_205631_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-21 20:56:31",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_143737_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 14:37:37",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_162408_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 16:24:08",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_162417_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 16:24:17",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_163503_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 16:35:03",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_171015_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:10:15",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_173805_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:38:05",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_173904_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:39:04",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_174543_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:45:43",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_174807_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:48:07",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_175040_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:50:40",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_175906_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 17:59:06",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_204133_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 20:41:33",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_204533_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 20:45:33",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_204552_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 20:45:52",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260222_204641_4": {
+    "status": "failed",
+    "user_id": 4,
+    "data_source": "profile",
+    "created_at": "2026-02-22 20:46:41",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_140912_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:09:12",
+    "error": "unsupported operand type(s) for /: 'NoneType' and 'float'"
+  },
+  "stu_gen_20260223_141240_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:12:40",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_141302_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:13:02",
+    "error": null
+  },
+  "stu_gen_20260223_141336_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:13:36",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_141429_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:14:29",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_144957_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:49:57",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_145019_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 14:50:19",
+    "error": null
+  },
+  "stu_gen_20260223_154733_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 15:47:33",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_154941_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 15:49:41",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260223_165257_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-02-23 16:52:57",
+    "error": "'str' object has no attribute 'get'"
+  },
+  "stu_gen_20260303_115117_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-03 11:51:17",
+    "error": null
+  },
+  "stu_gen_20260303_115118_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-03 11:51:18",
+    "error": null
+  },
+  "stu_gen_20260303_115544_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-03 11:55:44",
+    "error": null
+  },
+  "stu_gen_20260303_120014_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-03 12:00:14",
+    "error": null
+  },
+  "stu_gen_20260304_154704_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-04 15:47:04",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260304_191030_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-04 19:10:30",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260305_140325_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-05 14:03:25",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260305_141003_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-05 14:10:03",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260305_141004_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-05 14:10:04",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260305_141028_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-05 14:10:28",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260305_141034_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-05 14:10:34",
+    "error": "Invalid format specifier ' \"本科/硕士/博士\",\n    \"major\": \"专业名称\",\n    \"school\": \"学校名称\",\n    \"gpa\": \"X.X/4.0\",\n    \"expected_graduation\": \"YYYY-MM\",\n    \"target_job\": \"推荐的目标岗位\"\n  ' for object of type 'str'"
+  },
+  "stu_gen_20260305_185359_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-05 18:53:59",
+    "error": null
+  },
+  "stu_gen_20260307_095623_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-07 09:56:23",
+    "error": null
+  },
+  "stu_gen_20260307_212440_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-07 21:24:40",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_094139_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:41:39",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_094329_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:43:29",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_094344_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:43:44",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_094352_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:43:52",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_094539_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:45:39",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_095237_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:52:37",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_095722_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 09:57:22",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_100449_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 10:04:49",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260308_100500_5": {
+    "status": "failed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-08 10:05:00",
+    "error": "'AIAbilityProfileGenerator' object has no attribute '_ability_profile_output_schema'"
+  },
+  "stu_gen_20260309_123755_5": {
+    "status": "completed",
+    "user_id": 5,
+    "data_source": "profile",
+    "created_at": "2026-03-09 12:37:55",
+    "error": null
+  }
+}

@@ -110,5 +110,17 @@
     "plan_updated": false,
     "created_at": "2026-03-22 11:10:04",
     "updated_at": "2026-03-22 11:10:13"
+  },
+  "failure_report_track_20260306171247704_1": {
+    "report_id": "failure_report_track_20260306171247704_1",
+    "user_id": 1,
+    "record_id": "track_20260306171247704_1",
+    "job_title": "Java",
+    "company_name": "字节跳动",
+    "failure_stage": "rejected",
+    "key_weakness": "",
+    "plan_updated": false,
+    "created_at": "2026-04-05 09:42:28",
+    "updated_at": "2026-04-05 09:42:28"
   }
 }

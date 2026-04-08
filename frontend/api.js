@@ -2596,6 +2596,14 @@ function getMockInterviewSpeechTranscribeURL() {
     return `${String(base).replace(/\/$/, '')}/mock-interview/speech/transcribe`;
 }
 
+// Socket.IO 挂在 Flask 根（无 /api/v1 前缀），与转写接口同源时从 assessmentBaseURL 推导
+function getMockInterviewBaseURL() {
+    const base = normalizeBaseURL(API_CONFIG.assessmentBaseURL || API_CONFIG.jobProfilesBaseURL, 'http://127.0.0.1:5002/api/v1');
+    const s = String(base).replace(/\/$/, '');
+    const origin = s.replace(/\/api\/v1$/i, '');
+    return origin || 'http://127.0.0.1:5002';
+}
+
 // ==================== 知识库模块 ====================
 
 // 查询知识库
@@ -2753,8 +2761,8 @@ async function restoreMockInterview(interview) {
     }
 }
 
-// 10.2 发送面试回答（支持SSE流式响应）
-async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, onNextQuestion = null, speechMeta = null, onScoreUpdate = null) {
+// 10.2 发送面试回答（支持SSE流式响应；可选 text_and_speech 流式语音片段 interviewer_tts_chunk）
+async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, onNextQuestion = null, speechMeta = null, onScoreUpdate = null, onTtsChunk = null, responseOutputMode = 'text') {
     if (API_CONFIG.mockMode) {
         const interview = api.mockInterviews.find(i => i.interview_id === interviewId);
         if (!interview) {
@@ -2849,6 +2857,9 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
         if (speechMeta) {
             requestBody.speech_meta = speechMeta;
         }
+        if (responseOutputMode && responseOutputMode !== 'text') {
+            requestBody.response_output_mode = responseOutputMode;
+        }
         console.log('[MockInterview] 请求参数:', requestBody);
         
         let response = await fetch(url, {
@@ -2910,9 +2921,12 @@ async function sendInterviewAnswer(interviewId, userId, answer, onChunk = null, 
                             const data = JSON.parse(payload);
                             console.log('[MockInterview] 解析的data:', data, '事件类型:', currentEvent);
                             
-                            if (data.chunk && onChunk) {
+                            if (data.chunk && onChunk && currentEvent !== 'interviewer_tts_chunk') {
                                 fullResponse += data.chunk;
                                 onChunk(data.chunk);
+                            }
+                            if (currentEvent === 'interviewer_tts_chunk' && onTtsChunk && data.audio_base64) {
+                                onTtsChunk(data);
                             }
                             if (currentEvent === 'next_question') {
                                 if (data.remaining_questions === 0) isComplete = true;
