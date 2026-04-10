@@ -1,23 +1,7 @@
 """
-人岗匹配模块 - 创新算法实现
-==================================================
-核心创新点：
-1. 4维度加权匹配算法（基础要求、职业技能、职业素养、发展潜力）
-2. AI语义相似度（技能近义词识别：React ≈ Vue，Python ≈ 编程）
-3. 动态权重调整（不同岗位级别，权重自动调整）
-4. 缺失技能可学习性评估（LLM评估学习难度和时间）
-5. 个性化匹配增强（基于用户偏好调整推荐）
+人岗匹配模块服务。
 
-技术亮点：
-- 准确率>80%（4维度加权 + 语义匹配 + 证据验证）
-- LLM智能推理（评估技能差距、学习难度、转岗建议）
-- 向量相似度（Embedding技能语义相似度）
-- 动态权重优化（根据岗位类型自适应）
-
-对应命题要求：
-- 4个维度：基础要求、职业技能、职业素养、发展潜力
-- 准确率>80%：多维度加权 + 语义匹配
-- 量化呈现契合度与差距
+提供岗位推荐、单岗/批量匹配分析，以及语义搜索与统计等能力。
 """
 
 import json
@@ -241,7 +225,7 @@ class SemanticSkillMatcher:
 
 
 # ============================================================
-# 创新算法2：动态权重调整
+# 动态权重调整
 # ============================================================
 
 class DynamicWeightAdjuster:
@@ -324,7 +308,7 @@ class DynamicWeightAdjuster:
 
 
 # ============================================================
-# 创新算法3：缺失技能可学习性评估（LLM）
+# 缺失技能可学习性评估
 # ============================================================
 
 class SkillGapAnalyzer:
@@ -853,7 +837,7 @@ class JobMatchingService:
             try:
                 from matching.high_precision_matching import get_high_precision_matching_engine
                 self.matching_engine = get_high_precision_matching_engine()
-                logger.info("[Matching] 使用高精度引擎（准确率>90%）")
+                logger.info("[Matching] 使用高精度匹配引擎")
             except:
                 logger.warning("[Matching] 高精度引擎加载失败，回退到标准引擎")
                 self.matching_engine = JobMatchingEngine()

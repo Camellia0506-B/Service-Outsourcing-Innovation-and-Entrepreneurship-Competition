@@ -212,8 +212,8 @@ def _fallback_parse_job_requirement(text: str) -> dict:
 @job_bp.route("/agent/parse-requirement", methods=["POST"])
 def agent_parse_job_profile_requirement():
     """
-    Agent核心逻辑 - 大模型解析：
-    输入：{ "text": "生成互联网/AI行业应届生算法工程师画像" }
+    解析岗位画像生成需求文本。
+    输入：{ "text": "..." }（或 query 字段）
     输出：{ "岗位名称": "...", "行业方向": "...", "经验阶段": "..." }
     """
     try:

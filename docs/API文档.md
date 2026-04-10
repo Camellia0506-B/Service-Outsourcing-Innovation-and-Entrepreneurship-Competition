@@ -1,10 +1,10 @@
-# AI职业规划智能体 - 完整API文档
+# AI职业规划智能体 - API文档
 
 ## 版本信息
 
 
-**版本** : v3.0
-**最后更新** : 2025-02-23
+**版本** : v3.1
+**最后更新** : 2026-04-10
 **项目** : 基于AI的大学生职业规划智能体
 **团队分工** :
 
@@ -20,6 +20,15 @@
 ### 0.1 URL前缀
 
 所有接口均以 `/api/v1` 为前缀，例如：`/api/v1/auth/login`
+
+### 0.1.1 服务边界说明（重要）
+
+本仓库当前存在两套服务：
+
+- **平台后端（Java/Spring）**：负责用户体系/鉴权、平台业务聚合等（本文档的 `Auth` 模块属于该服务；当前 AI(Flask) 侧未实现 `/auth/*`）。
+- **AI算法服务（Python/Flask）**：对外提供 `/api/v1/*` 的算法与演示接口（本文档后续大部分模块已按 `ai/app.py` + `ai/api/*_router.py` 的真实实现对齐）。
+
+若你只启动 AI算法服务（默认端口 5002），则仅能访问 AI(Flask) 已实现的接口；文档中标注“规划/未落地”的接口不会可用。
 
 
 ### 0.2 请求格式
@@ -54,6 +63,9 @@
 | 404 | 资源不存在 | 提示资源未找到 |
 | 500 | 服务器内部错误 | 稍后重试或联系技术支持 |
 ## 1. 身份认证模块 (Auth)
+
+> **实现状态**：本模块为平台后端（Java/Spring）职责；AI算法服务（Flask）当前未实现 `/auth/*` 路由。  
+> 若你在本项目中仅启动 AI算法服务，请跳过本章。
 
 ### 1.1 用户注册
 
@@ -390,6 +402,32 @@
 { "code" : 200 , "msg" : "success" , "data" : { "status" : "completed" , // processing/completed/failed "parsed_data" : { "basic_info" : { "name" : "李明" , "phone" : "13800138000" , "email" : " [email protected] " } , "education" : [ ... ] , "skills" : [ ... ] , "internships" : [ ... ] , "projects" : [ ... ] } , "confidence_score" : 0.92 , // AI解析置信度 "suggestions" : [ "建议补充GPA信息" , "实习经历描述可以更具体" ] } }
 ```
 
+### 2.5 全量简历解析
+
+**功能说明**：对 `resume_text` 做一次性全量 AI 解析（不走上传任务/轮询），返回结构与 2.4 的 `parsed_data` 对齐。
+
+**方法**：`POST`\
+**路径**：`/profile/parse-resume`
+
+**请求示例**：
+
+```json
+{ "resume_text": "简历全文..." }
+```
+
+### 2.6 解析基本信息（已实现）
+
+**功能说明**：从 `resume_text` 仅解析姓名/生日/性别等基础字段（返回为空字符串表示未解析到）。
+
+**方法**：`POST`\
+**路径**：`/profile/parse-basic-info`
+
+**请求示例**：
+
+```json
+{ "resume_text": "简历全文..." }
+```
+
 
 ## 3. 职业测评模块 (Assessment)
 
@@ -465,6 +503,19 @@
 { "code" : 200 , "msg" : "success" , "data" : { "report_id" : "report_20250214_10001" , "user_id" : 10001 , "assessment_date" : "2025-02-14" , "status" : "completed" , // 职业兴趣分析 "interest_analysis" : { "holland_code" : "RIA" , // 霍兰德职业兴趣代码 "primary_interest" : { "type" : "研究型(I)" , "score" : 85 , "description" : "喜欢观察、学习、研究、分析、评估和解决问题" } , "interest_distribution" : [ { "type" : "研究型(I)" , "score" : 85 } , { "type" : "实用型(R)" , "score" : 72 } , { "type" : "艺术型(A)" , "score" : 65 } ] , "suitable_fields" : [ "软件开发" , "数据分析" , "算法工程师" , "人工智能研发" ] } , // 性格特质分析 "personality_analysis" : { "mbti_type" : "INTJ" , "traits" : [ { "trait_name" : "外向性" , "score" : 45 , "level" : "偏内向" , "description" : "更倾向于独立思考和深度工作" } , { "trait_name" : "开放性" , "score" : 82 , "level" : "高" , "description" : "对新事物充满好奇，善于学习新技能" } , { "trait_name" : "尽责性" , "score" : 78 , "level" : "高" , "description" : "做事认真负责，注重细节" } ] } , // 能力倾向分析 "ability_analysis" : { "strengths" : [ { "ability" : "逻辑分析能力" , "score" : 88 , "description" : "擅长发现问题本质和规律" } , { "ability" : "学习能力" , "score" : 85 , "description" : "能够快速掌握新知识和技能" } ] , "areas_to_improve" : [ { "ability" : "沟通表达能力" , "score" : 62 , "suggestions" : [ "多参加团队讨论和技术分享" , "练习清晰表达技术方案" ] } ] } , // 职业价值观 "values_analysis" : { "top_values" : [ { "value" : "成就感" , "score" : 90 , "description" : "追求技术突破和个人成长" } , { "value" : "学习发展" , "score" : 88 , "description" : "重视持续学习和能力提升" } ] } , // 综合建议 "recommendations" : { "suitable_careers" : [ { "career" : "算法工程师" , "match_score" : 92 , "reasons" : [ "与你的研究型兴趣高度匹配" , "充分发挥逻辑分析和学习能力" , "符合追求成就感的价值观" ] } , { "career" : "后端开发工程师" , "match_score" : 87 , "reasons" : [ ... ] } ] , "development_suggestions" : [ "加强沟通表达能力的训练" , "多参与团队项目提升协作能力" , "保持技术深度的同时拓展技术广度" ] } } }
 ```
 
+### 3.4 智能评分
+
+**功能说明**：基于测评答案计算四维度能力分数（学习/逻辑/执行/创新）与建议。
+
+**方法**：`POST`\
+**路径**：`/assessment/calculate`
+
+### 3.5 测评报告历史列表（已实现）
+
+**方法**：`GET`\
+**路径**：`/assessment/report-history`\
+**请求参数（Query）**：`user_id`
+
 
 ## 4. 岗位画像模块 (Job Profile)
 
@@ -472,7 +523,7 @@
 
 **功能说明**：获取系统中的岗位画像库（至少10个岗位）
 
-**方法**： `POST`
+**方法**： `POST`（兼容实现：`GET`/`POST` 均可）
 
 **路径**： `/job/profiles`
 
@@ -766,6 +817,25 @@
 ### 4.3 获取岗位关联图谱
 
 **功能说明**：获取岗位间的血缘关系和转换路径
+
+> **实现说明**：当前“岗位图谱/路径”由 `Graph` 模块提供（`/api/v1/job/*`）：
+>
+> - `GET /job/relation-graph?jobName=...`：转岗血缘图谱（动态计算）
+> - `GET /job/career-path?jobName=...`：晋升路径（动态计算）
+> - `POST /job/promotion-path`：晋升路径（SSE/流式 JSON）
+> - `POST /job/transfer-path`：换岗路径（SSE/流式 JSON）
+> - `POST /job/search`：岗位搜索（用于前端联想）
+>
+> 本节下方旧版 `POST /job/relation-graph` 请视为“规划接口”，不要直接联调。
+
+#### 4.3.1 已实现接口小节（Graph）
+
+- `GET /job/career-path`：参数 `jobName`，返回动态晋升路径
+- `GET /job/relation-graph`：参数 `jobName`，返回动态转岗关系图
+- `GET /job/recruitments`：参数 `keyword`，返回岗位招聘详情列表
+- `POST /job/search`：关键词搜索岗位（JSON）
+- `POST /job/promotion-path`：流式返回晋升路径（SSE）
+- `POST /job/transfer-path`：流式返回换岗路径（SSE）
 
 **方法**： `POST`
 
@@ -1112,6 +1182,23 @@
 }
 ```
 
+### 6.4 岗位语义搜索
+
+**方法**：`POST`\
+**路径**：`/matching/search-jobs`
+
+> **说明**：支持分页参数 `pageNum/pageSize`，并支持在传入 `user_id` 时为结果补全 `match_score/match_level`。
+
+### 6.5 岗位语义搜索
+
+**方法**：`POST`\
+**路径**：`/matching/search-jobs-grouped`
+
+### 6.6 匹配度统计
+
+**方法**：`POST`\
+**路径**：`/matching/statistics`
+
 
 ## 7. 职业规划报告模块 (Career Report)
 
@@ -1150,6 +1237,18 @@
 **方法**： `POST`
 
 **路径**： `/career/report`
+
+### 7.2.1 报告状态查询
+
+**方法**：`POST`\
+**路径**：`/career/report-status`
+
+**功能说明**：查询报告生成状态（task_id 即 report_id）。
+
+### 7.2.2 获取职业规划报告
+
+**方法**：`POST`\
+**路径**：`/career/view-report`
 
 **请求示例**：
 
@@ -1375,7 +1474,30 @@
 > Chain）、**主动追问与澄清**四大智能体特征，在网页端以沉浸式对话界面呈现，并实时展示
 > Agent 的思考过程（ReAct 推理链可视化）。
 
+> **实现状态**：AI算法服务（Flask）当前已落地的对话入口为 `POST /agent/chat`（SSE 流式）。  
+> 本章原设计中的 `/agent/session/*`（会话创建/历史/列表/定时任务）在当前仓库的 AI(Flask) 服务中**尚未实现**，请视为“规划接口”，不要按本文档旧路径直接联调。
+
+### 8.0 智能体对话
+
+**方法**：`POST`\
+**路径**：`/agent/chat`\
+**响应类型**：`text/event-stream`
+
+**请求体**（JSON）：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| message | string | 是 | 用户输入 |
+| user_id | number | 否 | 用户ID（提供后会尝试拉取平台数据） |
+| history | array | 否 | 历史对话：`[{role, content}]`，最多取后 20 条 |
+| profile_snapshot | object | 否 | 可选：前端传入的档案快照，避免重复拉取 |
+| ability_snapshot | object | 否 | 可选：前端传入的能力画像快照 |
+
+**SSE 输出**：以 `data: {"text": "..."}\n\n` 分块输出，结束时输出 `data: [DONE]\n\n`。若识别到意图，会在尾部额外输出 `data: {"actions":[{"label":"...","fn":"..."}]}\n\n` 供前端渲染快捷按钮。
+
 ### 8.1 发起智能体对话会话
+
+> **实现状态**：未落地（AI算法服务无该接口）。
 
 **功能说明**：创建一个新的 Agent 会话，Agent
 会自动分析用户当前状态（档案完整度、测评结果、已有匹配岗位），制定本次对话的初始规划目标，并以主动提问的方式引导用户。
@@ -1516,6 +1638,7 @@ SSE 流式输出，前端实时渲染思考链与回答内容。
     }
 
 ### 8.4 获取用户所有会话列表
+
 
 **方法**：`GET`\
 **路径**：`/agent/session/list`
@@ -1802,6 +1925,43 @@ SSE 流式输出，前端实时渲染思考链与回答内容。
 > **核心设计理念**：基于目标岗位画像，由 AI
 > 担任面试官进行沉浸式模拟面试，实时评估回答质量，生成面试表现报告与改进建议，体现智能体的交互能力与规划性。
 
+### 10.0 恢复模拟面试会话（重要：支持后端重启后续聊）
+
+**功能说明**：当后端服务重启导致内存会话丢失时，前端可把本地缓存的“完整会话对象”回传，后端将其写入 `data/mock_interview_sessions.json` 并恢复面试进度。
+
+**方法**：`POST`\
+**路径**：`/mock-interview/session/restore`\
+**请求格式**：`application/json`
+
+**请求参数**：请求体为“完整会话对象”，至少包含：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| interview_id | string | 是 | 面试会话ID |
+| target_job_title | string | 否 | 目标岗位名称（若前端用 `target_position`，后端会兼容映射） |
+| target_position | string | 否 | 兼容字段：前端旧字段 |
+
+**请求示例**（最小示例）：
+
+```json
+{
+  "interview_id": "mock_interview_001",
+  "user_id": "10001",
+  "target_position": "后端开发工程师",
+  "messages": []
+}
+```
+
+**响应示例**：
+
+```json
+{
+  "code": 200,
+  "msg": "会话恢复成功",
+  "data": { "restored": true }
+}
+```
+
 ### 10.1 创建模拟面试会话
 
 **功能说明**：根据目标岗位创建模拟面试会话，AI
@@ -1812,41 +1972,46 @@ SSE 流式输出，前端实时渲染思考链与回答内容。
 
 **请求示例**：
 
-    {
-      "user_id": 10001,
-      "target_job_id": "job_2025_001",  // 可选，若不填则从已匹配岗位中选择
-      "target_job_title": "AI产品经理",
-      "interview_type": "comprehensive",  // comprehensive | technical | hr | case_study
-      "difficulty": "medium",  // easy | medium | hard
-      "duration_minutes": 30  // 模拟面试时长
-    }
+```json
+{
+  "user_id": "10001",
+  "target_job_title": "后端开发工程师",
+  "job_type": "java_backend", 
+  "interview_type": "comprehensive",
+  "difficulty": "medium",
+  "duration_minutes": 30
+}
+```
+
+**说明**：
+
+- `job_type` 可选：不传则后端会根据 `target_job_title` 自动推断（`java_backend | web_frontend | python_algo`）。
 
 **响应示例**：
 
-    {
-      "code": 200,
-      "msg": "模拟面试已准备就绪",
-      "data": {
-        "interview_id": "mock_interview_001",
-        "interviewer_persona": {
-          "name": "张总",
-          "role": "某AI公司产品总监",
-          "style": "注重产品思维与商业逻辑，会追问细节"
-        },
-        "interview_plan": {
-          "total_questions": 8,
-          "sections": [
-            {"name": "自我介绍", "question_count": 1, "time_minutes": 3},
-            {"name": "产品思维考察", "question_count": 3, "time_minutes": 12},
-            {"name": "背景与动机", "question_count": 2, "time_minutes": 8},
-            {"name": "案例分析", "question_count": 1, "time_minutes": 5},
-            {"name": "反向提问", "question_count": 1, "time_minutes": 2}
-          ]
-        },
-        "opening_message": "你好！请先做一个简短的自我介绍，重点介绍一下你与产品岗位相关的经历和优势。",
-        "started_at": "2025-03-20 14:00:00"
-      }
-    }
+```json
+{
+  "code": 200,
+  "msg": "模拟面试已准备就绪",
+  "data": {
+    "interview_id": "c6d38c5c-1e42-4f1d-9c2b-4e8b0a2d3d6f",
+    "opening_message": "你好！我是李工，今天将负责你后端开发工程师岗位的面试。\n\n我们将进行大约30分钟的面试。\n\n准备好了吗？第一个问题：\n\n请先简单介绍一下你自己",
+    "interviewer_persona": {
+      "name": "李工",
+      "role": "某大厂 Java 架构师",
+      "style": "逻辑严密，步步深挖，不接受模糊答案",
+      "avatar": "interviewer_java.png"
+    },
+    "interview_plan": {
+      "total_questions": 5,
+      "duration_minutes": 30,
+      "question_types": ["自我介绍", "岗位认知", "项目经验", "技术能力", "职业规划"]
+    },
+    "question_pool_size": 120,
+    "started_at": "2026-04-10T12:00:00.000000"
+  }
+}
+```
 
 ### 10.2 发送面试回答（流式实时评估）
 
@@ -1859,46 +2024,70 @@ SSE 流式输出，前端实时渲染思考链与回答内容。
 
 **请求示例**：
 
-    {
-      "user_id": 10001,
-      "interview_id": "mock_interview_001",
-      "question_id": "q_001",
-      "answer_text": "我叫李明，就读于某大学计算机科学专业大四，有两年的算法开发经验，同时热爱产品设计，曾独立完成一款校园工具App从0到1的产品设计与上线..."
-    }
+```json
+{
+  "user_id": "10001",
+  "interview_id": "c6d38c5c-1e42-4f1d-9c2b-4e8b0a2d3d6f",
+  "question_id": "q_001",
+  "answer_text": "我叫李明，就读于某大学计算机科学专业…",
+  "speech_meta": {
+    "words_per_minute": 168,
+    "pause_count": 1,
+    "confidence_keywords": ["Spring", "MySQL"],
+    "fluency_score": 82
+  },
+  "response_output_mode": "text"
+}
+```
+
+**参数说明**：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| user_id | string/number | 是 | 用户ID |
+| interview_id | string | 是 | 面试会话ID（也在 URL path 中） |
+| answer_text | string | 是 | 本轮回答文本 |
+| question_id | string | 否 | 前端用于对齐本轮评分的题号；不传则后端自动生成 |
+| speech_meta | object | 否 | **语音识别侧**返回的表达指标（见 10.5），用于调整“表达能力”评分并生成 `speech_feedback` |
+| response_output_mode | string | 否 | 输出模式：`text`（默认）；`text_and_speech`（若已配置 DashScope Key，会追加 TTS 音频事件） |
 
 **SSE 事件流格式**：
 
-    event: evaluating
-    data: {"description": "正在评估你的回答..."}
+```text
+event: evaluating
+data: {"description": "正在分析你的回答..."}
 
-    event: score_update
-    data: {
-      "question_id": "q_001",
-      "dimension_scores": {
-        "内容完整度": 85,
-        "逻辑结构": 80,
-        "与岗位相关性": 90,
-        "表达清晰度": 75
-      },
-      "overall_score": 83
-    }
+event: score_update
+data: {
+  "question_id": "q_001",
+  "dimension_scores": {
+    "内容质量": 80,
+    "表达能力": 78,
+    "逻辑思维": 75,
+    "岗位匹配度": 82
+  },
+  "overall_score": 79,
+  "speech_feedback": "语速适中(168字/分)，提及2个专业术语，停顿次数正常(1次)"
+}
 
-    event: interviewer_response_chunk
-    data: {"chunk": "不错！你提到了独立做过一款App，这个经历很有说服力。"}
+event: interviewer_response_chunk
+data: {"chunk": "不错！你提到了…"}
 
-    event: interviewer_response_chunk
-    data: {"chunk": "我想进一步了解一下：那款校园App当时你是如何做用户调研的？最终的日活数据大概是多少？"}
+event: interviewer_response_chunk
+data: {"chunk": "我想进一步了解一下…"}
 
-    event: next_question
-    data: {
-      "question_id": "q_002",
-      "section": "产品思维考察",
-      "question_number": 2,
-      "remaining_questions": 6
-    }
+event: interviewer_tts_chunk
+data: {"format":"mp3","audio_base64":"..."}   # 仅 response_output_mode=text_and_speech 且已配置密钥时出现
 
-    event: done
-    data: {"message_id": "msg_002"}
+event: follow_up_triggered
+data: {"reason":"项目细节描述不够深入","follow_up_count":1,"max_follow_ups":2}
+
+event: next_question
+data: {"question_id":"q_a1b2c3d4","section":"项目经验","remaining_questions":3}
+
+event: done
+data: {"message_id":"msg_002"}
+```
 
 ### 10.3 结束模拟面试并获取报告
 
@@ -1915,52 +2104,35 @@ AI 给出的改进建议。
       "interview_id": "mock_interview_001"
     }
 
-**响应示例**：
+**响应示例**（字段为简化版报告结构）：
 
-    {
-      "code": 200,
-      "msg": "面试报告生成成功",
-      "data": {
-        "interview_id": "mock_interview_001",
-        "target_job": "AI产品经理",
-        "total_duration_minutes": 28,
-        "overall_score": 76,
-        "pass_threshold": 80,
-        "result": "borderline",  // excellent | good | borderline | needs_improvement
-        "dimension_scores": {
-          "产品思维": {"score": 65, "weight": 0.30, "benchmark": 80},
-          "沟通表达": {"score": 82, "weight": 0.20, "benchmark": 75},
-          "技术背景": {"score": 90, "weight": 0.15, "benchmark": 70},
-          "商业敏感度": {"score": 60, "weight": 0.20, "benchmark": 78},
-          "逻辑思维": {"score": 80, "weight": 0.15, "benchmark": 75}
-        },
-        "strengths": [
-          "技术背景扎实，能够清晰描述技术实现逻辑，获得面试官认可",
-          "表达流畅，答题结构较清晰（多次使用STAR法则）"
-        ],
-        "weaknesses": [
-          "产品思维深度不足：在案例分析题中，对用户痛点的挖掘流于表面，缺乏数据支撑",
-          "商业敏感度偏低：无法清晰描述产品的盈利模式与商业价值"
-        ],
-        "question_reviews": [
-          {
-            "question_id": "q_001",
-            "question": "请做自我介绍",
-            "your_answer_summary": "介绍了CS背景和App项目经历",
-            "score": 83,
-            "feedback": "内容有亮点，建议开头更简洁，将App成绩数据前置"
-          }
-        ],
-        "improvement_plan": {
-          "short_term": [
-            "每天练习1道产品案例题（推荐使用PM面试宝典）",
-            "研读3家AI公司的商业模式与盈利逻辑"
-          ],
-          "suggested_retry_days": 14
-        },
-        "created_at": "2025-03-20 14:30:00"
-      }
-    }
+```json
+{
+  "code": 200,
+  "msg": "面试报告生成成功",
+  "data": {
+    "interview_id": "mock_interview_001",
+    "target_job": "后端开发工程师",
+    "overall_score": 76,
+    "round_count": 5,
+    "dimension_scores": {
+      "expression": 82,
+      "logic": 80,
+      "content": 75,
+      "stress_resistance": 75,
+      "cultural_fit": 80
+    },
+    "strengths": ["表达清晰", "项目描述具体", "逻辑结构完整"],
+    "weaknesses": ["细节追问准备不足", "指标量化不够"],
+    "suggestions": ["补充关键技术选型理由", "用数据量化项目收益", "针对高频追问做专项练习"],
+    "improvement_plan": {
+      "short_term": ["每天练习1道面试题", "每周进行2-3次模拟面试"],
+      "suggested_retry_days": 14
+    },
+    "created_at": "2026-04-10T12:30:00.000000"
+  }
+}
+```
 
 ### 10.4 获取历史面试记录
 
@@ -1979,26 +2151,39 @@ AI 给出的改进建议。
   size              number            否                默认10
   -----------------------------------------------------------------------
 
-**响应示例**：
+**响应示例**（除 `list` 外还会返回趋势维度数据）：
 
-    {
-      "code": 200,
-      "msg": "success",
-      "data": {
-        "total": 5,
-        "score_trend": [72, 74, 76, 78, 81],  // 历次得分趋势（用于前端折线图）
-        "list": [
-          {
-            "interview_id": "mock_interview_005",
-            "target_job": "AI产品经理",
-            "overall_score": 81,
-            "result": "good",
-            "duration_minutes": 30,
-            "created_at": "2025-04-03 10:00:00"
-          }
-        ]
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "total": 5,
+    "score_trend": [72, 74, 76, 78, 81],
+    "dimension_trend": {
+      "内容质量": [75, 78, 80],
+      "表达能力": [70, 75, 78],
+      "逻辑思维": [72, 74, 76],
+      "岗位匹配度": [75, 77, 80]
+    },
+    "dates": ["2026-04-01", "2026-04-05", "2026-04-10"],
+    "list": [
+      {
+        "interview_id": "mock_interview_005",
+        "target_job": "后端开发工程师",
+        "job_type": "java_backend",
+        "overall_score": 81,
+        "total_score": 81,
+        "status": "completed",
+        "result": "excellent",
+        "used_voice": true,
+        "duration_minutes": 30,
+        "created_at": "2026-04-10 10:00:00"
       }
-    }
+    ]
+  }
+}
+```
 
 ## 11. 企业HR评估模块 (HR Evaluation)
 
@@ -2151,30 +2336,70 @@ AI 给出的改进建议。
 
 ### 11.5 学生响应HR评估邀请
 
-**方法**：`POST`\
-**路径**：`/hr/evaluation/respond`
+> **实现说明（与代码一致）**：学生端接口分为“查询邀请列表”和“对单条邀请执行 accept/decline”。当前 AI(Flask) 服务未实现文档旧版的 `/hr/evaluation/respond`。
 
-**请求示例**：
+#### 11.5.1 学生获取评估邀请列表
 
-    {
-      "user_id": 10001,
-      "invitation_id": "inv_001",
-      "action": "accept",  // accept | decline
-      "agree_reveal_identity": false  // 是否同意向HR解除匿名
-    }
+**方法**：`GET`\
+**路径**：`/hr/student/invitations`
+
+**请求参数（Query）**：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| user_id | number | 是 | 学生用户ID |
 
 **响应示例**：
 
-    {
-      "code": 200,
-      "msg": "已接受邀请",
-      "data": {
-        "evaluation_id": "eval_001",
-        "hr_company": "某AI科技公司",
-        "target_job": "AI产品经理",
-        "status": "in_progress"
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "list": [
+      {
+        "invitation_id": "inv_1710912000",
+        "hr_id": "hr_001",
+        "company_name": "星途智探",
+        "hr_name": "HR管理员",
+        "anonymous_student_id": "student_016",
+        "target_job": "后端开发工程师",
+        "message": "我们对你很感兴趣…",
+        "status": "pending",
+        "sent_at": "2026-04-10T12:00:00.000000"
       }
-    }
+    ]
+  }
+}
+```
+
+#### 11.5.2 学生接受/拒绝一条邀请
+
+**方法**：`POST`\
+**路径**：`/hr/student/invitation/{invitation_id}/respond`
+
+**请求示例**：
+
+```json
+{
+  "user_id": 10001,
+  "action": "accept"
+}
+```
+
+**响应示例**：
+
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": {
+    "invitation_id": "inv_1710912000",
+    "status": "accepted",
+    "responded_at": "2026-04-10T12:05:00.000000"
+  }
+}
+```
 
 ### 11.6 HR提交学生评估结果
 
@@ -2224,47 +2449,44 @@ AI 给出的改进建议。
 **功能说明**：学生查看企业HR对自己的评估报告（仅在学生同意接受的评估中可见）。
 
 **方法**：`GET`\
-**路径**：`/hr/evaluation/student/{user_id}/results`
+**路径**：`/hr/student/evaluation-reports`
 
 **响应示例**：
 
-    {
-      "code": 200,
-      "msg": "success",
-      "data": {
-        "total": 2,
-        "list": [
-          {
-            "evaluation_id": "eval_001",
-            "company_name": "某AI科技公司（已认证）",
-            "target_job": "AI产品经理",
-            "overall_impression": "good",
-            "dimension_scores": {
-              "专业技能匹配度": 85,
-              "学习能力": 90,
-              "沟通表达": 80
-            },
-            "strengths_noted": "技术背景扎实，学习能力强",
-            "recommended_positions": ["产品助理", "数据产品经理"],
-            "hiring_intent_label": "有意向",
-            "evaluated_at": "2025-03-12 16:30:00"
-          }
-        ],
-        "external_dimension_summary": {
-          "avg_skill_match": 85,
-          "avg_learning_ability": 90,
-          "avg_communication": 80,
-          "data_source_count": 2,
-          "insight": "来自2家企业HR的外部评估显示：你的学习能力被一致认可（平均90分），技术匹配度强；商业经验不足是最常被提及的待提升点。"
-        }
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "list": [
+      {
+        "evaluation_id": "inv_1710912000",
+        "target_job": "后端开发工程师",
+        "company_name": "星途智探",
+        "hr_name": "HR管理员",
+        "submitted_at": "2026-04-10 12:30:00",
+        "status": "completed"
       }
-    }
+    ]
+  }
+}
+```
+
+#### 11.7.1 学生查看评估报告详情
+
+**方法**：`GET`\
+**路径**：`/hr/student/evaluation-reports/{evaluation_id}`\
+**请求参数（Query）**：`user_id`
+
+> `evaluation_id` 在当前实现中与邀请 ID 对齐（通常为 `inv_...`）。
 
 ## 12. 向量语义匹配升级模块 (Semantic Matching)
 
 > **技术创新点**：在原有精准/模糊字段匹配基础上，引入向量数据库（ChromaDB
 > /
 > Milvus）与语义嵌入模型（BGE-M3），实现对简历中非结构化文本的**语义理解与匹配**，大幅提升推荐准确性。
+
+> **实现状态**：当前 AI算法服务（Flask）未实现 `/semantic/*` 路由；本章接口为“规划设计”，请勿直接联调。
 
 ### 12.1 构建/更新用户语义向量
 
@@ -2497,6 +2719,17 @@ AI 给出的改进建议。
 
 > **技术创新点**：平台涉及学生隐私数据（个人信息、学业成绩、职业测评结果等），引入国产加密算法（SM2/SM3/SM4）与分级数据脱敏机制，作为技术创新亮点之一，也体现平台的可信度与合规性。
 
+> **实现状态**：AI算法服务（Flask）当前已落地的安全/隐私接口主要包括：
+>
+> - `GET /security/privacy/consent`：查询用户隐私授权
+> - `PUT /security/privacy/consent`：更新用户隐私授权
+> - `GET /security/access/logs`：查询数据访问日志
+> - `GET /security/data/export`：导出用户数据（演示实现）
+> - `DELETE /security/data/delete`：删除用户数据（演示实现，不可恢复）
+> - `GET /security/data/summary`：用户数据汇总统计
+>
+> 本章中“数据脱敏配置”“加密存储验证”等为规划设计，当前 AI(Flask) 服务未提供对应路由。
+
 ### 14.1 数据脱敏配置
 
 **功能说明**：管理员配置各类数据字段的脱敏规则，确保在数据共享（如HR浏览、数据导出）时敏感字段自动脱敏处理。
@@ -2572,6 +2805,8 @@ AI 给出的改进建议。
 **方法**：`PUT`\
 **路径**：`/security/privacy/consent`
 
+**补充（已实现）**：`GET /security/privacy/consent?user_id=...` 可查询当前隐私授权配置。
+
 **请求示例**：
 
     {
@@ -2603,7 +2838,7 @@ AI 给出的改进建议。
 **功能说明**：学生可查看自己数据被访问的记录（谁、在什么时候、访问了什么数据），保障数据透明度。
 
 **方法**：`GET`\
-**路径**：`/security/access-log`
+**路径**：`/security/access/logs`
 
 **请求参数（Query）**：
 
@@ -2762,6 +2997,160 @@ AI 给出的改进建议。
     "专业技能": 0.3,
     "职业素养": 0.45,
     "发展潜力": 0.15
+  }
+}
+```
+
+### 10.5 语音识别转写（HTTP 上传音频）
+
+**功能说明**：接收前端录制的音频文件（`audio/webm`），调用 DashScope Paraformer 进行识别，返回转写文本，并计算表达能力相关指标（语速/停顿/专业术语命中/流畅度）。
+
+**方法**：`POST`\
+**路径**：`/mock-interview/speech/transcribe`\
+**请求格式**：`multipart/form-data`
+
+**请求参数**：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| audio_file | file | 是 | 录音文件（仅支持 `.webm`；建议 ≤5MB） |
+| interview_id | string | 是 | 当前面试会话ID（用于提取目标岗位关键词与 job_type） |
+| user_id | number/string | 是 | 用户ID |
+
+**响应示例（识别到文本）**：
+
+```json
+{
+  "code": 200,
+  "msg": "转写成功",
+  "data": {
+    "transcript": "我认为这个项目的核心难点在于…",
+    "duration_seconds": 10,
+    "speech_meta": {
+      "words_per_minute": 168,
+      "pause_count": 1,
+      "confidence_keywords": ["Spring", "Redis"],
+      "fluency_score": 82
+    }
+  }
+}
+```
+
+**响应示例（未识别到有效语音）**：
+
+```json
+{
+  "code": 200,
+  "msg": "转写完成（未识别到有效语音）",
+  "data": {
+    "transcript": "",
+    "duration_seconds": 0,
+    "speech_meta": {
+      "words_per_minute": 0,
+      "pause_count": 0,
+      "confidence_keywords": [],
+      "fluency_score": 0
+    }
+  }
+}
+```
+
+**错误说明（与实现一致）**：
+
+- `400`：缺少文件/参数、或文件格式不是 `.webm`
+- `503`：未安装 `dashscope` 或未配置 `DASHSCOPE_API_KEY`（语音服务不可用）
+- `502`：语音识别上游服务调用失败（DashScope 返回非 200）
+
+### 10.6 题库统计（面试题向量库）
+
+**方法**：`GET`\
+**路径**：`/mock-interview/question-bank/stats`
+
+**功能说明**：返回 ChromaDB 中 `interview_questions` collection 的题库统计，按 `job_type` 与 `category` 聚合。
+
+**响应示例**：
+
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "java_backend": { "total": 120, "technical": 60, "project": 30, "scenario": 20, "behavior": 10 },
+    "web_frontend": { "total": 80, "technical": 40, "project": 20, "scenario": 15, "behavior": 5 }
+  }
+}
+```
+
+### 10.7 题库重建（管理员）
+
+**方法**：`POST`\
+**路径**：`/mock-interview/question-bank/rebuild`\
+**请求格式**：`application/json`
+
+**请求参数**：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| admin_key | string | 是 | 管理员密钥（实现中为固定值 `gradquest_admin_2026`） |
+| job_type | string | 否 | `all`（默认）或指定 `java_backend/web_frontend/python_algo` |
+
+**响应示例**：
+
+```json
+{
+  "code": 200,
+  "msg": "题库重建成功",
+  "data": { "rebuilt_count": 120, "time_seconds": 12.34 }
+}
+```
+
+### 10.8 语音识别转写（WebSocket 实时流式，推荐）
+
+**功能说明**：用于“边说边出字”的实时识别。前端通过 Socket.IO 连接到 AI 服务（同一 Flask 服务），启动识别后持续发送 PCM 帧，服务端实时推送部分转写与结束事件。
+
+**连接说明**：
+
+- AI 服务默认端口：`5002`（可通过环境变量 `AI_SERVICE_PORT` 修改）
+- 协议：Socket.IO（WebSocket）
+
+**前端 → 服务端事件**：
+
+- `start_streaming`：
+
+```json
+{ "interview_id": "xxx", "user_id": "10001" }
+```
+
+- `audio_chunk`：发送 16kHz 单声道 PCM `s16le` 的 base64 数据
+
+```json
+{ "audio_data": "BASE64_PCM" }
+```
+
+- `stop_streaming`：结束识别
+
+**服务端 → 前端事件**：
+
+- `streaming_started`：启动成功
+- `streaming_failed`：启动失败（常见于未配置 `DASHSCOPE_API_KEY`）
+- `asr_partial`：实时增量文本
+
+```json
+{ "transcript": "…当前已识别文本…", "sentence_end": false }
+```
+
+- `streaming_stopped`：识别结束（含 speech_meta，字段含义同 10.5）
+
+```json
+{
+  "status": "success",
+  "message": "",
+  "transcript": "…最终文本…",
+  "speech_meta": {
+    "words_per_minute": 168,
+    "pause_count": 1,
+    "confidence_keywords": ["Spring"],
+    "fluency_score": 82
   }
 }
 ```
